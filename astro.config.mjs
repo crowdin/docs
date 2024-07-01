@@ -3,8 +3,12 @@ import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightUtils from '@lorenzo_lewis/starlight-utils';
 
+import crowdinSidebar from './src/content/sidebars/crowdin.ts';
+import enterpriseSidebar from './src/content/sidebars/enterprise.ts';
+import developerSidebar from './src/content/sidebars/developer.ts';
+
 // https://astro.build/config
-export default defineConfig({
+const config = defineConfig({
 	integrations: [
 		starlight({
 			title: 'Crowdin',
@@ -18,23 +22,24 @@ export default defineConfig({
 			},
 			sidebar: [
 				{
-					label: 'Crowdin',
-					autogenerate: { directory: 'crowdin' },
+					label: 'Crowdin KB',
+					items: [...crowdinSidebar],
 				},
 				{
-					label: 'Enterprise',
-					autogenerate: { directory: 'enterprise' },
+					label: 'Enterprise KB',
+					items: [...enterpriseSidebar],
 				},
 				{
-					label: 'Developer',
-					autogenerate: { directory: 'developer' },
+					label: 'Developer Portal',
+					items: [...developerSidebar],
 				},
+				// Navigation links
 				{
 					label: "leading",
 					items: [
-						{ label: "Crowdin KB", link: "/crowdin" },
-						{ label: "Enterprise KB", link: "/enterprise" },
-						{ label: "Developer Portal", link: "/developer" },
+						{ label: "Crowdin KB", link: "/crowdin/introduction/" },
+						{ label: "Enterprise KB", link: "/enterprise/introduction/" },
+						{ label: "Developer Portal", link: "/developer/introduction/" },
 					],
 				}
 			],
@@ -54,3 +59,5 @@ export default defineConfig({
 		tailwind({ applyBaseStyles: false }),
 	],
 });
+
+export default config;
