@@ -3,6 +3,8 @@ import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightUtils from '@lorenzo_lewis/starlight-utils';
 import starlightLinksValidator from 'starlight-links-validator';
+import { rehypeHeadingIds } from '@astrojs/markdown-remark';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 
 import crowdinSidebar from './src/content/sidebars/crowdin.ts';
 import enterpriseSidebar from './src/content/sidebars/enterprise.ts';
@@ -44,7 +46,10 @@ const config = defineConfig({
 					],
 				}
 			],
-			customCss: ['./src/tailwind.css'],
+			customCss: [
+				'./src/tailwind.css',
+				'./src/global.css'
+			],
 			pagination: false,
 			plugins: [
         starlightUtils({
@@ -60,6 +65,14 @@ const config = defineConfig({
 		}),
 		tailwind({ applyBaseStyles: false }),
 	],
+	markdown: {
+		rehypePlugins: [rehypeHeadingIds, [
+			rehypeAutolinkHeadings,
+			{
+				behavior: 'wrap', // Wrap the heading text in a link.
+			},
+		]],
+	},
 });
 
 export default config;
