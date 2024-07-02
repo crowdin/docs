@@ -12,67 +12,72 @@ import developerSidebar from './src/content/sidebars/developer.ts';
 
 // https://astro.build/config
 const config = defineConfig({
-	integrations: [
-		starlight({
-			title: 'Crowdin',
-			logo: {
-				replacesTitle: true,
-				light: './src/assets/logo/dark.svg',
-				dark: './src/assets/logo/light.svg',
-			},
-			social: {
-				github: 'https://github.com/withastro/starlight',
-			},
-			sidebar: [
-				{
-					label: 'Crowdin KB',
-					items: [...crowdinSidebar],
-				},
-				{
-					label: 'Enterprise KB',
-					items: [...enterpriseSidebar],
-				},
-				{
-					label: 'Developer Portal',
-					items: [...developerSidebar],
-				},
-				// Navigation links
-				{
-					label: "leading",
-					items: [
-						{ label: "Crowdin KB", link: "/crowdin/introduction/" },
-						{ label: "Enterprise KB", link: "/enterprise/introduction/" },
-						{ label: "Developer Portal", link: "/developer/introduction/" },
-					],
-				}
-			],
-			customCss: [
-				'./src/tailwind.css',
-				'./src/global.css'
-			],
-			pagination: false,
-			plugins: [
+  integrations: [
+    starlight({
+      title: 'Crowdin',
+      logo: {
+        replacesTitle: true,
+        light: './src/assets/logo/dark.svg',
+        dark: './src/assets/logo/light.svg',
+      },
+      sidebar: [
+        {
+          label: 'Crowdin KB',
+          items: [...crowdinSidebar],
+        },
+        {
+          label: 'Enterprise KB',
+          items: [...enterpriseSidebar],
+        },
+        {
+          label: 'Developer Portal',
+          items: [...developerSidebar],
+        },
+        // Navigation links
+        {
+          label: "leading",
+          items: [
+            { label: "Crowdin KB", link: "/crowdin/introduction/" },
+            { label: "Enterprise KB", link: "/enterprise/introduction/" },
+            { label: "Developer Portal", link: "/developer/introduction/" },
+            { label: "Store", link: "https://store.crowdin.com", attrs: { target: '_blank' } },
+            { label: "Community", link: "https://community.crowdin.com/", attrs: { target: '_blank' } },
+          ],
+        }
+      ],
+      customCss: [
+        './src/tailwind.css',
+        './src/global.css'
+      ],
+      pagination: false,
+      plugins: [
         starlightUtils({
           multiSidebar: {
             switcherStyle: "dropdown",
           },
-					navLinks: {
-						leading: { useSidebarLabelled: "leading" },
-					}
+          navLinks: {
+            leading: { useSidebarLabelled: "leading" },
+          }
         }),
-				starlightLinksValidator(),
+        starlightLinksValidator(),
       ],
-		}),
-		tailwind({ applyBaseStyles: false }),
-	],
-	markdown: {
-		rehypePlugins: [rehypeHeadingIds, [
-			rehypeAutolinkHeadings,
-			{
-				behavior: 'wrap', // Wrap the heading text in a link.
-			},
-		]],
-	},
+      social: {
+        'x.com': 'https://x.com/crowdin',
+        linkedin: 'https://www.linkedin.com/company/crowdin',
+        youtube: 'https://youtube.com/@crowdin-localization',
+        github: 'https://github.com/crowdin',
+      }
+    }),
+    tailwind({ applyBaseStyles: false }),
+  ],
+  markdown: {
+    rehypePlugins: [rehypeHeadingIds, [
+      rehypeAutolinkHeadings,
+      {
+        behavior: 'wrap', // Wrap the heading text in a link.
+      },
+    ]],
+  },
 });
 
 export default config;
