@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightUtils from '@lorenzo_lewis/starlight-utils';
+import starlightLinksValidator from 'starlight-links-validator';
 
 import crowdinSidebar from './src/content/sidebars/crowdin.ts';
 import enterpriseSidebar from './src/content/sidebars/enterprise.ts';
@@ -53,7 +54,8 @@ const config = defineConfig({
 					navLinks: {
 						leading: { useSidebarLabelled: "leading" },
 					}
-        })
+        }),
+				starlightLinksValidator(),
       ],
 		}),
 		tailwind({ applyBaseStyles: false }),
