@@ -25,33 +25,6 @@ export default  [
     label: 'Translation Process',
     autogenerate: { directory: path('translation-process') },
   },
-
-  /**
-   *
-   * - **Organization Management**
-   *     - [Overview](https://support.crowdin.com/enterprise/organization/)
-   *     - [Groups](https://support.crowdin.com/enterprise/groups/)
-   *     - [Teams](https://support.crowdin.com/enterprise/teams/)
-   *     - [Vendors](https://support.crowdin.com/enterprise/vendors/)
-   *     - [Clients](https://support.crowdin.com/enterprise/clients/)
-   *     - [Crowdsourcing](https://support.crowdin.com/enterprise/crowdsourcing/)
-   *     - **Workflows**
-   *         - [Workflow Overview](https://support.crowdin.com/enterprise/workflows/)
-   *         - [Source Text Review](https://support.crowdin.com/enterprise/source-text-review/)
-   *         - [Translation and Proofreading by Vendor](https://support.crowdin.com/enterprise/translation-proofreading-by-vendor/)
-   *         - [Translation by API Vendor](https://support.crowdin.com/enterprise/translation-by-api-vendor/)
-   *         - [Custom Code](https://support.crowdin.com/enterprise/custom-code/)
-   *     - **Organization Settings**
-   *         - [General](https://support.crowdin.com/enterprise/organization-settings/)
-   *         - [Authentication Settings](https://support.crowdin.com/enterprise/authentication-settings/) + [IP Allowlist](https://support.crowdin.com/enterprise/ip-allowlist/)
-   *         - [SAML](https://support.crowdin.com/enterprise/saml/) + [Configuring SAML SSO for Google Workspace](https://support.crowdin.com/enterprise/saml-google-workspace/) + (…)
-   *         - [Fields](https://support.crowdin.com/enterprise/fields/)
-   *         - [Custom Quality Assurance Checks +](https://support.crowdin.com/enterprise/custom-qa-checks/) [Code Snippet for Custom QA Checks](https://support.crowdin.com/enterprise/code-snippet-qa-checks/)
-   *         - [Custom Placeholders](https://support.crowdin.com/enterprise/custom-placeholders/)
-   *         - [Permission Granularity Mode](https://support.crowdin.com/enterprise/permissions-granularity-mode/)
-   *
-   */
-
   {
     label: 'Organization Management',
     items: [

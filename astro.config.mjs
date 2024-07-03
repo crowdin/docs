@@ -45,6 +45,10 @@ const config = defineConfig({
           ],
         }
       ],
+      tableOfContents: {
+        minHeadingLevel: 2,
+        maxHeadingLevel: 4,
+      },
       customCss: [
         './src/tailwind.css',
         './src/global.css'
