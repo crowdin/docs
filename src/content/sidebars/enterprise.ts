@@ -6,7 +6,6 @@ export default  [
     label: 'Getting Started',
     items: [
       { label: 'Introduction', link: path('introduction') },
-      { label: 'Features', link: path('getting-started', 'features') },
       { label: 'For Managers', link: path('getting-started', 'for-managers') },
       { label: 'For Translators', link: path('getting-started', 'for-translators') },
       { label: 'For Vendors', link: path('getting-started', 'for-vendors')},
@@ -24,6 +23,7 @@ export default  [
   {
     label: 'Translation Process',
     autogenerate: { directory: path('translation-process') },
+    collapsed: true,
   },
   {
     label: 'Organization Management',
@@ -44,7 +44,8 @@ export default  [
         autogenerate: { directory: path('organization-management', 'settings') },
         collapsed: true,
       }
-    ]
+    ],
+    collapsed: true,
   },
   {
     label: 'Project Management',
@@ -68,31 +69,38 @@ export default  [
         autogenerate: { directory: path('project-management', 'project-settings') },
         collapsed: true,
       }
-    ]
+    ],
+    collapsed: true,
   },
   {
     label: 'Team Management',
     autogenerate: { directory: path('team-management') },
+    collapsed: true,
   },
   {
     label: 'Integrations',
     autogenerate: { directory: path('integrations') },
+    collapsed: true,
   },
   {
     label: 'Localization Resources',
     autogenerate: { directory: path('localization-resources') },
+    collapsed: true,
   },
   {
     label: 'Online Editor',
     autogenerate: { directory: path('online-editor') },
+    collapsed: true,
   },
   {
     label: 'Reports',
     autogenerate: { directory: path('reports') },
+    collapsed: true,
   },
   {
     label: 'Billing and Payments',
     autogenerate: { directory: path('billing') },
+    collapsed: true,
   }
 ]
 
