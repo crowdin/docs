@@ -12,6 +12,7 @@ import developerSidebar from './src/content/sidebars/developer.ts';
 
 // https://astro.build/config
 const config = defineConfig({
+  site: 'https://support.crowdin.com',
   integrations: [
     starlight({
       title: 'Crowdin',
