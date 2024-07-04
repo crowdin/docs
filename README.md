@@ -52,3 +52,33 @@ All commands are run from the root of the project, from a terminal:
 - [Astro docs](https://docs.astro.build)
 - [Tailwind CSS docs](https://tailwindcss.com/)
 - [Astro Discord server](https://astro.build/chat)
+
+## Authoring Content
+
+### Icons
+
+You can use Starlight's [`Icon`](https://starlight.astro.build/guides/components/#icon) component. It provides some basic set of icons.
+
+```mdx
+import { Icon } from '@astrojs/starlight/components';
+
+<Icon name="approve-check" />
+```
+
+Also, you can use [Astro Icon](https://www.astroicon.dev/guides/components/) component with [Material Design icons](https://icones.js.org/collection/mdi). It supports Local Icons and various Icon Packs.
+
+For example:
+
+```mdx
+import { Icon } from 'astro-icon/components';
+
+<Icon name="mdi:cloud-download" />
+```
+
+Use the `inline-icon` class to display icons inline with text:
+
+```mdx
+<Icon name="mdi:cloud-download" class="inline-icon" />
+```
+
+It's always better to use these icons instead of local, as they are already support for dark mode and are accessible.

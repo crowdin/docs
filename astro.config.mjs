@@ -5,6 +5,7 @@ import starlightUtils from '@lorenzo_lewis/starlight-utils';
 import starlightLinksValidator from 'starlight-links-validator';
 import { rehypeHeadingIds } from '@astrojs/markdown-remark';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import icon from 'astro-icon';
 
 import crowdinSidebar from './src/content/sidebars/crowdin.ts';
 import enterpriseSidebar from './src/content/sidebars/enterprise.ts';
@@ -74,6 +75,7 @@ const config = defineConfig({
       }
     }),
     tailwind({ applyBaseStyles: false }),
+    icon()
   ],
   markdown: {
     rehypePlugins: [rehypeHeadingIds, [
