@@ -75,7 +75,12 @@ const config = defineConfig({
       }
     }),
     tailwind({ applyBaseStyles: false }),
-    icon()
+    icon({
+      include: {
+        // Include only specific icons in the bundle (https://www.astroicon.dev/reference/configuration#include)
+        mdi: ['*']
+      }
+    })
   ],
   markdown: {
     rehypePlugins: [rehypeHeadingIds, [
