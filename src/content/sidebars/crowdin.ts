@@ -5,13 +5,13 @@ export default [
   {
     label: 'Getting Started',
     items: [
-      { label: 'Introduction', link: path('introduction') },
-      { label: 'For Managers', link: path('getting-started', 'for-managers') },
-      { label: 'For Translators', link: path('getting-started', 'for-translators') },
-      { label: 'For Developers', link: path('getting-started', 'for-developers') },
-      { label: 'Supported Formats', link: path('getting-started', 'supported-formats') },
-      { label: 'Migrating to Crowdin', link: path('getting-started', 'migrating-to-crowdin') },
-      { label: 'Additional Support Services', link: path('getting-started', 'additional-support-services') },
+      { slug: path('introduction') },
+      { slug: path('getting-started', 'for-managers') },
+      { slug: path('getting-started', 'for-translators') },
+      { slug: path('getting-started', 'for-developers') },
+      { slug: path('getting-started', 'supported-formats') },
+      { slug: path('getting-started', 'migrating-to-crowdin') },
+      { slug: path('getting-started', 'additional-support-services') },
       {
         label: 'Account',
         autogenerate: { directory: path('getting-started', 'account') },
@@ -27,10 +27,10 @@ export default [
   {
     label: 'Project Management',
     items: [
-      { label: 'Creating a Project', link: path('project-management', 'creating-project') },
-      { label: 'Screenshots', link: path('project-management', 'screenshots') },
-      { label: 'Tasks', link: path('project-management', 'tasks') },
-      { label: 'Project Activity', link: path('project-management', 'project-activity') },
+      { slug: path('project-management', 'creating-project') },
+      { slug: path('project-management', 'screenshots') },
+      { slug: path('project-management', 'tasks') },
+      { slug: path('project-management', 'project-activity') },
       {
         label: 'Content',
         autogenerate: { directory: path('project-management', 'content') },
@@ -82,5 +82,5 @@ export default [
 ]
 
 function path(...args: string[]) {
-  return '/crowdin/' + args.join('/');
+  return 'crowdin/' + args.join('/');
 }

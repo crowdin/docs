@@ -5,12 +5,12 @@ export default [
   {
     label: 'Crowdin Apps',
     items: [
-      { label: 'Introduction', link: path('introduction') },
-      { label: 'Quick Start', link: path('crowdin-apps', 'quick-start') },
+      { slug: path('introduction') },
+      { slug: path('crowdin-apps', 'quick-start') },
     ],
   }
 ]
 
 function path(...args: string[]) {
-  return '/developer/' + args.join('/');
+  return 'developer/' + args.join('/');
 }
