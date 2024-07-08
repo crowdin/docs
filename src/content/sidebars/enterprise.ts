@@ -6,13 +6,13 @@ export default  [
     label: 'Getting Started',
     items: [
       { slug: path('introduction') },
-      { slug: path('getting-started', 'for-managers') },
-      { slug: path('getting-started', 'for-translators') },
-      { slug: path('getting-started', 'for-vendors')},
-      { slug: path('getting-started', 'for-developers') },
-      { slug: path('getting-started', 'supported-formats') },
-      { slug: path('getting-started', 'migrating-to-crowdin-enterprise') },
-      { slug: path('getting-started', 'additional-support-services') },
+      { slug: path('for-managers') },
+      { slug: path('for-translators') },
+      { slug: path('for-vendors')},
+      { slug: path('for-developers') },
+      { slug: path('supported-formats') },
+      { slug: path('migrating-to-crowdin-enterprise') },
+      { slug: path('additional-support-services') },
       {
         label: 'Account',
         autogenerate: { directory: path('getting-started', 'account') },
@@ -28,12 +28,12 @@ export default  [
   {
     label: 'Organization Management',
     items: [
-      { slug: path('organization-management', 'overview') },
-      { slug: path('organization-management', 'groups') },
-      { slug: path('organization-management', 'teams') },
-      { slug: path('organization-management', 'vendors') },
-      { slug: path('organization-management', 'clients') },
-      { slug: path('organization-management', 'crowdsourcing') },
+      { slug: path('organization') },
+      { slug: path('groups') },
+      { slug: path('teams') },
+      { slug: path('vendors') },
+      { slug: path('clients') },
+      { slug: path('crowdsourcing') },
       {
         label: 'Workflows',
         autogenerate: { directory: path('organization-management', 'workflows') },
@@ -50,13 +50,13 @@ export default  [
   {
     label: 'Project Management',
     items: [
-      { slug: path('project-management', 'creating-project') },
-      { slug: path('project-management', 'screenshots') },
-      { slug: path('project-management', 'tasks') },
-      { slug: path('project-management', 'project-activity') },
+      { slug: path('creating-project') },
+      { slug: path('screenshots') },
+      { slug: path('tasks') },
+      { slug: path('project-activity') },
       {
-        label: 'Content',
-        autogenerate: { directory: path('project-management', 'content') },
+        label: 'Sources',
+        autogenerate: { directory: path('project-management', 'sources') },
         collapsed: true,
       },
       {

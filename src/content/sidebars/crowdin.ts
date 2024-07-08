@@ -5,13 +5,13 @@ export default [
   {
     label: 'Getting Started',
     items: [
-      { slug: path('introduction') },
-      { slug: path('getting-started', 'for-managers') },
-      { slug: path('getting-started', 'for-translators') },
-      { slug: path('getting-started', 'for-developers') },
-      { slug: path('getting-started', 'supported-formats') },
-      { slug: path('getting-started', 'migrating-to-crowdin') },
-      { slug: path('getting-started', 'additional-support-services') },
+      { slug: 'introduction' },
+      { slug: 'for-managers' },
+      { slug: 'for-translators' },
+      { slug: 'for-developers' },
+      { slug: 'supported-formats' },
+      { slug: 'migrating-to-crowdin' },
+      { slug: 'additional-support-services' },
       {
         label: 'Account',
         autogenerate: { directory: path('getting-started', 'account') },
@@ -27,13 +27,13 @@ export default [
   {
     label: 'Project Management',
     items: [
-      { slug: path('project-management', 'creating-project') },
-      { slug: path('project-management', 'screenshots') },
-      { slug: path('project-management', 'tasks') },
-      { slug: path('project-management', 'project-activity') },
+      { slug: 'creating-project' },
+      { slug: 'screenshots' },
+      { slug: 'tasks' },
+      { slug: 'project-activity' },
       {
-        label: 'Content',
-        autogenerate: { directory: path('project-management', 'content') },
+        label: 'Sources',
+        autogenerate: { directory: path('project-management', 'sources') },
         collapsed: true,
       },
       {

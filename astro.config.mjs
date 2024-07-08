@@ -39,9 +39,9 @@ const config = defineConfig({
         {
           label: "leading",
           items: [
-            { label: "Crowdin KB", link: "/crowdin/introduction/" },
-            { label: "Enterprise KB", link: "/enterprise/introduction/" },
-            { label: "Developer Portal", link: "/developer/introduction/" },
+            { label: "Crowdin KB", link: "/introduction" },
+            { label: "Enterprise KB", link: "/enterprise/introduction" },
+            { label: "Developer Portal", link: "/developer/introduction" },
             { label: "Store", link: "https://store.crowdin.com", attrs: { target: '_blank' } },
             { label: "Community", link: "https://community.crowdin.com/", attrs: { target: '_blank' } },
           ],
