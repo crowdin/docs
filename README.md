@@ -82,3 +82,24 @@ Use the `inline-icon` class to display icons inline with text:
 ```
 
 It's always better to use these icons instead of local, as they are already support for dark mode and are accessible.
+
+### File-based/String-based content differentiation
+
+To differentiate between file-based and string-based content, you can use the `Tabs` component with the `syncKey` prop. This prop allows you to switch between tabs and keep the selected tab in sync across multiple components.
+
+```mdx
+Some common content
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    File-based specific content
+  </TabItem>
+  <TabItem label="String-based project">
+    String-based specific content
+  </TabItem>
+</Tabs>
+
+Common content
+```
