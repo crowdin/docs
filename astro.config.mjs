@@ -39,9 +39,9 @@ const config = defineConfig({
         {
           label: "leading",
           items: [
-            { label: "Crowdin KB", link: "/introduction" },
-            { label: "Enterprise KB", link: "/enterprise/introduction" },
-            { label: "Developer Portal", link: "/developer/introduction" },
+            { label: "Crowdin KB", link: "/introduction", attrs: { id: "crowdin-nav-button" } },
+            { label: "Enterprise KB", link: "/enterprise/introduction", attrs: { id: "enterprise-nav-button" } },
+            { label: "Developer Portal", link: "/developer/introduction", attrs: { id: "developer-nav-button" } },
             { label: "Store", link: "https://store.crowdin.com", attrs: { target: '_blank' } },
             { label: "Community", link: "https://community.crowdin.com/", attrs: { target: '_blank' } },
           ],
@@ -50,6 +50,9 @@ const config = defineConfig({
       tableOfContents: {
         minHeadingLevel: 2,
         maxHeadingLevel: 4,
+      },
+      components: {
+        Head: './src/components/Head.astro',
       },
       customCss: [
         './src/tailwind.css',
