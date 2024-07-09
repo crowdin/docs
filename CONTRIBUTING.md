@@ -24,6 +24,14 @@ There are a couple of custom components in this project that you can use:
   <FormatsBanner />
   ```
 
+- `Include` - A component that allows you to include content from another file. It's useful when you want to reuse content across multiple pages.
+
+  ```mdx
+  import Include from '~/components/Include.astro';
+
+  <Include file="file.mdx" />
+  ```
+
 ## Icons
 
 You can use Starlight's [`Icon`](https://starlight.astro.build/guides/components/#icon) component. It provides some basic set of icons.

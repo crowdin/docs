@@ -1,0 +1,22 @@
+---
+interface Props {
+  file: string;
+}
+
+const { file } = Astro.props;
+
+// Look up all the Markdown files in the includes folder.
+// TODO: handle current locale
+const includes = import.meta.glob('../content/includes/**/*.mdx');
+
+// Find the file that matches the passed `file` prop.
+const loader = includes[`../content/includes/${file}`];
+
+if (!loader) {
+  throw new Error(`Could not find \`${file}\`.`)
+}
+
+const { Content } = await loader() as any;
+---
+
+<Content />
