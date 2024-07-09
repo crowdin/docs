@@ -29,7 +29,6 @@ export default [
     items: [
       { slug: 'creating-project' },
       { slug: 'screenshots' },
-      { slug: 'tasks' },
       { slug: 'project-activity' },
       {
         label: 'Sources',
@@ -67,6 +66,11 @@ export default [
   {
     label: 'Online Editor',
     autogenerate: { directory: path('online-editor') },
+    collapsed: true,
+  },
+  {
+    label: 'Tasks',
+    autogenerate: { directory: path('tasks') },
     collapsed: true,
   },
   {
