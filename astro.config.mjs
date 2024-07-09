@@ -78,7 +78,8 @@ const config = defineConfig({
     icon({
       include: {
         // Include only specific icons in the bundle (https://www.astroicon.dev/reference/configuration#include)
-        mdi: ['*']
+        mdi: ['*'],
+        heroicons: ['*'],
       }
     })
   ],
