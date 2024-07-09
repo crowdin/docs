@@ -59,7 +59,7 @@ const config = defineConfig({
       plugins: [
         starlightUtils({
           multiSidebar: {
-            switcherStyle: "dropdown",
+            switcherStyle: "hidden",
           },
           navLinks: {
             leading: { useSidebarLabelled: "leading" },
