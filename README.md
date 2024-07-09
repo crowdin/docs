@@ -6,6 +6,8 @@
 
 [![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build).
 
+[Contributing](./CONTRIBUTING.md)
+
 ### Project Structure
 
 ```
@@ -52,54 +54,3 @@ All commands are run from the root of the project, from a terminal:
 - [Astro docs](https://docs.astro.build)
 - [Tailwind CSS docs](https://tailwindcss.com/)
 - [Astro Discord server](https://astro.build/chat)
-
-## Authoring Content
-
-### Icons
-
-You can use Starlight's [`Icon`](https://starlight.astro.build/guides/components/#icon) component. It provides some basic set of icons.
-
-```mdx
-import { Icon } from '@astrojs/starlight/components';
-
-<Icon name="approve-check" />
-```
-
-Also, you can use [Astro Icon](https://www.astroicon.dev/guides/components/) component with [Material Design icons](https://icones.js.org/collection/mdi). It supports Local Icons and various Icon Packs.
-
-For example:
-
-```mdx
-import { Icon } from 'astro-icon/components';
-
-<Icon name="mdi:cloud-download" />
-```
-
-Use the `inline-icon` class to display icons inline with text:
-
-```mdx
-<Icon name="mdi:cloud-download" class="inline-icon" />
-```
-
-It's always better to use these icons instead of local, as they are already support for dark mode and are accessible.
-
-### File-based/String-based content differentiation
-
-To differentiate between file-based and string-based content, you can use the `Tabs` component with the `syncKey` prop. This prop allows you to switch between tabs and keep the selected tab in sync across multiple components.
-
-```mdx
-Some common content
-
-import { Tabs, TabItem } from '@astrojs/starlight/components';
-
-<Tabs syncKey="projectType">
-  <TabItem label="File-based project">
-    File-based specific content
-  </TabItem>
-  <TabItem label="String-based project">
-    String-based specific content
-  </TabItem>
-</Tabs>
-
-Common content
-```
