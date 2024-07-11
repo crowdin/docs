@@ -56,7 +56,13 @@ import { Icon } from '@astrojs/starlight/components';
 <Icon name="approve-check" />
 ```
 
-Also, you can use [Astro Icon](https://www.astroicon.dev/guides/components/) component with [Material Design icons](https://icones.js.org/collection/mdi). It supports Local Icons and various Icon Packs.
+Also, you can use [Astro Icon](https://www.astroicon.dev/guides/components/) component. It supports Local Icons and various Icon Packs.
+
+Installed Icon packs:
+
+- `mdi` - [Material Design Icons](https://icones.js.org/collection/mdi)
+- `material-symbols` - [Material Symbols](https://icones.js.org/collection/material-symbols)
+- `heroicons` - [Heroicons](https://icones.js.org/collection/heroicons)
 
 For example:
 

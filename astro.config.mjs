@@ -83,6 +83,7 @@ const config = defineConfig({
         // Include only specific icons in the bundle (https://www.astroicon.dev/reference/configuration#include)
         mdi: ['*'],
         heroicons: ['*'],
+        'material-symbols': ['*'],
       }
     })
   ],
