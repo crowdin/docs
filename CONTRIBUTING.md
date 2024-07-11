@@ -32,6 +32,20 @@ There are a couple of custom components in this project that you can use:
   <Include file="file.mdx" />
   ```
 
+- `MobileDesktopImage` - A component that displays an image for mobile and desktop. It's useful when you want to display different images for mobile and desktop.
+
+  ```mdx
+  import MobileDesktopImage from '~/components/MobileDesktopImage.astro';
+  import mobileImage from "./_assets/mobile-profile-image.jpg";
+  import desktopImage from "./_assets/desktop-profile-image.jpg";
+
+  <MobileDesktopImage
+      mobileImgUrl={mobileImage}
+      desktopImgUrl={desktopImage}
+      alt="Image alt text"
+  />
+  ```
+
 ## Icons
 
 You can use Starlight's [`Icon`](https://starlight.astro.build/guides/components/#icon) component. It provides some basic set of icons.
