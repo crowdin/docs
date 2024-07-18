@@ -5,4 +5,130 @@ sidebar:
   order: 4
 ---
 
-https://support.crowdin.com/versions-management/
+[//]: # (https://support.crowdin.com/versions-management/)
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Image } from 'astro:assets';
+
+import branchesWorkflow from './_assets/branches_workflow.png';
+import branchesStructure from './_assets/branches_structure.png';
+import branchMerging from './_assets/branch_merging.png';
+import branchTranslationVerification from './_assets/branch_translation_verification.png';
+
+Maintain an agile localization process and prevent translation delays for added texts or new product features. Integrate your project branches with Crowdin and allow translators to access all new texts immediately.
+
+## Branches
+
+When several people work on product development, branches help manage different content versions. If you have a continuous project, you can add project branches to Crowdin and allow translators to translate the texts in parallel with development to prevent deployment delays.
+
+Branches in Crowdin look like regular folders marked with a specific icon and have special behavior for duplicate strings.
+
+Example of branch structure in the version control system (VCS) and Crowdin:
+
+<Image src={branchesStructure} alt="Branch Structure" class="no-shadow" />
+
+### Branch Creation
+
+<Aside type="caution">
+  The first files you upload to the Crowdin project must contain all the original strings and should be placed in the corresponding branch. For all article examples, a branch with original texts is named *Master*.
+</Aside>
+
+There are a few ways to add branches to Crowdin:
+
+* Integrate Crowdin projects with [GitLab](/gitlab-integration/), [GitHub](/github-integration/), [Bitbucket](/bitbucket-integration/), or [Azure Repos](/azure-repos-integration/). It’s a recommended option, as branches selected for localization in your version control system (VCS) will be created in Crowdin automatically.
+* Use [CLI](https://crowdin.github.io/crowdin-cli/) or [API](https://developer.crowdin.com/api/v2/) to add new branches.
+* Create branches [manually](/files-management/#branches-and-folders).
+
+#### Branch Creation using API
+
+To create a branch via API, use the [Add Branch](https://developer.crowdin.com/api/v2/#operation/api.projects.branches.post) method.
+
+#### Branch Management using CLI
+
+If you use CLI, you can add and delete version branches with dedicated commands. Alternatively, you can create version branches during the file upload.
+
+<ReadMore>
+  Read more about [Branch Management with CLI](https://crowdin.github.io/crowdin-cli/commands/crowdin-branch).
+</ReadMore>
+
+### Prioritizing Branches
+
+You can set a specific priority for each branch by clicking an arrow icon next to the needed branch. Then translators will see branches sorted according to their priority on the language page and in the Editor.
+
+Branches might have the following priorities:
+
+- <Icon name="mdi:arrow-down-bold" class="inline-icon" /> – low
+
+- <Icon name="mdi:arrow-up-bold-outline" class="inline-icon" /> – normal
+
+- <Icon name="mdi:arrow-up-bold" class="inline-icon" /> – high
+
+To set a priority for your branches, follow these steps:
+
+<Steps>
+  1. Open your project and go to **Sources > Files** tab.
+  2. Click an arrow icon next to the needed branch to set the preferred priority.
+</Steps>
+
+<Aside>
+  Branch prioritization is only available for [file-based](/creating-project#project-types) projects.
+</Aside>
+
+## Duplicates
+
+Because branches are different versions of the same product feature, their localization content is usually duplicated. To help translators translate versions consistently and avoid additional translation costs, we have the **Show within a version branch** option that allows hiding duplicated strings only between versions. If your source files contain strings with apparent identifiers (keys), it's better to use a *strict* version of this option. In other cases, feel free to use a *regular* one.
+
+When this option is chosen, only the master strings first uploaded to the system should be translated. All duplicated strings will automatically gain translations from the master strings.
+
+![Duplicates](./_assets/versions_duplicate_strings.png)
+
+<ReadMore>
+  Read more about [Duplicates settings](/project-settings/import/).
+</ReadMore>
+
+## Suggested Workflow
+
+To make sure versions work smoothly for your Crowdin project, we recommend the following workflow:
+
+1. Upload your project files to the Crowdin project using one of the [available methods](#branch-creation).
+2. Open your project and go to **Settings > Import > Source Strings**.
+3. Switch the **Duplicate Strings** option to **Show within a version branch**.
+
+The screenshot below visualizes how the workflow works in practice. All texts from *Master*, *Branch 1*, and *Branch 2* are transferred to the translation server immediately after they appear, even though the branches are not merged to the *Master* branch yet.
+
+<Image src={branchesWorkflow} alt="Branches Workflow" class="no-shadow mb-8" />
+
+### Translation Download
+
+Translations from all version branches are placed in one ZIP archive when downloaded through the web interface. Use the CLI or API to download the translations for each branch individually.
+
+#### Translation Download using API
+
+To download translations of the specific version branch with API, you can use the following API methods:
+* [Build Project Translation](https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.post) - make sure to use the *CrowdinTranslationCreateProjectBuildForm* schema.
+* [Check Project Build Status](https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.get)
+* [Download Project Translations](https://developer.crowdin.com/api/v2/#operation/api.projects.translations.builds.download.download)
+
+#### Translation Download using CLI
+
+Download translations of the specific version branch:
+
+```shell
+crowdin download -b branch_name
+```
+
+### Merging Branches
+
+The *Master* branch will contain new texts from the *Feature* branches as soon as they are merged. While synchronizing with Crowdin, texts in the *Master* branch are populated with translations from the appropriate branch.
+
+After synchronizing the updated *Master* branch with Crowdin, you can remove the *Feature* branch from Crowdin. All translations stored in the *Master* branch will remain.
+
+<Image src={branchMerging} alt="Merging Branches" class="no-shadow mb-8" />
+
+### Branch Translation Verification
+
+You can verify translations on production using only the *Feature* branch before changes are merged with your *Master* branch. Such test deployment allows you to quickly revert to the original Master branch version if needed.
+
+<Image src={branchTranslationVerification} alt="Branch Translation Verification" class="no-shadow mb-8" />
