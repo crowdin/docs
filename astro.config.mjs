@@ -5,6 +5,7 @@ import starlightUtils from '@lorenzo_lewis/starlight-utils';
 import starlightLinksValidator from 'starlight-links-validator';
 import { rehypeHeadingIds } from '@astrojs/markdown-remark';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import rehypeExternalLinks from 'rehype-external-links';
 import icon from 'astro-icon';
 
 import crowdinSidebar from './src/content/sidebars/crowdin.ts';
@@ -88,12 +89,21 @@ const config = defineConfig({
     })
   ],
   markdown: {
-    rehypePlugins: [rehypeHeadingIds, [
-      rehypeAutolinkHeadings,
-      {
-        behavior: 'wrap', // Wrap the heading text in a link.
-      },
-    ]],
+    rehypePlugins: [
+      rehypeHeadingIds,
+      [
+        rehypeAutolinkHeadings,
+        {
+          behavior: 'wrap', // Wrap the heading text in a link.
+        },
+      ],
+      [
+        rehypeExternalLinks,
+        {
+          target: '_blank', // Open external links in a new tab.
+        }
+      ]
+    ],
   },
 });
 
