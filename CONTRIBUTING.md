@@ -90,6 +90,23 @@ Put screenshots in the `_assets` directory at the same level as your MDX file. Y
 
 This architecture allows you to keep your images close to the content they are associated with and makes it easier to manage them. Make sure to add descriptive alt text to your images to make them accessible.
 
+### Customizing screenshots
+
+You can use the Astro `Image` component to apply custom classes for screenshots. For example:
+
+```mdx
+import { Image } from 'astro:assets';
+import configureFormat from "./_assets/bundles_configure_format.png";
+
+[//]: # (...)
+
+<Image src={configureFormat} alt="Configure Bundle File Format" class="dialog"/>
+```
+
+- `dialog` - sets the maximum width of the image to `26rem`.
+- `no-shadow` - removes the shadow from the image.
+- etc.
+
 ## File-based/String-based content differentiation
 
 To differentiate between file-based and string-based content, you can use the `Tabs` component with the `syncKey` prop. This prop allows you to switch between tabs and keep the selected tab in sync across multiple components.
