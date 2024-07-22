@@ -32,20 +32,6 @@ There are a couple of custom components in this project that you can use:
   <Include file="file.mdx" />
   ```
 
-- `MobileDesktopImage` - A component that displays an image for mobile and desktop. It's useful when you want to display different images for mobile and desktop.
-
-  ```mdx
-  import MobileDesktopImage from '~/components/MobileDesktopImage.astro';
-  import mobileImage from "./_assets/mobile-profile-image.jpg";
-  import desktopImage from "./_assets/desktop-profile-image.jpg";
-
-  <MobileDesktopImage
-      mobileImgUrl={mobileImage}
-      desktopImgUrl={desktopImage}
-      alt="Image alt text"
-  />
-  ```
-
 ## Icons
 
 You can use Starlight's [`Icon`](https://starlight.astro.build/guides/components/#icon) component. It provides some basic set of icons.
@@ -82,30 +68,26 @@ It's always better to use these icons instead of local, as they are already supp
 
 ## Screenshots
 
-Put screenshots in the `_assets` directory at the same level as your MDX file. You can then reference them in your MDX file like this:
-
-```mdx
-![Alt text](./_assets/screenshot.png)
-```
-
-This architecture allows you to keep your images close to the content they are associated with and makes it easier to manage them. Make sure to add descriptive alt text to your images to make them accessible.
-
-### Customizing screenshots
-
-You can use the Astro `Image` component to apply custom classes for screenshots. For example:
+Put screenshots in the `src/assets/screenshots` directory according to the document location. You can then reference them in your MDX file like this:
 
 ```mdx
 import { Image } from 'astro:assets';
-import configureFormat from "./_assets/bundles_configure_format.png";
+import uploadFiles from "!/crowdin/getting-started/upload_files.png";
 
-[//]: # (...)
-
-<Image src={configureFormat} alt="Configure Bundle File Format" class="dialog"/>
+<Image src={uploadFiles} alt="Upload Files" />
 ```
 
-- `dialog` - sets the maximum width of the image to `26rem`.
-- `no-shadow` - removes the shadow from the image.
-- etc.
+The `!` is an alias for the `src/assets/screenshots` directory.
+
+This approach uses Astro's default `Image` component and takes advantage of its optimization and caching capabilities.
+
+### Customizing screenshots
+
+You can specify your own classes to customize the image (e.g, `no-shadow`, `dialog`)
+
+```mdx
+<Image src={uploadFiles} alt="Upload Files" class="no-shadow" />
+```
 
 ## File-based/String-based content differentiation
 
