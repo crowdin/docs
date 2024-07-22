@@ -32,19 +32,15 @@ There are a couple of custom components in this project that you can use:
   <Include file="file.mdx" />
   ```
 
-- `MobileDesktopImage` - A component that displays an image for mobile and desktop. It's useful when you want to display different images for mobile and desktop.
+- `Screenshot` - A component that displays a screenshot.
 
-  ```mdx
-  import MobileDesktopImage from '~/components/MobileDesktopImage.astro';
-  import mobileImage from "./_assets/mobile-profile-image.jpg";
-  import desktopImage from "./_assets/desktop-profile-image.jpg";
+```mdx
+import Screenshot from '~/components/Screenshot.astro';
 
-  <MobileDesktopImage
-      mobileImgUrl={mobileImage}
-      desktopImgUrl={desktopImage}
-      alt="Image alt text"
-  />
-  ```
+<Screenshot src="/localization-resources/mt_suggestions.png" alt="Localization Resources" />
+```
+
+The `Screenshot` component automatically resolves the path to the screenshot, so you don't need to specify the full or relative path.
 
 ## Icons
 
@@ -82,30 +78,27 @@ It's always better to use these icons instead of local, as they are already supp
 
 ## Screenshots
 
-Put screenshots in the `_assets` directory at the same level as your MDX file. You can then reference them in your MDX file like this:
+Put screenshots in the `src/assets/screenshots` directory according to the document location. You can then reference them in your MDX file like this:
 
 ```mdx
-![Alt text](./_assets/screenshot.png)
+import Screenshot from '~/components/Screenshot.astro';
+
+<Screenshot src="/localization-resources/mt_suggestions.png" alt="Localization Resources" />
 ```
 
-This architecture allows you to keep your images close to the content they are associated with and makes it easier to manage them. Make sure to add descriptive alt text to your images to make them accessible.
+It automatically resolves the path to the screenshot, so you don't need to specify the full or relative path. For the example above, the screenshot should be located in the `src/assets/screenshots/crowdin/localization-resources/mt_suggestions.png` path.
+
+For Crowdin Enterprise, just add the `enterprise` prop to the `Screenshot` component:
+
+```mdx
+<Screenshot src="/organization-management/fields_details.png" alt="Field" enterprise />
+```
+
+So it will display the screenshot from the `src/assets/screenshots/enterprise/organization-management/fields_details.png` path.
 
 ### Customizing screenshots
 
-You can use the Astro `Image` component to apply custom classes for screenshots. For example:
-
-```mdx
-import { Image } from 'astro:assets';
-import configureFormat from "./_assets/bundles_configure_format.png";
-
-[//]: # (...)
-
-<Image src={configureFormat} alt="Configure Bundle File Format" class="dialog"/>
-```
-
-- `dialog` - sets the maximum width of the image to `26rem`.
-- `no-shadow` - removes the shadow from the image.
-- etc.
+You can specify your own classes to customize the image (e.g, `no-shadow`, `dialog`)
 
 ## File-based/String-based content differentiation
 
