@@ -32,16 +32,6 @@ There are a couple of custom components in this project that you can use:
   <Include file="file.mdx" />
   ```
 
-- `Screenshot` - A component that displays a screenshot.
-
-```mdx
-import Screenshot from '~/components/Screenshot.astro';
-
-<Screenshot src="/localization-resources/mt_suggestions.png" alt="Localization Resources" />
-```
-
-The `Screenshot` component automatically resolves the path to the screenshot, so you don't need to specify the full or relative path.
-
 ## Icons
 
 You can use Starlight's [`Icon`](https://starlight.astro.build/guides/components/#icon) component. It provides some basic set of icons.
@@ -81,24 +71,23 @@ It's always better to use these icons instead of local, as they are already supp
 Put screenshots in the `src/assets/screenshots` directory according to the document location. You can then reference them in your MDX file like this:
 
 ```mdx
-import Screenshot from '~/components/Screenshot.astro';
+import { Image } from 'astro:assets';
+import uploadFiles from "!/crowdin/getting-started/upload_files.png";
 
-<Screenshot src="/localization-resources/mt_suggestions.png" alt="Localization Resources" />
+<Image src={uploadFiles} alt="Upload Files" />
 ```
 
-It automatically resolves the path to the screenshot, so you don't need to specify the full or relative path. For the example above, the screenshot should be located in the `src/assets/screenshots/crowdin/localization-resources/mt_suggestions.png` path.
+The `!` is an alias for the `src/assets/screenshots` directory.
 
-For Crowdin Enterprise, just add the `enterprise` prop to the `Screenshot` component:
-
-```mdx
-<Screenshot src="/organization-management/fields_details.png" alt="Field" enterprise />
-```
-
-So it will display the screenshot from the `src/assets/screenshots/enterprise/organization-management/fields_details.png` path.
+This approach uses Astro's default `Image` component and takes advantage of its optimization and caching capabilities.
 
 ### Customizing screenshots
 
 You can specify your own classes to customize the image (e.g, `no-shadow`, `dialog`)
+
+```mdx
+<Image src={uploadFiles} alt="Upload Files" class="no-shadow" />
+```
 
 ## File-based/String-based content differentiation
 
