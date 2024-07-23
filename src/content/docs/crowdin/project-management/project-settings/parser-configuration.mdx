@@ -1,6 +1,189 @@
 ---
 title: Parser Configuration
-slug: project-settings/parsers-configuration
+slug: project-settings/parser-configuration
 ---
 
-https://support.crowdin.com/parsers-configuration/
+[//]: # (https://support.crowdin.com/parsers-configuration/)
+
+import { Steps, Aside, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Image } from 'astro:assets';
+import parsersConfiguration from '!/crowdin/project-management/settings/parser_configuration.png';
+
+The Parser configuration feature lets you change the default import and export behavior predefined for file formats supported by Crowdin. Parser configuration in a specific project is applied only to files stored in this project.
+
+You can set the parser configuration for all files of a certain format or single files. Once you save the parser configuration for some file format, you can upload source files to your project, and Crowdin will apply your settings accordingly.
+
+You can configure import and export behavior for the following formats: Java Properties, Generic XML, DITA, AsciiDoc, Plain text, MadCap Flare, HTML, Office documents, Adobe FrameMaker, Adobe InDesign, Markdown, and MediaWiki.
+
+<Image src={parsersConfiguration} alt="Parser configuration" />
+
+<Aside type="caution">
+  Some parser settings may be unavailable in [string-based](/creating-project#string-based-project) projects.
+</Aside>
+
+## Parser Configuration Parameters
+
+Some parameters are common to all formats, while others are format-specific.
+
+In the table below, you can see the available parser parameters and formats they could be configured for.
+
+<table>
+  <colgroup>
+    <col width="18%" />
+    <col width="55%" />
+    <col width="27%" />
+  </colgroup>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+      <th>Format</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Content segmentation</td>
+      <td>On import, the source file's content will be split into shorter text segments using predefined segmentation rules (SRX 2.0).</td>
+      <td>Generic XML, DITA, AsciiDoc, MadCap Flare, HTML, Office documents, Adobe FrameMaker, Adobe InDesign, Markdown</td>
+    </tr>
+    <tr>
+      <td>Custom segmentation rules</td>
+      <td>
+        <div>
+          Defines your own segmentation rules.
+          <Aside>The **Content segmentation** option should be enabled to be able to enable and define **Custom segmentation rules**.</Aside>
+          <ReadMore>Read more about [Custom Segmentation](/custom-segmentation).</ReadMore>
+        </div>
+      </td>
+      <td>Generic XML, DITA, AsciiDoc, Plain text, MadCap Flare, HTML, Office documents, Adobe FrameMaker, Adobe InDesign, Markdown, MediaWiki</td>
+    </tr>
+    <tr>
+      <td>Excluded elements</td>
+      <td>Defines a list of CSS style selectors for elements that should not be available for translation (e.g., code, pre > code, .code-block). Applicable only to block elements. Inline elements are ignored.</td>
+      <td>HTML, HTML with Front Matter</td>
+    </tr>
+    <tr>
+      <td>Excluded front matter elements</td>
+      <td>Defines a list of front matter elements that should not be available for translation (e.g., keywords, "internal.description", tags). The path elements should be delimited by a period. The keys containing a period must be enclosed in quotation marks.</td>
+      <td>HTML with Front Matter, MDX</td>
+    </tr>
+    <tr>
+      <td>Exclude code blocks</td>
+      <td>Defines whether to import code blocks. Applicable only to code blocks. Inline elements with code are ignored.</td>
+      <td>MDX</td>
+    </tr>
+    <tr>
+      <td>Translate content</td>
+      <td>Texts stored inside the tags will be available for translation.</td>
+      <td>Generic XML</td>
+    </tr>
+    <tr>
+      <td>Translate attributes</td>
+      <td>Tag attributes will be available for translation.</td>
+      <td>Generic XML</td>
+    </tr>
+    <tr>
+      <td>Translatable elements</td>
+      <td>
+        <div>
+          Defines the specific nodes and attributes to be available for translation.
+          <Aside>If defined, the parameters **Translate content** and **Translate attributes** are ignored on import.</Aside>
+        </div>
+      </td>
+      <td>Generic XML</td>
+    </tr>
+    <tr>
+      <td>Escape single quote</td>
+      <td>
+        <div>
+          Defines the behavior regarding a single quote escaping in exported translations.<br />
+          Available options:
+            - Do not escape single quote
+            - Escape single quote by backslash (`It's okay`⇒`It\'s okay`)
+            - Escape single quote by another single quote (`It's okay`⇒`It''s okay`)
+            - Escape single quote by another single quote only in strings containing variables `{0}` (`{0} it's okay`⇒`{0} it''s okay`)
+        </div>
+      </td>
+      <td>Java Properties</td>
+    </tr>
+    <tr>
+      <td>Escape special characters</td>
+      <td>
+        <div>
+          Any special characters (i.e., `=`, `:`, `!`, `#`) will be escaped by a backslash `\` in exported translations.
+        </div>
+      </td>
+      <td>Java Properties</td>
+    </tr>
+    <tr>
+      <td>Clean tags aggressively</td>
+      <td>Additional formatting tags related to text spacing will be removed on import. Useful when translating Office documents converted from other formats (e.g., PDF, etc.), and the conversion introduced lots of unnecessary formatting tags.</td>
+      <td>Office documents</td>
+    </tr>
+    <tr>
+      <td>Translate hyperlink URLs</td>
+      <td>Hyperlink URLs will be available for translation.</td>
+      <td>Office documents</td>
+    </tr>
+    <tr>
+      <td>Translate hidden text</td>
+      <td>The hidden text will be available for translation.</td>
+      <td>Office documents</td>
+    </tr>
+    <tr>
+      <td>Translate hidden rows and columns</td>
+      <td>The hidden rows and columns will be available for translation.</td>
+      <td>Office documents</td>
+    </tr>
+    <tr>
+      <td>Import hidden slides</td>
+      <td>The hidden slides will be available for translation.</td>
+      <td>Office documents</td>
+    </tr>
+    <tr>
+      <td>Import notes</td>
+      <td>The slide notes will be available for translation.</td>
+      <td>Office documents</td>
+    </tr>
+  </tbody>
+</table>
+
+## Parser Configuration for All Project Files of a Specific Format
+
+To set the preferred parser configuration for all files of a specific format, follow these steps:
+
+<Steps>
+  1. Open your project and go to **Settings > Parser configuration**.
+
+  2. Click **Add file type**.
+
+  3. Choose the needed file format.
+
+  4. Set the preferred settings.
+
+  5. Click **Save**.
+</Steps>
+
+## Parser Configuration for a Single File
+
+In some cases, you might need to set the parser configuration not for all files of some file format but just for a single file. To set the parser configuration for a single file, follow these steps:
+
+<Steps>
+  1. Open your project and go to **Sources > Files**.
+
+  2. Double-click on the needed file.
+
+  3. In the appeared dialog, switch to the **Parser configuration** tab.
+
+  4. Set the preferred settings.
+
+  5. Click **Save**.
+</Steps>
+
+Once you save the file parser configuration, Crowdin will reimport this file and apply your settings.
+
+## See Also
+
+* [Project Settings](/project-settings)
+* [Files Management](/files-management)
