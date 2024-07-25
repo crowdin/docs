@@ -3,4 +3,110 @@ title: ICU Message Syntax
 slug: icu-message-syntax
 ---
 
-https://support.crowdin.com/icu-message-syntax/
+import { Image } from 'astro:assets';
+import { LinkCard } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import icuEditor from '!/crowdin/online-editor/icu_editor.png';
+import icuSyntaxError from '!/crowdin/online-editor/icu_syntax_error.png';
+
+Crowdin supports ICU Message syntax, which is used to help express the subtleties of language-specific spelling, grammar, and formatting in translations.
+
+Strings formatted in the ICU Message syntax can have different types of replacements called **arguments**.
+Each argument is enclosed in curly brackets and refers to a value in the input data.
+Arguments of the following types are supported in Crowdin: number, date, time, select, and plural.
+
+### ICU Message Syntax in the Editor
+
+ICU syntax arguments are always highlighted in the [Editor](/online-editor/), so you know which part of the string shouldn’t be translated.
+Change the position of arguments in translation to follow the natural word order in the target language.
+There’s also a preview mode, that allows you to see how the translation will be displayed in the UI to make sure that all the translatable elements are translated.
+
+<Image src={icuEditor} alt="ICU Message syntax in the Editor" />
+
+<LinkCard
+  title="The Ultimate Guide to ICU Message Format"
+  description="This article will cover the ICU i18n and ICU message format basics, and how Crowdin handles it."
+  href="https://crowdin.com/blog/2022/04/13/icu-guide"
+  target="_blank"
+/>
+
+## Plural
+
+Plural type is used to handle plural category variations, as each language has its own set of plural categories (for example, English has  "one" and "other", while Ukrainian has  "one", "few", "many", and "other").
+
+```json
+You {itemCount, plural,
+    =0 {have no projects}
+    one {have # project}
+    other {have # projects}
+}.
+```
+
+The following short tags are used to determine the plural categories:
+
+- zero
+- one (singular)
+- two (dual)
+- few (paucal)
+- many (also used for fractions if they have a separate class)
+- other (required—general plural form—also used if the language only has a single form)
+
+In the Editor, you don't have to manually add or delete plural categories to the translations you are making.
+Just click **Copy Source**, and the source string will be copied to the translation field with the number of plural categories right for the current target language.
+
+<ReadMore>
+  Read more about [Language Plural Rules](https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html).
+</ReadMore>
+
+## Select Ordinal
+
+The purpose of the select ordinal type is to choose output based on the ordinal pluralization rules (1st, 2nd, 3rd, etc.) of the current target language. It is very similar to the plural type, except the value is mapped to an ordinal plural category.
+
+```json
+Congrats! It's your {year, selectordinal,
+    one {#st}
+    two {#nd}
+    few {#rd}
+    other {#th}
+} subscription anniversary!
+```
+
+## Select
+
+Select type is mostly used to represent the right gender-based inflections in the message.
+
+```json
+{gender, select,
+    male {He uses}
+    female {She uses}
+    other {They use}
+} Crowdin.
+```
+
+## Number
+
+The purpose of the number type is to display different number values such as percentage,
+currency, and decimal numbers independently of the locale conventions for those.
+This enables adjustment of the message output to the number formats used in different locales. [ICU Number Skeletons](https://unicode-org.github.io/icu/userguide/format_parse/numbers/skeletons.html) are also supported.
+
+```json
+The app price is {price, number, ::currency/USD} with {discount, number, percent} discount.
+```
+
+## Date, Time
+
+Date and time types show date and time values according to the formats preferred in the specified locales.
+These types can also have a style &ndash; extra information on how the value will be formatted.
+The following four styles can be used: short, medium, long, and full.
+
+```json
+Your meeting is scheduled for {dateValue, date, long} at {timeValue, time, short} AM.
+```
+
+## Syntax Errors
+
+Syntax error detection significantly reduces confusion when translating strings with ICU Message syntax,
+as the platform automatically detects potential translation errors.
+If a syntax error is found, you'll see a notice with a suggestion of what needs to be fixed.
+
+<Image src={icuSyntaxError} alt="Syntax error detected" />
