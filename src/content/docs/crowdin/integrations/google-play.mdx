@@ -5,4 +5,107 @@ sidebar:
   order: 11
 ---
 
-https://support.crowdin.com/google-play-integration/
+import { Image } from 'astro:assets';
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+import integrationAccess from '!/crowdin/integrations/google_play_integration_access.png';
+import integrationConfigureServiceAccount from '!/crowdin/integrations/google_play_integration_configure_service_account.png';
+import integrationCreateServiceAccount from '!/crowdin/integrations/google_play_integration_create_service_account.png';
+import integrationEdit from '!/crowdin/integrations/google_play_integration_edit.png';
+import integrationLinkProject from '!/crowdin/integrations/google_play_integration_link_project.png';
+import integrationPermissions from '!/crowdin/integrations/google_play_integration_permissions.png';
+import integrationPublish from '!/crowdin/integrations/google_play_integration_publish.png';
+import integrationPublishingProgress from '!/crowdin/integrations/google_play_integration_publishing_progress.png';
+import integrationSelectLanguages from '!/crowdin/integrations/google_play_integration_select_languages.png';
+import integrationSelectProject from '!/crowdin/integrations/google_play_integration_select_project.png';
+import integrationServiceAccountCreateKey from '!/crowdin/integrations/google_play_integration_service_account_create_key.png';
+import integrationServiceAccountCredentials from '!/crowdin/integrations/google_play_integration_service_account_credentials.png';
+import integrationServiceAccountKeyType from '!/crowdin/integrations/google_play_integration_service_account_key_type.png';
+import integrationServiceAccountName from '!/crowdin/integrations/google_play_integration_service_account_name.png';
+import integrationServiceAccountRole from '!/crowdin/integrations/google_play_integration_service_account_role.png';
+import integrationSetUp from '!/crowdin/integrations/google_play_integration_set_up.png';
+
+With Crowdin's Google Play integration, you can speed up the process of your app's data localization. Once the integration is enabled, all the texts from the store page are collected in one file and added to your project in Crowdin. When translations are completed, it takes a few clicks to add them to your app's page in the store.
+
+<Aside>
+  You will need to [install the Google Play integration](https://crowdin.com/store/apps/google-play) in your Crowdin account before you can set it up and use it.
+</Aside>
+
+## Connecting Google Play with Crowdin
+
+To connect Google Play with your project in Crowdin, follow these steps:
+
+<Steps>
+  1. Open your project and go to the **Integrations** tab.
+
+  2. Click **Add Integration** and find **Google Play** in the list.
+
+  3. Click **Install** and follow the instructions to complete the installation.
+
+  4. After installing, click on **Google Play** in the Integrations List.
+
+  5. Enter the package name and click **Set Up Integration**. <Image src={integrationSetUp} alt="Google Play Integration Set Up" />
+</Steps>
+
+You can edit the package name if you entered it incorrectly and delete the integration if needed.
+
+<Image src={integrationEdit} alt="Google Play Integration Edit Package Name" />
+
+The integration will collect the source texts into a file which will be placed in **Sources > Files**. By default, the file name is set to `google_play.xml`.
+
+## Publishing Translations
+
+To publish translations, follow these steps:
+
+<Steps>
+  1. Open your project and go to **Integrations > Google Play**.
+
+  2. Click **Preview & Publish Translations**. <Image src={integrationPublish} alt="Publish Translations" width="600" />
+
+  3. Available translations will appear accordingly to the configured [Export options](/project-settings/export/). See whether all translations look good and clear the checkbox next to the languages you don't want to publish. Click **Next** to proceed. <Image src={integrationSelectLanguages} alt="Selecting Languages for Publishing" width="500" />
+
+  4. Upload a file with your [service account credentials](#creating-service-account-credentials) and click **Publish**. <Image src={integrationServiceAccountCredentials} alt="Service Account Credentials" width="500" />
+
+  5. You can track the publishing progress in the next dialog. Once the translations are uploaded, click **Close**. <Image src={integrationPublishingProgress} alt="Publishing Progress" width="500" />
+</Steps>
+
+<Aside>
+  Google Play limits the number of times you can publish translations for the same language in one day.
+</Aside>
+
+## Creating Service Account Credentials
+
+To publish translations from Crowdin directly to your Google Play project, you need to configure access to your Google Play Console beforehand.
+
+<Aside>
+  For security reasons, the file with your service account credentials is not stored in Crowdin, so it's necessary to upload this file each time you want to publish your translations to Google Play.
+</Aside>
+
+To create and add your service account credentials, follow these steps:
+
+<Steps>
+  1. Link Google Play Console with Google Cloud project:
+     - Open the Google Play Console and go to **Setup >** [**API access**](https://play.google.com/console/u/0/developers/api-access).
+     - Link an existing project or create a new one. <Image src={integrationLinkProject} alt="Link Project" />
+
+  2. Generate service account credentials:
+     - Go to [**Service accounts**](https://console.developers.google.com/iam-admin/serviceaccounts). If prompted, select one of the existing projects. <Image src={integrationSelectProject} alt="Select Project" />
+     - Click **Create Service Account**. <Image src={integrationCreateServiceAccount} alt="Create Service Account" />
+     - Specify the service account name and click **Create and Continue**. <Image src={integrationServiceAccountName} alt="Service Account Name" />
+     - From the **Role** list, select **Service Accounts > Service Account User** and click **Done**. <Image src={integrationServiceAccountRole} alt="Service Account Role" />
+     - Open the Actions menu on the created service account and select **Manage keys**. <Image src={integrationConfigureServiceAccount} alt="Configure Service Account" />
+     - In the **Keys** tab, click **Add key > Create new key**. <Image src={integrationServiceAccountCreateKey} alt="Create Key" />
+     - Select **JSON** and click **Create**. <Image src={integrationServiceAccountKeyType} alt="Key Type" width="500" />
+     - A JSON file that contains your service account credentials will be downloaded to your machine.
+
+  3. Grant access to your service account:
+     - In the Google Play Console, go to **Setup >** [**API access**](https://play.google.com/console/u/0/developers/api-access) and click **Grant access** on your service account. <Image src={integrationAccess} alt="Grant Access" />
+     - In the **Account permissions** tab, select the following permissions:
+       - View app information and download bulk reports (read-only)
+       - Publish Play Games Services projects
+       - Release to production, exclude devices, and use Play App Signing
+       - Manage store presence <Image src={integrationPermissions} alt="Permissions" width="600" />
+     - Click **Invite user**.
+</Steps>
+
+After it, you can use the file with your service account credentials to publish your translations from Crowdin to Google Play.
