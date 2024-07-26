@@ -5,4 +5,221 @@ sidebar:
   order: 4
 ---
 
-https://support.crowdin.com/azure-repos-integration/ + https://support.crowdin.com/azure-repos-integration-sb/
+import { Image } from 'astro:assets';
+import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import connectingAzureRepos from '!/crowdin/integrations/azure_repos_integration_connecting_azure_repos.png';
+import authorizationAzureRepos from '!/crowdin/integrations/azure_repos_integration_authorization.png';
+import unconfigured from '!/crowdin/integrations/azure_repos_integration_unconfigured.png';
+import unconfiguredSb from '!/crowdin/integrations/azure_repos_integration_unconfigured_sb.png';
+import translationImportOptions from '!/crowdin/integrations/integration_translation_import_options.png';
+import syncSettings from '!/crowdin/integrations/integration_sync_settings.png';
+import branchesSyncAutomatically from '!/crowdin/integrations/branches_sync_automatically.png';
+import defaultConfigFileName from '!/crowdin/integrations/default_config_file_name.png';
+import multipleRepositories from '!/crowdin/integrations/integration_multiple_repositories.png';
+import syncNow from '!/crowdin/integrations/integration_sync_now.png';
+import syncBranch from '!/crowdin/integrations/integration_sync_branch.png';
+import uploadTranslations from '!/crowdin/integrations/integration_upload_translations.png';
+
+The Azure Repos integration allows you to synchronize files between your Azure Repos repository and Crowdin project.
+
+<Aside>
+  You will need to [install the Azure Repos integration](https://store.crowdin.com/azure-repos) in your Crowdin account before you can set it up and use it.
+</Aside>
+
+In file-based projects, there are two possible Azure Repos integration modes you can choose from:
+
+* **Source and translation files mode** &ndash; synchronize source and translation files between your Azure Repos repository and Crowdin project.
+* **Target file bundles mode** &ndash; generate and push translation files to your Azure Repos repository from the Crowdin project in the selected format. In this mode, integration pushes translation files and doesn't sync sources from your repo. In cases when you perform a source text review in your Crowdin project and want to get updated source texts to your repo, you can add a source language as a target language, which will be pushed to your repo along with translations.
+
+In string-based projects, Azure Repos integration exclusively operates in the **Target file bundles mode**.
+
+<ReadMore>
+  Read more about [project types](/creating-project#project-types).
+</ReadMore>
+
+All translated and approved files (or target file bundles) are automatically merged into the `l10n` branch of the Azure Repos repository.
+
+## Connecting Azure Repos with Crowdin
+
+<Steps>
+  1. Open your project and go to the **Integrations** tab.
+  2. Click on **Azure Repos** in the Integrations list.
+  3. Click **Set Up Integration** and select **Source and translation files mode** or **Target file bundles mode** from the drop-down list to integrate via your Azure Repos account. <Image src={connectingAzureRepos} alt="Connecting Azure Repos" />
+     <Aside>For string-based projects, the *Target file bundles mode* is used by default.</Aside>
+  4. Then authorize the connection with Crowdin on the Azure Repos side: <Image src={authorizationAzureRepos} alt="Azure Repos Integration Authorization" />
+</Steps>
+
+In case the repository you need is private, and you have limited or no access to it, please ask the repository owner to provide you with an access token. Afterward, click **Use personal access token** and insert the token into the *Token* field and click **Set Up Integration**.
+
+<Aside title="Permissions">
+  When setting up an integration with an access token, ensure that you have the Project Administrator level permission to the necessary repo.
+</Aside>
+
+### Selecting Repository
+
+In the appeared dialog, select your repository and branches that should be translated.
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Image src={unconfigured} alt="Azure Repos Integration Unconfigured" />
+
+    It's recommended to switch Duplicate Strings to **Show within a version branch**, so identical strings will be hidden between branches. If your source files contain strings with apparent identifiers (keys), it's better to use a *strict* version of this option. In other cases, feel free to use a *regular* one.
+  </TabItem>
+  <TabItem label="String-based project">
+    <Image src={unconfiguredSb} alt="Azure Repos Integration Unconfigured" />
+  </TabItem>
+</Tabs>
+
+<CardGrid>
+  <LinkCard title="Duplicate Strings" href="/project-settings/import#duplicate-strings" />
+  <LinkCard title="Version Management" href="/version-management" />
+</CardGrid>
+
+When working with Azure Repos integration in the **Target File Bundles Mode**, the integration will send the completed translations from your Crowdin project without pulling sources from your repo. So when selecting a repository and branches that should be translated, you specify where the integration should put the generated bundles with translations.
+
+<ReadMore>
+  Read more about [configuring target file bundles for VCS integration](/bundles#bundles-in-vcs-integrations).
+</ReadMore>
+
+When you work with private integrations (e.g., integrations with self-hosted VCS), you need to add dedicated Crowdin IP addresses to the allowlist to ensure that it operates properly while staying secure.
+
+<ReadMore>
+  Read more about [IP Addresses](https://developer.crowdin.com/ip-addresses/#integrations).
+</ReadMore>
+
+### Service Branches
+
+When translations are finished and your languages are ready to go live, Crowdin sends the pull request with translations to your version control system. For every branch that is under localization, Crowdin creates an additional service branch with translations. We don't commit directly to the master branch so that you can verify translations first.
+
+By default, *l10n_* is added to the created service branch name. If necessary, you can easily change it.
+
+### Synchronization Settings
+
+To import existing translations from your repo, select one of the following options:
+
+* **One-time translation import after the branch is connected**
+* **Always import new translations from the repository**
+
+By default, the first option is selected to import translations only once. Alternatively, you can clear both options if you don’t want to import translations from your repo.
+
+<Image src={translationImportOptions} alt="Integration Translation Import Options" />
+
+By default, sources are not pushed to the repo with translations. Although, if you perform a source text review in your Crowdin project and would like to push the changes made to your source files on Crowdin back to your repo, click **Edit**, select *Push Sources* in the integration settings, and click **Save**.
+
+There are cases when it's necessary to disable translations from being pushed to the repo temporarily. In this situation, click **Edit**, clear *Sync Schedule* in the integration settings, and click **Save**. When ready to sync translations with the repo, select the *Sync Schedule*, and click **Save**.
+
+<Aside type="caution" title="Limitations">
+  The *Import existing translations* and *Push Sources* options are only available for file-based projects.
+</Aside>
+
+The synchronization is processed every hour automatically. If necessary, you can change the update interval in the integration settings. To configure the synchronization schedule – click **Edit**, scroll down to the *Sync Schedule*, set the preferred interval, and click **Save**.
+
+Not depending on the synchronization settings, the source files' changes on the repo will still be synced with Crowdin continuously.
+
+<Image src={syncSettings} alt="Integration Sync Settings" />
+
+### Branches to Sync Automatically
+
+When you set up the integration, you select existing repository branches to be added to the Crowdin project. To add future branches from Azure Repos to Crowdin automatically, create a pattern for the branch names in the integration settings.
+
+For example, you add a pattern **feature* in the Azure Repos integration settings. In this case, the future branches that contain this word at the end of the title will be added to the project.
+
+To add a pattern for branch names, follow these steps:
+
+<Steps>
+  1. Click **Edit** in the Azure Repos integration section.
+  2. In the appeared dialog, scroll down to the *Branches to Sync Automatically*.
+  3. In the *Branches to Sync Automatically* field, use wildcard selectors such as '*', '?', '[set]', '\' and others to identify the necessary branches.
+  4. Click **Save**. <Image src={branchesSyncAutomatically} alt="Branches to Sync Automatically" width="600" />.
+</Steps>
+
+### Default Configuration File Name
+
+`crowdin.yml` is the default file name that is used for automatically synchronized branches. To change the default settings, click **Edit**, specify the preferred name in the *Default configuration file name* field in the integration settings, and click **Save**.
+
+<Image src={defaultConfigFileName} alt="Default Configuration File Name" width="600" />
+
+If you don't specify your custom configuration file name for automatically synchronized branches, and the integration doesn't find a configuration file with the default name `crowdin.yml` in the root of the branch, these branches will be marked in the integration settings with a red icon with an exclamation mark saying "Not Ready. Check the configuration".
+
+## Selecting Content for Synchronization
+
+To make integration work, you need to specify which source files should be translated and how Crowdin should structure translated files in your repository.
+
+<Aside type="tip">
+  If you see a red icon with an exclamation mark next to the service branch name, it means that you haven't selected any content for synchronization.
+</Aside>
+
+There are two ways you can specify content for synchronization:
+
+* Configuring online
+* Configuring manually by creating a configuration file
+
+### Configuring Online
+
+This procedure is the same for all integrations with version control systems (VCS).
+
+<ReadMore>
+  Check [Configuring VCS Integrations Online](/configuring-vcs-integrations-online) to get to know how to select content for synchronization online.
+</ReadMore>
+
+### Creating Configuration File
+
+The configuration file `crowdin.yml` should be stored in the Azure Repos repository along with each separate branch that you want to translate, so Crowdin knows what files exactly should be sent for translations.
+
+It should have the same structure as required for CLI, but your project’s credentials should not be stored in the file’s header for security reasons.
+
+<ReadMore>
+  Read more about [creating a configuration file](https://developer.crowdin.com/configuration-file/).
+</ReadMore>
+
+## Working with Multiple Repositories within One Project
+
+If you're working with a multi-platform product that has versions for different operating systems, you may want to connect multiple repositories that contain source files for each operating system. In this case, localization resources (e.g., TMs, Glossaries) and translations could be used more efficiently, reducing the time needed for project localization.
+
+To add another repository, follow these steps:
+
+<Steps>
+  1. Open your project and go to the **Integrations** tab.
+  2. Click on **Azure Repos** in the Integrations list.
+  3. Click **Add Repository**. <Image src={multipleRepositories} alt="Integration Multiple Repositories" />
+  4. Configure the integration with the new repository according to your needs and preferences.
+</Steps>
+
+## Checking the Status of Synchronization
+
+Once the integration is set up, all related information is stored in the **Integrations** tab > **Azure Repos** section.
+
+After the integration is connected, the settings can be updated only by the project member who configured it. All project managers except the person who configured the integration will see the **Edit** button disabled with the following message when hovering over it: `Integration was configured by {Full Name} ({username})`.
+
+By default, synchronization is processed every hour automatically. If you need to launch the synchronization immediately – click **Sync Now**.
+
+<Image src={syncNow} alt="Integration Sync Now" />
+
+Alternatively, if you need to sync only one branch separately, click <Icon name="mdi:dots-horizontal" class="inline-icon" /> on the needed branch and select **Sync branch**.
+
+<Image src={syncBranch} alt="Integration Sync Branch" />
+
+## Uploading Translations from Repo
+
+By default, the translations stored on the repo are uploaded to Crowdin during the first synchronization only. To upload translations to Crowdin manually, click on the drop-down toggle on the **Sync Now** button, and click **Upload Translations**. The integration will upload existing translations to your Crowdin project.
+
+<Image src={uploadTranslations} alt="Integration Upload Translations" />
+
+<Aside type="caution" title="Limitations">
+  The *Upload Translations* option is available for file-based projects only.
+</Aside>
+
+## Q&A
+
+Q: *I have an application build configured to be triggered by every commit. Since Crowdin commits each translation file in a separate commit, how can I avoid unnecessary application builds triggered by commits from Crowdin?*
+
+A: Since VCS integrations in Crowdin use API to commit files but not Git, each file is committed separately.
+
+Here are a few recommendations that might help solve similar situations:
+
+* Use the `export_languages` option to skip commits from languages you're not interested in yet. Read more about the [Export languages parameter for VCS integrations](https://developer.crowdin.com/configuration-file#export-languages-parameter-for-vcs-integrations).
+* Use the `[ci skip]` tag in the commit messages to skip unnecessary builds. Read more about the [Commit Message parameter for VCS integrations](https://developer.crowdin.com/configuration-file#commit-message-parameter-for-vcs-integrations).
+* Configure the preferred sync interval using [Sync Schedule](#synchronization-settings) (e.g., set the sync once in 24 hours).
+* Squash commits when merging a localization branch to keep the master branch history clean and uncluttered.

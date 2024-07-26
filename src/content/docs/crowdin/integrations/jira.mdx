@@ -5,4 +5,111 @@ sidebar:
   order: 7
 ---
 
-https://support.crowdin.com/jira-integration/
+import { Image } from 'astro:assets';
+import { Steps, Aside } from '@astrojs/starlight/components';
+import appLink from '!/crowdin/integrations/jira_app_link.png';
+import deleteIntegration from '!/crowdin/integrations/jira_delete_integration.png';
+import editSettings from '!/crowdin/integrations/jira_edit_settings.png';
+import fields1 from '!/crowdin/integrations/jira_fields_1.png';
+import fields2 from '!/crowdin/integrations/jira_fields_2.png';
+import openSettings from '!/crowdin/integrations/jira_open_settings.png';
+import setUp from '!/crowdin/integrations/jira_set_up.png';
+import settings from '!/crowdin/integrations/jira_settings.png';
+import subtask from '!/crowdin/integrations/jira_subtask.png';
+import syncIssues from '!/crowdin/integrations/jira_sync_issues.png';
+import warning from '!/crowdin/integrations/jira_warning.png';
+import allowAccess from '!/crowdin/integrations/jira_allow_access.png';
+
+Integration with Atlassian Jira allows you to keep track of source string and translation issues reported by users working on the project translation in Crowdin.
+
+<Aside>
+  You will need to [install the Jira Software integration](https://store.crowdin.com/jira) in your Crowdin account before you can set it up and use it.
+</Aside>
+
+With current integration, the following issue types reported in Crowdin are supported for the Jira dashboard:
+
+- General issues
+- Lack of context issues
+- Translation issues
+- Source string issues
+
+Each synchronized issue type will have the parent task in Jira named after it. Each issue reported in Crowdin will create a sub-task in the corresponding parent task in Jira.
+
+<Aside type="caution">
+  The integration disables email notifications for project issues in Crowdin that are synchronized with Jira.
+</Aside>
+
+Once all reported issues have been resolved and their respective sub-tasks closed in Jira, you can also close their parent Jira task representing one of the Crowdin issue types. As translators report new issues in the Crowdin project, the Jira integration will create new parent Jira task with its corresponding sub-tasks for each issue in the Crowdin project.
+
+<Image src={subtask} alt="Crowdin issue displayed in Jira" />
+
+## Connecting Jira with Crowdin
+
+To connect Jira with your project in Crowdin, follow these steps:
+
+<Steps>
+1. Open your project and go to the **Integrations** tab.
+
+2. Click on **Jira Software** in the Integrations list.
+3. Enter the Base URL of your Jira project and click **Set Up Integration**.
+    <Image src={setUp} alt="Base URL" />
+    You’ll then access the **Providing Access to Your Jira Project** dialog.
+
+4. Configure an **Application Link** in Jira:
+    <Aside>Only project administrators can set up Application Links.</Aside>
+    1. Log in to Jira as a user with **Jira Administrator** permissions.
+    1. Go to **Jira settings > Products > Application Links**.
+    1. Enter your Crowdin URL and click **Create new link**.
+        <Image src={openSettings} alt="Jira administration" />
+        Due to Jira functionality, it sometimes does not receive the response from the entered URL. If you see the message below, check the provided URL to be correct and click **Continue**.
+        <Image src={warning} alt="Application Links" width="500" />
+    1. Fill in all the required fields in dialog windows and click **Continue** to finish configuring the link:
+        - Application name: Crowdin Integration
+        - Application type: Generic Application
+        - Select **Create incoming link** and click **Continue** <Image src={fields1} alt="Create a link" width="500" />
+        - Consumer Key: Crowdin
+        - Consumer Name: Crowdin
+        - Public Key: copy it from the **Providing Access to Your Jira Project** dialog in Crowdin <Image src={fields2} alt="Link applications" width="500" />
+        Click **Continue** to finalize the Application Link setup.
+
+5. Go back to Crowdin and click **Next** in the **Providing Access to Your Jira Project** dialog. <Image src={appLink} alt="Providing Access to Your Jira Project" />
+
+6. Allow read and write access to project data in Jira. Crowdin will use this access to help the integration run correctly. <Image src={allowAccess} alt="Allow access" width="500" />
+
+7. Choose the Jira project key, select types, and configure settings of Crowdin issues that you'd like to be synchronized with your Jira project.
+    Jira issue settings available are:
+    - Type
+    - Priority
+    - Assignee
+    - Labels (Optional)
+    - Status &ndash; used to select the Jira status value that will trigger the closure of a related string issue in the Crowdin project.
+      <Aside>The status values that you can select are taken only from the <i>Done</i> status category in Jira (including Done, Closed, etc.).</Aside>
+
+8. Click **Save**. <Image src={settings} alt="Jira settings" width="400" />
+</Steps>
+
+## Synchronizing Issues
+
+Once you set up the integration, you can synchronize already existing issues in Crowdin (if any). A short message would tell you how many issues aren't synchronized yet. To synchronize them, click **Sync Issues**.
+
+<Image src={syncIssues} alt="Synchronize issues" />
+
+## Managing Jira Integration Settings
+
+To change the integration settings, click **Settings** and apply the necessary changes. Updated settings will apply only to the newly synchronized issues. All the issues synchronized before will remain without any changes.
+
+<Aside>
+  If you change the Jira project key, already synchronized issues will remain as sub-tasks in Jira but won’t be resolved in Crowdin automatically.
+</Aside>
+
+<Image src={editSettings} alt="Edit settings" />
+
+## Deleting Integration
+
+To delete the integration, click **Delete Integration**.
+
+<Aside>
+  All synchronized issues will remain as sub-tasks in Jira but won’t be resolved in Crowdin automatically.
+</Aside>
+
+<Image src={deleteIntegration} alt="Delete integration" />
