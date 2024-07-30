@@ -83,10 +83,21 @@ This approach uses Astro's default `Image` component and takes advantage of its 
 
 ### Customizing screenshots
 
-You can specify your own classes to customize the image (e.g, `no-shadow`, `dialog`)
+You can specify your own classes to customize the image.
+
+Custom classes available:
+
+- `no-shadow` - Removes the shadow and border from the image
+- `crowdin-modal` - Sets bigger border radius for Crowdin modal screenshots
 
 ```mdx
 <Image src={uploadFiles} alt="Upload Files" class="no-shadow" />
+```
+
+You can also specify the width of the image:
+
+```mdx
+<Image src={uploadFiles} alt="Upload Files" width="500" />
 ```
 
 ## File-based/String-based content differentiation
