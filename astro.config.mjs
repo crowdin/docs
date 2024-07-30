@@ -6,6 +6,7 @@ import starlightLinksValidator from 'starlight-links-validator';
 import { rehypeHeadingIds } from '@astrojs/markdown-remark';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeExternalLinks from 'rehype-external-links';
+import { remarkHeadingId } from 'remark-custom-heading-id';
 import icon from 'astro-icon';
 
 import crowdinSidebar from './src/content/sidebars/crowdin.ts';
@@ -89,6 +90,9 @@ const config = defineConfig({
     })
   ],
   markdown: {
+    remarkPlugins: [
+      remarkHeadingId, // Support custom heading IDs.
+    ],
     rehypePlugins: [
       rehypeHeadingIds,
       [
