@@ -30,7 +30,6 @@ export default  [
     items: [
       { slug: path('organization') },
       { slug: path('groups') },
-      { slug: path('teams') },
       { slug: path('vendors') },
       { slug: path('clients') },
       { slug: path('crowdsourcing') },
