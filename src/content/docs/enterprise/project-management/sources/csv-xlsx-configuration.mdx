@@ -3,8 +3,134 @@ title: CSV / XLSX File Configuration
 slug: enterprise/csv-xlsx-configuration
 ---
 
-https://support.crowdin.com/enterprise/csv-xlsx-configuration/
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import csvFileConfiguration from '!/enterprise/project-management/sources/csv_file_configuration.png';
+import csvFileConfigure from '!/enterprise/project-management/sources/csv_file_configure.png';
+import csvFileConfigureSb from '!/enterprise/project-management/sources/csv_file_configure_sb.png';
+import xlsxConfigurationOptions from '!/enterprise/project-management/sources/xlsx_configuration_options.png';
+
+After CSV or XLSX files are uploaded to the project, they require additional configuration before the system can import the contents of these files.
+
+To configure CSV or XLSX files, follow these steps:
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Steps>
+      1. Open your project and go to **Sources > Files**.
+      2. Click **Configure** next to the file to open the configuration window.
+    </Steps>
+    <Image src={csvFileConfigure} alt="Configure File" />
+    <Aside type="tip">
+      You can also configure multiple files at once by right-clicking on the desired files and selecting **Configure Files**ю Additionally, to configure all CSV or all XLSX files simultaneously, click **Configure All**.
+    </Aside>
+  </TabItem>
+  <TabItem label="String-based project">
+    <Steps>
+      1. Open your project and go to the **Upload** tab.
+      2. Drag and drop files from your machine.
+      3. Click **Configure** next to the file to open the configuration window.
+    </Steps>
+    <Image src={csvFileConfigureSb} alt="Configure File (String-based)" />
+  </TabItem>
+</Tabs>
+
+The same configurations mentioned in this article are also applicable to the TSV file format. The main difference between CSV and TSV files is that they use different delimiters between columns (i.e., commas in CSV and tabs in TSV).
+
+## Configuration Options for XLSX Files
+
+When configuring XLSX files, you’ll have the following options:
+
+* **Import all cells** - import each cell as a separate source string. Additionally, you can use *Content Segmentation* to split the source file's content into shorter text pieces, mostly sentences and short paragraphs. This is helpful when translating content units consisting of several sentences because it will be easier to translate smaller pieces of text. Segmentation Rules eXchange (SRX) are used for automatic content segmentation.
+
+* **Configure columns for import** - specify the preferred column order.
+
+<Image src={xlsxConfigurationOptions} alt="XLSX Configuration Options" />
 
 ## Configuring Columns for Import
 
+When configuring CSV or XLSX file with **Configure columns for import** option, you can specify the following column types:
+
+* *Key* &ndash; Column contains string identifiers. Typically, an alphanumeric value.
+* *Source string* &ndash; Column contains source strings that should be translated.
+* *Source string/Translation* &ndash; Column contains source strings, but the same column will be filled with translations when the file is exported. When uploading existing translations, the values from this column will be used as translations.
+* *Translation* &ndash; Column for resulting translations added on export. On import and when uploading existing translations, the system will check this column for existing translations and upload them to the project.
+* *Context* &ndash; Column contains comments or context information for the source strings.
+* *Labels* &ndash; Column contains labels for the source strings. You can add multiple labels to each string, separating them with commas.
+* *Max. Length* &ndash; Column contains max.length limit values for the translations of the strings.
+* *Not chosen* &ndash; Column that will be skipped on import.
+
+<Image src={csvFileConfiguration} alt="CSV Configuration" />
+
+### Column Headers
+
+If you don't want to translate the column headers, select **Do not import the first row (header)**.
+
+<Aside>
+  The **Do not import the first row (header)** option is automatically selected if the [automatic column identification](#automatic-column-identification) identifies all columns in the source file.
+</Aside>
+
+### Multilingual Spreadsheets
+
+If your file contains several columns with translations into different languages, select **Multilingual spreadsheet** and map the languages to the appropriate columns.
+
+By default, when you configure the multilingual spreadsheets, the **Import translations** option is selected. If you’d like not to import the existing translations from the file, you can clear this option.
+
+If your multilingual source file doesn’t contain enough columns for all project target languages, click **Add column**.
+To remove one of the added columns, click **Delete selected column**.
+
+### Automatic Column Identification
+
+Once you open the configuration dialog for source files in CSV or XLSX formats, the system automatically detects the file scheme based on the column names specified in the first row. The identification is performed in a case-insensitive manner. Columns that weren’t detected automatically will be left as **Not chosen** for manual configuration.
+
+Automatic column identification is especially helpful when you upload multiple multilingual spreadsheets that contain many languages and additional columns (e.g., Context, Labels, Max. Length).
+
+To get the most out of the automatic column detection, we recommend that you name the columns in your CSV or XLSX source files using the values displayed in the table below:
+
+| Column type                       | Expected value                                                                                                                                                                                              |
+|-----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Key                               | `identifier`, `key`                                                                                                                                                                                         |
+| Source String                     | `source phrase`, `source_phrase`, `source string`, `source_string`                                                                                                                                          |
+| Source String/Translation         | `source or translation`, `source_or_translation`, `source/translation`                                                                                                                                      |
+| Translation                       | `translation`                                                                                                                                                                                               |
+| Context                           | `context`                                                                                                                                                                                                   |
+| Labels                            | `labels`                                                                                                                                                                                                    |
+| Max. Length                       | `max. length`, `max_length`                                                                                                                                                                                 |
+| Language (for multilingual files) | Language name (e.g., Ukrainian), Crowdin language code (e.g., uk-UA), Locale (e.g., uk-UA), Locale with underscore (e.g., uk_UA), Language code ISO 639-1 (e.g., uk), Language code ISO 639-2/T (e.g., ukr) |
+
+<Aside type="tip">
+  Visit the [Crowdin Language Codes](https://developer.crowdin.com/language-codes/) page to get Language Names and Crowdin language codes.
+</Aside>
+
+By default, during scheme configuration, the system treats CSV and XLSX source files as monolingual.
+
+To autodetect file scheme for multilingual source files, follow these steps:
+
+<Steps>
+  1. Select **Multilingual spreadsheet**.
+  2. Click **More** and select **Detect Configuration**.
+</Steps>
+
+### Reset Spreadsheet Configuration
+
+If you'd like to start the spreadsheet configuration over, click **Reset configuration**.
+
+### Configuration Templates
+
+If multiple files have the same configuration scheme, save your current configuration as a template by clicking **Templates** > **Save as template**, then specify the template name and click **Create**. You’ll be able to apply the template to the newly imported files.
+
 ## Changing Scheme for CSV and XLSX Files
+
+You might want to update CSV or XLSX files and change the initially configured scheme. The scheme update might be needed when you add a new target language to your Crowdin Enterprise project.
+
+To change the scheme for your source file, follow these steps:
+
+<Steps>
+  1. Right-click on the needed files and select **Change scheme**.
+  2. Select the new file on your machine.
+  3. Set the new configuration/template for the file correspondingly.
+</Steps>
+
+<Aside>
+  You can't edit the existing configuration template. Instead, you can remove it or create a new one.
+</Aside>
