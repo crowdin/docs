@@ -1,0 +1,138 @@
+---
+import Default from '@astrojs/starlight/components/Hero.astro';
+import SearchBox from '~/components/SearchBox.astro';
+import CallToAction from '@astrojs/starlight/components/CallToAction.astro';
+import { Image } from 'astro:assets';
+
+const isHomepage = Astro.props.slug === '';
+
+const { title, tagline, image, actions } = Astro.props.entry.data.hero;
+
+const imageAttrs = {
+    loading: 'eager' as const,
+    decoding: 'async' as const,
+    alt: image?.alt || '',
+};
+
+let darkImage: ImageMetadata | undefined;
+let lightImage: ImageMetadata | undefined;
+let rawHtml: string | undefined;
+
+if (image) {
+    if ('file' in image) {
+        darkImage = image.file;
+    } else if ('dark' in image) {
+        darkImage = image.dark;
+        lightImage = image.light;
+    } else {
+        rawHtml = image.html;
+    }
+}
+
+---
+
+<style>
+    .homepage-hero {
+        padding: 2rem 0;
+
+        h1 {
+            font-size: clamp(var(--sl-text-3xl),calc(0.25rem + 5vw),var(--sl-text-6xl));
+            line-height: var(--sl-line-height-headings);
+        }
+
+        .tagline {
+            font-size: clamp(var(--sl-text-base),calc(0.0625rem + 2vw),var(--sl-text-xl))
+        }
+
+        .search-wrapper button {
+            height: 3.5rem;
+            font-size: var(--sl-text-base);
+            max-width: 32rem;
+
+            @media (max-width:49.9999rem) {
+                border: 1px solid var(--sl-color-gray-5);
+                border-radius: 0.5rem;
+                padding-inline-start: 0.75rem;
+                padding-inline-end: 0.5rem;
+                background-color: var(--sl-color-black);
+                color: var(--sl-color-gray-2);
+                width: 100%;
+
+                > kbd, > span {
+                    display: flex !important;
+                }
+
+                > kbd {
+                    margin-inline-start: auto;
+                }
+            }
+
+        }
+
+        .shortucts-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 1rem;
+            margin-top: 1rem;
+
+            .search-chip {
+                font-size: var(--sl-text-code-sm);
+                font-family: var(--sl-font-mono),serif;
+                padding: .25rem;
+                background: var(--crowdin-gray-005);
+                border-radius: 0.25rem;
+                white-space: nowrap;
+
+                &:hover {
+                    background: var(--crowdin-gray-01);
+                }
+            }
+        }
+
+        + .sl-markdown-content a:not(:where(.not-content *)) {
+            text-decoration: none;
+        }
+    }
+</style>
+
+{
+    isHomepage ? (
+    <div className={'northern-lights northern-lights--right'}>
+        <div className={'aurora-borealis aurora-borealis--big aurora-borealis--green'}></div>
+        <div className={'aurora-borealis aurora-borealis--big aurora-borealis--blue'}></div>
+    </div>
+    <section class="homepage-hero">
+        <div class="grid grid-cols-12 gap-1">
+            <div class="col-span-12 xl:col-span-5 xl:order-last flex  justify-center">
+                {
+                    darkImage && (
+                        <Image
+                            src={darkImage}
+                            {...imageAttrs}
+                            class:list={{ 'w-6/12 xl:w-full max-w-full h-auto light:sl-hidden': Boolean(lightImage) }}
+                        />
+                    )
+                }
+                {lightImage && <Image src={lightImage} {...imageAttrs} class="w-6/12 xl:w-full max-w-full h-auto dark:sl-hidden" />}
+            </div>
+            <div class="col-span-12  xl:col-span-7 flex flex-col self-center">
+                <h1 class="mb-0 text-center md:text-left" data-page-title set:html={title} />
+                {tagline && <p class="tagline mb-4 text-center md:text-left" set:html={tagline} />}
+                <div class="search-wrapper flex justify-center md:justify-start"><SearchBox /></div>
+                {
+                    actions.length > 0 && (
+                        <div class="shortucts-wrapper justify-center md:justify-start flex-wrap">
+                            {actions.map(({ text, ...attrs}) => (
+                                <CallToAction class={'search-chip'} {...attrs} set:html={text} />
+                            ))}
+                        </div>
+                    )
+                }
+            </div>
+        </div>
+    </section>
+    ) : (
+    <Default {...Astro.props as any}><slot /></Default>
+    )
+}
+

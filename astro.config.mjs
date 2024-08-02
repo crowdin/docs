@@ -41,11 +41,11 @@ const config = defineConfig({
         {
           label: "leading",
           items: [
-            { label: "Crowdin KB", link: "/introduction", attrs: { id: "crowdin-nav-button" } },
-            { label: "Enterprise KB", link: "/enterprise/introduction", attrs: { id: "enterprise-nav-button" } },
-            { label: "Developer Portal", link: "/developer/introduction", attrs: { id: "developer-nav-button" } },
-            { label: "Store", link: "https://store.crowdin.com", attrs: { target: '_blank' } },
-            { label: "Community", link: "https://community.crowdin.com/", attrs: { target: '_blank' } },
+            { label: "Crowdin KB", link: "/introduction", attrs: { id: "crowdin-nav-button", class: 'nav-link' } },
+            { label: "Enterprise KB", link: "/enterprise/introduction", attrs: { id: "enterprise-nav-button", class: 'nav-link' } },
+            { label: "Developer Portal", link: "/developer/introduction", attrs: { id: "developer-nav-button", class: 'nav-link' } },
+            { label: "Store", link: "https://store.crowdin.com", attrs: { target: '_blank', class: 'nav-link' } },
+            { label: "Community", link: "https://community.crowdin.com/", attrs: { target: '_blank', class: 'nav-link' } },
           ],
         }
       ],
@@ -55,10 +55,15 @@ const config = defineConfig({
       },
       components: {
         Head: './src/components/Head.astro',
+        Footer: './src/components/Footer.astro',
+        Hero: './src/components/Hero.astro',
+        Search: './src/components/Search.astro',
+        SearchBox: './src/components/SearchBox.astro',
       },
       customCss: [
         './src/tailwind.css',
-        './src/global.css'
+        './src/global.css',
+          '@fontsource-variable/plus-jakarta-sans',
       ],
       pagination: false,
       plugins: [
@@ -89,6 +94,7 @@ const config = defineConfig({
       }
     })
   ],
+  pagefind: true,
   markdown: {
     remarkPlugins: [
       remarkHeadingId, // Support custom heading IDs.
