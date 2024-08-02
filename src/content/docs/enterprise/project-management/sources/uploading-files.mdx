@@ -5,4 +5,121 @@ sidebar:
   order: 0
 ---
 
-https://support.crowdin.com/enterprise/uploading-files/ + https://support.crowdin.com/enterprise/uploading-files-sb/
+import { Aside, Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import uploadFiles from '!/enterprise/project-management/sources/upload_files.png';
+import uploadFilesSB from '!/enterprise/project-management/sources/upload_files_sb.png';
+import baseHtmlEditor from '!/crowdin/project-management/sources/base_html_editor.png';
+
+Once you've [created a project](/enterprise/creating-project), the next step would be preparing source files for upload. Crowdin Enterprise supports a wide range of [file formats](/enterprise/supported-formats), including Android XML, iOS Strings, XML, JSON, etc.
+
+Usually, this task is accomplished by developers. You can [invite your colleague developer](/enterprise/inviting-people) to assist you with this step.
+
+<Aside title="String-Based Projects">
+  When uploading translatable content to a string-based project, you can use the following file formats:
+
+  <details>
+    <summary>View File Formats</summary>
+    <Include file="sb-file-formats.mdx" />
+  </details>
+</Aside>
+
+When you have your files prepared, you can add them to your Crowdin Enterprise project for translation.
+
+Crowdin Enterprise offers a few options for adding content to a project:
+
+* Manually via the web interface (UI).
+* Integrate your Crowdin Enterprise project with the tools you already use. Explore available integrations on the [Crowdin Store](https://store.crowdin.com/).
+* Use [API](https://developer.crowdin.com/enterprise/api/v2/) or [console client](https://crowdin.github.io/crowdin-cli/) (CLI).
+
+You can also use Crowdin sample files to test the translation workflows before starting your project with the actual source files.
+
+<Aside type="tip">
+  Add support for more formats by installing the corresponding apps in the [Crowdin Store](https://store.crowdin.com/categories/file-formats).
+</Aside>
+
+## Uploading Files
+
+To upload files via the web interface, follow these steps:
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Steps>
+      1. Open your project and go to **Sources > Files**.
+      2. Drag and drop files from your machine, or click **Upload Files**. You can upload ZIP archives if you want a set of folders and files to be added. <Image src={uploadFiles} alt="Upload Files" />
+    </Steps>
+  </TabItem>
+  <TabItem label="String-based project">
+    <Steps>
+      1. Open your project and go to the **Upload** tab.
+      1. Select the target branch to which you're uploading source files. By default, the `main` branch is selected. Create new branches if needed.
+      1. Drag and drop files from your machine, or click **Select Files**. You can also upload ZIP archives if you want a set of files to be added.
+      1. Crowdin Enterprise automatically tries to detect whether you're uploading source content or translations. Check it manually to make sure everything is recognized correctly (e.g., English (source) should be selected for source files if the project's source language is English).
+      1. *(Optional)* In the **Source files** section, to the right of the uploaded file list, configure [advanced source file import settings](#advanced-import-settings).
+      1. Click **Upload** to finish uploading the source content. <Image src={uploadFilesSB} alt="Files tab in the project settings" />
+    </Steps>
+  </TabItem>
+</Tabs>
+
+<ReadMore>
+  Read more about [project types](/enterprise/creating-project#project-types).
+</ReadMore>
+
+### XML, CSV, and XLSX Files
+
+Some file formats, such as XML, CSV, XLSX, and others, might require additional configuration.
+
+<Aside>
+  The XLSX/XLS file size is limited to 1 000 000 cells. The file containing up to 330 000 cells will be processed with original formatting styles. The file containing from 330 000 to 1 000 000 cells will be processed with cleared formatting styles.
+</Aside>
+
+* [CSV/XLSX File Configuration](/enterprise/csv-xlsx-configuration)
+* [XML File Configuration](/enterprise/xml-configuration)
+* [Parser Configuration](/enterprise/project-settings/parser-configuration)
+
+<Aside type="caution" title="Limitations">
+  XML files are not supported in [string-based](/enterprise/creating-project#string-based-project) projects.
+</Aside>
+
+### HTML Files with Relative URLs
+
+To display images and styles in the HTML file used outside of the website, where it belongs, add the `<base>` tag to specify the base URL/target for all relative URLs in a document.
+
+```html
+<html>
+  <head>
+    <base href="https://www.w3schools.com/images/">
+  </head>
+  <body>
+    <p><img src="stickman.gif" width="24" height="39" alt="Stickman">Please note that we only specified a relative address for the image. Since we specified a base URL in the head section, the browser will look for the image at "https://www.w3schools.com/images/stickman.gif".</p>
+  </body>
+</html>
+```
+
+Once you add the `<base>` tag, translators will see images in the HTML files when translating in the Editor.
+
+<Image src={baseHtmlEditor} alt="HTML file with a base tag displayed in the Editor" />
+
+<Aside type="caution" title="Limitations">
+  HTML files are not supported in [string-based](/enterprise/creating-project#string-based-project) projects.
+</Aside>
+
+## Advanced Import Settings
+
+You can configure the desired system behavior for uploaded source files in string-based projects using the available options:
+
+* **Update strings** &ndash; Use this option to update strings with the same identifiers. By default, this option is selected.
+* **Cleanup mode** &ndash; Use this option to remove previously uploaded strings that wouldn't be found in the uploaded file. By default, this option is cleared.
+* **Add labels** &ndash; When uploading source files, Crowdin automatically adds system labels to the strings containing the source file name. If needed, you can tag uploaded strings with other labels you have in your project.
+
+## Uploading Translations
+
+After you add source content to Crowdin, you can [upload existing translations](/enterprise/uploading-translations).
+
+## See Also
+
+- [File Management](/enterprise/file-management)
+- [Versions Management](/enterprise/version-management)
+- [Project Settings](/enterprise/project-settings)
