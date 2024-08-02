@@ -6,7 +6,9 @@ import { Image } from 'astro:assets';
 
 const isHomepage = Astro.props.slug === '';
 
-const { title, tagline, image, actions } = Astro.props.entry.data.hero;
+const { data } = Astro.props.entry;
+
+const { title, tagline, image, actions } = data.hero || {};
 
 const imageAttrs = {
     loading: 'eager' as const,
@@ -97,9 +99,9 @@ if (image) {
 
 {
     isHomepage ? (
-    <div className={'northern-lights northern-lights--right'}>
-        <div className={'aurora-borealis aurora-borealis--big aurora-borealis--green'}></div>
-        <div className={'aurora-borealis aurora-borealis--big aurora-borealis--blue'}></div>
+    <div class="northern-lights northern-lights--right">
+        <div class="aurora-borealis aurora-borealis--big aurora-borealis--green"></div>
+        <div class="aurora-borealis aurora-borealis--big aurora-borealis--blue"></div>
     </div>
     <section class="homepage-hero">
         <div class="grid grid-cols-12 gap-1">
@@ -122,9 +124,16 @@ if (image) {
                 {
                     actions.length > 0 && (
                         <div class="shortucts-wrapper justify-center md:justify-start flex-wrap">
-                            {actions.map(({ text, ...attrs}) => (
-                                <CallToAction class={'search-chip'} {...attrs} set:html={text} />
-                            ))}
+                            {actions.map((attrs:any) => {
+                                const attributes = {
+                                    ...attrs,
+                                    icon: {
+                                        type: 'raw',
+                                        html: attrs.text
+                                    }
+                                };
+                                return <CallToAction {...attributes}/>
+                            })}
                         </div>
                     )
                 }

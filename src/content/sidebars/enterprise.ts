@@ -19,6 +19,7 @@ export default  [
         collapsed: true,
       },
     ],
+    collapsed: true,
   },
   {
     label: 'Translation Process',
