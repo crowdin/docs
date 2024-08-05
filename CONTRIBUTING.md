@@ -32,6 +32,18 @@ There are a couple of custom components in this project that you can use:
   <Include file="file.mdx" />
   ```
 
+- `QuestionAnswer` - A component that displays a question and answer pair. It's useful when you want to provide a question and answer in a single block. It's a wrapper around the `details` and `summary` HTML elements.
+
+  ```mdx
+  import QuestionAnswer from '~/components/QuestionAnswer.astro';
+
+  <QuestionAnswer title="What is Astro?">
+    Astro is a modern static site generator that allows you to build fast websites with less client-side JavaScript.
+  </QuestionAnswer>
+  ```
+
+  It is closed by default, but you can open it by passing the `open` prop.
+
 ## Icons
 
 You can use Starlight's [`Icon`](https://starlight.astro.build/guides/components/#icon) component. It provides some basic set of icons.
