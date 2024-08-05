@@ -9,7 +9,6 @@ export default  [
       { slug: path('for-managers') },
       { slug: path('for-translators') },
       { slug: path('for-vendors')},
-      { slug: path('for-developers') },
       { slug: path('supported-formats') },
       { slug: path('migrating-to-crowdin-enterprise') },
       { slug: path('additional-support-services') },
