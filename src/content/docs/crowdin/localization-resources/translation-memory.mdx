@@ -3,7 +3,8 @@ title: Translation Memory
 slug: translation-memory
 ---
 
-import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import Include from '~/components/Include.astro';
 import ReadMore from '~/components/ReadMore.astro';
 import { Icon } from 'astro-icon/components';
 import { Image } from 'astro:assets';
@@ -20,14 +21,10 @@ import deleteAllTranslationUnits from '!/crowdin/localization-resources/tm_delet
 import deleteSegments from '!/crowdin/localization-resources/tm_delete_segments.png';
 import downloadUpload from '!/crowdin/localization-resources/tm_download_upload.png';
 import configureImport from '!/crowdin/localization-resources/tm_configure_import.png';
-import prioritizingTm from '!/crowdin/localization-resources/tm_prioritizing_tm.png';
-import changingDefaultTm from '!/crowdin/localization-resources/tm_changing_default_tm.gif';
 import sharingTm from '!/crowdin/localization-resources/tm_sharing_tm.png';
 import preTranslation from '!/crowdin/localization-resources/tm_pre_translation.png';
 import preTranslationDialog from '!/crowdin/localization-resources/tm_pre_translation_dialog.png';
 import fuzzyMatches from '!/crowdin/localization-resources/tm_fuzzy_matches.png';
-import tmSettings from '!/crowdin/project-management/settings/tm_settings.png';
-import assigningTm from '!/crowdin/project-management/settings/tm_assigning.png';
 import autoSubstitutionSuggestion from '!/crowdin/localization-resources/tm_auto_substitution_suggestion.png';
 
 A Translation Memory (TM) is a database that stores translation units, which are segments of source text paired with their corresponding translations in different languages. It improves and speeds up the translation process by providing suggestions for identical or similar strings in your projects. A project TM is created automatically for each Crowdin project, and each translation made within the project is automatically added to this TM.
@@ -50,16 +47,31 @@ To create a TM, follow these steps:
   5. Click **Create**. <Image src={createTmDialog} alt="Create TM Dialog" width="600px" />
 </Steps>
 
+<CardGrid>
+  <LinkCard
+    title="Assigning TM"
+    href="/project-settings/translation-memories/#assigning-tm"
+  />
+  <LinkCard
+    title="Prioritizing TM"
+    href="/project-settings/translation-memories/#prioritizing-tm"
+  />
+  <LinkCard
+    title="Changing Default TM"
+    href="/project-settings/translation-memories/#changing-default-tm"
+  />
+</CardGrid>
+
+## Managing Translation Units and Segments
+
+You can create translation units from scratch, edit and delete existing translation units or segments of a particular TM or all available TMs.
+
 <LinkCard
   title="Translation Memory Generator"
   description="Use this app to create a TM based on the translated Crowdin project."
   href="https://store.crowdin.com/tmg"
   target="_blank"
 />
-
-## Managing Translation Units and Segments
-
-You can create translation units from scratch, edit and delete existing translation units or segments of a particular TM or all available TMs.
 
 ### Creating Translation Units
 
@@ -204,7 +216,7 @@ To download or upload TMs, follow these steps:
 <Steps>
   1. Open your profile home page and select **Translation Memories** on the left sidebar. Alternatively, open your project and go to **Settings > Translation Memories**.
   2. Click **View Records** on the needed TM.
-  3. Click **Download** or **Upload**.
+  3. Click <Icon name="mdi:swap-vertical" class="inline-icon" /> and select **Download** or **Upload**.
 </Steps>
 
 The project owner and managers can download and upload TM in the following file formats: TMX, XLSX, or CSV.
@@ -250,40 +262,9 @@ Additional TM attributes provided by translation memory downloaded in TMX format
 
 Often translation vendors that work in Crowdin export TMs from projects to manage them for their clients in various desktop applications (e.g., for cleaning TMs from irrelevant translations and further reimport back to Crowdin). The TM attributes listed above allow better navigation and filtering of TM segments based on different criteria. Also, you might use cleaned and refreshed TMs to train MT engines only on product-specific data to ensure a higher quality of translations as a result.
 
-## Assigning TM
-
-To assign a TM to your project, follow these steps:
-
-<Steps>
-  1. Open your project and go to **Settings > Translation Memories**.
-  1. In the **Assigned Translation Memories** section, select the needed TMs from the list. <Image src={assigningTm} alt="Assigning TM" width="744px" />
-</Steps>
-
-## Prioritizing TM
-
-When you assign a few TMs to the project, you can set the needed priority for each of them. As a result, TM suggestions from the TM with the higher priority will be displayed in the first place.
-
-The default TM priority value is set to 1. A higher number has a higher priority (for example, 5 has a higher priority than 1). For example, if you assigned four TMs to your project, you can set the priority of 4 to the most important TM, the one that should be used in the first place. And respectively set lower priorities to other TMs.
-
-To set the priority for TMs, follow these steps:
-
-<Steps>
-  1. Open your project and go to **Settings > Translation Memories**.
-  2. In the **Assigned Translation Memories** section, set the preferred priority for assigned TMs from the respective drop-down list. <Image src={prioritizingTm} alt="Prioritizing TM" width="744px" />
-</Steps>
-
-## Changing Default TM
-
-To change your project's default TM, follow these steps:
-
-<Steps>
-  1. Open your project and go to **Settings > Translation Memories**.
-  2. In the **Assigned Translation Memories** section, click the star icon next to the needed TM from the list. <Image src={changingDefaultTm} alt="Changing Default TM" width="744px" />
-</Steps>
-
 ## Sharing TMs
 
-Using the shared TMs, you can pre-translate any of the projects you own. Also, TM suggestions from all TMs will appear in the Editor.  
+Using the shared TMs, you can pre-translate any of the projects you own. Also, TM suggestions from all TMs will appear in the Editor.
 
 <Aside>
   If you want to share a TM between projects, the source language of both projects must match.
@@ -317,7 +298,7 @@ Pre-translation via TM allows you to leverage a minimum of 100% and Perfect matc
      <Image src={preTranslationDialog} alt="Pre-translation via TM Dialog" width="600px" />
 </Steps>
 
-You can set up the Pre-translation to be performed automatically when new files are uploaded. This feature can be enabled and configured in the project **Settings > Translation Memories**.
+You can set up the Pre-translation to be performed automatically when new files are uploaded. This feature can be enabled and configured in the project **Settings > Pre-translate**.
 
 <ReadMore>
   Read more about [Automated Pre-translation via TM](/project-settings/pre-translate/#tm-pre-translate).
@@ -331,7 +312,7 @@ The following parameters are listed in the order the system uses them to decide 
 
 1. Relevance &ndash; also known as TM match. <ReadMore>Read more about [TM Match Calculation](#tm-match-calculation).</ReadMore>
 2. Auto-Substitution usage &ndash; verifying whether the TM suggestion was improved by the auto-substitution. <ReadMore>Read more about [Auto-substitution](#tm-auto-substitution).</ReadMore>
-3. Assigned TM Priority &ndash; the priority of the TM a TM suggestion is stored in. <ReadMore>Read more about [Prioritizing TM](#prioritizing-tm).</ReadMore>
+3. Assigned TM Priority &ndash; the priority of the TM a TM suggestion is stored in. <ReadMore>Read more about [Prioritizing TM](/project-settings/translation-memories/#prioritizing-tm).</ReadMore>
 4. Primary or dialect language &ndash; the primary or dialect language usage in TM suggestion's source text (e.g., a TM suggestion from English will have a higher priority than English, Canada).
 5. TM suggestion creation date &ndash; the date a TM suggestion was created (a TM suggestion with a more recent creation date will have a higher priority).
 
@@ -380,33 +361,13 @@ There are multiple different factors that affect the calculation of fuzzy matche
 
 Auto-Substitution is aimed to increase the benefit of using the translation memory (TM) by suggesting translations with a higher similarity match. The feature substitutes the non-translatable elements (such as tags, HTML entities, placeholders, numbers, and more) in translations suggested by TM by the ones used in the source strings.
 
+To enable the Auto-substitution feature, open your project and go to **Settings** > **Translation Memories**.
+
 ### Non-translatable Elements that can be Auto-substituted
 
 Auto-substitution feature can substitute the following non-translatable elements:
 
-| Non-translatable elements | Source string example | TM suggestion (German) | Improved TM suggestion |
-|---------------------------|-----------------------|------------------------|------------------------|
-| Tags                      | `<b %s>Help</b>`      | `<span>Hilfe<span>`    | `<b %s>Hilfe</b>`      |
-| HTML entities             | Currency `&euro;`       | Währung `&yen;`          | Währung `&euro;`         |
-| Line breaks               | Profile               | Profil`<br/>`            | Profil                 |
-| Escape sequences (`\r\n`, `\r`, `\n`, `\t`, unicode, hex) | Translation `\x42`       | Übersetzung `\u4242`     | Übersetzung `\x42`       |
-| Non-escaped equivalents of `\r\n`, `\r`, `\n`, `\t` | Translated by `\n` TM    | Übersetzt vom Übersetzungsspeicher | Übersetzt vom `\n` Übersetzungsspeicher |
-| Placeholders              | Example `%s`            | Beispiel `%1$s`         | Beispiel `%s`            |
-| Numbers                   | Attempt 2             | Versuch 5              | Versuch 2              |
-| <abbr title="First character">Letter case</abbr> | Log in                 | einloggen              | Einloggen              |
-| <abbr title="At the beginning and at the end of the string">Special characters</abbr> | Help?                 | Hilfe!                 | Hilfe?                 |
-| URLs                      | More Information: https://crowdin.com/page/tour | Weitere Infos: https://crowdin.com/ | Weitere Infos: https://crowdin.com/page/tour |
-| ICU syntax                | Get \{discountPercent, number, percent} discount | Erhalte \{discountValue, number, currency} Rabatt | Erhalte \{discountPercent, number, percent} Rabatt |
-
-
-### Auto-Substitution Setup
-
-To enable the Auto-substitution feature, follow these steps: 
-
-<Steps>
-  1. Open your project and go to **Settings > Translation Memory**.
-  2. Select **Enable Auto-Substitution** in the **Translation Memory** section. <Image src={tmSettings} alt="Translation Memory Settings" width="744px" />
-</Steps>
+<Include file="tm-non-translatable-elements.mdx" />
 
 ### Auto-substitution for Pre-translation
 
@@ -424,7 +385,7 @@ With the Auto-substitution feature, translators can see the improved TM suggesti
 
 ### Cost Reports
 
-Once the feature is enabled, it will affect how the **Costs Estimate** and **Translation Cost** reports are calculated.
+Once the feature is enabled, it will affect how the [Costs Estimate](/project-reports/#cost-estimate) and [Translation Cost](/project-reports/#translation-cost) reports are calculated.
 
 **Costs Estimate** report would count TM suggestions that can potentially be improved by the auto-substitution feature based on the highest similarity match to which those strings can be improved. For example, a match that can be improved from a 75% match to a 100% match would be considered a 100% match. 
 
