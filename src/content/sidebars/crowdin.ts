@@ -8,7 +8,6 @@ export default [
       { slug: 'introduction' },
       { slug: 'for-managers' },
       { slug: 'for-translators' },
-      { slug: 'for-developers' },
       { slug: 'supported-formats' },
       { slug: 'migrating-to-crowdin' },
       { slug: 'additional-support-services' },
