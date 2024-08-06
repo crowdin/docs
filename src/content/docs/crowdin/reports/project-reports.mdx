@@ -6,7 +6,7 @@ sidebar:
 ---
 
 import { Image } from 'astro:assets';
-import { Steps, Aside } from '@astrojs/starlight/components';
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
 import units from '!/crowdin/reports/reports_units.png';
 import projectStatus from '!/crowdin/reports/reports_project_status.png';
@@ -14,6 +14,7 @@ import dashboard from '!/crowdin/reports/reports_dashboard.png';
 import translationActivity from '!/crowdin/reports/reports_translation_activity.png';
 import proofreadingActivity from '!/crowdin/reports/reports_proofreading_activity.png';
 import sourceStrings from '!/crowdin/reports/reports_source_strings.png';
+import preTranslationEfficiencyGenerated from '!/crowdin/reports/reports_pre_translation_efficiency_generated.png';
 import costEstimateGenerating from '!/crowdin/reports/reports_cost_estimate_generating.png';
 import addTmMatchType from '!/crowdin/reports/reports_cost_estimate_add_tm_match_type.png';
 import addIndividualRates from '!/crowdin/reports/reports_cost_estimate_add_individual_rates.png';
@@ -24,10 +25,8 @@ import costEstimateGenerated from '!/crowdin/reports/reports_cost_estimate_gener
 import translationCostGenerated from '!/crowdin/reports/reports_translation_cost_generated.png';
 import topMembers from '!/crowdin/reports/reports_top_members.png';
 import archiveViewing from '!/crowdin/reports/reports_archive_viewing.png';
-import archiveExporting from '!/crowdin/reports/reports_archive_exporting.png';
-import archiveDeleting from '!/crowdin/reports/reports_archive_deleting.png';
 
-To view your project status, estimate and count the translation cost, keep track of the most active members, and view historical data of the previously generated reports, open your project and go to the **Reports** tab.
+To view your project status, assess the effectiveness of pre-translation methods, estimate and count the translation cost, keep track of the most active members, and view historical data of previously generated reports, open your project and go to the **Reports** tab.
 
 For each report, you can select a report unit:
 
@@ -82,6 +81,77 @@ This chart shows the total amount of approved text and votes made for all langua
 This chart shows the total amount of source text added and removed.
 
 <Image src={sourceStrings} alt="Source Strings Activity" />
+
+## Pre-translation Efficiency
+
+Use this report to assess the effectiveness of pre-translation methods (via AI, MT, and TM) used in your project by analyzing post-editing required for pre-translated strings before approval. It compares the initial pre-translated strings with the final approved translations after post-editing, categorizing data based on the edit distance and pre-translation method. This report allows you optimize your translation workflows and improve overall content quality by identifying the best-performing pre-translation methods.
+
+### Report Scope
+
+* Includes only approved strings with at least one pre-translation.
+* If multiple pre-translations exist for a string, each is included with its edit distance.
+* Only the top translation is used for comparison if multiple approvals exist.
+
+### Use Case and Best Practices
+
+**Typical Use Case:**
+
+1. Launch Pre-translation &ndash; use different methods (via AI, MT, and TM) for a portion of your content. Alternatively, you can use one method (e.g., AI) and compare various prompts with different settings.
+2. Invite a Proofreader &ndash;  have the pre-translated content reviewed and approved by a proofreader.
+3. Generate Report &ndash; use the Pre-translation Efficiency report to evaluate which pre-translation method performed best by requiring the least amount of post-editing.
+4. Optimize Workflow &ndash; use the most effective pre-translation method for all your content.
+
+**Best Practices:**
+
+* **Regular Reviews** &ndash; regularly generate and review the report to stay informed about the performance of your pre-translation methods.
+* **Adjust Methods** &ndash; use the insights from the report to adjust your pre-translation methods. For example, if AI pre-translations require minimal edits, consider increasing their use.
+
+### Generating a Report
+
+You can generate a Pre-translation Efficiency report based on the following filters:
+
+* **Task** &ndash; Not selected, All Tasks, or a specific task.
+* **Language** &ndash; All, specific language.
+* **Strings added (Date range of when the strings were approved)** &ndash; All time, Today, Yesterday, Last 7 days, Last 30 days, This month, or Custom range.
+
+Additionally, using the report's **Settings**, you can adjust how the post-editing information will be displayed on the graphs:
+
+* **Total** &ndash; aggregates all post-editing data without breakdown.
+* **Split into Categories by Edit Distance %** &ndash; offers a detailed view by categorizing units based on the extent of editing required.
+
+To generate the Pre-translation Efficiency report, follow these steps:
+
+1. Select the preferred report unit (words, strings, characters with or without spaces).
+2. *(Optional)* Select the task if you want to generate a report based on work done within all or specific tasks. Alternatively, leave it as **Not selected** to generate a report based on a wider content scope.
+3. Select the preferred language.
+4. Select the time period.
+5. Click **Settings** and select one of the available options to configure how you want the post-editing information to be displayed.
+6. Click **Generate**.
+
+### Result Analysis
+
+When the report is generated, you will see the information grouped into pre-translation methods (via AI, MT, and TM):
+
+* Pre-translation via AI:
+  * Total approved words, pre-translated by AI
+  * Separate graphs for each prompt
+* Pre-translation via MT:
+  * Total approved words, pre-translated by MT
+  * Separate graphs for each MT engine
+* Pre-translation via TM:
+  * Total approved words, pre-translated by TM
+
+In each section, the data is displayed as histograms and pie charts:
+
+* **Stacked Histogram** &ndash; visualizes the distribution of units approved with or without edits. It categorizes units based on the extent of post-editing, such as:
+  * Approved with no post-edit
+  * Post-edited with varying degrees of edit distance
+
+* **Pie Chart** &ndash; displays the proportion of units approved with no post-edits compared to those that were post-edited. This provides a clear view of the percentage breakdown of pre-translated units.
+
+To download the Pre-translation Efficiency report, click **Export** and select the preferred export format (XLSX, CSV, or JSON).
+
+<Image src={preTranslationEfficiencyGenerated} alt="Pre-translation Efficiency Generated" />
 
 ## Cost Estimate
 
@@ -293,7 +363,7 @@ When the report is generated, you will see the following amounts:
 * Information about users: profile picture, full name, username, and role.
 * Costs: total and separate for each user (for all contributions, contributions to a specific language, distinguished for translated and approved text by a member), and the amount of savings for translations made with TM and MT suggestions.
 
-To download the Cost Estimate report, click **Export** and select the preferred export format (CSV, XLSX, or JSON).
+To download the Translation Cost report, click **Export** and select the preferred export format (CSV, XLSX, or JSON).
 
 <Image src={translationCostGenerated} alt="Translation Cost Generated" />
 
@@ -489,27 +559,45 @@ View the available report columns and their mode applicability (i.e., translatio
 
 ## Top Members
 
-To see who contributed the most to your project’s translation, generate a list of top members.
+The Top Members report allows you to see who contributed the most to your project's translation.
 
-### Generating a List of Top Members
+Default parameters:
+- *Text unit*: words
+- *Time period*: Last 30 days
+- *Sorted by*: translated text units. A member who translated the most is placed on the top of the list.
+- *Languages*: all languages
+- *Contributors*: all
 
-To generate a list of top members, set a time period for which you want to see the activity of translators and the report unit. When you set the parameters, click **Generate** to see the list. By default, the list would include translators for all languages. To make a list of translators for a specific language, select the language you need from the drop-down menu above the list. To find a specific member, use the search field next to the drop-down menu. To open the member’s profile page, double-click on the name.
+Re-sort the members by clicking on the needed parameter. For example, if you want to analyze members by their proofreading activity, click on the *Approved* parameter to redo sorting.
 
-The list has the following columns:
+### Generating a Custom List of Top Members
 
-- *Name* &ndash; a translator's full name and username.
-- *Languages* &ndash; project languages.
-- *Translated* &ndash; the amount of translated source content.
-- *Target Words* &ndash; the amount of translated target content.
-<br/> This parameter is not available for the strings report unit because the amount of source and translated strings is always the same.
-- *Approved* &ndash; the amount of approved content.
-- *Voted* &ndash; the number of votes a translator made.
-- *"+" votes received* &ndash; the number of upvotes a translator received for translations.
-- *"-" votes received* &ndash; the number of downvotes a translator received for translations.
-- *Winning* &ndash; the number of approvals a translator received for translations.
-- *Joined* &ndash; the date a member joined a project.
+To generate a custom list of top members, follow these steps:
 
-To show or hide some columns, click <Icon name="material-symbols:table-chart" class="inline-icon" /> on the top-right side of the table and select the preferred ones.
+1. Select the preferred report unit (words, strings, characters with or without spaces).
+1. Select the time period for which you want to see the activity of contributors.
+1. To make a list of contributors for a specific language, select the language you need from the drop-down menu above the list. Alternatively, select **All languages**.
+1. Click **Generate**.
+
+To find a specific member, use the search field. To open the member’s profile page, double-click on the name.
+
+The Top Members list includes the following columns:
+
+* *Name* &ndash; conributor's first name, last name and username.
+* *Languages* &ndash; project languages.
+* *Translated* &ndash; the number of translated source content units.
+* *Target Words* &ndash; the number of translated content units in a target language.
+<br/> This parameter is not available for the *Strings* content unit because the number of source and translated strings is always the same.
+* *Approved* &ndash; the number of approved content units.
+* *Voted* &ndash; the number of votes a contributor made.
+* *"+" votes received* &ndash; the number of upvotes a contributor received for translations.
+* *"-" votes received* &ndash; the number of downvotes a contributor received for translations.
+* *Winning* &ndash; the number of approvals a contributor received for translations.
+* *Joined* &ndash; the date a member joined a project.
+
+To customize the visibility of columns in the report, click <Icon name="material-symbols:table-chart" class="inline-icon" /> at the upper-right side of the table and select the preferred ones.
+
+To download the Top Members report, click **Export** and select the preferred export format (CSV, XLSX, or JSON).
 
 <Image src={topMembers} alt="Generating a list of Top Members" />
 
@@ -541,8 +629,8 @@ To export the previously generated reports, follow these steps:
 
 <Steps>
   1. Open your project and go to **Reports > Archive**.
-  1. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> (or right-click) on the needed report in the list.
-  1. Click on the preferred file format to export. <Image src={archiveExporting} alt="Exporting Previously Generated Reports" />
+  1. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> on the needed report in the list.
+  1. Click on the preferred file format to export.
 </Steps>
 
 ### Deleting Previously Generated Reports
@@ -551,16 +639,26 @@ To delete the previously generated reports, follow these steps:
 
 <Steps>
   1. Open your project and go to **Reports > Archive**.
-  1. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> (or right-click) on the needed report in the list.
-  1. Click **Delete**. <Image src={archiveDeleting} alt="Deleting Previously Generated Reports" />
+  1. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> on the needed report in the list.
+  1. Click **Delete**.
 </Steps>
 
 ### Managing Reports Archive via API
 
-Besides UI, reports Archive can also be managed using the API methods from the Reports sections:
-
-* [Reports section (File-based)](https://developer.crowdin.com/api/v2/#tag/Reports)
-* [Reports section (String-based)](https://developer.crowdin.com/api/v2/string-based/#tag/Reports)
+<CardGrid>
+  <LinkCard
+    title="AI Section (File-based)"
+    description="Manage Reports Archive using API methods."
+    href="https://developer.crowdin.com/api/v2/#tag/Reports"
+    target="_blank"
+  />
+  <LinkCard
+    title="AI Section (String-based)"
+    description="Manage Reports Archive using API methods."
+    href="https://developer.crowdin.com/api/v2/string-based/#tag/Reports"
+    target="_blank"
+  />
+</CardGrid>
 
 ## See Also
 
