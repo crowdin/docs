@@ -3,5 +3,168 @@ title: Custom QA Checks
 slug: enterprise/custom-qa-checks
 ---
 
-https://support.crowdin.com/enterprise/custom-qa-checks/
-https://support.crowdin.com/enterprise/code-snippet-qa-checks/
+import { Image } from 'astro:assets';
+import { Steps } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import organizationSettingsMenuItem from '!/enterprise/organization-management/organization_settings_menu_item.png';
+import createCustomQAChecks from '!/enterprise/organization-management/custom_qa_checks_create.png';
+
+The custom quality assurance (QA) checks is the feature that helps efficiently handle language-specific aspects such as punctuation, numbers, and regular expressions to ensure more accurate QA check results and high-quality translations in all languages. With custom QA checks, you can detect the exact mistakes you want. It helps customers avoid mistakes in the texts and translators to translate the content more proficiently.
+
+## Creating and Adding Custom QA Checks
+
+You can manage Custom QA checks in the **Organization Settings**. There are two possible ways to add new Custom QA checks in your organization: create your own custom QA checks specifying a code snippet from scratch or add them from the Crowdin [Store](https://store.crowdin.com/).
+
+<Steps>
+  1. Click on your profile picture in the upper-right corner and select **Organization Settings**. <Image src={organizationSettingsMenuItem} alt="Open Organization Settings" />
+  1. Switch to the **Custom QA checks** page on the left menu bar and click **Create custom QA check**.
+  1. Provide the details of the custom QA check in the required fields:
+      - *Name* – provide a clear name for your custom QA check, so the translator can understand what should be corrected in translation
+      - *Description* – explain what custom QA check corrects or verifies
+      - *Code Snippet* – provide the Javascript-based [code snippet](#code-snippet) to make the QA check work. It includes a `crowdin` object and several properties.
+  1. Click **Create**. <Image src={createCustomQAChecks} alt="Create Custom QA Check" />
+</Steps>
+
+Alternatively, to add existing custom QA checks from the [Crowdin Store](https://store.crowdin.com/types/qa-check), follow these steps:
+
+<Steps>
+  1. Go to **Organization Settings** > **Custom QA checks**.
+  1. Click **Add from store**.
+  1. Click <Icon name="mdi:plus" class="inline-icon" /> towards the needed custom QA check.
+  1. Click **Create**.
+</Steps>
+
+## Code Snippet
+
+Code Snippet is a piece of code that helps to create custom QA checks and integrate them to Crowdin Enterprise.
+
+### Parameters
+
+Code Snippet is Javascript-based. It Includes a `crowdin` object and a number of properties. To create the code snippet, use this object template for code input:
+
+```text
+object crowdin {
+ object file {
+   string name,
+   string fullName,
+   string branch,
+   string type
+ }
+ string sourceLanguage,
+ string targetLanguage,
+ object context {
+   string context,
+   ?int maxLength,
+   ?string pluralForm,
+   ?string identifier
+ },
+ string contentType,
+ string source,
+ string translation
+}
+```
+
+Find  the example of a custom QA check code snippet in [Crowdin Script Editor](https://crowdin.github.io/crowdin-script-editor/). Use the link to see the structure of code snippet, edit it with your data and verify your code is correct.
+
+### Request
+
+The code snippet request includes the keys listed below:
+
+| Property<div class="w-48"></div> | Description                                                                                                                    |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `file.name`                      | Source file name                                                                                                               |
+| `file.fullName`                  | Full path to the source file in the project (excluding branch if any)                                                          |
+| `file.branch`                    | Branch name the source file is stored in                                                                                       |
+| `file.type`                      | Source file type                                                                                                               |
+| `sourceLanguage`                 | [Crowdin’s code](https://developer.crowdin.com/language-codes/) for the project source language                                |
+| `targetLanguage`                 | [Crowdin’s code](https://developer.crowdin.com/language-codes/) for the project target language                                |
+| `source`                         | Source text                                                                                                                    |
+| `translation`                    | Translated string                                                                                                              |
+| `context.context`                | Source string context                                                                                                          |
+| `context.maxLength`              | Maximum length of the translated string                                                                                        |
+| `context.pluralForm`             | PluralForm indicates which plural form is being translated right now                                                           |
+| `context.identifier`             | Source string identifier (key)                                                                                                 |
+| `contentType`                    | String can include one of the 3 types: `text/plain`, `application/vnd.crowdin.text+plural`, `application/vnd.crowdin.text+icu` |
+
+See the example of code snippet request:
+
+```json
+{
+   "file": {
+     "name": "strings.json",
+     "fullName": "backend/strings.json",
+     "branch": "master",
+     "type": "json"
+   },
+   "sourceLanguage": "en",
+   "targetLanguage": "de",
+   "context": {
+     "context": "backend.string.example.plain",
+     "maxLength": 10,
+     "pluralForm": "one",
+     "identifier": "6a1821e6499ebae94de4b880fd93b985"
+   },
+   "contentType": "application/vnd.crowdin.text+plural",
+   "source": '{"one":"Password", "other":"Passwords"}',
+   "translation": "das Passwort "
+}
+```
+
+### Response
+
+After running the code snippet, it should return the response whether the custom QA checks have passed successfully or failed:
+
+- The response object should contain boolean `success` property indicating whether QA checks have passed. For instance:
+  ```json
+  {
+    "success": true
+  }
+  ```
+
+- In case the QA checks failed, the property “message” will be displayed to the translator. For example:
+  ```json
+  {
+    "success": false,
+    "message": "The sentence starts with space, please remove 1 space at the beginning of the translation.",
+    "fixes": [
+      {
+        "from_pos": 0,
+        "to_pos": 1,
+        "replacement": ""
+      }
+    ]
+  }
+  ```
+
+- Crowdin QA checks can also return the mistakes and automatic fix instructions to the editor. If possible, it is recommended to include `fixes` property (an array of objects) since it can save a lot of time and effort for translators.
+  ```json
+  {
+    "from_pos": 0,
+    "to_pos": 1,
+    "replacement": ""
+  }
+  ```
+
+The `from_pos` is a character position in the `translation` string where the replacement starts. The `to_pos` is the end of character position. The `replacement` property is the text that should be placed between `from_pos` and `to_pos`.
+
+### Limitations
+
+Crowdin code snippet has the limitations listed below:
+
+- The code is completely sandboxed. Neither browser context nor Node.js context is available
+- Standard objects like `date`, `math`, and similar ones are not available
+- Crowdin limits the time of running the custom QA check: a user's code can run up to 100 ms. If the code snippet is too complex or has any mistakes, the custom QA check can be processed longer and will be stopped. In this case, correct the issues and run the check over.
+
+## Enabling Custom QA Checks
+
+All custom QA checks will be available in the project's **Settings**, along with QA checks provided by Crowdin. To enable custom QA checks, follow these steps:
+
+<Steps>
+  1. Open your project and go to **Settings > Quality assurance**.
+  1. Select the needed custom QA checks.
+</Steps>
+
+<ReadMore>
+  Read more about [Quality Assurance settings](/enterprise/project-settings/qa-checks/).
+</ReadMore>
