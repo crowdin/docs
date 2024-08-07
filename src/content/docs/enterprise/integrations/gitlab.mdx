@@ -5,4 +5,214 @@ sidebar:
   order: 2
 ---
 
-https://support.crowdin.com/enterprise/gitlab-integration/ + https://support.crowdin.com/enterprise/gitlab-integration-sb/
+import { Image } from 'astro:assets';
+import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import setUpIntegrationDropdown from '!/enterprise/integrations/set_up_integration_dropdown.png';
+import authorization from '!/crowdin/integrations/gitlab_integration_authorization.png';
+import unconfigured from '!/crowdin/integrations/integration_unconfigured.png';
+import unconfiguredSb from '!/crowdin/integrations/integration_unconfigured_sb.png';
+import syncNow from '!/enterprise/integrations/integration_sync_now.png';
+
+The GitLab integration allows you to synchronize files between your GitLab repo and Crowdin Enterprise project.
+
+<Aside>
+  You will need to [install the GitLab integration](https://store.crowdin.com/gitlab) in your Crowdin Enterprise organization before you can set it up and use it.
+</Aside>
+
+In file-based projects, there are two possible GitLab integration modes you can choose from:
+
+* **Source and translation files mode** &ndash; synchronize source and translation files between your GitLab repository and Crowdin Enterprise project.
+* **Target file bundles mode** &ndash; generate and push translation files to your GitLab repository from the Crowdin Enterprise project in the selected format. In this mode, integration pushes translation files and doesn't sync sources from your repo. In cases when you perform a source text review in your Crowdin Enterprise project and want to get updated source texts to your repo, you can add a source language as a target language, which will be pushed to your repo along with translations.
+
+In string-based projects, GitLab integration exclusively operates in the **Target file bundles mode**.
+
+<ReadMore>
+  Read more about [project types](/creating-project#project-types).
+</ReadMore>
+
+All translated and approved files (or target file bundles) are automatically merged into the `l10n` branch of the GitLab repository.
+
+<Aside type="tip" title="Using GitLab CI/CD?">
+  An alternative to this integration is to use [Crowdin CLI](https://store.crowdin.com/gitlab-ci) in GitLab CI/CD pipelines to automate the localization process.
+</Aside>
+
+## Connecting GitLab Account
+
+<Steps>
+  1. Open your project and go to the **Integrations** tab.
+  2. Click on **GitLab** in the Integrations list.
+  3. Click **Set Up Integration** and select **Source and translation files mode** or **Target file bundles mode** from the drop-down list to integrate via your GitLab account. <Image src={setUpIntegrationDropdown} alt="GitLab Integration Connecting GitLab" width="400" />
+  <Aside>In string-based projects, GitLab integration exclusively operates in the **Target file bundles mode**.</Aside>
+  4. Then authorize the connection with Crowdin on the GitLab side: <Image src={authorization} alt="GitLab Integration Authorization" width="500" />
+</Steps>
+
+In case the repository you need is private, and you have limited or no access to it, please ask the repository owner to provide you with an access token.
+Afterward, click **Use personal access token** and insert the token into the *Token* field and click **Set Up Integration**.
+
+<Aside title="Permissions">
+  When setting up an integration with an access token, ensure that you have the Maintainer level permission to the necessary repo.
+</Aside>
+
+### Selecting Repository
+
+In the appeared dialog, select your repository and branches that should be translated.
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Image src={unconfigured} alt="GitLab Integration Unconfigured" />
+
+    It's recommended to switch Duplicate Strings to **Show within a version branch**, so identical strings will be hidden between branches. If your source files contain strings with apparent identifiers (keys), it's better to use a *strict* version of this option. In other cases, feel free to use a *regular* one.
+  </TabItem>
+  <TabItem label="String-based project">
+    <Image src={unconfiguredSb} alt="GitLab Integration Unconfigured" />
+  </TabItem>
+</Tabs>
+
+<CardGrid>
+  <LinkCard title="Duplicate Strings" href="/project-settings/import#duplicate-strings" />
+  <LinkCard title="Version Management" href="/version-management" />
+</CardGrid>
+
+When working with GitLab integration in the **Target File Bundles Mode**, the integration will send the completed translations from your Crowdin Enterprise project without pulling sources from your repo. So when selecting a repository and branches that should be translated, you specify where the integration should put the generated bundles with translations.
+
+<ReadMore>
+  Read more about [configuring target file bundles for VCS integration](/bundles#bundles-in-vcs-integrations).
+</ReadMore>
+
+When you work with private integrations (e.g., integrations with self-hosted VCS), you need to add dedicated Crowdin IP addresses to the allowlist to ensure that it operates properly while staying secure.
+
+<ReadMore>
+  Read more about [IP Addresses](https://developer.crowdin.com/ip-addresses/#integrations).
+</ReadMore>
+
+### Service Branches
+
+When translations are finished and your languages are ready to go live, Crowdin Enterprise sends the merge request with translations to your version control system. For every branch that is under localization, Crowdin Enterprise creates an additional service branch with translations. We don't commit directly to the master branch so that you can verify translations first.
+
+By default, *l10n_* is added to the created service branch name. If necessary, you can easily change it.
+
+### Synchronization Settings
+
+To import existing translations from your repo, select one of the following options:
+
+* **One-time translation import after the branch is connected**
+* **Always import new translations from the repository**
+
+By default, the first option is selected to import translations only once. Alternatively, you can clear both options if you don’t want to import translations from your repo.
+
+#### Push Sources
+
+By default, sources are not pushed to the repo with translations. Although, if you perform a source text review in your Crowdin Enterprise project and would like to push the changes made to your source files on Crowdin Enterprise back to your repo, click **Edit**, select *Push Sources* in the integration settings, and click **Save**.
+
+<Aside type="caution" title="Limitations">
+  The *Import existing translations* and *Push Sources* options are only available for file-based projects.
+</Aside>
+
+#### Sync Schedule
+
+The synchronization is processed every hour automatically. If necessary, you can change the update interval in the integration settings. To configure the synchronization schedule – click **Edit**, scroll down to the *Sync Schedule*, set the preferred interval, and click **Save**.
+
+There are cases when it's necessary to disable translations from being pushed to the repo temporarily. In this situation, click **Edit**, clear *Sync Schedule* in the integration settings, and click **Save**. When ready to sync translations with the repo, select the *Sync Schedule*, and click **Save**.
+
+Not depending on the synchronization settings, the source files' changes on the repo will still be synced with Crowdin Enterprise continuously.
+
+### Branches to Sync Automatically
+
+When you set up the integration, you select existing repository branches to be added to the Crowdin Enterprise project. To add future branches from GitLab to Crowdin Enterprise automatically, create a pattern for the branch names in the integration settings.
+
+For example, you add a pattern **feature* in the GitLab integration settings. In this case, the future branches that contain this word at the end of the title will be added to the project.
+
+To add a pattern for branch names, follow these steps:
+
+<Steps>
+  1. Click **Edit** in the GitLab integration section.
+  2. In the appeared dialog, scroll down to the *Branches to Sync Automatically*.
+  3. In the *Branches to Sync Automatically* field, use wildcard selectors such as `*`, `?`, `[set]`, `\` and others to identify the necessary branches.
+  4. Click **Save**.
+</Steps>
+
+### Default Configuration File Name
+
+`crowdin.yml` is the default file name that is used for automatically synchronized branches. To change the default settings, click **Edit**, specify the preferred name in the *Default configuration file name* field in the integration settings, and click **Save**.
+
+If you don't specify your custom configuration file name for automatically synchronized branches, and the integration doesn't find a configuration file with the default name `crowdin.yml` in the root of the branch, these branches will be marked in the integration settings with a red icon with an exclamation mark saying "Not Ready. Check the configuration".
+
+## Selecting Content for Synchronization
+
+To make integration work, you need to specify which source files should be translated and how Crowdin Enterprise should structure translated files in your repository. To make integration work in the Target file bundles mode, you need to select the required bundles that you want to push to your repository.
+
+<Aside type="tip">
+  If you see a red icon with an exclamation mark next to the service branch name, it means that you haven't selected any content for synchronization.
+</Aside>
+
+There are two ways you can specify content for synchronization:
+
+* Configuring online
+* Configuring manually by creating a configuration file
+
+### Configuring Online
+
+This procedure is the same for all integrations with version control systems (VCS).
+
+<ReadMore>
+  Check [Configuring VCS Integrations Online](/configuring-vcs-integrations-online) to get to know how to select content for synchronization online.
+</ReadMore>
+
+### Creating Configuration File
+
+The configuration file `crowdin.yml` should be stored in the GitLab repository along with each separate branch that you want to translate.
+
+It should have the same structure as required for CLI, but your project’s credentials should not be stored in the file’s header for security reasons.
+
+<ReadMore>
+  Read more about [creating a configuration file](https://developer.crowdin.com/configuration-file/).
+</ReadMore>
+
+## Working with Multiple Repositories within One Project
+
+If you're working with a multi-platform product that has versions for different operating systems, you may want to connect multiple repositories that contain source files for each operating system. In this case, localization resources (e.g., TMs, Glossaries) and translations could be used more efficiently, reducing the time needed for project localization.
+
+To add another repository, follow these steps:
+
+<Steps>
+  1. Open your project and go to the **Integrations** tab.
+  2. Click on **GitLab** in the Integrations list.
+  3. Click **Add Repository**.
+  4. Configure the integration with the new repository according to your needs and preferences.
+</Steps>
+
+## Checking the Status of Synchronization
+
+Once the integration is set up, all related information is stored in the **Integrations** tab > **GitLab** section.
+
+After the integration is connected, the settings can be updated only by the project member who configured it. All project managers except the person who configured the integration will see the **Edit** button disabled with the following message when hovering over it: `Integration was configured by {Full Name} ({username})`.
+
+By default, synchronization is processed every hour automatically. If you need to launch the synchronization immediately – click **Sync Now**.
+
+<Image src={syncNow} alt="GitLab Integration Sync Now" />
+
+Alternatively, if you need to sync only one branch separately, click <Icon name="mdi:dots-vertical" class="inline-icon" /> on the needed branch and select **Sync branch**.
+
+## Uploading Translations from Repo
+
+By default, the translations stored on the repo are uploaded to Crowdin Enterprise during the first synchronization only. To upload translations to Crowdin Enterprise manually, click <Icon name="mdi:dots-vertical" class="inline-icon" /> icon next to the **Sync Now** button, and click **Sync Translations to Crowdin Enterprise**. The integration will upload existing translations to your Crowdin Enterprise project.
+
+<Aside type="caution" title="Limitations">
+  The *Sync Translations to Crowdin Enterprise* option is available for file-based projects only.
+</Aside>
+
+## Q&A
+
+<QuestionAnswer title="How can I avoid unnecessary application builds triggered by commits from Crowdin Enterprise?">
+  Since VCS integrations in Crowdin Enterprise use API to commit files but not Git, each file is committed separately.
+
+  Here are a few recommendations that might help solve similar situations:
+
+  * Use the `export_languages` option to skip commits from languages you're not interested in yet. Read more about the [Export languages parameter for VCS integrations](https://developer.crowdin.com/configuration-file#export-languages-parameter-for-vcs-integrations).
+  * Use the `[ci skip]` tag in the commit messages to skip unnecessary builds. Read more about the [Commit Message parameter for VCS integrations](https://developer.crowdin.com/configuration-file#commit-message-parameter-for-vcs-integrations).
+  * Configure the preferred sync interval using [Sync Schedule](#synchronization-settings) (e.g., set the sync once in 24 hours).
+  * Squash commits when merging a localization branch to keep the master branch history clean and uncluttered.
+</QuestionAnswer>
