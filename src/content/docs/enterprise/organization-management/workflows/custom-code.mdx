@@ -1,8 +1,122 @@
 ---
 title: Custom Code
-slug: enterprise/workflows/custom-code
+slug: enterprise/custom-code
 sidebar:
   order: 3
 ---
 
-https://support.crowdin.com/enterprise/custom-code/
+import { Image } from 'astro:assets';
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+import customCodeWorkflowEditor from '!/enterprise/organization-management/custom_code_workflow_editor.png';
+
+Custom Code is a workflow step that allows you to specify your own code snippets according to which the strings should be filtered further in the workflow. The Custom Code has one input and two outputs (`true` and `false`), so you can split strings into two workflow threads according to some specific conditions written using JavaScript.
+
+## Use Cases
+
+You can use the custom code workflow step in the numerous scenarios. Here are a few examples:
+
+* To send one part of the strings to in-house translators and another part to a translation agency.
+* To send one part of the strings to machine translation and another part to crowdsourcing.
+* To send one part of the strings to in-house proofreaders and another part to proofreading by a translation agency.
+
+<CardGrid>
+  <LinkCard
+    title="Workflow Overview"
+    href="/enterprise/workflows/"
+  />
+  <LinkCard
+    title="Crowdin Script Editor"
+    href="https://crowdin.github.io/crowdin-script-editor/"
+    target="_blank"
+  />
+</CardGrid>
+
+## Adding Custom Code Step to Your Workflow
+
+Custom Code could be added to the workflow of your project in the workflow editor or the Workflow template editor.
+
+<Image src={customCodeWorkflowEditor} alt="Custom Code in the Workflow Editor" />
+
+## Code Snippet Parameters
+
+After you've added the Custom Code step to your workflow, you need to specify the code snippet in the *Custom Code* field that will redirect the strings to one of two outputs.
+
+The Code Snippet is JavaScript-based. It contains a `crowdin` object and several properties. To create the code snippet, use this object template for code input:
+
+```text
+object crowdin {
+ object file {
+   string name,
+   string fullName,
+   string title,
+   string branchName,
+   string type
+ }
+ object context {
+   string context
+   ?int maxLength
+ },
+ string contentType,
+ string source,
+ array labels
+}
+```
+
+Find the example of a custom code snippet in [Crowdin Script Editor](https://crowdin.github.io/crowdin-script-editor/). Use the link to see the structure of code snippet, edit it with your data and verify your code is correct.
+
+## Code Snippet Request
+
+The code snippet request includes the keys listed below:
+
+| Property<div class="w-48"></div> | Description                                                                                                                    |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `file.name`                      | Source file name                                                                                                               |
+| `file.fullName`                  | Full path to the source file in the project (excluding branch if any)                                                          |
+| `file.title`                     | Source file title as it appears to translators                                                                                 |
+| `file.branchName`                | Branch name the source file is stored in                                                                                       |
+| `file.type`                      | Source file type                                                                                                               |
+| `source`                         | Source text                                                                                                                    |
+| `label`                          | Source string labels array                                                                                                     |
+| `context.maxLength`              | Maximum length of the string                                                                                                   |
+| `context.context`                | Context of the string that enters the input of the Custom Code step                                                            |
+| `context.identifier`             | Source string identifier (key)                                                                                                 |
+| `contentType`                    | String can include one of three types: `text/plain`, `application/vnd.crowdin.text+plural`, `application/vnd.crowdin.text+icu` |
+
+See the example of a code snippet request:
+
+```json
+{
+   "file": {
+     "name": "strings.json",
+     "fullName": "backend/strings.json",
+     "title": "application strings",
+     "branchName": "master",
+     "type": "json"
+   },
+   "context": {
+     "context": "backend.string.example.plain",
+     "maxLength": 10,
+     "identifier": "6a1821e6499ebae94de4b880fd93b985"
+   },
+   "contentType": "application/vnd.crowdin.text+plural",
+   "source": '{"one":"Password", "other":"Passwords"}',
+   "label" : ["Translate by vendor"]
+}
+```
+
+## Code Snippet Response
+
+After running the code snippet, it should return the response whether the specified conditions are met or not:
+
+- The response object should contain boolean `success` property indicating whether the specified conditions are met. For instance:
+  ```json
+  {
+    "success": true
+  }
+  ```
+- In case the specified conditions are not met, the string will be directed to the `false` output of the Custom Code step. For example:
+  ```json
+  {
+    "success": false
+  }
+  ```
