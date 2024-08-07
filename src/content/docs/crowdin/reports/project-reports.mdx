@@ -6,7 +6,8 @@ sidebar:
 ---
 
 import { Image } from 'astro:assets';
-import { Steps, Aside } from '@astrojs/starlight/components';
+import Include from '~/components/Include.astro';
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
 import units from '!/crowdin/reports/reports_units.png';
 import projectStatus from '!/crowdin/reports/reports_project_status.png';
@@ -22,12 +23,11 @@ import addMtMatchType from '!/crowdin/reports/reports_translation_cost_add_mt_ma
 import addIndividualRatesTranslationCost from '!/crowdin/reports/reports_translation_cost_add_individual_rates.png';
 import costEstimateGenerated from '!/crowdin/reports/reports_cost_estimate_generated.png';
 import translationCostGenerated from '!/crowdin/reports/reports_translation_cost_generated.png';
+import preTranslationEfficiencyGenerated from '!/crowdin/reports/reports_pre_translation_efficiency_generated.png';
 import topMembers from '!/crowdin/reports/reports_top_members.png';
 import archiveViewing from '!/crowdin/reports/reports_archive_viewing.png';
-import archiveExporting from '!/crowdin/reports/reports_archive_exporting.png';
-import archiveDeleting from '!/crowdin/reports/reports_archive_deleting.png';
 
-To view your project status, estimate and count the translation cost, keep track of the most active members, and view historical data of the previously generated reports, open your project and go to the **Reports** tab.
+To view your project status, assess the effectiveness of pre-translation methods, estimate and count the translation cost, keep track of the most active members, and view historical data of previously generated reports, open your project and go to the **Reports** tab.
 
 For each report, you can select a report unit:
 
@@ -96,13 +96,13 @@ You can generate a Cost Estimate report based on the following filters:
   Final translation cost might differ due to various factors such as added or deleted texts, multiple people translating the same string into the same language (both of them will be counted in the Translation Cost), and others.
 </Aside>
 
-### Generating a Report
+### Generating a Report {#generating-cost-estimate}
 
 To generate the Cost Estimate report, follow these steps:
 
 <Steps>
   1. Select the preferred currency and the report unit (word, string, character, or characters (including spaces)).
-  1. Set your [rates](#rates) for translations and approvals.
+  1. Set your [rates](#rates-cost-estimate) for translations and approvals.
   1. Select either **General Filter** or **Task Filter** to generate a report based on work to be done within a specific task. Use the available filter parameters to specify the report data you're interested in.
   1. Click **Generate**.
 </Steps>
@@ -113,11 +113,11 @@ To generate the Cost Estimate report, follow these steps:
   Rates are automatically saved after you click *Generate*.
 </Aside>
 
-### Rates
+### Rates {#rates-cost-estimate}
 
 You can set the prices for Base rates (full translation, proofread) and configure Net Rate Schemes (percentage of the full translation rate paid for translation using TM suggestions).
 
-#### Base Rates
+#### Base Rates {#base-rates-cost-estimate}
 
 In the Base Rates section, you can set rates for the following types of work:
 
@@ -125,7 +125,7 @@ In the Base Rates section, you can set rates for the following types of work:
   <Aside>If the string has several translations made by the same person, only one will be counted. If the string has several translations made by different people, each of them will be counted.</Aside>
 * **Proofread** &ndash; for each approved translation.
 
-#### Net Rate Schemes
+#### Net Rate Schemes {#net-rate-schemes-cost-estimate}
 
 In the Net Rate Schemes section, in addition to the base rates, you can set the percentage of the full translation rate to be paid for translations made using TM suggestions of various TM Match types. By default, you can configure the percentage of the full translation rate for the following TM Match types:
 
@@ -145,7 +145,7 @@ To add your own TM match types, follow these steps:
 
 <Image src={addTmMatchType} alt="Adding TM Match Type" width="500" />
 
-#### Adding Individual Rates
+#### Adding Individual Rates {#individual-rates-cost-estimate}
 
 In addition to base rates that are applied to all languages by default, you can add individual rates for specific languages. To add individual rates, click **Add individual rates**.
 
@@ -190,7 +190,7 @@ Keep in mind that calculations are approximate because strings might be translat
   Internal Fuzzy Matches would be counted according to the Net Rate Schemes configurations.
 </Aside>
 
-### Result Analysis
+### Result Analysis {#result-analysis-cost-estimate}
 
 When the report is generated, you will see the following amounts:
 
@@ -218,7 +218,7 @@ You can generate a Translation Cost report based on the following filters:
 * **General filter** &ndash; Group by: Member or language; Time period: All time, Today, Yesterday, Last 7 days, Last 30 days, or Custom range; Files: All files (including deleted) or Selected files (excluding deleted); Language: All or specific target language; Users: one or a few specific users.
 * **Task filter** &ndash; Tasks: All Tasks or specific task.
 
-### Generating a Report
+### Generating a Report {#generating-translation-cost}
 
 To generate the Translation Cost report, follow these steps:
 
@@ -239,7 +239,7 @@ To generate the Translation Cost report, follow these steps:
 
 You can set the prices for Base rates (full translation, proofread) and configure Net Rate Schemes (percentage of the full translation rate paid for translation using TM suggestions, MT suggestions, and existing translations).
 
-#### Base Rates
+#### Base Rates {#base-rates-translation-cost}
 
 In the Base Rates section, you can set rates for the following types of work:
 
@@ -247,7 +247,7 @@ In the Base Rates section, you can set rates for the following types of work:
   <Aside>If the string has several translations made by the same person, only one will be counted. If the string has several translations made by different people, each of them will be counted.</Aside>
 * **Proofread** &ndash; for each approved translation.
 
-#### Net Rate Schemes
+#### Net Rate Schemes {#net-rate-schemes-translation-cost}
 
 In the Net Rate Schemes section, in addition to the base rates, you can set the percentage of the full translation rate to be paid for translations made using TM suggestions, MT suggestions, and other translations of various Match types.
 
@@ -278,7 +278,7 @@ To add your own match types, follow these steps:
 
 <Image src={addMtMatchType} alt="Adding MT/Other Translation Match Type" />
 
-#### Adding Individual Rates
+#### Adding Individual Rates {#individual-rates-translation-cost}
 
 In addition to base rates that are applied to all languages and users by default, you can add individual rates for specific languages and users. To add individual rates, click **Add individual rates**.
 
@@ -286,16 +286,91 @@ To select the languages and users for individual rates, click **Edit Languages**
 
 <Image src={addIndividualRatesTranslationCost} alt="Adding Individual Rates" />
 
-### Result Analysis
+### Result Analysis {#result-analysis-translation-cost}
 
 When the report is generated, you will see the following amounts:
 
 * Information about users: profile picture, full name, username, and role.
 * Costs: total and separate for each user (for all contributions, contributions to a specific language, distinguished for translated and approved text by a member), and the amount of savings for translations made with TM and MT suggestions.
 
-To download the Cost Estimate report, click **Export** and select the preferred export format (CSV, XLSX, or JSON).
+To download the Translation Cost report, click **Export** and select the preferred export format (CSV, XLSX, or JSON).
 
 <Image src={translationCostGenerated} alt="Translation Cost Generated" />
+
+## Pre-translation Efficiency
+
+Use this report to assess the effectiveness of pre-translation methods (via AI, MT, and TM) used in your project by analyzing post-editing required for pre-translated strings before approval. It compares the initial pre-translated strings with the final approved translations after post-editing, categorizing data based on the edit distance and pre-translation method. This report allows you optimize your translation workflows and improve overall content quality by identifying the best-performing pre-translation methods.
+
+### Report Scope
+
+* Includes only approved strings with at least one pre-translation.
+* If multiple pre-translations exist for a string, each is included with its edit distance.
+* Only the top translation is used for comparison if multiple approvals exist.
+
+### Use Case and Best Practices
+
+**Typical Use Case:**
+
+<Steps>
+  1. Launch Pre-translation &ndash; use different methods (via AI, MT, and TM) for a portion of your content. Alternatively, you can use one method (e.g., AI) and compare various prompts with different settings.
+  2. Invite a Proofreader &ndash;  have the pre-translated content reviewed and approved by a proofreader.
+  3. Generate Report &ndash; use the Pre-translation Efficiency report to evaluate which pre-translation method performed best by requiring the least amount of post-editing.
+  4. Optimize Workflow &ndash; use the most effective pre-translation method for all your content.
+</Steps>
+
+**Best Practices:**
+
+* **Regular Reviews** &ndash; regularly generate and review the report to stay informed about the performance of your pre-translation methods.
+* **Adjust Methods** &ndash; use the insights from the report to adjust your pre-translation methods. For example, if AI pre-translations require minimal edits, consider increasing their use.
+
+### Generating a Report {#generating-pre-translation-efficiency}
+
+You can generate a Pre-translation Efficiency report based on the following filters:
+
+* **Task** &ndash; Not selected, All Tasks, or a specific task.
+* **Language** &ndash; All, specific language.
+* **Strings added (Date range of when the strings were approved)** &ndash; All time, Today, Yesterday, Last 7 days, Last 30 days, This month, or Custom range.
+
+Additionally, using the report's **Settings**, you can adjust how the post-editing information will be displayed on the graphs:
+
+* **Total** &ndash; aggregates all post-editing data without breakdown.
+* **Split into Categories by Edit Distance %** &ndash; offers a detailed view by categorizing units based on the extent of editing required.
+
+To generate the Pre-translation Efficiency report, follow these steps:
+
+<Steps>
+  1. Select the preferred report unit (words, strings, characters with or without spaces).
+  2. *(Optional)* Select the task if you want to generate a report based on work done within all or specific tasks. Alternatively, leave it as **Not selected** to generate a report based on a wider content scope.
+  3. Select the preferred language.
+  4. Select the time period.
+  5. Click **Settings** and select one of the available options to configure how you want the post-editing information to be displayed.
+  6. Click **Generate**.
+</Steps>
+
+### Result Analysis {#result-analysis-pre-translation-efficiency}
+
+When the report is generated, you will see the information grouped into pre-translation methods (via AI, MT, and TM):
+
+* Pre-translation via AI:
+  * Total approved words, pre-translated by AI
+  * Separate graphs for each prompt
+* Pre-translation via MT:
+  * Total approved words, pre-translated by MT
+  * Separate graphs for each MT engine
+* Pre-translation via TM:
+  * Total approved words, pre-translated by TM
+
+In each section, the data is displayed as histograms and pie charts:
+
+* **Stacked Histogram** &ndash; visualizes the distribution of units approved with or without edits. It categorizes units based on the extent of post-editing, such as:
+  * Approved with no post-edit
+  * Post-edited with varying degrees of edit distance
+
+* **Pie Chart** &ndash; displays the proportion of units approved with no post-edits compared to those that were post-edited. This provides a clear view of the percentage breakdown of pre-translated units.
+
+To download the Pre-translation Efficiency report, click **Export** and select the preferred export format (XLSX, CSV, or JSON).
+
+<Image src={preTranslationEfficiencyGenerated} alt="Pre-translation Efficiency Generated" />
 
 ## Contribution Raw Data Report
 
@@ -307,209 +382,51 @@ For repeated translations by the same user on the same source string, into the s
 
 View the available report columns and their mode applicability (i.e., translations, approvals, and votes) in the following table:
 
-<table>
-  <thead>
-  <tr>
-    <th>Name</th>
-    <th>Available in Report Mode</th>
-    <th>Description</th>
-  </tr>
-  </thead>
-  <tbody>
-  <tr>
-    <td><code>userId</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>integer</code></p>
-      <p>Numeric identifier of a user who added a translation.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>languageId</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>string</code></p>
-      <p>Target language identifier (<a href="https://developer.crowdin.com/language-codes/" target="_blank">Crowdin language code</a> (e.g., uk)).</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>stringId</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>integer</code></p>
-      <p>Numeric string identifier in Crowdin project.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>translationId</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>integer</code></p>
-      <p>Numeric identifier of the translation in Crowdin project.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>fileId</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>integer</code></p>
-      <p>Numeric file identifier in Crowdin project where the source string is stored.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>filePath</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>string</code></p>
-      <p>Path to the file that contains the source string (e.g., /main/docs/index.md).</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>pluralForm</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>string</code></p>
-      <p>Translation plural form (each plural form is displayed as a separate record in the report).</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>sourceStringTextHash</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>string</code></p>
-      <p>Hash of the source string.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>mtEngine</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>string</code></p>
-      <p>MT engine name from which a translation was provided.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>mtId</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>integer</code></p>
-      <p>Numeric MT engine identifier.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>tmName</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>string</code></p>
-      <p>Translation memory name from which a translation was provided.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>tmId</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>integer</code></p>
-      <p>Numeric translation memory identifier.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>preTranslated</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>string</code></p>
-      <p>Specifies if a translation was applied via pre-translation.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>tmMatch</code></td>
-    <td>Translations</td>
-    <td>
-      <p><strong>Type:</strong> <code>integer</code></p>
-      <p>The highest match value of the translation with other TM suggestions, if any.<br/>Read more about [TM Match Calculation](/translation-memory#tm-match-calculation).</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>mtMatch</code></td>
-    <td>Translations</td>
-    <td>
-      <p><strong>Type:</strong> <code>integer</code></p>
-      <p>The highest match value of the translation with other MT suggestions, if any.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>suggestionMatch</code></td>
-    <td>Translations</td>
-    <td>
-      <p><strong>Type:</strong> <code>integer</code></p>
-      <p>The highest match value of the translation with suggestions from other translators, if any.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>sourceUnits</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>integer</code></p>
-      <p>Specifies the number of words in the source text (available only if <code>strings</code> unit type is not selected).</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>targetUnits</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>integer</code></p>
-      <p>Specifies the number of words in the translation (available only if <code>strings</code> unit type is not selected).</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>createdAt</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>datetime</code></p>
-      <p>Specifies the date when the string was initially translated.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>updatedAt</code></td>
-    <td>Translations, Approvals, Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>datetime</code></p>
-      <p>Specifies the date when the last translation was added.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>mark</code></td>
-    <td>Votes</td>
-    <td>
-      <p><strong>Type:</strong> <code>string</code></p>
-      <p>A vote mark that indicates how the translation rating has changed (e.g., if a translation has been voted up or down, or if the vote has been canceled).</p>
-    </td>
-  </tr>
-  </tbody>
-</table>
+<Include file="contribution-raw-data-report-columns.mdx" />
 
 ## Top Members
 
-To see who contributed the most to your project’s translation, generate a list of top members.
+The Top Members report allows you to see who contributed the most to your project's translation.
 
-### Generating a List of Top Members
+Default parameters:
+- *Text unit*: words
+- *Time period*: Last 30 days
+- *Sorted by*: translated text units. A member who translated the most is placed on the top of the list.
+- *Languages*: all languages
+- *Contributors*: all
 
-To generate a list of top members, set a time period for which you want to see the activity of translators and the report unit. When you set the parameters, click **Generate** to see the list. By default, the list would include translators for all languages. To make a list of translators for a specific language, select the language you need from the drop-down menu above the list. To find a specific member, use the search field next to the drop-down menu. To open the member’s profile page, double-click on the name.
+Re-sort the members by clicking on the needed parameter. For example, if you want to analyze members by their proofreading activity, click on the *Approved* parameter to redo sorting.
 
-The list has the following columns:
+### Generating a Custom List of Top Members
 
-- *Name* &ndash; a translator's full name and username.
-- *Languages* &ndash; project languages.
-- *Translated* &ndash; the amount of translated source content.
-- *Target Words* &ndash; the amount of translated target content.
-<br/> This parameter is not available for the strings report unit because the amount of source and translated strings is always the same.
-- *Approved* &ndash; the amount of approved content.
-- *Voted* &ndash; the number of votes a translator made.
-- *"+" votes received* &ndash; the number of upvotes a translator received for translations.
-- *"-" votes received* &ndash; the number of downvotes a translator received for translations.
-- *Winning* &ndash; the number of approvals a translator received for translations.
-- *Joined* &ndash; the date a member joined a project.
+To generate a custom list of top members, follow these steps:
 
-To show or hide some columns, click <Icon name="material-symbols:table-chart" class="inline-icon" /> on the top-right side of the table and select the preferred ones.
+<Steps>
+  1. Select the preferred report unit (words, strings, characters with or without spaces).
+  1. Select the time period for which you want to see the activity of contributors.
+  1. To make a list of contributors for a specific language, select the language you need from the drop-down menu above the list. Alternatively, select **All languages**.
+  1. Click **Generate**.
+</Steps>
+
+To find a specific member, use the search field. To open the member’s profile page, double-click on the name.
+
+The Top Members list includes the following columns:
+
+* *Name* &ndash; conributor's first name, last name and username.
+* *Languages* &ndash; project languages.
+* *Translated* &ndash; the number of translated source content units.
+* *Target Words* &ndash; the number of translated content units in a target language.
+<br/> This parameter is not available for the *Strings* content unit because the number of source and translated strings is always the same.
+* *Approved* &ndash; the number of approved content units.
+* *Voted* &ndash; the number of votes a contributor made.
+* *"+" votes received* &ndash; the number of upvotes a contributor received for translations.
+* *"-" votes received* &ndash; the number of downvotes a contributor received for translations.
+* *Winning* &ndash; the number of approvals a contributor received for translations.
+* *Joined* &ndash; the date a member joined a project.
+
+To customize the visibility of columns in the report, click <Icon name="material-symbols:table-chart" class="inline-icon" /> at the upper-right side of the table and select the preferred ones.
+
+To download the Top Members report, click **Export** and select the preferred export format (CSV, XLSX, or JSON).
 
 <Image src={topMembers} alt="Generating a list of Top Members" />
 
@@ -541,8 +458,8 @@ To export the previously generated reports, follow these steps:
 
 <Steps>
   1. Open your project and go to **Reports > Archive**.
-  1. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> (or right-click) on the needed report in the list.
-  1. Click on the preferred file format to export. <Image src={archiveExporting} alt="Exporting Previously Generated Reports" />
+  1. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> on the needed report in the list.
+  1. Click on the preferred file format to export.
 </Steps>
 
 ### Deleting Previously Generated Reports
@@ -551,16 +468,26 @@ To delete the previously generated reports, follow these steps:
 
 <Steps>
   1. Open your project and go to **Reports > Archive**.
-  1. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> (or right-click) on the needed report in the list.
-  1. Click **Delete**. <Image src={archiveDeleting} alt="Deleting Previously Generated Reports" />
+  1. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> on the needed report in the list.
+  1. Click **Delete**.
 </Steps>
 
 ### Managing Reports Archive via API
 
-Besides UI, reports Archive can also be managed using the API methods from the Reports sections:
+Besides UI, you can also manage Reports Archive using the API methods from the Reports sections:
 
-* [Reports section (File-based)](https://developer.crowdin.com/api/v2/#tag/Reports)
-* [Reports section (String-based)](https://developer.crowdin.com/api/v2/string-based/#tag/Reports)
+<CardGrid>
+  <LinkCard
+    title="Manage Reports Archive using API methods (File-based)"
+    href="https://developer.crowdin.com/api/v2/#tag/Reports"
+    target="_blank"
+  />
+  <LinkCard
+    title="Manage Reports Archive using API methods (String-based)"
+    href="https://developer.crowdin.com/api/v2/string-based/#tag/Reports"
+    target="_blank"
+  />
+</CardGrid>
 
 ## See Also
 
