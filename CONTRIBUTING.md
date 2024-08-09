@@ -101,16 +101,17 @@ Custom classes available:
 
 - `no-shadow` - Removes the shadow and border from the image
 - `crowdin-modal` - Sets bigger border radius for Crowdin modal screenshots
+- `width-sm` - 384px
+- `width-md` - 448px
+- `width-lg` - 512px
+- `width-xl` - 576px
+- `width-2xl` - 672px
 
 ```mdx
-<Image src={uploadFiles} alt="Upload Files" class="no-shadow" />
+<Image src={uploadFiles} alt="Upload Files" class="no-shadow width-2xl" />
 ```
 
-You can also specify the width of the image:
-
-```mdx
-<Image src={uploadFiles} alt="Upload Files" width="500" />
-```
+By default, images take up the entire width of the content container. To make the image smaller, use the appropriate classes. Don't use the `width` attribute to resize images, as this will degrade quality. Instead, use the `width-*` classes.
 
 ## File-based/String-based content differentiation
 
