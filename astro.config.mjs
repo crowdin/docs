@@ -63,8 +63,8 @@ const config = defineConfig({
       customCss: [
         './src/style/tailwind.css',
         './src/style/global.css',
-        './src/style/using-logo.css',
-        './src/style/northern-lights.css',
+        './src/style/using-logo.scss',
+        './src/style/northern-lights.scss',
         '@fontsource-variable/plus-jakarta-sans',
       ],
       pagination: false,
