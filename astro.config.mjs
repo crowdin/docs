@@ -61,8 +61,10 @@ const config = defineConfig({
         SearchBox: './src/components/SearchBox.astro',
       },
       customCss: [
-        './src/tailwind.css',
-        './src/global.css',
+        './src/style/tailwind.css',
+        './src/style/global.css',
+        './src/style/using-logo.scss',
+        './src/style/northern-lights.scss',
         '@fontsource-variable/plus-jakarta-sans',
       ],
       pagination: false,
