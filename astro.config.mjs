@@ -43,7 +43,7 @@ const config = defineConfig({
           items: [
             { label: "Crowdin KB", link: "/introduction", attrs: { id: "crowdin-nav-button", class: "nav-link" } },
             { label: "Enterprise KB", link: "/enterprise/introduction", attrs: { id: "enterprise-nav-button", class: "nav-link" } },
-            { label: "Developer Portal", link: "/developer/introduction", attrs: { id: "developer-nav-button", class: "nav-link" } },
+            { label: "Developer Portal", link: "/developer/crowdin-apps-about", attrs: { id: "developer-nav-button", class: "nav-link" } },
             { label: "Store", link: "https://store.crowdin.com", attrs: { target: "_blank", class: "nav-link" } },
             { label: "Community", link: "https://community.crowdin.com/", attrs: { target: "_blank", class: "nav-link" } },
           ],
