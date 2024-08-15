@@ -2,3 +2,436 @@
 title: App Descriptor
 slug: developer/crowdin-apps-app-descriptor
 ---
+
+import { Aside } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+The app descriptor is one of the essential building blocks of Crowdin apps. The app descriptor is a JSON file (for example, `manifest.json`) that includes general information for the app, as well as the modules that the app wants to operate with or extend.
+
+It describes how the application will work, what resources will be used, etc.
+
+## App Descriptor Structure
+
+The app descriptor is a JSON object with the following structure:
+
+```json
+{
+  "identifier": "your-application-identifier",
+  "name": "Your Application",
+  "description": "Application description",
+  "logo": "/assets/logos/app-logo.png",
+  "baseUrl": "http://example.com",
+  "authentication": {
+    "type": "crowdin_app",
+    "clientId": "your-client-id"
+  },
+  "events": {
+    "installed": "/hooks/installed"
+  },
+  "scopes": [
+    "project"
+  ],
+  "modules": {
+    "project-integrations": [
+      {
+        "key": "your-module-key",
+        "name": "Module Name",
+        "description": "Module description",
+        "logo": "/assets/logos/module-logo.png",
+        "url": "/page/integration",
+        "environments": [
+          "crowdin", "crowdin-enterprise"
+        ]
+      }
+    ]
+  }
+}
+```
+
+<table>
+  <colgroup>
+    <col width="20%" />
+    <col width="80%" />
+  </colgroup>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>identifier</code></td>
+    <td>
+      <div><strong>Type:</strong> <code>string</code> (<code>^[a-z0-9-._]+$</code>)</div>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> A unique key to identify the app. This identifier must be &lt;= 255 characters.</p>
+      <Aside type="caution">Don't use uppercase in the app identifier.</Aside>
+    </td>
+  </tr>
+  <tr>
+    <td><code>name</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> The human-readable name of the app.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>baseUrl</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code> (<code>uri</code>)</p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> The base URL of the remote app, which is used for all communications back to the app instance.<br/>
+        Once the app is installed in a workspace, the app's baseUrl can’t be changed without uninstalling the app beforehand.</p>
+      <p><strong>This is important:</strong> choose your baseUrl wisely before making your app public.<br/>
+        The baseUrl must start with <code>https://</code> to ensure that all data is sent securely between our cloud instances and your app.</p>
+      <Aside>
+        Each app must have a unique `baseUrl`. If you would like to serve multiple apps from the same host, consider adding a path prefix into the `baseUrl`.
+      </Aside>
+    </td>
+  </tr>
+  <tr>
+    <td><code>authentication</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>Authentication</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> Specifies the authentication type to use when signing requests between the host application and the Crowdin app.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>description</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The human-readable description of what the app does.<br/>
+        The description will be visible in the Crowdin UI.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>logo</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code> (<code>relativeUri</code>)</p>
+      <p><strong>Description:</strong> The image URL relative to the app's base URL which will be displayed in the Crowdin UI.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>events</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>Events</code></p>
+      <p><strong>Description:</strong> Allow the app to register for app event notifications.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>scopes</code></td>
+    <td>
+      <p><strong>Type:</strong> [<code>string</code>, … ]</p>
+      <p><strong>Description:</strong> Set of [scopes](/developer/understanding-scopes) requested by this app.</p>
+      <div>
+        ```json
+        "scopes": [
+          "project",
+          "tm"
+        ]
+        ```
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code>modules</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object</code></p>
+      <p><strong>Description:</strong> The list of modules this app provides.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>environments</code></td>
+    <td>
+      <p><strong>Type:</strong> [<code>string</code>, … ]</p>
+      <p><strong>Allowed values:</strong> <code>crowdin</code>, <code>crowdin-enterprise</code></p>
+      <p><strong>Description:</strong> Set of environments where a module could be installed.</p>
+      <div>
+        ```json
+        "environments": [
+          "crowdin-enterprise"
+        ]
+        ```
+      </div>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+## Authentication
+
+Specifies the authentication type to use when signing requests from the host application to the Crowdin app. Crowdin Apps support two types of authentication:
+
+* using OAuth app (`crowdin_app` value)
+* without OAuth app (`none` value)
+
+In case your Crowdin app requires access to Crowdin API at any time, it’s recommended to use the `crowdin_app`, in other cases feel free to use the `none`. The authentication type `none` grants access to Crowdin API as well as the `crowdin_app`, but only when the Crowdin app is executed on the user side, for example, when the iframe opens.
+
+Example:
+
+```json
+{
+  "authentication": {
+    "type": "crowdin_app",
+    "clientId": "your-client-id"
+  }
+}
+```
+
+<table>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>type</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Defaults to:</strong> <code>none</code></p>
+      <p><strong>Allowed values:</strong> <code>none</code>, <code>crowdin_app</code></p>
+      <p><strong>Description:</strong> The type of authentication to use.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>clientId</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> OAuth client id for authorization via the <code>crowdin_app</code> type.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+## Modules
+
+Modules are how apps extend Crowdin and interact with it. Using modules your app can do the following things:
+
+* Extend the Crowdin UI.
+* Create integrations with external services.
+* Add support for new custom file formats.
+* Customize processing for supported file formats.
+
+<ReadMore>
+  Read more about [UI Modules](/developer/crowdin-apps-modules-ui) and [File Processing Modules](/developer/crowdin-apps-modules-file-processing).
+</ReadMore>
+
+## Events
+
+Allow an app to register callbacks for events that occur in the workspace. When an event is fired, a POST request will be made to the appropriate URL registered for the event. The installed callback is an integral part of the installation process of an app, whereas the remaining events are essentially webhooks. Each property within this object is a URL relative to the app's base URL.
+
+Example:
+
+```json
+{
+  "events": {
+    "installed": "/hook/installed",
+    "uninstall": "/hook/uninstall"
+  }
+}
+```
+
+<table>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>installed</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The event that is sent to an app after a user installed the app in Crowdin.</p>
+      <p>This event is required if you use <code>crowdin_app</code>. Read more about [Authentication](#authentication).</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>uninstall</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The event that is sent to an app before the app uninstallation from Crowdin.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### Installed Event Payload
+
+The Installed event is sent from Crowdin to the remote app when a user installs the app in Crowdin. The Installed event contains the information about the Crowdin workspace or profile the Crowdin App was installed to, the information about the app itself, as well as the credentials to fetch an API token.
+
+<ReadMore>
+  Read more about [Installed Event Flow](/developer/crowdin-apps-installation#installed-event-communication-flow).
+</ReadMore>
+
+Payload example:
+
+```json
+{
+  "appId": "your-application-identifier",
+  "appSecret": "dbfg....asdffgg",
+  "clientId": "your-client-id",
+  "userId": 1,
+  "organizationId": 1,
+  "domain": null,
+  "baseUrl": "https://crowdin.com"
+}
+```
+
+```json
+{
+  "appId": "your-application-identifier",
+  "appSecret": "dbfg....asdffgg",
+  "clientId": "your-client-id",
+  "userId": 1,
+  "organizationId": 1,
+  "domain": "{domain}",
+  "baseUrl": "https://{domain}.crowdin.com"
+}
+```
+
+Properties:
+
+<table>
+  <colgroup>
+    <col width="20%" />
+    <col width="80%" />
+  </colgroup>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>appId</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The identifier of the app that is declared in the app descriptor file.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>appSecret</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The unique secret used for authorization of your Crowdin app.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>clientId</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The OAuth client identifier that is declared in the app descriptor file.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>userId</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> The numeric identifier of the user that installed the app in Crowdin Enterprise.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>organizationId</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> The numeric identifier of the organization the app was installed to.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>domain</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The name of the organization in Crowdin Enterprise the app was installed to. For Crowdin the domain value is always null</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>baseUrl</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The `baseUrl` of the organization in Crowdin Enterprise the app was installed to. For Crowdin the `baseUrl` value is always `https://crowdin.com`</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### Uninstall Event Payload
+
+The uninstall event is sent from Crowdin Enterprise to the remote Crowdin app when a user uninstalls the app from Crowdin Enterprise. The Uninstall event, like the install event, contains the information about the Crowdin workspace or account the Crowdin App was installed to, and the information about the app itself. After receiving the uninstall event, it's necessary to find and remove all of the data related to the Crowdin workspace or account the app is removed from.
+
+Payload example:
+
+```json
+{
+  "appId": "your-application-identifier",
+  "clientId": "your-client-id",
+  "organizationId": 1,
+  "domain": null,
+  "baseUrl": "https://crowdin.com"
+}
+```
+
+```json
+{
+  "appId": "your-application-identifier",
+  "clientId": "your-client-id",
+  "organizationId": 1,
+  "domain": "{domain}",
+  "baseUrl": "https://{domain}.crowdin.com"
+}
+```
+
+Properties:
+
+<table>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>appId</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The identifier of the app that is declared in the app descriptor file.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>clientId</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The OAuth client identifier that is declared in the app descriptor file.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>organizationId</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> The numeric identifier of the organization the app uninstalled from.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>domain</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The name of the organization in Crowdin Enterprise the app uninstalled from. For Crowdin the domain value is always null</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>baseUrl</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The baseUrl of the organization in Crowdin Enterprise the app uninstalled from. For Crowdin the `baseUrl` value is always `https://crowdin.com`</p>
+    </td>
+  </tr>
+  </tbody>
+</table>

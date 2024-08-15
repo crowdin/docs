@@ -2,3 +2,1377 @@
 title: Crowdin Apps JS
 slug: developer/crowdin-apps-js
 ---
+
+The Crowdin Apps JS is a library built for easier interaction with Crowdin. Since the integration uses the iframes, there are certain limitations on the interaction between windows: environments are encapsulated and do not have access to the page content, code, styles, and any other information related to the page.
+
+The Crowdin Apps JS library is based on cross-window messaging technology and uses *postMessage()* to interact between multiple windows.
+
+## Getting Started
+
+To use this library, connect it on the module page by inserting the following code into the page header:
+
+```html
+<script src="https://cdn.crowdin.com/apps/dist/iframe.js"></script>
+```
+
+After adding the code mentioned above, you'll be able to use the global AP variable.
+
+<div class="alert alert-warning"><b>Note!</b> Don't download the <code>iframe.js</code> file and serve it up from your app server directly. The <code>iframe.js</code> file must be served up by Crowdin for establishing of the cross-domain messaging bridge. The <code>iframe.js</code> file is only intended for use in an iframe inside Crowdin and does not work for standalone web pages.</div>
+
+## Global Actions
+
+Global actions are the actions that are available on all module pages.
+
+### AP.getContext(callback) {#get-context}
+
+The method retrieves the context information about the current page and puts it into the callback. For example, the project ID where the module is opened or the locale used on the page.
+
+Example:
+
+```js
+AP.getContext(function(contextData) {
+  console.log("Object: context", contextData);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the response object.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+Depending on the current page on which this method is used, the payload may contain a different set of the context information.
+
+Payload example:
+
+```json
+{
+  "project_id": "12",
+  "organization_id": "200000000",
+  "editor": {
+    "mode": "translate",
+    "theme": "dark",
+    "source_language_id": "en",
+    "target_language_id": "fr",
+    "file": 12345,
+    "workflow_step": {
+      "id": 7777,
+      "title": "Translation",
+      "type": "Translate"
+    }
+  }
+}
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>project_id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The identifier of the Crowdin project.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>organization_id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Crowdin Enterprise only. The identifier of the organization in Crowdin Enterprise.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>editor</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object</code></p>
+      <p><strong>Description:</strong> Contains settings and context for the Editor.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>editor.mode</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Active mode of the Editor.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>editor.theme</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Active theme of the Editor.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>editor.source_language_id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The identifier of the source language.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>editor.target_language_id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The identifier of the target language.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>editor.file</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> The numeric identifier of a file in the Crowdin project that is open in the Editor.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>editor.workflow_step</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object</code></p>
+      <p><strong>Description:</strong> Crowdin Enterprise only. Details of the current workflow step in the Editor.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>editor.workflow_step.id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> The numeric identifier of the workflow step.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>editor.workflow_step.title</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Title of the workflow step.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>editor.workflow_step.type</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Type of the workflow step.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.getJwtToken(callback) {#get-jwt-token}
+
+The method retrieves a JWT token string. Used to get a current token. If the previous token has a validity period of less than one minute, the method will generate and return a new token.
+
+Example:
+
+```js
+AP.getJwtToken(function(jwtToken) {
+  console.log("String: JWT token", jwtToken);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the response string.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.getTheme() {#get-theme}
+
+The method retrieves information about the currently selected theme.
+
+Example:
+
+```js
+AP.getTheme(function(theme) {
+  light | dark
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the response string.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+## Editor Module Actions
+
+Editor module actions provide a possibility to get information from the Editor UI. These actions are available only on pages that are loaded in an iframe in the Editor-panels module.
+
+### AP.editor.getString(callback) {#get-string}
+
+The method retrieves information about the currently selected string in the Editor.
+
+Example:
+
+```js
+AP.editor.getString(function(stringData) {
+  console.log("Object: source string", stringData);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the response object.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.getTranslations(callback) {#get-translations}
+
+The method retrieves a list of translations suggested to the currently selected string in the Editor. Additionally, the response contains information about the translation author, the number of votes, and approval on the current workflow step.
+
+Example:
+
+```js
+AP.editor.getTranslations(function(translationsData) {
+  console.log("Array: translation objects", translationsData);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the response array.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.getTopTranslation(callback) {#get-top-translation}
+
+The method retrieves a top translation (the translation with the highest priority) for the currently selected source string in the Editor.
+
+Example:
+
+```js
+AP.editor.getTopTranslation(function(topTranslationData) {
+  console.log("Object: top translation", topTranslationData);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the response object.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.setTranslation(text) {#set-translation}
+
+The method sets the translation text for the currently selected source string in the Editor.
+
+Example:
+
+```js
+AP.editor.setTranslation("Hello,");
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The translation text that is being set for the currently selected source string.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.appendTranslation(text) {#append-translation}
+
+The method appends the translation text next to the cursor for the currently selected source string in the Editor.
+
+Example:
+
+```js
+AP.editor.appendTranslation(" {user},");
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">text</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The translation text that is being appended next to the cursor for the currently selected source string.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.clearTranslation() {#clear-translation}
+
+The method clears the translation text for the currently selected source string in the Editor.
+
+Example:
+
+```js
+AP.editor.clearTranslation();
+```
+
+### AP.editor.setFocus() {#set-focus}
+
+The method sets focus on the translation field in the Editor.
+
+Example:
+
+```js
+AP.editor.setFocus();
+```
+
+### AP.editor.noticeMessage(message) {#notice-message}
+
+The method displays the notice message text in the Editor.
+
+Example:
+
+```js
+AP.editor.noticeMessage("Message text");
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The notice message text that is being displayed.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.successMessage(message) {#success-message}
+
+The method displays the success message text in the Editor.
+
+Example:
+
+```js
+AP.editor.successMessage("Message text");
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The success message text that is being displayed.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.errorMessage(message) {#error-message}
+
+The method displays the error message text in the Editor.
+
+Example:
+
+```js
+AP.editor.errorMessage("Message text");
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The error message text that is being displayed.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.setApplicationNotification(1) {#set-application-notification}
+
+The method sets a notification count next to an app icon in the right panel in the Editor.
+
+Example:
+
+```js
+AP.editor.setApplicationNotification(1);
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>count</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> The notification count number.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.clearApplicationNotification() {#clear-application-notification}
+
+The method clears a notification count next to an app icon in the right panel in the Editor.
+
+Example:
+
+```js
+AP.editor.clearApplicationNotification();
+```
+
+### AP.editor.getCustomFilter(callback) {#get-custom-filter}
+
+The method retrieves the current Advanced filter applied in the Editor.
+
+Example:
+
+```js
+AP.editor.getCustomFilter(function(customFilter) {
+  console.log(customFilter);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the custom filter object.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.setCustomFilter(customFilter) {#set-custom-filter}
+
+The method sets a Advanced filter in the Editor.
+
+Example:
+
+```js
+AP.editor.setCustomFilter({
+  //filter object
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>customFilter</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object</code></p>
+      <p><strong>Description:</strong> The custom filter object to be applied.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.resetCustomFilter() {#reset-custom-filter}
+
+The method resets the Advanced filter to the default state.
+
+Example:
+
+```js
+AP.editor.resetCustomFilter();
+```
+
+### AP.editor.getFilter(callback) {#get-filter}
+
+The method retrieves the current filter applied in the Editor.
+
+Example:
+
+```js
+AP.editor.getFilter(function(filter) {
+  console.log(filter);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the filter ID.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.setFilter(filterNumber) {#set-filter}
+
+The method sets a filter in the Editor.
+
+Example:
+
+```js
+AP.editor.setFilter(filterNumber);
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>filterNumber</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> The filter ID to be applied.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+**Filter Option IDs:**
+
+* All, Untranslated First &ndash; 0
+* Untranslated &ndash; 2
+* Show All &ndash; 3
+* Approved &ndash; 4
+* Translated, Not Approved &ndash; 5
+* Hidden &ndash; 6
+* With Comments &ndash; 7
+* Translated by TM &ndash; 30
+* Translated by MT &ndash; 31
+* Translated by TM or MT &ndash; 10
+* Advanced Filter &ndash; 12
+* With unresolved issues (All languages) &ndash; 13
+* Need to be voted &ndash; 15
+* Without comments &ndash; 16
+* With unresolved issues (Current language) &ndash; 17
+* QA Issues (All) &ndash; 18
+* QA Issues (Empty translation) &ndash; 19
+* QA Issues (Variables mismatch) &ndash; 20
+* QA Issues (Tags mismatch) &ndash; 21
+* QA Issues (Punctuation mismatch) &ndash; 22
+* QA Issues (Character case mismatch) &ndash; 23
+* QA Issues (Spaces mismatch) &ndash; 24
+* QA Issues (Length issues) &ndash; 25
+* QA Issues (Special character mismatch) &ndash; 26
+* QA Issues ("Incorrect translation" issues) &ndash; 27
+* QA Issues (Spelling) &ndash; 28
+* QA Issues (ICU syntax) &ndash; 29
+* QA Issues (Consistent terminology) &ndash; 32
+* QA Issues (Without QA issues) &ndash; 33
+* QA Issues (Duplicate translation) &ndash; 35
+* QA Issues (FTL syntax) &ndash; 36
+* QA Issues (Android syntax) &ndash; 37
+
+### AP.editor.getPage(callback) {#get-page}
+
+The method retrieves the current page number in the Editor.
+
+Example:
+
+```js
+AP.editor.getPage(function(page) {
+  console.log(page);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the page number.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.setPage(pageNumber) {#set-page}
+
+The method sets a page number in the Editor.
+
+Example:
+
+```js
+AP.editor.setPage(pageNumber);
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>pageNumber</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> The page number to be set.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.getProjectTargetLanguages(callback) {#get-project-target-languages}
+
+The method retrieves the target languages for the current project.
+
+Example:
+
+```js
+AP.editor.getProjectTargetLanguages(function(languages) {
+  console.log(languages);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the target languages array.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.setTargetLanguage(languageIdOrIds, callback) {#set-target-language}
+
+The method sets the target language(s) in the Editor.
+
+Example:
+
+```js
+AP.editor.setTargetLanguage(languageId | languageIds, function(res) {
+  console.log(res)// response message
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>languageIdOrIds</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string | array</code></p>
+      <p><strong>Description:</strong> The ID or array of IDs of the target languages to be set.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the response.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.getCroqlFilter(callback) {#get-croql-filter}
+
+The method retrieves the current CroQL filter applied in the Editor.
+
+Example:
+
+```js
+AP.editor.getCroqlFilter(function(croql) {
+  console.log(croql);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the CroQL.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.setCroqlFilter(croql) {#set-croql-filter}
+
+The method sets a CroQL filter in the Editor.
+
+Example:
+
+```js
+AP.editor.setCroqlFilter(croql);
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>croql</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The CroQL filter to be applied.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.resetCroqlFilter() {#reset-croql-filter}
+
+The method resets the CroQL filter to the default state.
+
+Example:
+
+```js
+AP.editor.resetCroqlFilter();
+```
+
+### AP.editor.search(text, options) {#search}
+
+The method performs a search within the Editor.
+
+Example:
+
+```js
+AP.editor.search('text', {
+  searchStrict: false,
+  searchFullMatch: false,
+  caseSensitive: false,
+  search_option: 0 // 1 - Strings, 2 - Context, 3 - Translations, 4 - Identifier (Key), 0 - Everything
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The search text.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>options</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object</code></p>
+      <p><strong>Description:</strong> The search options.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.setWorkflowStepStatusFilter(status) {#set-workflow-step-status-filter}
+
+The method sets a workflow step status filter in the Editor (Crowdin Enterprise only).
+
+Example:
+
+```js
+AP.editor.setWorkflowStepStatusFilter('ALL' | 'TODO' | 'DONE' | 'INCOMPLETE');
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>status</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The workflow step status to be set.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.getWorkflowStepStatusFilter(callback) {#get-workflow-step-status-filter}
+
+The method retrieves the current workflow step status filter applied in the Editor.
+
+Example:
+
+```js
+AP.editor.getWorkflowStepStatusFilter(function(step) {
+  console.log(step);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the workflow step status filter.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.getMode(callback) {#get-mode}
+
+The method retrieves the current mode of the Editor.
+
+Example:
+
+```js
+AP.editor.getMode(function(mode) {
+  console.log(mode);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the current mode.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.setMode(mode) {#set-mode}
+
+The method sets a mode in the Editor.
+
+Example:
+
+```js
+AP.editor.setMode('translate' | 'proofread' | 'review' | 'multilingual');
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>mode</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The mode to be set.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+## Event Module Actions
+
+Event module actions provide a possibility to work with events, enable the Crowdin app to respond to events that happen in Crowdin UI, and trigger its own events. Read more about [supported events](#supported-events).
+
+### AP.events.once(event, callback) {#events-once}
+
+The method subscribes a one-time listener to detect events with a specified name. The listener is unsubscribed as soon as the first event is processed.
+
+Example:
+
+```js
+AP.events.once("event", function(eventData) {
+  console.log("Event data", eventData);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>event</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The name of the event the callback of the function should react to.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the event. Depending on the event's type, there could be either one or a few arguments in the callback.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.events.on(event, callback) {#events-on}
+
+The method subscribes a listener to all events with a specified name.
+
+Example:
+
+```js
+AP.events.on("event", function(eventData) {
+  console.log("Event data", eventData);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>event</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The name of the event the callback of the function should react to.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the event. Depending on the event's type, there could be either one or a few arguments in the callback.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.events.off(event, callback) {#events-off}
+
+The method unsubscribes a listener for an event with a specified name.
+
+Example:
+
+```js
+function callback(eventData) {
+  console.log("Event data", eventData);
+};
+
+AP.events.on("event", callback);
+AP.events.off("event", callback);
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>event</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The name of the event the callback of the function should be unsubscribed from.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that was previously subscribed to the event.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.events.ofAll(event) {#events-off-all}
+
+The method unsubscribes all previously subscribed listeners from the specified event.
+
+Example:
+
+```js
+AP.events.offAll("event");
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>event</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The name of the event all listeners should be unsubscribed from.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.events.onAny(callback) {#events-on-any}
+
+The method subscribes to all events from Crowdin UI.
+
+Example:
+
+```js
+AP.events.onAny(function(event, data) {
+  console.log("Event name string", event);
+  console.log("Event data", data);
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that receives the name of the event and all the data transferred to the event.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.events.offAny(callback) {#events-off-any}
+
+The method unsubscribes a listener from all events.
+
+Example:
+
+```js
+function callback(event, data) {
+  console.log("Event name string", event);
+  console.log("Event data", data);
+};
+
+AP.events.onAny(callback);
+AP.events.offAny(callback);
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that was subscribed to all events.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### Supported Events
+
+Check out the list of supported events that could be passed to the Crowdin Apps JS library in the following table:
+
+<table>
+  <colgroup>
+    <col width="30%" />
+    <col width="70%" />
+  </colgroup>
+  <thead>
+  <tr>
+    <th>Event</th>
+    <th>Details</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>string.change</code></td>
+    <td>
+      The event emitted when a user switches from one string to another. <br/>
+      <div>
+        ```json
+        {
+          "id": 3939912,
+          "text": "source string",
+          "context": "string context",
+          "max_length": 35,
+            "file": {
+            "id": 26588,
+            "name": "file name.csv"
+          }
+        }
+        ```
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code>textarea.edited</code></td>
+    <td>
+      The event emitted when a user performs any changes in the translation field.<br/>
+      <div>
+        ```json
+        {
+          "id": 3939912,
+          "text": "source string",
+          "context": "string context",
+          "max_length": 0,
+          "file": {
+            "id": 26588,
+            "name": "file name.csv"
+          },
+          "oldText": "chaîne de caractères source",
+          "newText": "chaîne source"
+        }
+        ```
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code>translation.added</code></td>
+    <td>
+      The event emitted when a user saves a translation for the current string.<br/>
+      <div>
+        ```json
+        {
+          "id": 422648,
+          "string_id": 3939912,
+          "text": "chaîne source",
+          "target_language_id": "fr",
+          "votes_rating": 0,
+          "approved": false,
+          "author": {
+            "id": "1",
+            "login": "user.login",
+            "name": "User Name",
+            "avatar_url": "https://avatar.com/avatar.png"
+          },
+          "created_at": "2022-12-09T12:17:37-05:00"
+        }
+        ```
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code>translation.deleted</code></td>
+    <td>
+      The event emitted when a user deletes a translation.<br/>
+      <div>
+        ```json
+        {
+          "id": 422560,
+          "string_id": 3939912
+        }
+        ```
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code>translation.restored</code></td>
+    <td>
+      The event emitted when a user restores a deleted translation.<br/>
+      <div>
+        ```json
+        {
+          "id": 422648,
+          "string_id": 3939912,
+          "text": "chaîne source",
+          "target_language_id": "fr",
+          "“votes_rating”": 0,
+          "author": {
+            "id": "1",
+            "login": "user.login",
+            "name": "User Name",
+            "avatar_url": "https://avatar.com/avatar.png"
+          },
+          "created_at": "2022-12-09T12:17:37-05:00"
+        }
+        ```
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code>translation.vote</code></td>
+    <td>
+      The event emitted when a user votes for a translation.<br/>
+      <div>
+        ```json
+        {
+          "id": 422648,
+          "string_id": 3939912,
+          "text": "chaîne source",
+          "target_language_id": "fr",
+          "votes_rating": 1,
+          "approved": false,
+          "author": {
+            "id": "1",
+            "login": "user.login",
+            "name": "User Name",
+            "avatar_url": "https://avatar.com/avatar.png"
+          },
+          "created_at": "2022-12-09T12:17:37-05:00"
+        }
+        ```
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code>translation.approve</code></td>
+    <td>
+      The event emitted when a user approves a translation.<br/>
+      <div>
+        ```json
+        {
+          "id": 422648,
+          "string_id": 3939912,
+          "text": "chaîne source",
+          "target_language_id": "fr",
+          "votes_rating": 0,
+          "approved": true,
+          "author": {
+            "id": "1",
+            "login": "user.login",
+            "name": "User Name",
+            "avatar_url": "https://avatar.com/avatar.png"
+          },
+          "created_at": "2022-12-09T12:17:37-05:00",
+          "approver": {
+            "id": "1",
+            "login": "super.user",
+            "name": "Super User",
+            "avatar_url": "https://avatar.com/avatar.png"
+          },
+          "approved_at": "2022-12-09T17:20:28.655Z"
+        }
+        ```
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code>translation.disapprove</code></td>
+    <td>
+      The event emitted when a user removes a translation approval.<br/>
+      <div>
+        ```json
+        {
+          "id": 422406,
+          "string_id": 3939858,
+          "text": "chaîne de caractères source",
+          "target_language_id": "fr",
+          "votes_rating": 0,
+          "approved": false,
+          "author": {
+            "id": "1",
+            "login": "user.login",
+            "name": "User Name",
+            "avatar_url": "https://avatar.com/avatar.png"
+          },
+          "created_at": "2022-12-08T12:29:07-05:00"
+        }
+        ```
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code>language.change</code></td>
+    <td>
+      The event emitted when a user changes a target language in the Editor.<br/>
+      <div>
+        ```json
+        {
+          "project_id": "15",
+          "organization_id": "200000000",
+          "editor": {
+            "mode": "translate",
+            "theme": "dark;",
+            "source_language_id": "en",
+            "target_language_id": "fr",
+            "file": 26588,
+            "workflow_step": {
+              "id": 77,
+              "title": "Translation",
+              "type": "Translate"
+            }
+          }
+        }
+        ```
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code>file.change</code></td>
+    <td>
+      The event emitted when a user changes a file in the Editor.<br/>
+      <div>
+        ```json
+        {
+          "project_id": "15",
+          "organization_id": "200000000",
+          "editor": {
+            "mode": "translate",
+            "theme": "dark;",
+            "source_language_id": "en",
+            "target_language_id": "fr",
+            "file": 26574,
+            "workflow_step": {
+              "id": 77,
+              "title": "Translation",
+              "type": "Translate"
+            }
+          }
+        }
+        ```
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code>theme.changed</code></td>
+    <td>
+      The event emitted when a user switches from one theme to another.<br/>
+      <div>
+        ```json
+        "light"
+        ```
+      </div>
+    </td>
+  </tr>
+  </tbody>
+</table>
