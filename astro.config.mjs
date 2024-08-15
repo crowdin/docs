@@ -77,7 +77,18 @@ const config = defineConfig({
             leading: { useSidebarLabelled: "leading" },
           }
         }),
-        starlightLinksValidator(),
+        starlightLinksValidator({
+          exclude: [
+            '/developer/api/v2/',
+            '/developer/api/v2/#tag/*',
+            '/developer/api/v2/string-based/',
+            '/developer/api/v2/string-based/#tag/*',
+            '/developer/enterprise/api/v2/',
+            '/developer/enterprise/api/v2/#tag/*',
+            '/developer/enterprise/api/v2/string-based/',
+            '/developer/enterprise/api/v2/string-based/#tag/*',
+          ],
+        }),
       ],
       social: {
         'x.com': 'https://x.com/crowdin',

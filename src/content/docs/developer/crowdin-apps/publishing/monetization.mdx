@@ -4,3 +4,89 @@ slug: developer/crowdin-apps-monetization
 sidebar:
   order: 0
 ---
+
+import { Image } from 'astro:assets';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import appMonetization from '!/developer/crowdin_apps_monetization.png';
+import appMonetizationEnterprise from '!/developer/crowdin_apps_monetization_enterprise.png';
+
+All Crowdin Apps can use one of the following payment models:
+
+* **Payment via Crowdin** &ndash; Application users can subscribe to the app directly via Crowdin. The platform provides an easy way to make payments.
+* **Payment via own payment system** &ndash; Application users can subscribe directly via the app or other third-party services connected to the app. The developer of the Crowdin App should connect and configure the preferred payment system himself.
+* **Free usage of the Crowdin Apps** &ndash; Application users don't pay for the app usage.
+
+## Payment via Crowdin
+
+You can use Crowdin as a payment processor for subscription handling of your apps. To use payment via Crowdin, [Contact Support Team](https://crowdin.com/contacts), so we will create a subscription for your Crowdin App.
+
+To implement this payment processor, you need to use an API endpoint to return up-to-date information on the app subscription. You should also add a middleware to your Crowdin App that will limit the access to the app for users that didn't subscribe.
+
+In the middleware, you should make an API request to Crowdin and, depending on the result, implement one of the following actions:
+
+- `200 OK` &ndash; the subscription is active. Crowdin App must provide access to the functionality by the date specified in the response. This date should be stored within the app to reduce the number of requests to this API endpoint.
+- `402 Payment Required` &ndash; the subscription was not paid.
+In this case, restrict access to the app functionality and provide the user with a URL to a checkout page. You will get the checkout URL in the response.
+- `404 Bad Request` &ndash; the subscription was not found. It means one of several errors: a user removed a Crowdin App from the organization, or a subscription wasn't defined for the app. In this case, you should restrict access to the Crowdin App.
+
+### Request
+
+To access the Crowdin App subscription API, the app must use the authorization method `crowdin_app` in the [App descriptor](/developer/crowdin-apps-app-descriptor) and use the received Access Token in the Authorization header.
+
+```bash
+GET /api/v2/applications/{app-identifier}/subscription
+```
+
+**Headers**
+
+- Content-type: `application/json`
+- Authorization: `bearer <access-token>`
+
+### Responses
+
+**Status code: `200`**
+
+```json
+{
+  "expires": "2022-12-19 12:00:00"
+}
+```
+
+**Status code: `402`**
+
+```json
+{
+  "subscribe_link": "https://crowdin.com/checkout?subscribe=..."
+}
+```
+
+**Status code: `400`**
+
+```json
+{
+  "message": "App identifier not found"
+}
+```
+
+## Purchasing a Crowdin App subscription via Crowdin
+
+In the event of subscribing to a Crowdin App, a user will be directed to a checkout page with the app subscription details. Please note that the first payment amount might differ from the app subscription cost. The subscription cost of the app is proportionally prorated over a billing cycle, and, e.g., if a user subscribes to an app at the beginning of his billing cycle, he will pay the app's subscription price in full. And if a user subscribes to an app in the middle of his billing cycle, he will pay only half of the app's subscription price.
+
+<Tabs>
+  <TabItem label="Crowdin Checkout page">
+    <Image src={appMonetization} alt="Crowdin Checkout page" />
+  </TabItem>
+  <TabItem label="Crowdin Enterprise Checkout page">
+    <Image src={appMonetizationEnterprise} alt="Crowdin Enterprise Checkout page" />
+  </TabItem>
+</Tabs>
+
+Let's review the possible scenario below:
+
+The total subscription price for a Crowdin App is $30/month. Suppose today is the 1st day of the month, and the next billing cycle starts on the 10th of the current month, so when subscribing to the app, a user will need to pay $10.
+
+```md
+$30 / 30 days (billing cycle) * 10 days (prorate period) = $10
+```
+
+On the next billing cycle, the app subscription will be included in the user's Crowdin subscription in full.

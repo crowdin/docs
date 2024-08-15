@@ -2,3 +2,195 @@
 title: App Installation
 slug: developer/crowdin-apps-installation
 ---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Icon } from 'astro-icon/components';
+import storeInstall from '!/developer/crowdin_apps_store_install.png';
+import storeInstallEnterprise from '!/developer/crowdin_apps_store_install_e.png';
+import installPermissions from '!/developer/crowdin_apps_app_permissions.png';
+import installPermissionsEnterprise from '!/developer/crowdin_apps_app_permissions_e.png';
+import communicationFlow from '!/developer/crowdin_apps_communication_crowdin.png';
+
+## App Installation
+
+You can install Crowdin Apps either from the [Crowdin Store](https://store.crowdin.com) or manually, depending on whether the app is already published or not.
+
+### Installation in Crowdin
+
+To install the app that is already published on the Crowdin Store, follow these steps:
+
+<Steps>
+  1. On your profile home page, open **Store**.
+  2. Click <Icon name="mdi:download" class="inline-icon" />**Install** on the needed app. <Image src={storeInstall} alt="Store" />
+  3. In the appeared dialog, configure preferred permissions and click **Install**.
+</Steps>
+
+To install a private app, follow these steps:
+
+<Steps>
+  1. Go to **Account Settings > Apps** and click **Install Private App**.
+  2. In the appeared dialog, paste in the Crowdin app Manifest URL and click **Install**.
+  3. In the **Install Application** dialog, configure preferred permissions and click **Install**.
+</Steps>
+
+### Installation in Crowdin Enterprise
+
+To install the app that is already published on the Crowdin Store, follow these steps:
+
+<Steps>
+  1. Open your organization's **Workspace** and select **Store** on the left sidebar.
+  2. Click <Icon name="mdi:download" class="inline-icon" />**Install** on the needed app. <Image src={storeInstallEnterprise} alt="Store" />
+  3. In the appeared dialog, configure preferred permissions and click **Install**.
+</Steps>
+
+To install a private app, follow these steps:
+
+<Steps>
+  1. Go to **Organization Settings > Apps** and click **Install Private App**.
+  2. In the appeared dialog, paste in the Crowdin app Manifest URL and click **Install**.
+  3. In the **Install Application** dialog, configure preferred permissions and click **Install**.
+</Steps>
+
+## Crowdin Apps Permission Configuration
+
+Configure preferred permissions for each app during the installation process. This step allows you to define who can access and use the app across its various modules and specifying in which projects of your Crowdin account (for Crowdin) or Crowdin organization (for Crowdin Enterprise) it can be used.
+
+If you restrict access to certain projects by using the **Selected projects** option, the app will not be able to communicate via the API with projects that are not included in the selected list. Also, the app will only be displayed in the UI of the selected projects. This ensures that the app's functionality and access are precisely tailored to the specific needs and security requirements of your organization.
+
+You can configure these access permissions at the time of installation or adjust them at any time for already installed apps. This flexibility allows you to respond to changes in your project requirements or security policies by updating the access settings to either expand or restrict the app's functionality and visibility within your Crowdin projects.
+
+### User Access Categories
+
+You can define which user categories are allowed to use the app. This setting is applied to each app module independently.
+
+Available options for Crowdin:
+
+* Only me (i.e., project owner)
+* Me, project managers and developers
+* All project members
+* Selected users
+* Guests (unauthenticated users)
+
+<Image src={installPermissions} alt="Permissions" class="width-md m-auto" />
+
+<Aside>
+  Project owner will always have access to all modules of the app.
+</Aside>
+
+Available options for Crowdin Enterprise:
+
+* Only organization admins
+* Organization admins, project managers and developers
+* All users in the organization projects
+* Selected users
+* Guests (unauthenticated users)
+
+<Image src={installPermissionsEnterprise} alt="Permissions" class="width-md m-auto" />
+
+<Aside>
+  Organization owner will always have access to all modules of the app.
+</Aside>
+
+### Project Access Configuration
+
+In addition to user access, you can also specify the projects in which the app can be used (these settings apply across all app modules).
+
+Project access options:
+
+* Projects you own (for Crowdin) or All projects (for Crowdin Enterprise)
+* Selected projects
+
+This targeted approach allows for enhanced security and customization, ensuring that the app is only used where it's really needed.
+
+## Installed Event Communication Flow
+
+When a Crowdin App is installed in the Account Settings the authorization flow takes place during which Crowdin and Crowdin App exchange the authorization data (the authorization code is being exchanged for an access token). In the following illustration, you can see the events that take place during this process.
+
+<Image src={communicationFlow} alt="Communication between Crowdin and Crowdin App" />
+
+<Aside>
+  Installed Event is used only for `authorization.type: "crowdin_app"`.
+</Aside>
+
+Let's examine in detail each step that happens in the illustration:
+
+<Steps>
+  1. Installation of the Manifest URL - the user pastes in the Manifest URL in the *Account Settings* > *Crowdin Applications* and clicks **Install**.
+  2. Fetching content from the Manifest URL - the request is sent to Crowdin App.
+  3. Response: manifest JSON - Crowdin App returns the Manifest JSON that contains the data about the app.
+  4. Manifest Data Validation - the received content is validated according to the structure and data of the Manifest JSON.
+  5. Prompt to install - the information about the Crowdin App, as well as the list of permissions and the **Install** button is displayed to the user.
+  6. Confirmation of the installation - the user confirms the installation of the Crowdin App.
+  7. The Installed event - Crowdin sends the Installed event with the authorization code to the Crowdin App for API token generation.
+  8. Token request - Crowdin App sends the request for API token acquiring:
+      ```
+      POST https://accounts.crowdin.com/oauth/token
+      ```
+  9. Access Token - authorization service returns the API access token and the refresh token.
+  10. Success Code Response - Crowdin App returns the success status code (2xx) which confirms that the application installation was successfully finished. In case the status code is different, the application will be removed from the Crowdin account.
+</Steps>
+
+**Token request parameters (step 8):**
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>grant_type: crowdin_app</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> The parameter is used for the flow specification of an OAuth app.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>client_id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> Client ID for the app is received when the app is registered.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>client_secret</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> Client Secret for the app is received when the app is registered.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>app_id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> Crowdin app identifier from the app descriptor.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>app_secret</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> The unique secret used for authorization of your Crowdin app. This value is retrieved from the installed event.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>domain</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string|null</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> The name of the organization from which the app is accessed. This value is retrieved from the installed event.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user_id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> The identifier of the user who installed the app. This value is retrieved from the installed event.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>

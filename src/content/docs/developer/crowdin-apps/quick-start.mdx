@@ -3,4 +3,668 @@ title: Quick Start
 slug: developer/quick-start
 ---
 
-In this article, you’ll find information on the fundamental principles of building a Crowdin Application. As a result, you’ll be able to build your own app along the way. To accomplish that, you’ll be using Node.js and the Heroku platform.
+import { Image } from 'astro:assets';
+import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Icon } from 'astro-icon/components';
+
+In this article, you'll find information on the fundamental principles of building a Crowdin Application. As a result, you'll be able to build your own app along the way. To accomplish that, you'll be using Node.js and the Heroku platform.
+
+**Prerequisites**:
+
+* Installed [Node.js and NPM](https://nodejs.org/en/download/).
+* Registered free account on the [Heroku](https://signup.heroku.com/login) platform.
+
+## Setup
+
+In this step, you need to download the sample app code on your local machine to check it out in detail.
+
+Download the app code from GitHub and install all the needed dependencies using the following commands:
+
+```bash
+git clone https://github.com/crowdin/apps-quick-start.git
+cd apps-quick-start
+npm i
+```
+
+At this point, you have a working app with the following structure:
+
+- `public` &ndash; The directory with public assets (e.g., images, styles, fonts, etc.).
+- `resources/views` &ndash; The directory with HTML page templates.
+- `app.json` &ndash; The descriptor file for the Heroku platform that describes the Heroku app and how to run it.
+- `manifest.js` &ndash; The descriptor of your app that describes the Crowdin app itself and its basic structure.
+- `index.js` &ndash; The main file and entry point of the app.
+- `router.js` &ndash; The file responsible for router initialization and the primary endpoints of the app.
+- `package.json` &ndash; The file that contains information about the app and its libraries.
+
+Now the app is ready for deployment on Heroku. As you may notice in the manifest.json, the app in its current state contains only the project-menu module and doesn't require authorization, i.e., the app won't have access to the API.
+
+## Deploying Crowdin App
+
+In this step, you'll deploy the app and install it in your Crowdin account.
+
+First, create an app on the Heroku platform. You can do it with the following command:
+
+```bash
+$ heroku create [crowdin-app-name]
+```
+
+The app name is optional. If you don't specify it, Heroku will do it for you automatically.
+
+Once the app is created, Heroku CLI with respond with the following output:
+
+```bash
+Creating app... done, ⬢ crowdin-app-name
+https://crowidn-app-name.herokuapp.com/ | https://git.heroku.com/crowdin-app-name.git
+```
+
+As you can see in the response above, Heroku has successfully created a new app and provided the URL to the app itself and the repository where it will be stored. Also, Heroku automatically connects the created repository to your local Git.
+
+Copy the app URL and add it to your Heroku environment variables using the following command (ensure to replace `<crowdin-app-name>` with your app's name):
+
+```bash
+heroku config:set BASE_URL=https://<crowdin-app-name>.herokuapp.com
+```
+
+All preparations are now complete, and you can deploy the app and run it with the following commands:
+
+```bash
+git push heroku main
+heroku ps:scale web=1
+heroku open
+```
+
+This app is now globally available and can be installed in the Crowdin account. After executing the `heroku open` command, it will automatically open the deployed app in your default browser. On the opened page, you will see a form with the manifest URL. Copy this URL and install the app in your Crowdin account using the [manual installation](https://developer.crowdin.com/crowdin-apps-installation/#manual-app-installation). After the installation, go to one of your existing projects or create a new one. Among the project tabs, you will see a new tab called "Getting Started". If you see a welcome message when opening the app, it has been installed successfully.
+
+At this stage, the app doesn't provide a lot of features. It can only get contextual information about the project it's installed in. Click on the `AP.getContext()` button to get information about the project. To develop more complex apps, you will need access to the API. Now you can go to your Crowdin **Account Settings > Crowdin Applications** and uninstall the app.
+
+## Adding API Access to Crowdin App
+
+In this step, you can provide the app with access to the API. To work with the Crowdin and Crowdin Enterprise API, you need an OAuth application.
+
+To create an OAuth app, follow these steps:
+
+<Steps>
+  1. Open your **Account Settings** and go to the **OAuth Applications** tab.
+  1. Click **New application**.
+  1. In the appeared dialog, specify **Getting Started** in the **Name** field.
+  1. Specify `http://localhost` in the **Authorization callback URLs** field.
+  1. Select **All scopes**.
+  1. Click **Create**.
+</Steps>
+
+Now you have a new entry in the OAuth application table. Open it with a double-click. In the appeared dialog, you'll see the **Client ID** and **Client secret** required for the app to work. In addition to the OAuth app, you need a database to store the API token received from Crowdin. To accomplish that, execute the following command in the console:
+
+```bash
+heroku addons:create heroku-postgresql:hobby-dev
+```
+
+Also, add the following environment variables to your app by executing the following commands (ensure to replace the placeholders `<OAuth App Client ID>` and `<OAuth App Client Secret>` with data from the OAuth app you created):
+
+```bash
+heroku config:set AUTH_URL=https://accounts.crowdin.com/oauth/token
+heroku config:set CLIENT_ID=<OAuth App Client ID>
+heroku config:set CLIENT_SECRET=<OAuth App Client Secret>
+```
+
+Now go back to your local project and open the `manifest.js` file. In this file, replace the `authorization` and `events` nodes with the following code:
+
+```bash
+authentication: {
+  type: "crowdin_app",
+  clientId: process.env.CLIENT_ID
+},
+events: {
+  installed: "/installed",
+  uninstall: "/uninstall",
+}
+```
+
+After these changes, during the app installation, Crowdin will try to transfer the authorization code to the app for the events specified in the manifest. So you need to add these routes and connect the database to save the access token for further use.
+
+Now for connecting to the database, create a `db.js` file and insert the following code listing:
+
+```js
+// db.js
+const Sequelize = require("sequelize");
+
+const sequelize = new Sequelize(process.env.DATABASE_URL,
+  {
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    }
+  }
+);
+
+sequelize
+  .authenticate()
+  .then(async () => {
+    console.log("Connection has been established successfully.");
+  })
+  .catch(err => {
+    console.error("Unable to connect to the database:", err);
+  });
+
+const Organization = sequelize.define("organization", {
+  domain: {
+    type: Sequelize.TEXT,
+    allowNull: true
+  },
+  organizationId: {
+    type: Sequelize.INTEGER
+  },
+  appId: {
+    type: Sequelize.TEXT
+  },
+  addSecret: {
+    type: Sequelize.TEXT
+  },
+  userId: {
+    type: Sequelize.INTEGER
+  },
+  baseUrl: {
+    type: Sequelize.TEXT
+  },
+  accessToken: {
+    type: Sequelize.TEXT
+  },
+  accessTokenExpires: {
+    type: Sequelize.INTEGER
+  }
+});
+
+module.exports = {
+  sequelize,
+  Organization
+}
+```
+
+In the code listing, you create a connection to the database, as well as an Organization model to store the received data in it.
+
+Open the `index.js` file and connect the database so it can be initialized with the app. For this, wrap the `app.listen(…)` function with the following code:
+
+```js
+// index.js
+const { sequelize } = require("./db");
+
+sequelize.sync().then(
+  () => app.listen(port, () => console.log(`Listening on ${ port }`))
+);
+```
+
+Now you can start creating the routes that will read events from Crowdin. Open the `router.js` file and add the following routes to it before the variable export:
+
+```js
+// router.js
+const { Organization } = require("./db");
+const { default: axios } = require("axios");
+
+router.post("/installed", async (req, res) => {
+  const oauthPayload = {
+    grant_type: "crowdin_app",
+    client_id: process.env.CLIENT_ID,
+    client_secret: process.env.CLIENT_SECRET,
+    app_id: req.body.appId,
+    app_secret: req.body.appSecret,
+    domain: req.body.domain,
+    user_id: req.body.userId,
+  };
+
+  const token = await axios.post(process.env.AUTH_URL, oauthPayload);
+  const params = {
+    domain: req.body.domain,
+    organizationId: req.body.organizationId,
+    appId: req.body.appId,
+    appSecret: req.body.appSecret,
+    userId: req.body.userId,
+    baseUrl: req.body.baseUrl,
+    accessToken: token.data.access_token,
+    accessTokenExpires: Math.round(new Date().getTime() / 1000) + token.data.expires_in
+  };
+
+  const organization = await Organization.findOne({
+    where: {
+      domain: req.body.domain,
+      organizationId: req.body.organizationId
+    }
+  });
+
+  if (!organization) {
+    await Organization.create(params);
+  } else {
+    organization.update(params);
+  }
+
+  res.status(200).send();
+});
+
+router.post("/uninstall", (req, res) => {
+  Organization.destroy({
+    where: {
+      domain: req.body.domain,
+      organizationId: +req.body.organizationId,
+    }
+  });
+
+  res.status(200).send();
+});
+```
+
+After receiving a request for the installed event, you can obtain an authorization code for the app using the OAuth Authorization Code flow. So you need to create a payload for extracting the access token according to this flow and make a request using the Axios library and save the received data to the Organization model or update the data in this model. For the uninstall event, the saved entry in the model will be deleted.
+
+Since the app will now work with the API and will have access to information in the project, it must be protected from third-party access so that unauthorized users of the app won't access Crowdin account data. You can do it by adding the middleware to the module's project menu in the `route.js` file.
+
+Open the `route.js` file and add the middleware:
+
+```js
+// route.js
+const jwt = require("jsonwebtoken");
+
+const authorizeUser = (req, res, next) => {
+  let decodedJwt = null;
+  let authorizationHeader = req.header("Authorization");
+
+  const token = authorizationHeader ? authorizationHeader.split(" ")[1] : req.query.jwtToken;
+
+  if (req.query.jwtToken) {
+    try {
+      decodedJwt = jwt.verify(token, process.env.CLIENT_SECRET);
+    } catch (error) {
+      console.error(error);
+      // can't decode or verify JWT
+    }
+  }
+
+  res.locals.isAuthorized = decodedJwt && decodedJwt.sub
+  res.locals.jwt = decodedJwt || {};
+
+  next();
+};
+```
+
+When opening the module page, Crowdin sends a JWT token in the request, signed by the OAuth Client Secret with information about the user that currently opens the app. Based on this, the middleware will verify access to the app.
+
+Modify the project menu module route to the following:
+
+```js
+router.get("/project-menu/", authorizeUser, (req, res) => res.render("project-menu", { isAuthorized: res.locals.isAuthorized }));
+```
+
+Also, add a route for extracting information about the current user using the stored access token if the user is authorized through the API. First, create the `apiClient.js` file and add the following code listing:
+
+```js
+// apiClient.js
+const { default: axios } = require("axios");
+
+const getActiveAccessToken = async (organization) => {
+  if (organization.accessTokenExpires > Math.round(new Date().getTime() / 1000)) {
+    return organization.accessToken;
+  }
+
+  const oauthPayload = {
+    grant_type: "crowdin_app",
+    client_id: process.env.CLIENT_ID,
+    client_secret: process.env.CLIENT_SECRET,
+    app_id: organization.appId,
+    app_secret: organization.appSecret,
+    domain: organization.domain,
+    user_id: organization.userId,
+  };
+
+  const response = await axios.post(process.env.AUTH_URL, oauthPayload);
+
+  organization = await organization.update({
+    accessToken: response.data.access_token,
+    accessTokenExpires: Math.round(new Date().getTime() / 1000) + response.data.expires_in
+  });
+
+  return organization.accessToken;
+};
+
+module.exports = async (organization) => {
+  const apiClient = axios.create({
+    baseURL: `${ organization.baseUrl }/api/v2/`,
+  });
+
+  apiClient.interceptors.request.use(async (config) => {
+    config.headers = {
+      ...config.headers,
+      Authorization: `Bearer ${ await getActiveAccessToken(organization) }`,
+    };
+
+    return config;
+  });
+
+  return apiClient;
+}
+```
+
+The code above allows you to extract the current access token for accessing the API.
+
+If the token has expired, then based on the refresh token, a new current token is extracted and saved in the Organization model. Also, a function with an API client with an authorization header is exported for the current organization.
+
+Now open the `route.js` file and add the action for retrieving information about the user:
+
+```js
+// route.js
+const apiClient = require("./apiClient");
+
+router.get("/user", authorizeUser, async (req, res) => {
+  if (!res.locals.isAuthorized) {
+    return res.status(403).send({ error: { message: "User is not authorized" } });
+  }
+
+  const organization = await Organization.findOne({
+    where: {
+      domain: res.locals.jwt.domain,
+      organizationId: res.locals.jwt.context.organization_id
+    }
+  });
+
+  if (!organization) {
+    return res.status(404).send({ error: { message: "Organization not found" } });
+  }
+
+  try {
+    const client = await apiClient(organization);
+    const response = await client.get("user");
+
+    return res.status(200).json(response.data || {});
+  } catch (e) {
+    console.log(e);
+
+    return res.status(500).send({
+      error: {
+        message: "Unknown error occurred"
+      }
+    });
+  }
+});
+```
+
+The app is now ready to work with the API. So you can deploy the changes and install the new version of the app in Crowdin. To apply the changes, execute the following commands:
+
+```bash
+git add .
+git commit -m "Added API access to Crowdin"
+git push heroku main
+heroku ps:scale web=1
+heroku open
+```
+
+As previously, copy the manifest URL and install the app in your Crowdin account using the [manual installation](https://developer.crowdin.com/crowdin-apps-installation/#manual-app-installation).
+
+Once installed, open the app in the project tab. Since the user is now authorized, we have more possibilities for the app. Click **Show user details** to get information about the user.
+
+In the next step, you will add the ability to process custom file formats. For now, you can go to your Crowdin **Account Settings > Crowdin Applications** and uninstall the app.
+
+## Adding Custom File Format Module to Crowdin App
+
+In this step, you will add to your app the possibility of custom processing a JSON file and building a preview for it.
+
+Open the `manifest.js` file and add a new module type by adding the following code to the `modules` node:
+
+```json
+{
+  "custom-file-format": [
+    {
+      "key": "custom-file-format",
+      "type": "custom-file-format",
+      "url": "/process",
+      "signaturePatterns": {
+        "fileName": ".+\\.json$",
+        "fileContent": "\"hello_world\":"
+      }
+    }
+  ]
+}
+```
+
+With the code above, you can add a module with the custom-file-format key that will process the file in the JSON format containing `“hello_world”` inside. If you upload such a file to the Crowdin project, it will be sent to the route process for custom parsing.
+
+Create the `fileHelper.js` file in the project root and add the following code listing to it:
+
+```js
+// fileHelper.js
+const fs = require("fs");
+let ejs = require("ejs");
+const { v4: uuidv4 } = require("uuid");
+const got = require("got");
+const Blob = require("node-blob");
+
+const MAX_BODY_SIZE = 5 * 1024 * 1024;  // 5mb
+
+async function parseFile(req) {
+  const fileContent = await getContent(req.file);
+
+  let isTranslation = false;
+
+  if (req.targetLanguages.length && req.targetLanguages[0].id) {
+    isTranslation = true;
+  }
+
+  const sourceStrings = [];
+  const previewStrings = [];
+
+  let previewIndex = 0;
+
+  if (fileContent[Object.keys(fileContent)[0]]) {
+    for (const key in fileContent) {
+      if (typeof fileContent[key] !== "string") {
+        continue;
+      }
+
+      let translations = {};
+
+      if (isTranslation) {
+        const languageId = req.targetLanguages[0].id;
+        translations = { [languageId]: { text: fileContent[key] } }
+      }
+
+      sourceStrings.push({
+        identifier: key,
+        context: `Some context: \n ${ fileContent[key] }`,
+        customData: "",
+        previewId: previewIndex,
+        labels: [],
+        isHidden: false,
+        text: fileContent[key],
+        translations: translations
+      });
+
+      previewStrings[key] = {
+        text: fileContent[key],
+        id: previewIndex
+      };
+
+      previewIndex++;
+    }
+  }
+
+  let previewHtml = "";
+
+  try {
+    const previewEjs = fs.readFileSync("resources/views/file-preview.ejs", "utf8");
+
+    let ejsTemplate = ejs.compile(previewEjs);
+
+    previewHtml = ejsTemplate({
+      fileName: req.file.name,
+      strings: previewStrings
+    });
+  } catch (err) {
+console.error(err);
+  }
+
+  if (new Blob([JSON.stringify(sourceStrings)]).size < MAX_BODY_SIZE) {
+    return {
+      data: {
+        strings: sourceStrings,
+        preview:Buffer.from(previewHtml).toString("base64")
+      }
+    }
+  }
+
+  return {
+    data: {
+      stringsUrl: getDownloadUrl(JSON.stringify(sourceStrings)),
+      previewUrl: getDownloadUrl(previewHtml)
+    }
+  }
+}
+
+async function buildFile(req) {
+  const fileContent = await getContent(req.file);
+
+  const languageId = req.targetLanguages[0].id;
+
+  const translations = await getStringsForExport(req);
+
+  if (!fileContent[Object.keys(fileContent)[0]]) {
+    throw "Nothing to translate";
+  }
+
+  for (const key of Object.keys(fileContent)) {
+    if (typeof fileContent[key] !== "string") {
+      continue;
+    }
+
+    fileContent[key] = getTranslation(translations, key, languageId, fileContent[key]);
+  }
+
+  const responseContent = JSON.stringify(fileContent, null, 2);
+
+  if (new Blob([responseContent]).size < MAX_BODY_SIZE) {
+    return {
+      data: {
+        content:Buffer.from(responseContent).toString("base64")
+      }
+    }
+  }
+
+  return {
+    data: {
+      contentUrl: getDownloadUrl(responseContent)
+    }
+  }
+}
+
+function getDownloadUrl(fileContents) {
+  const tmpFileName = uuidv4();
+
+  fs.writeFileSync("/tmp/" + tmpFileName, fileContents);
+
+  return `${process.env.BASE_URL }/download?file=` + tmpFileName;
+}
+
+async function getContent(file) {
+  if (file.content) {
+    return JSON.parse(Buffer.from(file.content, "base64").toString());
+  }
+
+  return (await got(file.contentUrl, {json: true})).body;
+}
+
+function getTranslation(translations, stringId, languageId, fallbackTranslation) {
+  for (let i = 0; i < translations.length; i++) {
+    if (translations[i].identifier === stringId) {
+      return translations[i].translations[languageId].text;
+    }
+  }
+
+  return fallbackTranslation;
+}
+
+async function getStringsForExport(req) {
+  if (!req.strings&& !req.stringsUrl) {
+    throw "Bad payload received: No strings found";
+  }
+
+  if (req.strings) {
+    return req.strings;
+  }
+
+  return (await got(req.stringsUrl, { json: true })).body;
+}
+
+module.exports = {
+  parseFile,
+  buildFile
+};
+```
+
+The code listing above contains two main methods for working with a file: `parseFile` and `buildFile`.
+
+- `parseFile` &ndash; Allows processing the source file's content, extracting strings for translation from the source file, and building an HTML preview for the source file, so that translators can conveniently review the content in the Crowdin editor and translate it.
+- `buildFile` &ndash; Allows building a file for export in the original custom format using the strings imported to Crowdin.
+
+Now open the `route.js` file and create a new route that will be receiving content from Crowdin:
+
+```js
+// route.js
+const { parseFile, buildFile } = require("./fileHelper");
+
+router.post("/process", authorizeUser, async (req, res) => {
+  let response
+  const request = req.body;
+
+  try {
+    switch (request.jobType) {
+      case "parse-file":
+        response = await parseFile(request);
+        break;
+      case "build-file":
+        response = await buildFile(request);
+        break;
+    }
+
+    res.status(200).send(response);
+  } catch (e) {
+console.error(e);
+
+    res.status(500).send({
+      error: {
+        message: "Unknown error occurred"
+      }
+    });
+  }
+});
+
+router.get("/download", authorizeUser, (req, res) => {
+  res.download(`/tmp/${ req.query.file }`, "file.txt", (err) => {
+    if (err) {
+console.log("Download error: ", err);
+    } else {
+console.log("Download went well");
+    }
+
+    fs.unlinkSync("/tmp/" + req.query.file);
+  });
+});
+```
+
+Besides the `/process` route, you also need to add a route for downloading the file if its size exceeds 5MB. Now the app can process a custom JSON file.
+
+Execute the following commands to deploy the changes:
+
+```bash
+git add .
+git commit -m "Added custom file format module"
+git push heroku main
+heroku ps:scale web=1
+heroku open
+```
+
+As previously, copy the manifest URL and once again install the app in your Crowdin account using the [manual installation](https://developer.crowdin.com/crowdin-apps-installation/#manual-app-installation). Then create a JSON file on your local machine and insert the following content:
+
+```json
+{
+	"hello_world": "Hello World!",
+	"test": "This is a sample string for translation"
+}
+```
+
+This is the source file you will be uploading to your Crowdin project for translation. Now open your test project in Crowdin and upload just created JSON source file to it. Once the file is uploaded and imported, Crowdin will display that it contains two strings for translation. Go to the **Home** tab, select one of the target languages and click on the file. You will see a custom preview for this JSON file in the editor's left panel.

@@ -11,7 +11,7 @@ export default [
       { slug: path('crowdin-apps-js') },
       { slug: path('crowdin-apps-installation') },
       { slug: path('crowdin-apps-security') },
-      { slug: path('crowdin-apps-ui-kit') },
+      { slug: path('crowdin-apps-user-interface') },
       {
         label: 'Publishing',
         autogenerate: { directory: path('crowdin-apps', 'publishing') },
