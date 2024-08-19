@@ -1,7 +1,7 @@
 ---
 import Default from '@astrojs/starlight/components/Hero.astro';
 import SearchBox from '~/components/SearchBox.astro';
-import CallToAction from '@astrojs/starlight/components/CallToAction.astro';
+import { LinkButton } from '@astrojs/starlight/components';
 import { Image } from 'astro:assets';
 
 const isHomepage = Astro.props.slug === '';
@@ -120,16 +120,12 @@ if (image) {
                 {
                     actions.length > 0 && (
                         <div class="shortucts-wrapper justify-center md:justify-start flex-wrap">
-                            {actions.map((attrs:any) => {
-                                const attributes = {
-                                    ...attrs,
-                                    icon: {
-                                        type: 'raw',
-                                        html: attrs.text
-                                    }
-                                };
-                                return <CallToAction {...attributes}/>
-                            })}
+                            {actions.map(({ attrs, icon, link: href, text, variant }: any) => (
+                                <LinkButton {href} {variant} icon={icon?.name} class={attrs.class} {...attrs}>
+                                    {text}
+                                    {icon?.html && <Fragment set:html={icon.html} />}
+                                </LinkButton>
+                            ))}
                         </div>
                     )
                 }
@@ -137,7 +133,6 @@ if (image) {
         </div>
     </section>
     ) : (
-    <Default {...Astro.props as any}><slot /></Default>
+        <Default {...Astro.props as any}><slot /></Default>
     )
 }
-
