@@ -22,7 +22,7 @@ For Crowdin Enterprise:
 * All users in the organization projects
 * Selected users
 
-### Structure
+## Structure
 
 ```json
 {
@@ -41,7 +41,7 @@ For Crowdin Enterprise:
 }
 ```
 
-### Properties
+## Properties
 
 <table>
   <tbody>
@@ -79,7 +79,7 @@ For Crowdin Enterprise:
       </td>
     </tr>
     <tr>
-      <td><code>signaturePatterns</code></td>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
       <td>
         <p><strong>Type:</strong> <code>object</code></p>
         <p><strong>Description:</strong> Contains <code>fileName</code> and/or <code>fileContent</code> regular expressions used to detect file type when uploading a new source file via UI (or via API without specified <code>type</code> parameter). If the file matches regular expressions, it's labeled as a custom format file.</p>
@@ -89,11 +89,11 @@ For Crowdin Enterprise:
   </tbody>
 </table>
 
-### Communication between Custom File Format App and Crowdin
+## Communication between Custom File Format App and Crowdin
 
 On the initial file import, the system detects custom file format using the `signaturePatterns` or `type` parameters and makes an HTTP request to the app's URL (`$baseUrl . $url`) for further processing. Then app processes the file in a custom format and responds to the system. The requests and responses to and from the custom file format apps have two-minute timeouts. The maximum request and response payload size is limited to 5 MB.
 
-### Request to the App
+## Request to the App
 
 Request payload example:
 
@@ -101,42 +101,44 @@ Request payload example:
 // max request payload - 5 MB
 // wait timeout - 2 minutes
 {
-    "jobType": "parse-file | build-file",
-    "organization": {
-        "id": 1,
-        "domain": "{domain}",
-        "baseUrl": "https://{domain}.crowdin.com",
-        "apiBaseUrl": "https://{domain}.api.crowdin.com"
-    },
-    "project": {
-        "id": 1,
-        "identifier": "your-project-identifier",
-        "name": "Your Project Name"
-    },
-    "file": {
-        "id": 1,
-        "name": "file.xml",
-        "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded source file content
-        "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // source file public URL
-    },
-    "sourceLanguage": {
-        "id": "es",
-        "name": "Spanish",
-        "editorCode": "es",
-        "twoLettersCode": "es",
-        "threeLettersCode": "spa",
-        "locale": "es-ES",
-        "androidCode": "es-rES",
-        "osxCode": "es.lproj",
-        "osxLocale": "es",
-        "pluralCategoryNames": ["one"],
-        "pluralRules": "(n != 1)"
-    },
-    "targetLanguages": [{
-        // same structure as for sourceLanguage, empty when uploading a new source file, one element for import_translations & export, can be more for miltilingual files
-    }],
-    "strings": [...], // for the build-file jobs, array of segments
-    "stringsUrl": "https://tmp.downloads.crowdin.com/strings.ndjson", // for the build-file jobs, file with segments, in new-line delimited json format
+  "jobType": "parse-file | build-file",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name"
+  },
+  "file": {
+    "id": 1,
+    "name": "file.xml",
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded source file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // source file public URL
+  },
+  "sourceLanguage": {
+    "id": "es",
+    "name": "Spanish",
+    "editorCode": "es",
+    "twoLettersCode": "es",
+    "threeLettersCode": "spa",
+    "locale": "es-ES",
+    "androidCode": "es-rES",
+    "osxCode": "es.lproj",
+    "osxLocale": "es",
+    "pluralCategoryNames": ["one"],
+    "pluralRules": "(n != 1)"
+  },
+  "targetLanguages": [
+    {
+      // same structure as for sourceLanguage, empty when uploading a new source file, one element for import_translations & export, can be more for multilingual files
+    }
+  ],
+  "strings": [...], // for the build-file jobs, array of segments
+  "stringsUrl": "https://tmp.downloads.crowdin.com/strings.ndjson" // for the build-file jobs, file with segments, in new-line delimited json format
 }
 ```
 
@@ -155,11 +157,11 @@ Properties:
       </td>
     </tr>
     <tr>
-      <td><code>file.content</code>, <code>file.contentUrl</code></td>
+      <td><code>file.content</code>, <code class="whitespace-nowrap">file.contentUrl</code></td>
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Description:</strong> Parameters used to pass the base64 encoded source file content (<code>file.content</code>) or a source file public URL (<code>file.contentUrl</code>).<br/>
-        Either of these two parameters can be used.<Aside>Maximum request payload limit is 5 MB.</Aside></p>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum request payload limit is 5 MB.</Aside></p>
       </td>
     </tr>
     <tr>
@@ -168,13 +170,13 @@ Properties:
         <p><strong>Type(strings):</strong> <code>array</code></p>
         <p><strong>Type(stringsUrl):</strong> <code>string</code></p>
         <p><strong>Description:</strong> Parameters used for translations download (for <code>build-file</code> job type only). <code>strings</code> - translation strings array. <code>stringsUrl</code> - public URL to a <a href="https://github.com/ndjson/ndjson-spec" target="_blank">new-line delimited json</a> with translation strings.<br/>
-        Either of these two parameters can be used.<Aside>Maximum request payload limit is 5 MB.</Aside></p>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum request payload limit is 5 MB.</Aside></p>
       </td>
     </tr>
   </tbody>
 </table>
 
-### Expected Response from the App for the parse-file Job Type
+## Expected Response from the App for the parse-file Job Type
 
 Response payload example:
 
@@ -182,15 +184,15 @@ Response payload example:
 // max response payload - 5 MB
 // wait timeout - 2 minutes
 {
-    "data": {
-        "strings": [...], // segments array
-        "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // new-line delimited json file with parsed strings
-        "preview": "VGhpbmdzIGFyZSBvbmx5IGltcG9zc2libGUgdW50aWwgdGhleSdyZSBub3Qu", // optional, base64 encoded content of preview html file, not supported if there are plural strings
-        "previewUrl": "https://app.example.com/LN3km2K6M-preview.html", // optional, URL of preview html file, not supported if there are plural strings
-    },
-    "error": {
-        "message": "Your error message"
-    }
+  "data": {
+    "strings": [...], // segments array
+    "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // new-line delimited json file with parsed strings
+    "preview": "VGhpbmdzIGFyZSBvbmx5IGltcG9zc2libGUgdW50aWwgdGhleSdyZSBub3Qu", // optional, base64 encoded content of preview html file, not supported if there are plural strings
+    "previewUrl": "https://app.example.com/LN3km2K6M-preview.html", // optional, URL of preview html file, not supported if there are plural strings
+  },
+  "error": {
+    "message": "Your error message"
+  }
 }
 ```
 
@@ -199,14 +201,14 @@ Properties:
 <table>
   <tbody>
     <tr>
-      <td><code>data.strings</code>, <code>data.stringsUrl</code></td>
+      <td><code>data.strings</code>, <code class="whitespace-nowrap">data.stringsUrl</code></td>
       <td>
         <p><strong>Type(data.strings):</strong> <code>array</code></p>
         <p><strong>Type(data.stringsUrl):</strong> <code>string</code></p>
         <p><strong>Description:</strong> Parameters used to pass the parsed strings content.<br/>
         <code>data.strings</code> - parsed strings array.<br/>
         <code>data.stringsUrl</code> - public URL to a <a href="https://github.com/ndjson/ndjson-spec" target="_blank">new-line delimited json</a> with parsed strings.<br/>
-        Either of these two parameters can be used.<Aside>Maximum response payload limit is 5 MB.</Aside></p>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum response payload limit is 5 MB.</Aside></p>
       </td>
     </tr>
     <tr>
@@ -228,7 +230,7 @@ Properties:
   </tbody>
 </table>
 
-### Expected Response from the App for the build-file Job Type
+## Expected Response from the App for the build-file Job Type
 
 Response payload example:
 
@@ -236,13 +238,13 @@ Response payload example:
 // max response payload - 5 MB
 // wait timeout - 2 minutes
 {
-    "data": {
-        "content": "TWF5IHRoZSBGb3JjZSBiZSB3aXRoIHlvdS4=", // base64 encoded translation file content
-        "contentUrl": "https://app.example.com/p5uLEpq8p-result.xml", // translation file public URL
-    },
-    "error": {
-        "message": "Your error message"
-    }
+  "data": {
+    "content": "TWF5IHRoZSBGb3JjZSBiZSB3aXRoIHlvdS4=", // base64 encoded translation file content
+    "contentUrl": "https://app.example.com/p5uLEpq8p-result.xml", // translation file public URL
+  },
+  "error": {
+    "message": "Your error message"
+  }
 }
 ```
 
@@ -256,7 +258,7 @@ Properties:
         <p><strong>Type(data.content):</strong> <code>string</code></p>
         <p><strong>Type(data.contentUrl):</strong> <code>string</code></p>
         <p><strong>Description:</strong> Parameters used to pass the base64 encoded translation file content (<code>data.content</code>) or a translation file public URL (<code>data.contentUrl</code>).<br/>
-        Either of these two parameters can be used.<Aside>Maximum response payload limit is 5 MB.</Aside></p>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum response payload limit is 5 MB.</Aside></p>
       </td>
     </tr>
     <tr>
@@ -269,7 +271,7 @@ Properties:
   </tbody>
 </table>
 
-### Strings Array Structure
+## Strings Array Structure
 
 Below you can see an example of the strings structure expected from the app for `parse-file` job type and passed to the app for `build-file` job type.
 
@@ -277,7 +279,8 @@ Payload example:
 
 ```json
 // strings should be in "new-line delimited json" format if they passed by URL
-[{ // non plural string
+[
+  { // non plural string
     "previewId": 1, // only for "parse-file" jobType, required when the HTML preview of the file is generated
     "id": 1, // only for "build-file" jobType
     "identifier": "string-key-1", // required
@@ -289,14 +292,14 @@ Payload example:
     "labels": ["label-one", "label-two"], // optional, default []
     "text": "String source text", // required
     "translations": { // optional
-        "uk": { // targetLanguage.id
-            "text": "Переклад стрічки", // required
-            "status": "untranslated | translated | approved" // optional, default "translated"
-        },
-        // can be other languages for multilingual, check "targetLanguages" in the request payload
+      "uk": { // targetLanguage.id
+        "text": "Переклад стрічки", // required
+        "status": "untranslated | translated | approved" // optional, default "translated"
+      },
+      // can be other languages for multilingual, check "targetLanguages" in the request payload
     }
-},
-{ // plural string
+  },
+  { // plural string
     "previewId": 2,
     "id": 2,
     "identifier": "string-key-2",
@@ -307,24 +310,25 @@ Payload example:
     "hasPlurals": true,
     "labels": [],
     "text": { // keys from sourceLanguage.pluralCategoryNames
-        "one": "One file",
-        "other": "%d files",
+      "one": "One file",
+      "other": "%d files",
     },
     "translations": {
-        "uk": {
-            "text": { // keys from targetLanguage.pluralCategoryNames
-                "one": "One file",
-                "few": "%d файла",
-                "many": "%d файлів",
-            },
-            "status": {
-                "one": "untranslated",
-                "few": "translated",
-                "many": "approved",
-            }
+      "uk": {
+        "text": { // keys from targetLanguage.pluralCategoryNames
+          "one": "One file",
+          "few": "%d файла",
+          "many": "%d файлів",
+        },
+        "status": {
+          "one": "untranslated",
+          "few": "translated",
+          "many": "approved",
         }
+      }
     }
-}]
+  }
+]
 ```
 
 Properties:
@@ -347,7 +351,7 @@ Properties:
       </td>
     </tr>
     <tr>
-      <td><code>identifier</code></td>
+      <td><code class="whitespace-nowrap">identifier</code></td>
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Description:</strong> Unique string key within the file.</p>
@@ -363,34 +367,36 @@ Properties:
   </tbody>
 </table>
 
-#### HTML Preview of the File
+### HTML Preview of the File
 
 HTML Preview of the file example:
 
 ```html
 <html lang="en">
-<head>
+  <head>
     <title>Optional Title</title>
     <style>
-        table, th, td { border: 1px solid #aaa; }
+      table, th, td { 
+        border: 1px solid #aaa; 
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1 style="text-align: center">HTML preview of the file</h1>
     <table style="width: 100%">
-        <tr>
-            <th>Key:</th>
-            <th>Text:</th>
-        </tr>
-        <tr>
-            <td>Key 1</td>
-            <td><span id="string_preview_id_1">Source Text 1</span></td> <!-- 1 is previewId in strings json -->
-        </tr>
-        <tr>
-            <td>Key 2</td>
-            <td><span id="string_preview_id_2">Source Text 2</span></td> <!-- 2 is previewId in strings json -->
-        </tr>
+      <tr>
+        <th>Key:</th>
+        <th>Text:</th>
+      </tr>
+      <tr>
+        <td>Key 1</td>
+        <td><span id="string_preview_id_1">Source Text 1</span></td> <!-- 1 is previewId in strings json -->
+      </tr>
+      <tr>
+        <td>Key 2</td>
+        <td><span id="string_preview_id_2">Source Text 2</span></td> <!-- 2 is previewId in strings json -->
+      </tr>
     </table>
-</body>
+  </body>
 </html>
 ```

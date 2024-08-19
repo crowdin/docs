@@ -29,7 +29,7 @@ For Crowdin Enterprise:
 * All users in the organization projects
 * Selected users
 
-### Structure
+## Structure
 
 ```json
 {
@@ -46,7 +46,7 @@ For Crowdin Enterprise:
 }
 ```
 
-### Properties
+## Properties
 
 <table>
   <tbody>
@@ -67,7 +67,7 @@ For Crowdin Enterprise:
       </td>
     </tr>
     <tr>
-      <td><code>signaturePatterns</code></td>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
       <td>
         <p><strong>Type:</strong> <code>object</code></p>
         <p><strong>Description:</strong> Contains <code>fileName</code> and/or <code>fileContent</code> regular expressions used to detect file type when exporting a translation file.</p>
@@ -77,13 +77,13 @@ For Crowdin Enterprise:
   </tbody>
 </table>
 
-### Communication between File Processing App and Crowdin
+## Communication between File Processing App and Crowdin
 
 When exporting a file, the system detects an appropriate pre-export module using the `signaturePatterns` parameter and makes an HTTP request to the app's URL (`$baseUrl . $url`) for further processing containing the source strings and their respective translations.
 
 The file processing app will modify the string translations according to your needs. Make sure that the pre-export module returns the original string quantity along with their string uniqId to ensure a successful translation export. Once the modified strings are returned from the pre-export module, they are used to build a translation file.
 
-### Request to the File Processing App
+## Request to the File Processing App
 
 Request payload example:
 
@@ -91,42 +91,44 @@ Request payload example:
 // max request payload - 5 MB
 // wait timeout - 2 minutes
 {
-    "jobType": "file-pre-export",
-    "organization": {
-        "id": 1,
-        "domain": "{domain}",
-        "baseUrl": "https://{domain}.crowdin.com",
-        "apiBaseUrl": "https://{domain}.api.crowdin.com"
-    },
-    "project": {
-        "id": 1,
-        "identifier": "your-project-identifier",
-        "name": "Your Project Name"
-    },
-    "file": {
-        "id": 1,
-        "name": "file.xml",
-        "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded source file content
-        "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // source file public URL
-    },
-    "sourceLanguage": {
-        "id": "es",
-        "name": "Spanish",
-        "editorCode": "es",
-        "twoLettersCode": "es",
-        "threeLettersCode": "spa",
-        "locale": "es-ES",
-        "androidCode": "es-rES",
-        "osxCode": "es.lproj",
-        "osxLocale": "es",
-        "pluralCategoryNames": ["one"],
-        "pluralRules": "(n != 1)"
-    },
-    "targetLanguages": [{
-        // same structure as for sourceLanguage, one element for export, can be more for miltilingual files
-    }],
-    "strings": [...],
-    "stringsUrl": "https://tmp.downloads.crowdin.com/strings.ndjson",
+  "jobType": "file-pre-export",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name"
+  },
+  "file": {
+    "id": 1,
+    "name": "file.xml",
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded source file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // source file public URL
+  },
+  "sourceLanguage": {
+    "id": "es",
+    "name": "Spanish",
+    "editorCode": "es",
+    "twoLettersCode": "es",
+    "threeLettersCode": "spa",
+    "locale": "es-ES",
+    "androidCode": "es-rES",
+    "osxCode": "es.lproj",
+    "osxLocale": "es",
+    "pluralCategoryNames": ["one"],
+    "pluralRules": "(n != 1)"
+  },
+  "targetLanguages": [
+    {
+      // same structure as for sourceLanguage, one element for export, can be more for multilingual files
+    }
+  ],
+  "strings": [...],
+  "stringsUrl": "https://tmp.downloads.crowdin.com/strings.ndjson",
 }
 ```
 
@@ -143,11 +145,11 @@ Properties:
       </td>
     </tr>
     <tr>
-      <td><code>file.content</code>, <code>file.contentUrl</code></td>
+      <td><code>file.content</code>, <code class="whitespace-nowrap">file.contentUrl</code></td>
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Description:</strong> Parameters used to pass the base64 encoded source file content (<code>file.content</code>) or a source file public URL (<code>file.contentUrl</code>).<br/>
-        Either of these two parameters can be used.<Aside>Maximum request payload limit is 5 MB.</Aside></p>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum request payload limit is 5 MB.</Aside></p>
       </td>
     </tr>
     <tr>
@@ -156,13 +158,13 @@ Properties:
         <p><strong>Type(strings):</strong> <code>array</code></p>
         <p><strong>Type(stringsUrl):</strong> <code>string</code></p>
         <p><strong>Description:</strong> Parameters used for the source strings and their respective translations before the file export. <code>strings</code> - strings array. <code>stringsUrl</code> - public URL to a <a href="https://github.com/ndjson/ndjson-spec" target="_blank">new-line delimited json</a> with strings.<br/>
-        Either of these two parameters can be used.<Aside>Maximum request payload limit is 5 MB.</Aside></p>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum request payload limit is 5 MB.</Aside></p>
       </td>
     </tr>
   </tbody>
 </table>
 
-### Expected Response from the App for the file-pre-export Job Type
+## Expected Response from the App for the file-pre-export Job Type
 
 Response payload example:
 
@@ -170,13 +172,13 @@ Response payload example:
 // max response payload - 5 MB
 // wait timeout - 2 minutes
 {
-    "data": {
-        "strings": [...], // modified strings array
-        "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // new-line delimited json file with modified strings
-    },
-    "error": {
-        "message": "Your error message"
-    }
+  "data": {
+    "strings": [...], // modified strings array
+    "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // new-line delimited json file with modified strings
+  },
+  "error": {
+    "message": "Your error message"
+  }
 }
 ```
 
@@ -192,7 +194,7 @@ Properties:
         <p><strong>Description:</strong> Parameters used to pass the modified strings content.<br/>
         <code>data.strings</code> - modified strings array.<br/>
         <code>data.stringsUrl</code> - public URL to a <a href="https://github.com/ndjson/ndjson-spec" target="_blank">new-line delimited json</a> with modified strings.<br/>
-        Either of these two parameters can be used.<Aside>Maximum response payload limit is 5 MB.</Aside></p>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum response payload limit is 5 MB.</Aside></p>
       </td>
     </tr>
     <tr>
@@ -205,7 +207,7 @@ Properties:
   </tbody>
 </table>
 
-### Strings Array Structure
+## Strings Array Structure
 
 Below you can see an example of the strings that app will receive before the export. The same structure is used for the modified strings in the app response.
 
@@ -214,50 +216,50 @@ Payload example:
 ```json
 // strings should be in "new-line delimited json" format if they passed by URL
 [
-    { // non plural string
-        "uniqId": "9cdfb439c7876e703e307864c9167a15::1", // required, unique ID 
-        "identifier": "string-key-1", // required
-        "context": "Some context", // optional
-        "maxLength": 10, // optional, default null
-        "isHidden": false, // optional, default null
-        "hasPlurals": false, // optional, default false
-        "labels": ["label-one", "label-two"], // optional, default []
-        "text": "String source text", // required
-        "translations": { // optional
-            "uk": { // targetLanguage.id
-                "text": "Переклад стрічки", // required
-                "status": "untranslated | translated | approved" // optional, default "translated"
-            }
-          // can be other languages for multilingual, check "targetLanguages" in the request payload
-        }
-    },
-    { // plural string
-        "uniqId": "9cdfb439c7876e703e307864c9167a15::2", // required, unique ID
-        "identifier": "string-key-2",
-        "context": "Some optional context",
-        "maxLength": 15,
-        "isHidden": false,
-        "hasPlurals": true,
-        "labels": [],
-        "text": { // keys from sourceLanguage.pluralCategoryNames
-            "one": "One file",
-            "other": "%d files"
-        },
-        "translations": {
-            "uk": {
-                "text": { // keys from targetLanguage.pluralCategoryNames
-                    "one": "One file",
-                    "few": "%d файла",
-                    "many": "%d файлів"
-                },
-                "status": {
-                    "one": "untranslated",
-                    "few": "translated",
-                    "many": "approved"
-                }
-            }
-        }
+  { // non plural string
+    "uniqId": "9cdfb439c7876e703e307864c9167a15::1", // required, unique ID 
+    "identifier": "string-key-1", // required
+    "context": "Some context", // optional
+    "maxLength": 10, // optional, default null
+    "isHidden": false, // optional, default null
+    "hasPlurals": false, // optional, default false
+    "labels": ["label-one", "label-two"], // optional, default []
+    "text": "String source text", // required
+    "translations": { // optional
+      "uk": { // targetLanguage.id
+        "text": "Переклад стрічки", // required
+        "status": "untranslated | translated | approved" // optional, default "translated"
+      }
+      // can be other languages for multilingual, check "targetLanguages" in the request payload
     }
+  },
+  { // plural string
+    "uniqId": "9cdfb439c7876e703e307864c9167a15::2", // required, unique ID
+    "identifier": "string-key-2",
+    "context": "Some optional context",
+    "maxLength": 15,
+    "isHidden": false,
+    "hasPlurals": true,
+    "labels": [],
+    "text": { // keys from sourceLanguage.pluralCategoryNames
+      "one": "One file",
+      "other": "%d files"
+    },
+    "translations": {
+      "uk": {
+        "text": { // keys from targetLanguage.pluralCategoryNames
+          "one": "One file",
+          "few": "%d файла",
+          "many": "%d файлів"
+        },
+        "status": {
+          "one": "untranslated",
+          "few": "translated",
+          "many": "approved"
+        }
+      }
+    }
+  }
 ]
 ```
 

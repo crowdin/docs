@@ -25,7 +25,7 @@ For Crowdin Enterprise:
 * All users in the organization projects
 * Selected users
 
-### Structure
+## Structure
 
 ```json
 {
@@ -42,7 +42,7 @@ For Crowdin Enterprise:
 }
 ```
 
-### Properties
+## Properties
 
 <table>
   <tbody>
@@ -63,7 +63,7 @@ For Crowdin Enterprise:
       </td>
     </tr>
     <tr>
-      <td><code>signaturePatterns</code></td>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
       <td>
         <p><strong>Type:</strong> <code>object</code></p>
         <p><strong>Description:</strong> Contains <code>fileName</code> and/or <code>fileContent</code> regular expressions used to detect file type when exporting a translation file.</p>
@@ -73,7 +73,7 @@ For Crowdin Enterprise:
   </tbody>
 </table>
 
-### Communication between File Processing App and Crowdin
+## Communication between File Processing App and Crowdin
 
 When exporting a file, Crowdin detects an appropriate module using the `signaturePatterns` parameter and makes an HTTP request to the app's URL (`$baseUrl . $url`) for further processing.
 
@@ -83,7 +83,7 @@ To modify the file content, the system first locates the appropriate post-export
 
 Once the post-export module has completed the file modifications, Crowdin returns the modified file content, as well as a new file name or extension if applicable.
 
-### Request to the File Processing App
+## Request to the File Processing App
 
 Request payload example:
 
@@ -91,44 +91,44 @@ Request payload example:
 // max request payload - 5 MB
 // wait timeout - 2 minutes
 {
-    "jobType": "file-post-export",
-    "organization": {
-        "id": 1,
-        "domain": "{domain}",
-        "baseUrl": "https://{domain}.crowdin.com",
-        "apiBaseUrl": "https://{domain}.api.crowdin.com"
-    },
-    "project": {
-        "id": 1,
-        "identifier": "your-project-identifier",
-        "name": "Your Project Name"
-    },
-    "file": {
-        "id": 1,
-        "name": "file.xml",
-        "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded exported file content
-        "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=...", // exported file public URL
-        "rawContent": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded source file content
-        "rawContentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // source file public URL
-    },
-    "sourceLanguage": {
-        "id": "es",
-        "name": "Spanish",
-        "editorCode": "es",
-        "twoLettersCode": "es",
-        "threeLettersCode": "spa",
-        "locale": "es-ES",
-        "androidCode": "es-rES",
-        "osxCode": "es.lproj",
-        "osxLocale": "es",
-        "pluralCategoryNames": ["one"],
-        "pluralRules": "(n != 1)"
-    },
-    "targetLanguages": [
-        {
-            // same structure as for sourceLanguage, one element for export, can be more for miltilingual files
-        }
-    ]
+  "jobType": "file-post-export",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name"
+  },
+  "file": {
+    "id": 1,
+    "name": "file.xml",
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded exported file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=...", // exported file public URL
+    "rawContent": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded source file content
+    "rawContentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // source file public URL
+  },
+  "sourceLanguage": {
+    "id": "es",
+    "name": "Spanish",
+    "editorCode": "es",
+    "twoLettersCode": "es",
+    "threeLettersCode": "spa",
+    "locale": "es-ES",
+    "androidCode": "es-rES",
+    "osxCode": "es.lproj",
+    "osxLocale": "es",
+    "pluralCategoryNames": ["one"],
+    "pluralRules": "(n != 1)"
+  },
+  "targetLanguages": [
+    {
+      // same structure as for sourceLanguage, one element for export, can be more for multilingual files
+    }
+  ]
 }
 ```
 
@@ -149,7 +149,7 @@ Properties:
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Description:</strong> Parameters used to pass the base64 encoded exported file content (<code>file.content</code>) or a exported file public URL (<code>file.contentUrl</code>).<br/>
-        Either of these two parameters can be used.<Aside>Maximum request payload limit is 5 MB.</Aside></p>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum request payload limit is 5 MB.</Aside></p>
       </td>
     </tr>
     <tr>
@@ -157,13 +157,13 @@ Properties:
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Description:</strong> Parameters used to pass the base64 encoded source file content (<code>file.rawContent</code>) or a source file public URL (<code>file.rawContentUrl</code>).<br/>
-        Either of these two parameters can be used.<Aside>Maximum request payload limit is 5 MB.</Aside></p>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum request payload limit is 5 MB.</Aside></p>
       </td>
     </tr>
   </tbody>
 </table>
 
-### Expected Response from the App for the file-post-export Job Type
+## Expected Response from the App for the file-post-export Job Type
 
 Response payload example:
 
@@ -171,14 +171,14 @@ Response payload example:
 // max response payload - 5 MB
 // wait timeout - 2 minutes
 {
-    "data": {
-        "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded modified file content
-        "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=...", // modified file public URL
-        "exportPattern": "file.html" // optional, new export pattern for a resulting file
-    },
-    "error": {
-        "message": "Your error message"
-    }
+  "data": {
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded modified file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=...", // modified file public URL
+    "exportPattern": "file.html" // optional, new export pattern for a resulting file
+  },
+  "error": {
+    "message": "Your error message"
+  }
 }
 ```
 
@@ -192,7 +192,7 @@ Properties:
         <p><strong>Type(data.content):</strong> <code>string</code></p>
         <p><strong>Type(data.contentUrl):</strong> <code>string</code></p>
         <p><strong>Description:</strong> Parameters used to pass the base64 encoded modified file content (<code>data.content</code>) or a modified file public URL (<code>data.contentUrl</code>).<br/>
-        Either of these two parameters can be used.<Aside>Maximum response payload limit is 5 MB.</Aside></p>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum response payload limit is 5 MB.</Aside></p>
       </td>
     </tr>
     <tr>
