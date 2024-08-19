@@ -49,6 +49,16 @@ const config = defineConfig({
           ],
         }
       ],
+      head: [
+        {
+          tag: 'script',
+          attrs: {
+            id: 'cookieyes',
+            src: 'https://cdn-cookieyes.com/client_data/2dabfbbec8b71e267115f6a5/script.js',
+            defer: true,
+          }
+        }
+      ],
       tableOfContents: {
         minHeadingLevel: 2,
         maxHeadingLevel: 4,
