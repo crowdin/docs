@@ -125,29 +125,6 @@ If mixed, *api_token* and *project_id* are prioritized:
 "base_url": "https://api.crowdin.com"      # High priority
 ```
 
-## Split Project Configuration and API Credentials
-
-The `crowdin.yml` file contains a description of the resources to manage and API credentials (`project_id`, `api_token`, `base_path`, `base_url`). It means that it's unsafe to commit this file into the code repository because the API key would be accessible to other users. Crowdin CLI supports two types of configuration files:
-
-- a description of the resources to manage, residing in the project directory
-- API credentials, probably residing in `$HOME/.crowdin.yml`
-
-<Aside>
-  PI credentials from the `.crowdin.yml` configuration file have higher priority than credentials from the project directory(`crowdin.yml`).
-</Aside>
-
-If you need to run a command with user-specific credentials (for example, `upload sources`), run the following command:
-
-```shell
-crowdin upload sources --identity 'path-to-user-credentials-file'
-```
-
-But if user-specific credentials file residing in `$HOME/.crowdin.yml` you can run:
-
-```shell
-crowdin upload sources
-```
-
 ## General Configuration
 
 The sample configuration provided above has source and translation attributes containing standard wildcards (also known as globbing patterns) to make it easier to work with multiple files.
@@ -546,7 +523,7 @@ You can use additional parameters to customize the import process for specific f
 
 Example of the configuration with additional parameters:
 
-```yml title="crowdin.yml"
+```yml title="crowdin.yml" wrap
 "files": [
   {
     "source": "/app/sample1.xml",
@@ -816,13 +793,17 @@ To make it work with Crowdin without changes in your project, you can set up Lan
 
 There are cases when it’s necessary to use VCS integration and CLI for one project. Mostly, in this kind of situation, you’d need to have two separate configuration files, one for VCS integration and another for CLI. However, you can use a single configuration file for both cases.
 
-Since the VCS integration configuration file doesn't contain `project_id` and `api_token` credentials required for CLI, you can pass them directly in the command using the following parameters: `-i/--project-id`, `-T/--token`. Alternatively, you may use [environment variables](#api-credentials-from-environment-variables) for this purpose.
+Since the VCS integration configuration file doesn't contain `project_id` and `api_token` credentials required for CLI, you can pass them directly in the command using the following parameters: `-i/--project-id`, `-T/--token`.
 
 As a result, your command for downloading translations via CLI will look like the following:
 
 ```shell
 crowdin download -i {your-project-id} -T {your-token}
 ```
+
+<ReadMore>
+  Alternatively, you may use [Environment Variables](#api-credentials-from-environment-variables) or [Split Project Configuration and API Credentials](https://crowdin.github.io/crowdin-cli/configuration#split-project-configuration-and-api-credentials).
+</ReadMore>
 
 ## Example Configurations
 
