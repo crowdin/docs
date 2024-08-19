@@ -1,0 +1,75 @@
+---
+const { product } = Astro.props;
+---
+
+<crowdin-languages data-product={product}>
+    <table class="w-full">
+        <colgroup>
+            <col width="20%" />
+            <col width="80%" />
+        </colgroup>
+        <thead>
+            <tr>
+                <th class="w-72">Code</th>
+                <th class="w-full">Name</th>
+            </tr>
+        </thead>
+        <tbody id={`languages-list-${product}`}></tbody>
+    </table>
+</crowdin-languages>
+
+<script>
+    import fetchJsonp from 'fetch-jsonp';
+
+    class CrowdinLanguages extends HTMLElement {
+        constructor() {
+            super();
+
+            const product = this.dataset.product;
+            if (!['crowdin', 'enterprise'].includes(this.dataset.product as string)) {
+                console.error('Invalid product');
+                return;
+            }
+
+            const htmlspecialchars = (text: string) => {
+                const map: { [key: string]: string } = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                };
+
+                return text.replace(/[&<>"']/g, (match: string) => ( map[match] ));
+            };
+
+            const getLanguages = (url: string) => {
+                fetchJsonp(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        const table = this.querySelector(`#languages-list-${product}`);
+
+                        if (!table) {
+                            return;
+                        }
+
+                        table.innerHTML = data.data.map((lang: any) => `
+                            <tr>
+                                <td>${htmlspecialchars(lang.code)}</td>
+                                <td>${htmlspecialchars(lang.name)}</td>
+                            </tr>
+                        `).join('');
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+            if (product === 'crowdin') {
+                getLanguages('https://crowdin.com/backend/languages/list');
+            } else {
+                getLanguages('https://enterprise.crowdin.com/backend/languages/list');
+            }
+        }
+    }
+
+    customElements.define('crowdin-languages', CrowdinLanguages);
+</script>
