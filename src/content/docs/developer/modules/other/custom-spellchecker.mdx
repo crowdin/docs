@@ -2,3 +2,243 @@
 title: Custom Spellchecker Module
 slug: developer/crowdin-apps-module-custom-spellchecker
 ---
+
+import ReadMore from '~/components/ReadMore.astro';
+
+This module allows you to add custom spellcheckers to verify translations against specific rules that are not supported by default.
+
+Each language can be assigned to only one active spellchecker. When using multiple custom spellcheckers, languages selected for a specific spellchecker are automatically unassigned from all other spellcheckers. Languages not assigned to any of the custom spellcheckers will be processed by the default Crowdin spellchecker.
+
+You can grant access to this module to one of the following user categories:
+
+* Only organization admins
+* All users in the organization projects
+* Selected users
+
+### Structure
+
+```json
+{
+   "custom-spellchecker": [
+     {
+            "key": "custom-spellchecker",
+            "name": "Custom Spellchecker",
+            "description": "Description",
+            "checkSpellingUrl": "/check",
+            "listSupportedLanguagesUrl": "/languages",
+            "url": "/setup.html"
+      }
+    ]
+}
+```
+
+### Properties
+
+<table class="api-parameters-table table table-bordered">
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The human-readable name of the module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The human-readable description of what the module does.<br/>
+         The description will be visible in the Crowdin Enterprise UI.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>checkSpellingUrl</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL triggered when sending texts for spell checking.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>listSupportedLanguagesUrl</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL triggered when retrieving the list of languages supported by the module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL to the module setup page.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>Description:</strong> Set of environments where a module could be installed.<br/>
+        This parameter is needed for cross-product applications.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Communication between Custom Spellchecker App and Crowdin
+
+The system sends texts for spell checking using `checkSpellingUrl` either from the Editor during translation or when the QA Checks validate translations. The app then processes the texts and responds back to the system with one of the two possible types of responses: [without spelling issues](#expected-response-from-the-app-without-spelling-issues), and [with spelling issues](#expected-response-from-the-app-with-spelling-issues). There are cases when the system needs to check the languages supported by the module (e.g., when configuring languages for Custom Spellchecker in the Organization Settings). In these cases, Crowdin sends a request to the app using `listSupportedLanguagesUrl` and the app responds with the data about the languages it supports.
+
+### Request to the App from Crowdin for checkSpellingUrl
+
+Request payload example:
+
+```json
+{
+  "language": "uk",
+  "texts": [
+    "Збререгти якк...",
+    "Ноаий файд"
+  ]
+}
+```
+
+### Expected Response from the App (Without spelling issues)
+
+Response payload example:
+
+```json
+{
+  "data": [
+    {
+      "text": "Зберегти як...",
+      "matches": []
+    },
+    {
+      "text": "Новий файл"
+      "matches": []
+    }
+  ]
+}
+```
+
+### Expected Response from the App (With spelling issues)
+
+Response payload example:
+
+```json
+{
+  "data": [
+    {
+      "text": "Збререгти якк...",
+      "matches": [
+        {
+          "category": "typos",
+          "message": "Знайдено потенційну орфографічну помилку.",
+          "shortMessage": "Орфографічна помилка",
+          "offset": 0,
+          "length": 9,
+          "replacements": [
+            "Зберегти"
+          ]
+        },
+        {
+          "category": "typos",
+          "message": "Знайдено потенційну орфографічну помилку.",
+          "shortMessage": "Орфографічна помилка",
+          "offset": 10,
+          "length": 3,
+          "replacements": [
+            "як"
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Ноаий файд",
+      "matches": [
+        {
+          "category": "typos",
+          "message": "Знайдено потенційну орфографічну помилку.",
+          "shortMessage": "Орфографічна помилка",
+          "offset": 0,
+          "length": 5,
+          "replacements": [
+            "Новий"
+          ]
+        },
+        {
+          "category": "typos",
+          "message": "Знайдено потенційну орфографічну помилку.",
+          "shortMessage": "Орфографічна помилка",
+          "offset": 6,
+          "length": 4,
+          "replacements": [
+            "файл"
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Expected category types:**
+
+* `typography`
+* `casing`
+* `grammar`
+* `typos`
+* `spelling`
+* `punctuation`
+* `confused_words`
+* `redundancy`
+* `style`
+* `gender_neutrality`
+* `semantics`
+* `colloquialisms`
+* `wikipedia`
+* `barbarism`
+* `misc`
+
+### Response from the App to Crowdin for listSupportedLanguagesUrl
+
+Response payload example:
+
+```json
+{
+  "data": [
+    {
+      "code": "uk",
+      "name": "Ukrainian"
+    },
+    {
+      "code": "kab",
+      "name": "Kabul"
+    },
+    {
+      "code": "en",
+      "name": "English"
+    }
+  ]
+}
+```
+
+The structure of the responses from the app should correspond to the presented examples, otherwise Crowdin will consider them invalid. 
+
+Languages that are not available in the organization won't be displayed in the module's language list. To display such languages, add them as custom languages.
+
+<ReadMore>
+  Read more about [Custom Languages](/enterprise/organization-settings/#custom-languages).
+</ReadMore>
