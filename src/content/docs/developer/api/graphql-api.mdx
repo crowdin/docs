@@ -4,3 +4,561 @@ slug: developer/graphql-api
 sidebar:
   order: 4
 ---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+GraphQL API is a tool that allows you to retrieve exactly the data you need using more specific and flexible queries. One of the main benefits of GraphQL API is that you can get many different resources using a single request.
+
+For cases when you want to run queries against the Crowdin GraphQL API, we recommend using the [GraphQL Playground](https://store.crowdin.com/graphql-playground) app, with the help of which you can build, test, and debug queries from Crowdin and Crowdin Enterprise web UI even before writing any code in your application.
+
+## Authorization with GraphQL API
+
+To work with GraphQL API in Crowdin or Crowdin Enterprise, use one of the following access tokens:
+
+* [Crowdin Personal Access Token](/account-settings/#creating-a-personal-access-token)
+* [Crowdin Enterprise Personal Access Token](/enterprise/account-settings/#creating-a-personal-access-token)
+* [OAuth Access Token](/developer/authorizing-oauth-apps/#make-requests-to-the-api-with-the-access-token-returned)
+
+Ensure to use the following header in your requests:
+
+```bash
+Authorization: Bearer <ACCESS_TOKEN>
+```
+
+The response in case authorization fails:
+
+401 Unauthorized
+
+```json
+{
+  "error": {
+    "message": "Unauthorized",
+    "code": 401
+  }
+}
+```
+
+## Root Endpoint
+
+In contrast to the REST API, GraphQL API has only one endpoint that remains constant, not depending on the performed operations.
+
+Crowdin GraphQL endpoint:
+
+```bash
+https://api.crowdin.com/api/graphql
+```
+
+Crowdin Enterprise GraphQL endpoint:
+
+```bash
+https://{domain}.api.crowdin.com/api/graphql
+```
+
+## Resource Limitations
+
+The Crowdin GraphQL API has limitations to prevent excessive or abusive calls to Crowdin servers.
+
+### Node Limit
+
+All GraphQL API calls must comply with the following requirements to pass schema validation:
+
+* Users must supply a `first` or `last` argument on any connection.
+* Values of `first` and `last` must be within 1-10,000.
+* Individual calls can't request more than 10,000 total nodes.
+
+#### Nodes Calculation
+
+In the following examples, you can check out how the nodes in a call are calculated.
+
+##### Simple query
+
+```graphql
+query {
+  viewer {
+    projects(first: 50) {
+      edges {
+        node {
+          name
+
+          files(first: 10) {
+            totalCount
+            edges {
+              node {
+                name
+                type
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Calculation:
+
+```
+50         = 50 projects
++
+50 x 10    = 500 files
+
+           = 550 total nodes
+```
+
+##### Complex query
+
+```graphql
+query {
+  viewer {
+    projects(first: 50) {
+      edges {
+        node {
+          files(first: 20) {
+            edges {
+              node {
+                strings(first: 10) {
+                  edges {
+                    node {
+                      ... on PlainSourceString {
+                        text
+                      }
+                      ... on ICUSourceString {
+                        text
+                      }
+                      ... on PluralSourceString {
+                        plurals {
+                          one
+                          other
+                        }
+                      }
+                      ... on AssetSourceString {
+                        text
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+  
+          translations(first: 20, languageId: "uk") {
+            edges {
+              node {
+                ... on PlainStringTranslation {
+                  text
+                }
+                ... on ICUStringTranslation {
+                  text
+                }
+                ... on PluralStringTranslation {
+                  pluralForm
+                  text
+                }
+                ... on AssetStringTranslation {
+                  text
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Calculation:
+
+```
+50           = 50 projects
++
+50 x 20      = 1,000 files
++
+50 x 20 x 10 = 10,000 strings
++
+50 x 20      = 1,000 translations
+
+             = 12,050 total nodes
+```
+
+### Rate Limit
+
+The GraphQL API limit is quite different compared to the rate limits set for [REST API](https://developer.crowdin.com/api/v2/#section/Introduction/Rate-Limits).
+
+As mentioned above, you can get the same amount of data using only one GraphQL call and replacing the need to execute multiple REST calls. While a single complex GraphQL call could be equivalent to thousands of REST requests and wouldn't exceed the REST API rate limit, its computation might be just as expensive for Crowdin servers.
+
+The GraphQL API uses a normalized point scale to precisely depict the server cost of a query by calculating a call's rate limit score. This score includes the first and last arguments on a parent connection and its children.
+
+* The formula uses the `first` and `last` arguments on a parent connection and its children to pre-determine the possible load on Crowdin systems, such as MySQL and ElasticSearch.
+* Each new connection has its own point value. Points are added to the call's other points to form a final rate limit score.
+
+The GraphQL API rate limit is set to 5,000 points per hour. Since the GraphQL API and REST API use different rate limits, 5,000 points per hour aren't the same as 5,000 calls per hour.
+
+<Aside type="caution">
+  The current calculation method and rate limit aren't constant and might be changed in the future.
+</Aside>
+
+#### Checking Rate Limit Status of a Call
+
+To check the rate limit status when using GraphQL API, query the fields on the `rateLimit` object:
+
+```graphql
+query {
+  viewer {
+    username
+  }
+  rateLimit {
+    limit
+    cost
+    remaining
+    resetAt
+  }
+}
+```
+
+* `limit` &ndash; returns the maximum number of points the user is allowed to consume in a 60-minute window.
+* `cost` &ndash; returns the point cost for the current call that counts against the rate limit.
+* `remaining` &ndash; returns the number of points remaining in the current rate limit window.
+* `resetAt` &ndash; returns the time at which the current rate limit window resets in UTC epoch seconds.
+
+#### Estimating Rate Limit Score before Call Execution
+
+While querying the `rateLimit` object can give you a call's score, it counts against the limit. To work around this situation, you can estimate the score of a call in advance. Using the following calculation, you can get approximately the same cost as returned by `rateLimit { cost }`.
+
+<Steps>
+  1. First, the number of requests required to fulfill each unique connection in the call should be added up. Suppose each request will reach the `first` or `last` argument limits.
+  1. Next, you need to divide the number by 100 and round the result to obtain the final combined cost. This step normalizes large numbers.
+</Steps>
+
+<Aside>
+  The GraphQL API minimum cost of a call is 1, which represents a single request.
+</Aside>
+
+Here's an example query and score calculation:
+
+```graphql
+query {
+  viewer {
+    username
+    projects(first: 100) {
+      edges {
+        node {
+          id
+          files(first: 50) {
+            edges {
+              node {
+                id
+                strings(first: 60) {
+                  edges {
+                    node {
+                      ... on PlainSourceString {
+                        id
+                        text
+                      }
+                      ... on ICUSourceString {
+                        id
+                        text
+                      }
+                      ... on PluralSourceString {
+                        id
+                        plurals {
+                          one
+                          other
+                        }
+                      }
+                      ... on AssetSourceString {
+                        id
+                        text
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+* While returning 100 projects, the API has to connect to the user's account once to get the list of projects. So, requests for projects = 1
+* While returning 50 files, the API has to connect to each of the 100 projects to get the list of files. So, requests for files = 100
+* While returning 60 strings, the API has to connect to each of the 5,000 potential total files to get the list of strings. So, requests for strings = 5,000
+* Total = 5,101
+
+Now, divide the total of 5,101 by 100 and round it. As a result, you get the final score of the query, which is 51.
+
+## Pagination
+
+Pagination is a fundamental concept in GraphQL that allows you to retrieve a subset of data from a larger collection, making it easier to manage and display information.
+
+In this section, we'll explore how to use pagination in Crowdin GraphQL API, focusing on the `projects` field as an example.
+
+### Understanding Pagination in Crowdin GraphQL
+
+Before diving into the specifics of using pagination, let's clarify some key terms:
+
+* **Connection** &ndash; In Crowdin GraphQL, a connection is a structure that holds a list of items. It typically includes edges, pageInfo, and totalCount. Edges contain the actual data items, pageInfo provides information about pagination, and totalCount indicates the total number of items in the connection.
+* **Edges** &ndash; Edges are individual items within a connection. Each edge contains the node (the data item) and a cursor, which is a string used to navigate the collection.
+* **PageInfo** &ndash; PageInfo provides information that helps you determine if there are more items to retrieve. It includes fields like `hasNextPage`, `hasPreviousPage`, `startCursor`, and `endCursor`.
+
+### Using Pagination in Crowdin GraphQL
+
+Now, let's focus on using pagination with the `projects` field in the Crowdin GraphQL API.
+
+#### Querying Projects with Pagination
+
+The `projects` field within the `User` type is used to query the projects associated with a user. It accepts several input parameters that allow you to control the pagination of the results. These parameters are:
+
+* `after` &ndash; A cursor that indicates where the query should start from in the list of projects.
+* `first` &ndash; The number of projects to retrieve after the specified cursor.
+* `before` &ndash; A cursor that indicates where the query should end.
+* `last` &ndash; The number of projects to retrieve before the specified cursor.
+
+#### Example Query
+
+The following example query requests the first ten projects associated with the authenticated user starting from the provided cursor (`cursor_string`). The response will include the `edges` array containing the project data, as well as `pageInfo` and `totalCount` fields for pagination control.
+
+```graphql
+query {
+  viewer {
+    projects(
+      after: "cursor_string",   # Replace with a valid `after` cursor
+      first: 10
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+      totalCount
+    }
+  }
+}
+```
+
+Here is a response example for the above query:
+
+```json
+{
+  "data": {
+    "viewer": {
+      "projects": {
+        "edges": [
+          {
+            "node": {
+              "id": 1,
+              "name": "Umbrella",
+              "description": "Official Umbrella Translation Project"
+            },
+            "cursor": "MA=="
+          },
+          {
+            "node": {
+              "id": 2,
+              "name": "Umbrella iOS",
+              "description": "Official Umbrella iOS App Translation Project"
+            },
+            "cursor": "MQ=="
+          }
+        ],
+        "pageInfo": {
+          "hasNextPage": true,
+          "hasPreviousPage": false,
+          "startCursor": "MA==",
+          "endCursor": "MQ=="
+        },
+        "totalCount": 5
+      }
+    }
+  }
+}
+```
+
+#### Pagination Control
+
+* `hasNextPage` &ndash; This field in `pageInfo` indicates whether there are more projects available for the next page.
+* `hasPreviousPage` &ndash; This field in `pageInfo` indicates whether there are more projects available for the previous page.
+* `startCursor` &ndash; The cursor pointing to the first project in the current result set.
+* `endCursor` &ndash; The cursor pointing to the last project in the current result set.
+* `totalCount` &ndash; The total count of projects associated with the user.
+
+#### Fetching Previous Pages
+
+There are scenarios where you may need to navigate backward through pages in your dataset. This might be needed for various reasons, such as: reviewing older data, correction or modification, etc.
+
+To navigate backward through pages, you can use the `last` and `before` parameters. The `last` parameter specifies the number of items from the end of the list, and the `before` parameter takes the cursor of the first item you want to retrieve. Here's an example:
+
+```graphql
+query {
+  viewer {
+    projects(
+      last: 10,
+      before: "cursor_of_first_item"   # Replace with a valid `before` cursor
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+      }
+    }
+  }
+}
+```
+
+## Filtering and Sorting
+
+Crowdin GraphQL provides capabilities for filtering and sorting (ordering) data, allowing you to narrow down the selection of data you want to retrieve and arrange it in a particular order.
+
+As with pagination, in this section, we'll explore how to use filtering and sorting in Crowdin GraphQL API, focusing on the `projects` field as an example.
+
+### Filtering Data
+
+Filtering is the process of specifying criteria to select a subset of data from a larger dataset. In Crowdin GraphQL, filtering lets you narrow down your query results based on specific conditions. This is particularly useful when you want to retrieve data that meets specific requirements or characteristics.
+
+#### `ProjectFilterInput`
+
+Crowdin GraphQL provides the `ProjectFilterInput` type, which allows you to filter projects based on various attributes. Here are some key attributes you can filter by:
+
+* `and` &ndash; A logical conjunction that combines multiple filter criteria.
+* `or` &ndash; A logical disjunction that combines multiple filter criteria.
+* `id` &ndash; Filter by project ID using various conditions, such as equality, greater than, or less than.
+* `userId` &ndash; Filter projects by the user ID associated with them.
+* `name` &ndash; Filter project by their name, with options to check for equality, containment, or starting with specific text.
+* `identifier` &ndash; Filter by project identifier, similar to filtering by name.
+* `description` &ndash; Filter project by their description, with options for equality, containment, or starting with specific text.
+* `publicDownloads` &ndash; Filter projects based on whether public downloads are enabled.
+* `languageAccessPolicy` &ndash; Filter projects by their language access policy (e.g., "open" or "moderate").
+* `visibility` &ndash; Filter projects based on their visibility (e.g., "open" or "private").
+* `createdAt` &ndash; Filter projects by their creation date using various date-related conditions.
+* `updatedAt` &ndash; Filter projects by their last update date.
+* `lastActivityAt` &ndash; Filter projects by their last activity date.
+
+Filtering is a flexible way to target the data you need in your queries precisely. You can use logical operators such as `and` and `or` to combine multiple filtering conditions to refine your query even further.
+
+#### Example of Filtering
+
+To retrieve projects created after a specific date and with a "private" visibility setting, you can create a filter input like this:
+
+```graphql
+query {
+  viewer {
+    projects(
+      first: 10,
+      filter: {
+        createdAt: { gt: "2023-01-01T00:00:00Z" }
+        and: { visibility: { equals: private } }
+      }
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+      }
+    }
+  }
+}
+```
+
+This filter will return projects that meet both conditions: created after January 1, 2023, and set to "private" visibility.
+
+### Sorting Data
+
+Sorting involves specifying the order in which query results are presented. It doesn't reduce the number of results but arranges them in a particular sequence. Crowdin GraphQL provides options for sorting data based on attributes such as project name, creation date, or other relevant factors.
+
+#### `ProjectOrderInput`
+
+The `ProjectOrderInput` type in Crowdin GraphQL allows you to specify the sorting order for your query results. You can order projects based on attributes like:
+
+* `id` &ndash; Sort projects by their unique identifier.
+* `userId` &ndash; Sort projects by the identifier of the user who created them.
+* `name` &ndash; Sort projects by their name.
+* `identifier` &ndash; Sort projects by their identifier.
+* `description` &ndash; Sort projects by their description.
+* `publicDownloads` &ndash; Sort projects by their public download setting.
+* `languageAccessPolicy` &ndash; Sort projects by their language access policy.
+* `visibility` &ndash; Sort projects by their visibility setting.
+* `createdAt` &ndash; Sort projects by their creation date.
+* `updatedAt` &ndash; Sort projects by their last update date.
+* `lastActivityAt` &ndash; Sort projects by their last activity date.
+
+You can specify the sorting order to be in ascending ("asc") or descending ("desc") order, giving you complete control over how the data is presented.
+
+#### Example of Sorting
+
+To retrieve projects sorted by their name in descending order, you can create a sort input like this:
+
+```graphql
+query {
+  viewer {
+    projects(
+      first: 10
+      order: [{ name: desc }]
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+      }
+    }
+  }
+}
+```
+
+This sorting order will present the projects in reverse alphabetical order of their names.
+
+### Combining Filtering and Sorting
+
+Crowdin GraphQL allows you to combine both filtering and sorting to tailor your queries precisely. You can first filter data to select a subset that meets specific criteria and then sort the results in the desired order. This combination allows you to retrieve and arrange data according to your specific requirements.
+
+#### Example of Filtering and Sorting
+
+To retrieve projects created after a specific date, with the "moderate" language access policy, and sort them by their last activity date in ascending order, you can create a query like this:
+
+```graphql
+query {
+  viewer {
+    projects(
+      first: 10
+      filter: {
+        createdAt: { gt: "2023-01-01T00:00:00Z" }
+        and: { languageAccessPolicy: { equals: moderate } }
+      },
+      order: [{ lastActivityAt: asc }]
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+      }
+    }
+  }
+}
+```
+
+This query will return projects that meet the filtering conditions and present them in ascending order based on their last activity date.
