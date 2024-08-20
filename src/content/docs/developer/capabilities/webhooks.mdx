@@ -4,3 +4,311 @@ slug: developer/webhooks
 sidebar:
   order: 1
 ---
+
+import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
+
+import fileTranslated from '/src/assets/code/webhooks/file.translated.json?raw';
+import fileApproved from '/src/assets/code/webhooks/file.approved.json?raw';
+import fileAdded from '/src/assets/code/webhooks/file.added.json?raw';
+import fileUpdated from '/src/assets/code/webhooks/file.updated.json?raw';
+import fileReverted from '/src/assets/code/webhooks/file.reverted.json?raw';
+import fileDeleted from '/src/assets/code/webhooks/file.deleted.json?raw';
+import projectTranslated from '/src/assets/code/webhooks/project.translated.json?raw';
+import projectTranslatedSb from '/src/assets/code/webhooks/sb/project.translated.json?raw';
+import projectApproved from '/src/assets/code/webhooks/project.approved.json?raw';
+import projectApprovedSb from '/src/assets/code/webhooks/sb/project.approved.json?raw';
+import projectBuilt from '/src/assets/code/webhooks/project.built.json?raw';
+import translationUpdated from '/src/assets/code/webhooks/translation.updated.json?raw';
+import translationUpdatedSb from '/src/assets/code/webhooks/sb/translation.updated.json?raw';
+import stringAdded from '/src/assets/code/webhooks/string.added.json?raw';
+import stringAddedSb from '/src/assets/code/webhooks/sb/string.added.json?raw';
+import stringUpdated from '/src/assets/code/webhooks/string.updated.json?raw';
+import stringUpdatedSb from '/src/assets/code/webhooks/sb/string.updated.json?raw';
+import stringDeleted from '/src/assets/code/webhooks/string.deleted.json?raw';
+import stringDeletedSb from '/src/assets/code/webhooks/sb/string.deleted.json?raw';
+import suggestionAdded from '/src/assets/code/webhooks/suggestion.added.json?raw';
+import suggestionAddedSb from '/src/assets/code/webhooks/sb/suggestion.added.json?raw';
+import suggestionUpdated from '/src/assets/code/webhooks/suggestion.updated.json?raw';
+import suggestionUpdatedSb from '/src/assets/code/webhooks/sb/suggestion.updated.json?raw';
+import suggestionDeleted from '/src/assets/code/webhooks/suggestion.deleted.json?raw';
+import suggestionDeletedSb from '/src/assets/code/webhooks/sb/suggestion.deleted.json?raw';
+import suggestionApproved from '/src/assets/code/webhooks/suggestion.approved.json?raw';
+import suggestionApprovedSb from '/src/assets/code/webhooks/sb/suggestion.approved.json?raw';
+import suggestionDisapproved from '/src/assets/code/webhooks/suggestion.disapproved.json?raw';
+import suggestionDisapprovedSb from '/src/assets/code/webhooks/sb/suggestion.disapproved.json?raw';
+import stringCommentCreated from '/src/assets/code/webhooks/stringComment.created.json?raw';
+import stringCommentCreatedSb from '/src/assets/code/webhooks/sb/stringComment.created.json?raw';
+import stringCommentUpdated from '/src/assets/code/webhooks/stringComment.updated.json?raw';
+import stringCommentUpdatedSb from '/src/assets/code/webhooks/sb/stringComment.updated.json?raw';
+import stringCommentDeleted from '/src/assets/code/webhooks/stringComment.deleted.json?raw';
+import stringCommentDeletedSb from '/src/assets/code/webhooks/sb/stringComment.deleted.json?raw';
+import stringCommentRestored from '/src/assets/code/webhooks/stringComment.restored.json?raw';
+import stringCommentRestoredSb from '/src/assets/code/webhooks/sb/stringComment.restored.json?raw';
+import taskAdded from '/src/assets/code/webhooks/task.added.json?raw';
+import taskAddedSb from '/src/assets/code/webhooks/sb/task.added.json?raw';
+import taskStatusChanged from '/src/assets/code/webhooks/task.statusChanged.json?raw';
+import taskStatusChangedSb from '/src/assets/code/webhooks/sb/task.statusChanged.json?raw';
+import taskDeleted from '/src/assets/code/webhooks/task.deleted.json?raw';
+import taskDeletedSb from '/src/assets/code/webhooks/sb/task.deleted.json?raw';
+
+You can add webhooks to build integrations with the third-party services or with your backend. After you configure a webhook for the project, Crowdin will start sending POST or GET requests with data to the webhook URL via HTTP.
+
+## Events
+
+You can configure webhooks for the following types of events:
+
+* [File fully translated](#file-fully-translated) &ndash; a file is translated into one of the target languages
+* [File fully reviewed](#file-fully-reviewed) &ndash; translations in a file are approved for one of the target languages
+* [File added](#file-added)
+* [File updated](#file-updated)
+* [File reverted](#file-reverted)
+* [File deleted](#file-deleted)
+* [Project fully translated](#project-fully-translated) &ndash; all files are translated into one of the target languages
+* [Project fully reviewed](#project-fully-reviewed) &ndash; translations in all files are approved for one of the target languages
+* [Project successfully built](#project-successfully-built)
+* [Exported translation updated](#exported-translation-updated) &ndash; final translation of a string is updated
+* [Source string added](#source-string-added)
+* [Source string updated](#source-string-updated)
+* [Source string deleted](#source-string-deleted)
+* [Suggested translation added](#suggested-translation-added) &ndash; a string in the project is translated
+* [Suggested translation updated](#suggested-translation-updated) &ndash; a translation for a string in the project is updated
+* [Suggested translation deleted](#suggested-translation-deleted) &ndash; one of the translations is deleted
+* [Suggested translation approved](#suggested-translation-approved) &ndash; a translation for a string is approved
+* [Suggested translation disapproved](#suggested-translation-disapproved) &ndash; approval for a previously added translation is removed
+* [String comment/issue created](#string-commentissue-created)
+* [String comment/issue updated](#string-commentissue-updated)
+* [String comment/issue deleted](#string-commentissue-deleted)
+* [String comment/issue restored](#string-commentissue-restored)
+* [Task added](#task-added)
+* [Task status changed](#task-status-changed)
+* [Task deleted](#task-deleted)
+
+## Webhook Payload Examples
+
+View the examples of the webhook payloads for different events.
+
+### File Fully Translated
+
+<Code code={fileTranslated} lang="json" wrap />
+
+### File Fully Reviewed
+
+<Code code={fileApproved} lang="json" wrap />
+
+### File Added
+
+<Code code={fileAdded} lang="json" wrap />
+
+### File Updated
+
+<Code code={fileUpdated} lang="json" wrap />
+
+### File Reverted
+
+<Code code={fileReverted} lang="json" wrap />
+
+### File Deleted
+
+<Code code={fileDeleted} lang="json" wrap />
+
+### Project Fully Translated
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={projectTranslated} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={projectTranslatedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Project Fully Reviewed
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={projectApproved} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={projectApprovedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Project Successfully Built
+
+<Code code={projectBuilt} lang="json" wrap />
+
+### Exported Translation Updated
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={translationUpdated} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={translationUpdatedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Source String Added
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={stringAdded} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={stringAddedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Source String Updated
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={stringUpdated} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={stringUpdatedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Source String Deleted
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={stringDeleted} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={stringDeletedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Suggested Translation Added
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={suggestionAdded} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={suggestionAddedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Suggested Translation Updated
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={suggestionUpdated} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={suggestionUpdatedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Suggested Translation Deleted
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={suggestionDeleted} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={suggestionDeletedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Suggested Translation Approved
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={suggestionApproved} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={suggestionApprovedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Suggested Translation Disapproved
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={suggestionDisapproved} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={suggestionDisapprovedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### String Comment/Issue Created
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={stringCommentCreated} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={stringCommentCreatedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### String Comment/Issue Updated
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={stringCommentUpdated} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={stringCommentUpdatedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### String Comment/Issue Deleted
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={stringCommentDeleted} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={stringCommentDeletedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### String Comment/Issue Restored
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={stringCommentRestored} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={stringCommentRestoredSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Task Added
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={taskAdded} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={taskAddedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Task Status Changed
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={taskStatusChanged} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={taskStatusChangedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Task Deleted
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={taskDeleted} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={taskDeletedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>

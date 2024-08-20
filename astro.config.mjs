@@ -3,7 +3,6 @@ import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightUtils from '@lorenzo_lewis/starlight-utils';
 import starlightLinksValidator from 'starlight-links-validator';
-import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
 import { rehypeHeadingIds } from '@astrojs/markdown-remark';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeExternalLinks from 'rehype-external-links';
@@ -101,9 +100,6 @@ const config = defineConfig({
           ],
         }),
       ],
-      expressiveCode: {
-        plugins: [pluginCollapsibleSections()],
-      },
       social: {
         'x.com': 'https://x.com/crowdin',
         linkedin: 'https://www.linkedin.com/company/crowdin',
