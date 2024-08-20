@@ -121,8 +121,7 @@ After these changes, during the app installation, Crowdin will try to transfer t
 
 Now for connecting to the database, create a `db.js` file and insert the following code listing:
 
-```js
-// db.js
+```js title="db.js"
 const Sequelize = require("sequelize");
 
 const sequelize = new Sequelize(process.env.DATABASE_URL,
@@ -183,8 +182,7 @@ In the code listing, you create a connection to the database, as well as an Orga
 
 Open the `index.js` file and connect the database so it can be initialized with the app. For this, wrap the `app.listen(…)` function with the following code:
 
-```js
-// index.js
+```js title="index.js"
 const { sequelize } = require("./db");
 
 sequelize.sync().then(
@@ -194,8 +192,7 @@ sequelize.sync().then(
 
 Now you can start creating the routes that will read events from Crowdin. Open the `router.js` file and add the following routes to it before the variable export:
 
-```js
-// router.js
+```js title="router.js"
 const { Organization } = require("./db");
 const { default: axios } = require("axios");
 
@@ -256,8 +253,7 @@ Since the app will now work with the API and will have access to information in 
 
 Open the `route.js` file and add the middleware:
 
-```js
-// route.js
+```js title="route.js"
 const jwt = require("jsonwebtoken");
 
 const authorizeUser = (req, res, next) => {
@@ -292,8 +288,7 @@ router.get("/project-menu/", authorizeUser, (req, res) => res.render("project-me
 
 Also, add a route for extracting information about the current user using the stored access token if the user is authorized through the API. First, create the `apiClient.js` file and add the following code listing:
 
-```js
-// apiClient.js
+```js title="apiClient.js"
 const { default: axios } = require("axios");
 
 const getActiveAccessToken = async (organization) => {
@@ -345,8 +340,7 @@ If the token has expired, then based on the refresh token, a new current token i
 
 Now open the `route.js` file and add the action for retrieving information about the user:
 
-```js
-// route.js
+```js title="route.js"
 const apiClient = require("./apiClient");
 
 router.get("/user", authorizeUser, async (req, res) => {
@@ -404,7 +398,7 @@ In this step, you will add to your app the possibility of custom processing a JS
 
 Open the `manifest.js` file and add a new module type by adding the following code to the `modules` node:
 
-```json
+```json title="manifest.js"
 {
   "custom-file-format": [
     {
@@ -424,8 +418,7 @@ With the code above, you can add a module with the custom-file-format key that w
 
 Create the `fileHelper.js` file in the project root and add the following code listing to it:
 
-```js
-// fileHelper.js
+```js title="fileHelper.js"
 const fs = require("fs");
 let ejs = require("ejs");
 const { v4: uuidv4 } = require("uuid");
@@ -493,7 +486,7 @@ async function parseFile(req) {
       strings: previewStrings
     });
   } catch (err) {
-console.error(err);
+    console.error(err);
   }
 
   if (new Blob([JSON.stringify(sourceStrings)]).size < MAX_BODY_SIZE) {
@@ -600,8 +593,7 @@ The code listing above contains two main methods for working with a file: `parse
 
 Now open the `route.js` file and create a new route that will be receiving content from Crowdin:
 
-```js
-// route.js
+```js title="route.js"
 const { parseFile, buildFile } = require("./fileHelper");
 
 router.post("/process", authorizeUser, async (req, res) => {
