@@ -3,4 +3,288 @@ title: File Pre-Export Processing Module
 slug: developer/crowdin-apps-module-file-pre-export-processing
 sidebar:
   order: 4
+  label: File Pre-Export Processing
 ---
+
+import { Aside} from '@astrojs/starlight/components';
+
+The pre-export module allows you to modify the strings before the file export. This module works with both the source strings and their respective translations. The pre-export module is especially useful if you'd like to preserve the original file structure and export it as it is but want to make some changes to translated strings.
+
+With the help of the pre-export module, you will get a payload with the file content and strings for export. Using the pre-export module, you can modify translated strings and return them for export. This allows you to customize the strings without directly modifying the file content.
+
+<Aside>
+  If your file processing app has changed the string quantity using the post-import module, make sure that the pre-export module returns the original string quantity along with their string uniqId.
+</Aside>
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+For Crowdin:
+
+* Only me (i.e., project owner)
+* All project members
+* Selected users
+
+For Crowdin Enterprise:
+
+* Only organization admins
+* All users in the organization projects
+* Selected users
+
+## Structure
+
+```json title="manifest.json"
+{
+  "modules": {
+    "file-pre-export": [
+      {
+        "key": "your-pre-export-module-key",
+        "url": "/export-strings",
+        "signaturePatterns": {
+          "fileName": "^.+\\.xml$",
+          "fileContent": "<properties>\\s*<property\\s+name=.*value=.*/>"
+        }
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL triggered on file export.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> Contains <code>fileName</code> and/or <code>fileContent</code> regular expressions used to detect file type when exporting a translation file.</p>
+        <p><Aside><code>fileContent</code> regular expression checks only the first 64 KB of the file content.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Communication between File Processing App and Crowdin
+
+When exporting a file, the system detects an appropriate pre-export module using the `signaturePatterns` parameter and makes an HTTP request to the app's URL (`$baseUrl . $url`) for further processing containing the source strings and their respective translations.
+
+The file processing app will modify the string translations according to your needs. Make sure that the pre-export module returns the original string quantity along with their string uniqId to ensure a successful translation export. Once the modified strings are returned from the pre-export module, they are used to build a translation file.
+
+### Request to the File Processing App
+
+Request payload example:
+
+```json
+// max request payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "jobType": "file-pre-export",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name"
+  },
+  "file": {
+    "id": 1,
+    "name": "file.xml",
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded source file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // source file public URL
+  },
+  "sourceLanguage": {
+    "id": "es",
+    "name": "Spanish",
+    "editorCode": "es",
+    "twoLettersCode": "es",
+    "threeLettersCode": "spa",
+    "locale": "es-ES",
+    "androidCode": "es-rES",
+    "osxCode": "es.lproj",
+    "osxLocale": "es",
+    "pluralCategoryNames": ["one"],
+    "pluralRules": "(n != 1)"
+  },
+  "targetLanguages": [
+    {
+      // same structure as for sourceLanguage, one element for export, can be more for multilingual files
+    }
+  ],
+  "strings": [...],
+  "stringsUrl": "https://tmp.downloads.crowdin.com/strings.ndjson",
+}
+```
+
+Properties:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>jobType</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Value:</strong> <code>file-pre-export</code></p>
+        <p><strong>Description:</strong> Specifies the action of the file pre-export module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.content</code>, <code class="whitespace-nowrap">file.contentUrl</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Parameters used to pass the base64 encoded source file content (<code>file.content</code>) or a source file public URL (<code>file.contentUrl</code>).<br/>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum request payload limit is 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>strings</code>, <code>stringsUrl</code></td>
+      <td>
+        <p><strong>Type(strings):</strong> <code>array</code></p>
+        <p><strong>Type(stringsUrl):</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Parameters used for the source strings and their respective translations before the file export. <code>strings</code> - strings array. <code>stringsUrl</code> - public URL to a <a href="https://github.com/ndjson/ndjson-spec" target="_blank">new-line delimited json</a> with strings.<br/>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum request payload limit is 5 MB.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Expected Response from the App for the file-pre-export Job Type
+
+Response payload example:
+
+```json
+// max response payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "data": {
+    "strings": [...], // modified strings array
+    "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // new-line delimited json file with modified strings
+  },
+  "error": {
+    "message": "Your error message"
+  }
+}
+```
+
+Properties:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>data.strings</code>, <code>data.stringsUrl</code></td>
+      <td>
+        <p><strong>Type(data.strings):</strong> <code>array</code></p>
+        <p><strong>Type(data.stringsUrl):</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Parameters used to pass the modified strings content.<br/>
+        <code>data.strings</code> - modified strings array.<br/>
+        <code>data.stringsUrl</code> - public URL to a <a href="https://github.com/ndjson/ndjson-spec" target="_blank">new-line delimited json</a> with modified strings.<br/>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum response payload limit is 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> An error message that can be passed from the app to Crowdin and will be visible to a user in the UI.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Strings Array Structure
+
+Below you can see an example of the strings that app will receive before the export. The same structure is used for the modified strings in the app response.
+
+Payload example:
+
+```json
+// strings should be in "new-line delimited json" format if they passed by URL
+[
+  { // non plural string
+    "uniqId": "9cdfb439c7876e703e307864c9167a15::1", // required, unique ID 
+    "identifier": "string-key-1", // required
+    "context": "Some context", // optional
+    "maxLength": 10, // optional, default null
+    "isHidden": false, // optional, default null
+    "hasPlurals": false, // optional, default false
+    "labels": ["label-one", "label-two"], // optional, default []
+    "text": "String source text", // required
+    "translations": { // optional
+      "uk": { // targetLanguage.id
+        "text": "Переклад стрічки", // required
+        "status": "untranslated | translated | approved" // optional, default "translated"
+      }
+      // can be other languages for multilingual, check "targetLanguages" in the request payload
+    }
+  },
+  { // plural string
+    "uniqId": "9cdfb439c7876e703e307864c9167a15::2", // required, unique ID
+    "identifier": "string-key-2",
+    "context": "Some optional context",
+    "maxLength": 15,
+    "isHidden": false,
+    "hasPlurals": true,
+    "labels": [],
+    "text": { // keys from sourceLanguage.pluralCategoryNames
+      "one": "One file",
+      "other": "%d files"
+    },
+    "translations": {
+      "uk": {
+        "text": { // keys from targetLanguage.pluralCategoryNames
+          "one": "One file",
+          "few": "%d файла",
+          "many": "%d файлів"
+        },
+        "status": {
+          "one": "untranslated",
+          "few": "translated",
+          "many": "approved"
+        }
+      }
+    }
+  }
+]
+```
+
+Properties:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>uniqId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Unique identifier within the file.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>identifier</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Visible string key.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>

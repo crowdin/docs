@@ -3,4 +3,216 @@ title: File Post-Export Processing Module
 slug: developer/crowdin-apps-module-file-post-export-processing
 sidebar:
   order: 5
+  label: File Post-Export Processing
 ---
+
+import { Aside} from '@astrojs/starlight/components';
+
+The post-export module allows you to modify your files after exporting them from Crowdin. With the post-export module, you can apply automated modifications to selected files. This module can work with a wide range of file formats, such as TXT, XML, JSON, and many more, to customize their contents.
+
+By using the post-export module in your Crowdin app, you can adjust the file format, structure, and content. Since the module is executed after Crowdin exports the file, you can fine-tune the content after the file is processed by the system.
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+For Crowdin:
+
+* Only me (i.e., project owner)
+* All project members
+* Selected users
+
+For Crowdin Enterprise:
+
+* Only organization admins
+* All users in the organization projects
+* Selected users
+
+## Structure
+
+```json title="manifest.json"
+{
+  "modules": {
+    "file-post-export": [
+      {
+        "key": "your-post-export-module-key",
+        "url": "/export-file",
+        "signaturePatterns": {
+          "fileName": "^.+\\.xml$",
+          "fileContent": "<properties>\\s*<property\\s+name=.*value=.*/>"
+        }
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL triggered on file export.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> Contains <code>fileName</code> and/or <code>fileContent</code> regular expressions used to detect file type when exporting a translation file.</p>
+        <p><Aside><code>fileContent</code> regular expression checks only the first 64 KB of the file content.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Communication between File Processing App and Crowdin
+
+When exporting a file, Crowdin detects an appropriate module using the `signaturePatterns` parameter and makes an HTTP request to the app's URL (`$baseUrl . $url`) for further processing.
+
+Additionally, during the file export, Crowdin will also validate the file name and content to ensure they match the appropriate file processing app modules. This process can include the pre-export processing module to modify the strings before the export and the post-export processing module to modify the content of the file after it is exported.
+
+To modify the file content, the system first locates the appropriate post-export module and sends the file content to it. The module then performs the predetermined modifications, which may include file format changes, structure, and content updates.
+
+Once the post-export module has completed the file modifications, Crowdin returns the modified file content, as well as a new file name or extension if applicable.
+
+### Request to the File Processing App
+
+Request payload example:
+
+```json
+// max request payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "jobType": "file-post-export",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name"
+  },
+  "file": {
+    "id": 1,
+    "name": "file.xml",
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded exported file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=...", // exported file public URL
+    "rawContent": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded source file content
+    "rawContentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // source file public URL
+  },
+  "sourceLanguage": {
+    "id": "es",
+    "name": "Spanish",
+    "editorCode": "es",
+    "twoLettersCode": "es",
+    "threeLettersCode": "spa",
+    "locale": "es-ES",
+    "androidCode": "es-rES",
+    "osxCode": "es.lproj",
+    "osxLocale": "es",
+    "pluralCategoryNames": ["one"],
+    "pluralRules": "(n != 1)"
+  },
+  "targetLanguages": [
+    {
+      // same structure as for sourceLanguage, one element for export, can be more for multilingual files
+    }
+  ]
+}
+```
+
+Properties:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>jobType</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Value:</strong> <code>file-post-export</code></p>
+        <p><strong>Description:</strong> Specifies the action of the file post-export module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.content</code>, <code>file.contentUrl</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Parameters used to pass the base64 encoded exported file content (<code>file.content</code>) or a exported file public URL (<code>file.contentUrl</code>).<br/>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum request payload limit is 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.rawContent</code>, <code>file.rawContentUrl</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Parameters used to pass the base64 encoded source file content (<code>file.rawContent</code>) or a source file public URL (<code>file.rawContentUrl</code>).<br/>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum request payload limit is 5 MB.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Expected Response from the App for the file-post-export Job Type
+
+Response payload example:
+
+```json
+// max response payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "data": {
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded modified file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=...", // modified file public URL
+    "exportPattern": "file.html" // optional, new export pattern for a resulting file
+  },
+  "error": {
+    "message": "Your error message"
+  }
+}
+```
+
+Properties:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>data.content</code>, <code>data.contentUrl</code></td>
+      <td>
+        <p><strong>Type(data.content):</strong> <code>string</code></p>
+        <p><strong>Type(data.contentUrl):</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Parameters used to pass the base64 encoded modified file content (<code>data.content</code>) or a modified file public URL (<code>data.contentUrl</code>).<br/>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum response payload limit is 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>exportPattern</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Optional parameter used to overwrite export pattern for a resulting file.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> An error message that can be passed from the app to Crowdin and will be visible to a user in the UI.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
