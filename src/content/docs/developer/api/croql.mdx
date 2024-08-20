@@ -4,3 +4,1290 @@ slug: developer/croql
 sidebar:
   order: 7
 ---
+
+import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
+import { Code } from 'astro-expressive-code/components';
+
+Crowdin Query Language (CroQL) is a tool for Crowdin Editor and Crowdin Enterprise Editor and Crowdin and Crowdin Enterprise API that allows you to retrieve needed localization resources based on specific conditions. Using CroQL, you can filter source strings and their translations for a specific target language, as well as TM segments.
+
+You can use CroQL with the following API methods:
+
+<Tabs>
+  <TabItem label="File-based API">
+    * [List Strings (Crowdin)](https://developer.crowdin.com/api/v2/#operation/api.projects.strings.getMany)
+    * [List Strings (Crowdin Enterprise)](https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.strings.getMany)
+    * [List Language Translations (Crowdin)](https://developer.crowdin.com/api/v2/#operation/api.projects.languages.translations.getMany)
+    * [List Language Translations (Crowdin Enterprise)](https://developer.crowdin.com/enterprise/api/v2/#operation/api.projects.languages.translations.getMany)
+    * [List TM Segments (Crowdin)](https://developer.crowdin.com/api/v2/#operation/api.tms.segments.getMany)
+    * [List TM Segments (Crowdin Enterprise)](https://developer.crowdin.com/enterprise/api/v2/#operation/api.tms.segments.getMany)
+  </TabItem>
+  <TabItem label="String-based API">
+    * [List Strings (Crowdin)](https://developer.crowdin.com/api/v2/string-based/#operation/api.projects.strings.getMany)
+    * [List Strings (Crowdin Enterprise)](https://developer.crowdin.com/enterprise/api/v2/string-based/#operation/api.projects.strings.getMany)
+    * [List Language Translations (Crowdin)](https://developer.crowdin.com/api/v2/string-based/#operation/api.projects.languages.translations.getMany)
+    * [List Language Translations (Crowdin Enterprise)](https://developer.crowdin.com/enterprise/api/v2/string-based/#operation/api.projects.languages.translations.getMany)
+    * [List TM Segments (Crowdin)](https://developer.crowdin.com/api/v2/string-based/#operation/api.tms.segments.getMany)
+    * [List TM Segments (Crowdin Enterprise)](https://developer.crowdin.com/enterprise/api/v2/string-based/#operation/api.tms.segments.getMany)
+  </TabItem>
+</Tabs>
+
+## Operators
+
+Main CroQL operators are listed below. Use and combine them to set specific conditions for retrieving the needed content from Crowdin. To form your CroQL query, you can use the elements from the tables below.
+
+### Arithmetic Operators
+
+The arithmetic operators are used to perform mathematic operations with any numeric data types.
+
+| Name           | Symbol | Example |
+|----------------|--------|---------|
+| Addition       | +      | 1 + 9   |
+| Subtraction    | -      | 11 - 1  |
+| Division       | /      | 20 / 2  |
+| Multiplication | *      | 2 * 5   |
+| Negation       | -      | -10     |
+
+### Comparison Operators
+
+The comparison operators are used to compare values and return `true` or `false`.
+
+<table>
+  <colgroup>
+    <col width="20%" />
+    <col width="40%" />
+    <col width="10%" />
+    <col width="30%" />
+  </colgroup>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Symbol</th>
+      <th>Aliases</th>
+      <th>Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Between</td>
+      <td>`{{expression}} between {{expression}} and {{expression}}`</td>
+      <td></td>
+      <td>5 between 1 and 10</td>
+    </tr>
+    <tr>
+      <td>Equal</td>
+      <td>=</td>
+      <td></td>
+      <td>10 = 10</td>
+    </tr>
+    <tr>
+      <td>Not equal</td>
+      <td>!=</td>
+      <td>≠</td>
+      <td>1 != 10; 1 ≠ 10</td>
+    </tr>
+    <tr>
+      <td>Greater</td>
+      <td>></td>
+      <td></td>
+      <td>10 &gt; 1</td>
+    </tr>
+    <tr>
+      <td>Greater or equal</td>
+      <td>&gt;=</td>
+      <td>≥</td>
+      <td>10 >= 1; 10 ≥ 1</td>
+    </tr>
+    <tr>
+      <td>Less</td>
+      <td>&lt;</td>
+      <td></td>
+      <td>1 &lt; 10</td>
+    </tr>
+    <tr>
+      <td>Less or equal</td>
+      <td>&lt;=</td>
+      <td>≤</td>
+      <td>1 &lt;= 10; 1 ≤ 10;</td>
+    </tr>
+    <tr>
+      <td>Contains</td>
+      <td>`{{string}} contains {{string}}`</td>
+      <td></td>
+      <td>
+        <div>
+          "Hello World" contains "Hello";<br/>
+          "Hello World" contains text;<br/>
+          text contains "Hello World";<br/>
+          context contains text;
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Logical Operators
+
+The logical operators are used to combine multiple boolean expressions or values and provide a single boolean output.
+
+| Name | Symbol | Example                  |
+|------|--------|--------------------------|
+| And  | and    | 1 < 10 and 10 > 1        |
+| Or   | or     | 1 < 10 or 10 > 1         |
+| Xor  | xor    | 1 < 10 xor 10 > 1        |
+| Not  | not    | not 1 < 10               |
+
+### Filtration Operators
+
+The filtration operators are used to filter the objects based on the specified condition.
+
+| Name   | Symbol                               | Example                                   |
+|--------|--------------------------------------|-------------------------------------------|
+| Filter | `{{collection}} where {{predicate}}` | `translations where (count of votes > 0)` |
+| Match  | `{{object}} with {{predicate}}`      | `user with (login = "crowdin")`           |
+
+### Conditional (Ternary) Operator
+
+The ternary operator is used to check a condition specified in the first value, and if it’s `true` it returns the second value, but if it’s `false` it returns the third value.
+
+| Name    | Symbol                                                     | Example                                |
+|---------|------------------------------------------------------------|----------------------------------------|
+| Ternary | `If {{condition}} then {{expression}} else {{expression}}` | `If 1 < 10 then "less" else "greater"` |
+
+### Fetch Operators
+
+The fetch operators are used for retrieving data from the objects.
+
+| Name       | Symbol                                     | Example                             |
+|------------|--------------------------------------------|-------------------------------------|
+| Mention    | `@user:{{string}}`; `@language:{{string}}` | `@user:"crowdin"`; `@language:"en"` |
+| Member     | `{{member}} of {{object}}`                 | `count of translations`             |
+| Identifier | `{{identifier}}`                           | `text`; `identifier`                |
+
+### Scalar Operators
+
+The scalar operators are used to declare values for further processing.
+
+| Name     | Symbol         | Example                        |
+|----------|----------------|--------------------------------|
+| Integer  | `{{integer}}`  | 10                             |
+| Float    | `{{float}}`    | 10.01                          |
+| String   | `{{string}}`   | "crowdin"                      |
+| Datetime | `{{datetime}}` | 'today'; '2021-03-16 00:00:00' |
+
+### Group Operator
+
+The group operator is used to determine the execution order of operators.
+
+| Name  | Symbol | Example                                    |
+|-------|--------|--------------------------------------------|
+| Group | ( )    | 1 < 10 and (20 > 10 or 10 > 5)             |
+
+## CroQL Query Examples
+
+In this section, you can find practical examples of CroQL queries that will help you understand and use the querying capabilities within Crowdin. These examples can help you learn how to create your own queries to retrieve specific sets of data based on various criteria, such as translation status, user activity, and string properties.
+
+### Strings Queries
+
+These queries are used to retrieve information about source strings.
+
+* Strings that have no Ukrainian translations with approvals or votes:
+  ```graphql wrap
+  count of translations where ( language = @language:"uk" and ( count of approvals > 0 or count of votes > 0 ) ) = 0
+  ```
+
+* Strings that have only one translation:
+  ```graphql
+  count of translations = 1
+  ```
+
+* Strings that have translations from only one specific user:
+  ```graphql wrap
+  count of translations > 0 and count of translations = count of translations where (user = @user:"crowdin")
+  ```
+
+* Strings that have at least one translation not from specific users:
+  ```graphql
+  count of translations where (user != @user:"crowdin") > 0
+  ```
+
+* Strings that have all translations not from specific users:
+  ```graphql wrap
+  count of translations > 0 and count of translations = count of translations where (user != @user:"crowdin")
+  ```
+
+* Strings filtered by identifier and numeric id of a file in your Crowdin project:
+  ```graphql
+  identifier = "key" and id of file = 777
+  ```
+
+* Strings that have unresolved issues filtered by numeric id of a file in your Crowdin project:
+  ```graphql
+  id of file = 777 and count of comments where (has unresolved issue) > 0
+  ```
+
+* Hidden strings that are not duplicates and have one or more translations:
+  ```graphql
+  is hidden and not is duplicate and count of translations > 0
+  ```
+
+* Strings that have one or more approvals:
+  ```graphql
+  count of languages summary where (approvalsCount >= 1) > 0
+  ```
+
+* Strings that have comments made by the user with a `crowdin` username:
+  ```graphql
+  count of comments where (user = @user:"crowdin") > 0
+  ```
+
+* Strings that contain "ABC" in the source text but don't contain "ABC" in their translations:
+  ```graphql
+  text contains "ABC" and (count of translations where (text contains "ABC") = 0)
+  ```
+
+<details>
+  <summary><strong>Using String Queries in Crowdin API</strong></summary>
+    Use your query in the following Crowdin API endpoints:
+
+    ```shell title="Crowdin" wrap
+    GET https://api.crowdin.com/api/v2/projects/{projectId}/strings?croql={croql}
+    ```
+
+    ```shell title="Crowdin Enterprise" wrap
+    GET https://{organization_domain}.api.crowdin.com/api/v2/projects/{projectId}/strings?croql={croql}
+    ```
+
+    | Parameter     | Details                                                                                  |
+    |---------------|------------------------------------------------------------------------------------------|
+    | `{projectId}`| **Type:** `integer`<br/>**Description:** Numeric identifier of your Crowdin project.      |
+    | `{croql}`    | **Type:** `string`<br/>**Description:** CroQL expression.                                 |
+
+    <Aside type="caution">Before executing the request, ensure to URL encode your CroQL expression.</Aside>
+</details>
+
+### Translation Queries
+
+These queries are used to retrieve information about translations.
+
+* Translations made by the user with a `crowdin` username or ones with ≥ 100 upvotes:
+  ```graphql
+  user = @user:"crowdin" or count of votes where ( is up ) >= 100
+  ```
+
+<details>
+  <summary><strong>Using Translation Queries in Crowdin API</strong></summary>
+    Use your query in the following Crowdin API endpoints:
+
+    ```shell title="Crowdin" wrap
+    GET https://api.crowdin.com/api/v2/projects/{projectId}/languages/uk/translations?croql={croql}
+    ```
+
+    ```shell title="Crowdin Enterprise" wrap
+    GET https://{organization_domain}.api.crowdin.com/api/v2/projects/{projectId}/languages/uk/translations?croql={croql}
+    ```
+
+    | Parameter     | Details                                                                                  |
+    |---------------|------------------------------------------------------------------------------------------|
+    | `{projectId}`| **Type:** `integer`<br/>**Description:** Numeric identifier of your Crowdin project.      |
+    | `{croql}`    | **Type:** `string`<br/>**Description:** CroQL expression.                                 |
+
+    <Aside type="caution">Before executing the request, ensure to URL encode your CroQL expression.</Aside>
+</details>
+
+### Translation Memory Segment Queries
+
+These queries are used to retrieve information about TM segments.
+
+* Translation memory segments containing at least one record used one or more times:
+  ```graphql
+  count of records where (usageCount > 0) > 0
+  ```
+
+* Translation memory segments containing at least one record created by the user with a `crowdin` username:
+  ```graphql
+  count of records where (createdBy = @user:"crowdin") > 0
+  ```
+
+<details>
+  <summary><strong>Using Translation Memory Segment Queries in Crowdin API</strong></summary>
+    Use your query in the following Crowdin API endpoints:
+
+    ```shell title="Crowdin" wrap
+    GET https://api.crowdin.com/api/v2/tms/{tmId}/segments?croql={croql}
+    ```
+
+    ```shell title="Crowdin Enterprise" wrap
+    GET https://{organization_domain}.api.crowdin.com/api/v2/tms/{tmId}/segments?croql={croql}
+    ```
+
+    | Parameter     | Details                                                                                  |
+    |---------------|------------------------------------------------------------------------------------------|
+    | `{projectId}`| **Type:** `integer`<br/>**Description:** Numeric identifier of your Crowdin project.      |
+    | `{croql}`    | **Type:** `string`<br/>**Description:** CroQL expression.                                 |
+
+    <Aside type="caution">Before executing the request, ensure to URL encode your CroQL expression.</Aside>
+</details>
+
+### CroQL Query Examples based on the Editor Advanced Filter Options
+
+<Aside>
+  To use the following queries in Crowdin API, ensure to specify the needed target language (e.g., `count of languages summary where (language = @language:"uk" and is translated) > 0`) in your CroQL query.
+</Aside>
+
+* Strings added:
+  ```graphql
+  added between '2023-12-06 13:44:14' and '2023-12-07 13:44:14'
+  ```
+* Strings updated:
+  ```graphql
+  updated between '2023-12-06 13:44:14' and '2023-12-07 13:44:14'
+  ```
+* Translations updated:
+  ```graphql wrap
+  count of languages summary where ( translation updated between '2023-12-06 13:44:14' and '2023-12-07 13:44:14') > 0
+  ```
+* Verbal Expressions: Not available
+* Verbal Expression Scope: Not available
+* Translations:
+  * Untranslated:
+    ```graphql
+    count of languages summary = 0
+    ```
+  * Partially translated (plurals):
+    ```graphql
+    count of languages summary where (is partially translated) > 0
+    ```
+  * Translated:
+    ```graphql
+    count of languages summary where (is translated) > 0
+    ```
+  * Same as source string:
+    ```graphql
+    count of languages summary where (has translation as source) > 0
+    ```
+  * Modified source String:
+    ```graphql
+    count of languages summary where (is source changed after translation) > 0
+    ```
+* Duplicates:
+  * Master strings:
+    ```graphql
+    not is duplicate
+    ```
+  * Duplicates only:
+    ```graphql
+    is duplicate
+    ```
+  * Duplicates with shared translations:
+    ```graphql
+    is duplicate and count of languages summary where (has shared translation) > 0
+    ```
+  * Duplicates with own translations:
+    ```graphql wrap
+    is duplicate and count of languages summary where (not has shared translation and is translated) > 0
+    ```
+* Approvals:
+  * Translated, not approved:
+    ```graphql
+    count of languages summary where (is translated and not is approved) > 0
+    ```
+  * Partially approved (plurals):
+    ```graphql
+    count of languages summary where (is partially approved) > 0
+    ```
+  * Approved:
+    ```graphql
+    count of languages summary where (is approved) > 0
+    ```
+  * Has translations after approval:
+    ```graphql
+    count of languages summary where (has translation after approval) > 0
+    ```
+* TM and MT:
+  * Translated by MT:
+    ```graphql
+    count of languages summary where (is translated by mt) > 0
+    ```
+  * Translated by TM:
+    ```graphql
+    count of languages summary where (is translated by tm) > 0
+    ```
+  * Translated by TM or MT:
+    ```graphql
+    count of languages summary where (is auto translated) > 0
+    ```
+* Pre translation:
+  * Used: Not available
+  * Not used: Not available
+* Comments:
+  ```graphql
+  count of comments > 0
+  ```
+* Screenshots:
+  ```graphql
+  count of screenshots > 0
+  ```
+* QA Issues:
+  ```graphql
+  count of languages summary where (has qa issues) > 0
+  ```
+* String Type:
+  ```graphql
+  type is plain or type is icu
+  ```
+* Votes:
+  ```graphql
+  count of languages summary where (rating > 0) > 0
+  ```
+* Translated by:
+  ```graphql
+  count of translations where (user = @user:"crowdin") > 0
+  ```
+* Not Translated by:
+  ```graphql
+  count of translations where (user != @user:"crowdin") > 0
+  ```
+* Approved by:
+  ```graphql wrap
+  count of translations where (count of approvals where (user = @user:"crowdin") > 0) > 0
+  ```
+* Not Approved by:
+  ```graphql wrap
+  count of translations where (count of approvals where (user != @user:"crowdin") > 0) > 0
+  ```
+* Sort by: Not available
+
+## Context
+
+CroQL can be used in the following contexts: source string context, translation context, and translation memory (TM) segment context. Use the following examples as a basis for building your CroQL queries.
+
+### Source String Context
+
+```json
+{
+  "type is plain": true,
+  "type is plural": false,
+  "type is icu": false,
+  "type is asset": false,
+  "text": "Quick Start",
+  "identifier": "quick_start",
+  "context": "quick_start",
+  "max length": 0,
+  "is visible": true,
+  "is hidden": false,
+  "is duplicate": false,
+  "isPassedWorkflow": true,
+  "file": {
+    "id": 32,
+      "name": "sample.csv",
+      "title": "Sample",
+      "type": "csv",
+      "context": "Some useful context information"
+  },
+  "comments": [
+    {
+      "has issue": false,
+      "has unresolved issue": false,
+      "user": 1
+    }
+  ],
+  "screenshots": [],
+  "translations": [
+    {
+      "text": "Швидкий старт",
+      "plural form": "none",
+      "is pre translated": true,
+      "provider": "tm",
+      "language": "uk",
+      "user": 1,
+      "votes": [
+        {
+          "is up": true,
+          "is down": false,
+          "user": 2,
+          "added": "2021-04-09 13:44:14"
+        }
+      ],
+      "approvals": [
+        {
+          "user": 2,
+          "added": "2021-04-09 13:44:14"
+        }
+      ],
+      "updated": "2021-04-09 10:23:17"
+    }
+  ],
+  "languages summary": [
+    {
+      "language": "en",
+      "is translated": false,
+      "is partially translated": false,
+      "is approved": false,
+      "is partially approved": false,
+      "translation updated": false,
+      "is auto translated": false,
+      "is translated by tm": false,
+      "is translated by mt": false,
+      "is source changed after translation": false,
+      "has translation as source": false,
+      "has translation after approval": false,
+      "has shared translation": false,
+      "has qa issues": false,
+      "has empty translation qa issues": false,
+      "has translation length qa issues": false,
+      "has tags mismatch qa issues": false,
+      "has spaces mismatch qa issues": false,
+      "has variables mismatch qa issues": false,
+      "has punctuation mismatch qa issues": false,
+      "has character case mismatch qa issues": false,
+      "has special characters mismatch qa issues": false,
+      "has incorrect translation qa issues": false,
+      "has spelling qa issues": false,
+      "has icu syntax qa issues": false,
+      "has terms qa issues": false,
+      "has duplicate translation qa issues": false,
+      "has ftl syntax qa issues": false,
+      "has android syntax qa issues": false,
+      "has custom qa issues": false,
+      "rating": 1,
+      "approvalsCount": 1
+    }
+  ],
+  "labels": [
+    {
+      "id": 1,
+      "title": "label title",
+      "is system": false
+    }
+  ],
+  "added": "2021-04-08 12:33:27",
+  "updated": "2021-04-08 12:33:27"
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>type is plain</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string with plain text.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>type is plural</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string with plural forms.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>type is icu</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string with ICU.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>type is asset</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string is an asset.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The source string text.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>identifier</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The source string identifier (key).</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>context</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The source string context.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>max length</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> The source string max.length.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is visible</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string is visible.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is hidden</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string is hidden.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is duplicate</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string is duplicate.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>isPassedWorkflow</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> Crowdin Enterprise only. The source string passed through a project workflow.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>file</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object</code></p>
+      <p><strong>Description:</strong> The source string file.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>comments</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>array</code></p>
+      <p><strong>Description:</strong> The source string comments.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has issue</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has an issue.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has unresolved issue</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has an unresolved issue.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the user who added a comment.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>screenshots</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>array</code></p>
+      <p><strong>Description:</strong> The source string screenshots.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>translations</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>array</code></p>
+      <p><strong>Description:</strong> Translations of the source string.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Translation text.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>plural form</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Translation plural form.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is pre translated</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> Translation added via pre-translation.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>provider</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Allowed values:</strong> <code>tm</code>, <code>global_tm</code>, <code>google</code>, <code>google_automl</code>, <code>microsoft</code>, <code>crowdin</code>, <code>deepl</code>, <code>modernmt</code>, <code>amazon</code>, <code>watson</code>, <code>custom_mt</code></p>
+      <p><strong>Description:</strong> Translation provided via translation memory or machine translation engine.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>language</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Language identifier specified as a string. Use the <a href="/developer/language-codes/">language codes</a>, for example, <code>"uk"</code> for Ukrainian. To specify in queries, use the format: <code>@language:"uk"</code>.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the user who added a translation.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>votes</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>array</code></p>
+      <p><strong>Description:</strong> Array of the votes added to the translation.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is up</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> Upvote.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is down</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> Downvote.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the user who added a vote for translation.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date when a vote for translation was added.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>approvals</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>array</code></p>
+      <p><strong>Description:</strong> Array of the added translation approvals.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the user who approved a translation.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date when a translation approval was added.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updated</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date when a translation was updated.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>languages summary</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>array</code></p>
+      <p><strong>Description:</strong> The source string top translations (the translations with the highest priority).</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>language</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Language identifier specified as a string. Use the <a href="/developer/language-codes/">language codes</a>, for example, <code>"uk"</code> for Ukrainian. To specify in queries, use the format: <code>@language:"uk"</code>.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is translated</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string is translated.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is partially translated</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string is partially translated.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is approved</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string is approved.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is partially approved</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string is partially approved.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>translation updated</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string translation is updated.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is auto translated</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string is translated by TM or MT.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is translated by tm</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string is translated by TM.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is translated by mt</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string is translated by MT.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is source changed after translation</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string changed after translation.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has translation as source</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has translation equal to source text.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has translation after approval</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has translation after approval.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has shared translation</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string duplicate has shared translations from a master string.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has empty translation qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has empty translation QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has translation length qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has translation length QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has tags mismatch qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has tags mismatch QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has spaces mismatch qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has spaces mismatch QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has variables mismatch qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has variables mismatch QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has punctuation mismatch qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has punctuation mismatch QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has character case mismatch qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has character case mismatch QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has special characters mismatch qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has special characters mismatch QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has incorrect translation qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has incorrect translation QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has spelling qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has spelling QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has icu syntax qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has ICU syntax QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has terms qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has terms QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has duplicate translation qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has duplicate translation QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has ftl syntax qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has FTL syntax QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has android syntax qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has Android syntax QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has custom qa issues</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> The source string has Custom QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>rating</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> The source string translation rating.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>approvalsCount</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> The number of translation approvals.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>labels</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>array</code></p>
+      <p><strong>Description:</strong> The source string labels.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the label.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>title</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Label title.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is system</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> System label (label with source file name that is automatically added to strings in string-based projects).</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date when a source string was added.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updated</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date when a source string was updated.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### Translation Context
+
+```json
+{
+  "text": "Швидкий старт",
+  "plural form": "none",
+  "is pre translated": true,
+  "provider": "tm",
+  "user": 1,
+  "votes": [
+    {
+      "is up": true,
+      "is down": false,
+      "user": 2,
+      "added": "2021-04-09 13:44:14"
+    }
+  ],
+  "approvals": [
+    {
+      "user": 2,
+      "added": "2021-04-09 13:44:14"
+    }
+  ],
+  "updated": "2021-04-09 10:23:17"
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> Translation text.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>plural form</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Translation plural form.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is pre translated</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> Translation added via pre-translation.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>provider</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Allowed values:</strong> <code>tm</code>, <code>global_tm</code>, <code>google</code>, <code>google_automl</code>, <code>microsoft</code>, <code>crowdin</code>, <code>deepl</code>, <code>modernmt</code>, <code>amazon</code>, <code>watson</code>, <code>custom_mt</code></p>
+      <p><strong>Description:</strong> Translation provided via translation memory or machine translation engine.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the user who added a translation.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>votes</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>array</code></p>
+      <p><strong>Description:</strong> Array of the votes added to the translation.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is up</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> Upvote.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is down</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> Downvote.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the user who added a vote for translation.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date when a vote for translation was added.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>approvals</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>array</code></p>
+      <p><strong>Description:</strong> Array of the added translation approvals.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the user who approved a translation.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date when a translation approval was added.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updated</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date when a translation was updated.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### Translation Memory (TM) Segment Context
+
+```json
+{
+  "records": [
+    {
+      "id": 1,
+      "text": "Перекладений текст",
+      "usageCount": 77,
+      "createdBy": 1,
+      "updatedBy": 1,
+      "createdAt": "2027-09-16T13:48:04+00:00",
+      "updatedAt": "2027-09-16T13:48:04+00:00"
+    }
+  ]
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>records</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>array</code></p>
+      <p><strong>Description:</strong> Array of translation memory segment records.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of a record.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Translation text of a record.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>usageCount</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> The number of times a translation memory record has been used.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>createdBy</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the user who created a translation memory record.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updatedBy</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the user who updated a translation memory record.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>createdAt</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date when a translation memory record was created.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updatedAt</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date when a translation memory record was updated.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
