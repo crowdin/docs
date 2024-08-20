@@ -5,6 +5,7 @@ sidebar:
   order: 11
 ---
 
+import { Aside } from '@astrojs/starlight/components';
 import { Image } from 'astro:assets';
 import mt from "!/developer/module_mt.png";
 
@@ -112,6 +113,10 @@ For Crowdin Enterprise:
 
 The system sends texts for translation using `url` and then the app processes the texts and responds back to the system with one of the two possible types of responses: [without errors](#expected-response-from-the-app-without-errors), and [with errors](#expected-response-from-the-app-with-errors).
 
+<Aside>
+  Ensure your Custom MT app uses the same [language codes](/developer/language-codes) as Crowdin supports. If some languages don't match, set up language mapping.
+</Aside>
+
 **HTTP request:**
 
 ```
@@ -159,6 +164,39 @@ https://{AppBaseUrl}/translate/?source=en&target=uk&project_id=727186&jwtToken={
     </tr>
   </tbody>
 </table>
+
+## Handling Non-Translatable Elements by Your MT Engine
+
+For strings containing non-translatable elements (e.g., tags, placeholders, etc.), Crowdin replaces these elements with special *notranslate* tags. This ensures that these elements remain in their original state after the string is translated by the MT engine. Crowdin uses this approach to avoid potential issues that could break exported translation files.
+
+Below you can see the examples of a string before and after the modification.
+
+Here is an example of how a string containing non-translatable elements (tags, placeholders, etc.) looks in Crowdin:
+
+```html
+<strong>Task:</strong>
+```
+
+This is how Crowdin modifies the above string before sending it to the MT engine:
+
+```html
+<span class="notranslate">0</span>Task:<span class="notranslate">1</span>
+```
+
+### Customizing Non-Translatable Elements for Your MT Engine
+
+If your MT engine already has a similar feature but implements it differently from Crowdin, we recommend adjusting the handling of non-translatable elements in your Custom MT app to match your MT engine's implementation. Specifically, replace Crowdin's defaults, like
+
+```html
+<span class="notranslate">%index%</span>
+```
+with do-not-translate elements specific to your MT engine.
+
+Here you can explore an implementation example of do-not-translate elements in Amazon Translate: [Using do-not-translate in Amazon Translate](https://docs.aws.amazon.com/translate/latest/dg/customizing-translations-tags.html).
+
+### Handling Translations with Altered Non-Translatable Elements
+
+If the MT engine sends a translation to Crowdin that doesn't include all tags in their original state or if they are somehow altered (e.g., translated), Crowdin will ignore such translations and won't save them to the string.
 
 ## Request to the App from Crowdin for applicationUrl (simple)
 
