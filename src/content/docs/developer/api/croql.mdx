@@ -5,8 +5,7 @@ sidebar:
   order: 7
 ---
 
-import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
-import { Code } from 'astro-expressive-code/components';
+import { Aside, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
 
 Crowdin Query Language (CroQL) is a tool for Crowdin Editor and Crowdin Enterprise Editor and Crowdin and Crowdin Enterprise API that allows you to retrieve needed localization resources based on specific conditions. Using CroQL, you can filter source strings and their translations for a specific target language, as well as TM segments.
 
@@ -122,6 +121,13 @@ The group operator is used to determine the execution order of operators.
 ## CroQL Query Examples
 
 In this section, you can find practical examples of CroQL queries that will help you understand and use the querying capabilities within Crowdin. These examples can help you learn how to create your own queries to retrieve specific sets of data based on various criteria, such as translation status, user activity, and string properties.
+
+<LinkCard
+  title="CroQL Tester - CroQL expression editor and tester"
+  description="Try out your CroQL queries in the CroQL Tester."
+  href="https://store.crowdin.com/croql-tester"
+  target="_blank"
+/>
 
 ### Strings Queries
 
@@ -265,11 +271,13 @@ These queries are used to retrieve information about TM segments.
     <Aside type="caution">Before executing the request, ensure to URL encode your CroQL expression.</Aside>
 </details>
 
-### CroQL Query Examples based on the Editor Advanced Filter Options
+### Examples based on the Editor Advanced Filter Options
 
 <Aside>
   To use the following queries in Crowdin API, ensure to specify the needed target language (e.g., `count of languages summary where (language = @language:"uk" and is translated) > 0`) in your CroQL query.
 </Aside>
+
+#### Strings
 
 * Strings added:
   ```graphql
@@ -279,83 +287,10 @@ These queries are used to retrieve information about TM segments.
   ```graphql
   updated between '2023-12-06 13:44:14' and '2023-12-07 13:44:14'
   ```
-* Translations updated:
-  ```graphql wrap
-  count of languages summary where ( translation updated between '2023-12-06 13:44:14' and '2023-12-07 13:44:14') > 0
-  ```
-* Verbal Expressions: Not available
-* Verbal Expression Scope: Not available
-* Translations:
-  * Untranslated:
-    ```graphql
-    count of languages summary = 0
+* String Type:
+  ```graphql
+  type is plain or type is icu
     ```
-  * Partially translated (plurals):
-    ```graphql
-    count of languages summary where (is partially translated) > 0
-    ```
-  * Translated:
-    ```graphql
-    count of languages summary where (is translated) > 0
-    ```
-  * Same as source string:
-    ```graphql
-    count of languages summary where (has translation as source) > 0
-    ```
-  * Modified source String:
-    ```graphql
-    count of languages summary where (is source changed after translation) > 0
-    ```
-* Duplicates:
-  * Master strings:
-    ```graphql
-    not is duplicate
-    ```
-  * Duplicates only:
-    ```graphql
-    is duplicate
-    ```
-  * Duplicates with shared translations:
-    ```graphql wrap
-    is duplicate and count of languages summary where (has shared translation) > 0
-    ```
-  * Duplicates with own translations:
-    ```graphql wrap
-    is duplicate and count of languages summary where (not has shared translation and is translated) > 0
-    ```
-* Approvals:
-  * Translated, not approved:
-    ```graphql
-    count of languages summary where (is translated and not is approved) > 0
-    ```
-  * Partially approved (plurals):
-    ```graphql
-    count of languages summary where (is partially approved) > 0
-    ```
-  * Approved:
-    ```graphql
-    count of languages summary where (is approved) > 0
-    ```
-  * Has translations after approval:
-    ```graphql
-    count of languages summary where (has translation after approval) > 0
-    ```
-* TM and MT:
-  * Translated by MT:
-    ```graphql
-    count of languages summary where (is translated by mt) > 0
-    ```
-  * Translated by TM:
-    ```graphql
-    count of languages summary where (is translated by tm) > 0
-    ```
-  * Translated by TM or MT:
-    ```graphql
-    count of languages summary where (is auto translated) > 0
-    ```
-* Pre translation:
-  * Used: Not available
-  * Not used: Not available
 * Comments:
   ```graphql
   count of comments > 0
@@ -368,13 +303,20 @@ These queries are used to retrieve information about TM segments.
   ```graphql
   count of languages summary where (has qa issues) > 0
   ```
-* String Type:
+
+#### Translations
+
+* Untranslated:
   ```graphql
-  type is plain or type is icu
+  count of languages summary = 0
   ```
-* Votes:
+* Partially translated (plurals):
   ```graphql
-  count of languages summary where (rating > 0) > 0
+  count of languages summary where (is partially translated) > 0
+  ```
+* Translated:
+  ```graphql
+  count of languages summary where (is translated) > 0
   ```
 * Translated by:
   ```graphql
@@ -384,6 +326,56 @@ These queries are used to retrieve information about TM segments.
   ```graphql
   count of translations where (user != @user:"crowdin") > 0
   ```
+* Same as source string:
+  ```graphql
+  count of languages summary where (has translation as source) > 0
+  ```
+* Modified source String:
+  ```graphql
+  count of languages summary where (is source changed after translation) > 0
+  ```
+* Translations updated:
+  ```graphql wrap
+  count of languages summary where ( translation updated between '2023-12-06 13:44:14' and '2023-12-07 13:44:14') > 0
+  ```
+* Votes:
+  ```graphql
+  count of languages summary where (rating > 0) > 0
+  ```
+
+#### Duplicates
+
+* Master strings:
+  ```graphql
+  not is duplicate
+  ```
+* Duplicates only:
+  ```graphql
+  is duplicate
+  ```
+* Duplicates with shared translations:
+  ```graphql wrap
+  is duplicate and count of languages summary where (has shared translation) > 0
+  ```
+* Duplicates with own translations:
+  ```graphql wrap
+  is duplicate and count of languages summary where (not has shared translation and is translated) > 0
+  ```
+
+#### Approvals
+
+* Translated, not approved:
+  ```graphql
+  count of languages summary where (is translated and not is approved) > 0
+  ```
+* Partially approved (plurals):
+  ```graphql
+  count of languages summary where (is partially approved) > 0
+  ```
+* Approved:
+  ```graphql
+  count of languages summary where (is approved) > 0
+  ```
 * Approved by:
   ```graphql wrap
   count of translations where (count of approvals where (user = @user:"crowdin") > 0) > 0
@@ -392,7 +384,34 @@ These queries are used to retrieve information about TM segments.
   ```graphql wrap
   count of translations where (count of approvals where (user != @user:"crowdin") > 0) > 0
   ```
+* Has translations after approval:
+  ```graphql
+  count of languages summary where (has translation after approval) > 0
+  ```
+
+#### TM and MT
+
+* Translated by MT:
+  ```graphql
+  count of languages summary where (is translated by mt) > 0
+  ```
+* Translated by TM:
+  ```graphql
+  count of languages summary where (is translated by tm) > 0
+  ```
+* Translated by TM or MT:
+  ```graphql
+  count of languages summary where (is auto translated) > 0
+  ```
+
+#### Other
+
+* Pre translation:
+  * Used: Not available
+  * Not used: Not available
 * Sort by: Not available
+* Verbal Expressions: Not available
+* Verbal Expression Scope: Not available
 
 ## Context
 
