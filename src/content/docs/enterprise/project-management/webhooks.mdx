@@ -1,0 +1,114 @@
+---
+title: Webhooks
+slug: enterprise/webhooks
+---
+
+import { Image } from 'astro:assets';
+import { Aside } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Icon } from 'astro-icon/components';
+import webhooksAdd from '!/enterprise/project-management/webhooks_add.png';
+import webhooksEditDelete from '!/enterprise/project-management/webhooks_edit_delete.png';
+import webhooksActivities from '!/enterprise/project-management/webhooks_activities.png';
+import webhooksLog from '!/enterprise/project-management/webhooks_log.png';
+
+Webhooks notify and help you collect information about the key events that happen in your Crowdin Enterprise project, like completed translations or proofreading. After you configure a webhook for the project, Crowdin Enterprise will start sending POST or GET requests with data to the webhook URL via HTTP.
+
+Only admins and group/project managers can register a webhook.
+
+<Aside title="Permissions">
+  To manage webhooks in a project, you must have the Admin, Group/Project Manager, or Developer role. See [Inviting People](/enterprise/inviting-people/) for more information.
+</Aside>
+
+## Use Cases
+
+You can add webhooks to build integrations with the services or with your backend. For example:
+
+* Set up a webhook to send notifications to the system you use.
+* Pass information to the third-party services with the specific request requirements (for example, HTTP method, content type).
+* Create custom integrations with Crowdin Enterprise.
+
+## Events
+
+You can configure webhooks for different events that occur in the project, e.g., when a file is translated, proofread, or when a string is added or updated.
+
+<ReadMore>
+  Read more about [Webhook Events](/developer/webhooks/#events) on Crowdin Developer Portal.
+</ReadMore>
+
+## Adding Webhooks
+
+To configure webhooks in Crowdin Enterprise, open your project and go to **Tools** > **Webhooks** on the left panel. Click **Create** to start configuring your new webhook.
+
+<Image src={webhooksAdd} alt="Add Webhook" />
+
+You will need to provide the following information to register a webhook:
+
+* The webhook name (for example, "New translation added").
+* The events to post to the URL. You can select either one event or a specific set of events.
+* The URL where the callback should be sent.
+* The request method that indicates the desired action to be performed for a given resource (use either GET or POST).
+* The content type for the POST request method (`multipart/form-data`, `application/json`, or `application/x-www-form-urlencoded`).
+  * For the `application/json` content type, you can select **Batch webhooks** to merge multiple events into a single request.
+
+Optionally, you can add special headers to your webhook. They can be used for additional security, as an authorization method, and more. For example, if you add headers, your webhook endpoint can check them to ensure that information is coming from Crowdin Enterprise.
+
+<Aside type="tip">
+  When adding a webhook, click **Test webhook** to see how your application will react to that call.
+</Aside>
+
+Depending on your approach to webhooks management, you might need to add dedicated Crowdin Enterprise IP addresses to your firewall to allow Crowdin Enterprise to open the pre-configured webhook URLs.
+
+<ReadMore>
+  Read more about [IP Addresses](/developer/ip-addresses#webhooks-and-mt-engines).
+</ReadMore>
+
+## Custom Payloads
+
+Each event type in Crowdin Enterprise has a specific payload format with the relevant event information. You can customize the webhook payload to add and organize the elements the way your system requires.
+
+To check the event's possible variables, hover over the *Info* <Icon name="mdi:info" class="inline-icon" /> icon in the *Payload* section's right upper corner.
+
+## Edit or Delete Webhooks
+
+You can access the list of all existing webhooks within a specific project. You will be able to edit or delete webhooks right from the list of webhooks displayed.
+
+<Image src={webhooksEditDelete} alt="Edit or Delete Webhooks" />
+
+## Activities
+
+After the events are triggered, you will be able to review the activity of each webhook separately. Use the filter to review all or only unsuccessful webhook notifications.
+
+<Image src={webhooksActivities} alt="Webhooks Activities" />
+
+Alternatively, you can review the full list of sent webhooks in the **Tools > Webhooks Log**. Filter webhook notifications by result (Any or Unsuccessful), event types, or name.
+
+<Image src={webhooksLog} alt="Webhooks Log" />
+
+## Failing Webhooks
+
+Webhooks that fail 100 or more times in the last 24 hours with response codes in the 4xx or 5xx ranges are automatically disabled.
+
+### Disabled Webhooks
+
+Disabled webhooks are listed in the **Webhooks** section with a cleared check mark, indicating that they are currently inactive due to persistent failures. To discover more about failed webhooks, navigate to the **Calls History > Unsuccessful** section. Here you can explore detailed information about the issues encountered by each failed webhook.
+
+### Manual Re-enabling
+
+Once you have identified and resolved the cause of the webhook failures, you can manually re-enable the webhooks to restore their functionality. In the **Webhooks** section, locate the disabled webhook and select it for re-enabling.
+
+## Sending Webhooks to Slack
+
+With the help of Crowdin Enterprise webhooks, you can send notifications about pre-configured event types directly to a specific Slack channel.
+
+To configure the webhooks' sending to Slack, you'd need to create a simple Slack app.
+
+<ReadMore>
+  Read more about [Sending messages to Slack using Incoming Webhooks](https://api.slack.com/messaging/webhooks).
+</ReadMore>
+
+As soon as you create and configure your Slack app, you'll have a Webhook URL that should be used for the Webhooks configuration in your Crowdin Enterprise project.
+
+<Aside>
+  To send webhooks to Slack, ensure that your custom payload contains the `"text"` field, and the `Batch webhooks` option is cleared.
+</Aside>
