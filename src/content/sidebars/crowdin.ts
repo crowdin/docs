@@ -30,6 +30,7 @@ export default [
       { slug: 'creating-project' },
       { slug: 'screenshots' },
       { slug: 'project-activity' },
+      { slug: 'webhooks' },
       {
         label: 'Sources',
         autogenerate: { directory: path('project-management', 'sources') },

@@ -52,6 +52,7 @@ export default  [
       { slug: path('creating-project') },
       { slug: path('screenshots') },
       { slug: path('project-activity') },
+      { slug: path('webhooks') },
       {
         label: 'Sources',
         autogenerate: { directory: path('project-management', 'sources') },

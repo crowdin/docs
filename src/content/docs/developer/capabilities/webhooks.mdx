@@ -1,11 +1,12 @@
 ---
-title: Webhooks
+title: Webhook Events
 slug: developer/webhooks
 sidebar:
   order: 1
 ---
 
 import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
 
 import fileTranslated from '/src/assets/code/webhooks/file.translated.json?raw';
 import fileApproved from '/src/assets/code/webhooks/file.approved.json?raw';
@@ -14,9 +15,7 @@ import fileUpdated from '/src/assets/code/webhooks/file.updated.json?raw';
 import fileReverted from '/src/assets/code/webhooks/file.reverted.json?raw';
 import fileDeleted from '/src/assets/code/webhooks/file.deleted.json?raw';
 import projectTranslated from '/src/assets/code/webhooks/project.translated.json?raw';
-import projectTranslatedSb from '/src/assets/code/webhooks/sb/project.translated.json?raw';
 import projectApproved from '/src/assets/code/webhooks/project.approved.json?raw';
-import projectApprovedSb from '/src/assets/code/webhooks/sb/project.approved.json?raw';
 import projectBuilt from '/src/assets/code/webhooks/project.built.json?raw';
 import translationUpdated from '/src/assets/code/webhooks/translation.updated.json?raw';
 import translationUpdatedSb from '/src/assets/code/webhooks/sb/translation.updated.json?raw';
@@ -53,35 +52,65 @@ import taskDeletedSb from '/src/assets/code/webhooks/sb/task.deleted.json?raw';
 
 You can add webhooks to build integrations with the third-party services or with your backend. After you configure a webhook for the project, Crowdin will start sending POST or GET requests with data to the webhook URL via HTTP.
 
+## Configuring Webhooks
+
+To configure webhooks for your project, navigate to the **Tools** tab in the project settings and select **Webhooks**.
+
+- [Crowdin](/webhooks/)
+- [Crowdin Enterprise](/enterprise/webhooks/)
+
+Depending on your approach to webhooks management, you might need to add dedicated Crowdin IP addresses to your firewall to allow Crowdin to open the pre-configured webhook URLs.
+
+<ReadMore>
+  Read more about [IP Addresses](/developer/ip-addresses#webhooks-and-mt-engines).
+</ReadMore>
+
 ## Events
 
-You can configure webhooks for the following types of events:
+You can configure webhooks for different events that occur in the project.
+
+#### File
 
 * [File fully translated](#file-fully-translated) &ndash; a file is translated into one of the target languages
 * [File fully reviewed](#file-fully-reviewed) &ndash; translations in a file are approved for one of the target languages
-* [File added](#file-added)
-* [File updated](#file-updated)
-* [File reverted](#file-reverted)
-* [File deleted](#file-deleted)
+* [File added](#file-added) &ndash; a new file is added to the project
+* [File updated](#file-updated) &ndash; a file is updated
+* [File reverted](#file-reverted) &ndash; a file is reverted to the previous revision
+* [File deleted](#file-deleted) &ndash; a file is deleted
+
+#### Project
+
 * [Project fully translated](#project-fully-translated) &ndash; all files are translated into one of the target languages
 * [Project fully reviewed](#project-fully-reviewed) &ndash; translations in all files are approved for one of the target languages
-* [Project successfully built](#project-successfully-built)
+* [Project successfully built](#project-successfully-built) &ndash; a project is built successfully
 * [Exported translation updated](#exported-translation-updated) &ndash; final translation of a string is updated
-* [Source string added](#source-string-added)
-* [Source string updated](#source-string-updated)
-* [Source string deleted](#source-string-deleted)
+
+#### Source String
+
+* [Source string added](#source-string-added) &ndash; a new string is added to the project
+* [Source string updated](#source-string-updated) &ndash; a string in the project is updated
+* [Source string deleted](#source-string-deleted) &ndash; a string is deleted
+
+#### Suggested Translation
+
 * [Suggested translation added](#suggested-translation-added) &ndash; a string in the project is translated
 * [Suggested translation updated](#suggested-translation-updated) &ndash; a translation for a string in the project is updated
 * [Suggested translation deleted](#suggested-translation-deleted) &ndash; one of the translations is deleted
 * [Suggested translation approved](#suggested-translation-approved) &ndash; a translation for a string is approved
 * [Suggested translation disapproved](#suggested-translation-disapproved) &ndash; approval for a previously added translation is removed
-* [String comment/issue created](#string-commentissue-created)
-* [String comment/issue updated](#string-commentissue-updated)
-* [String comment/issue deleted](#string-commentissue-deleted)
-* [String comment/issue restored](#string-commentissue-restored)
-* [Task added](#task-added)
-* [Task status changed](#task-status-changed)
-* [Task deleted](#task-deleted)
+
+#### String Comment/Issue
+
+* [String comment/issue created](#string-commentissue-created) &ndash; a comment or issue is added to the string
+* [String comment/issue updated](#string-commentissue-updated) &ndash; a comment or issue is updated
+* [String comment/issue deleted](#string-commentissue-deleted) &ndash; a comment or issue is deleted
+* [String comment/issue restored](#string-commentissue-restored) &ndash; a comment or issue is restored
+
+#### Task
+
+* [Task added](#task-added) &ndash; a task is added to the project
+* [Task status changed](#task-status-changed) &ndash; a task status is changed
+* [Task deleted](#task-deleted) &ndash; a task is deleted
 
 ## Webhook Payload Examples
 
@@ -113,25 +142,11 @@ View the examples of the webhook payloads for different events.
 
 ### Project Fully Translated
 
-<Tabs syncKey="projectType">
-  <TabItem label="File-based project">
-    <Code code={projectTranslated} lang="json" wrap />
-  </TabItem>
-  <TabItem label="String-based project">
-    <Code code={projectTranslatedSb} lang="json" wrap />
-  </TabItem>
-</Tabs>
+<Code code={projectTranslated} lang="json" wrap />
 
 ### Project Fully Reviewed
 
-<Tabs syncKey="projectType">
-  <TabItem label="File-based project">
-    <Code code={projectApproved} lang="json" wrap />
-  </TabItem>
-  <TabItem label="String-based project">
-    <Code code={projectApprovedSb} lang="json" wrap />
-  </TabItem>
-</Tabs>
+<Code code={projectApproved} lang="json" wrap />
 
 ### Project Successfully Built
 
@@ -312,3 +327,38 @@ View the examples of the webhook payloads for different events.
     <Code code={taskDeletedSb} lang="json" wrap />
   </TabItem>
 </Tabs>
+
+## Crowdin and Crowdin Enterprise Events Payloads
+
+The payload structure for Crowdin and Crowdin Enterprise events is basically the same. The only difference is in the `project` object. For Crowdin Enterprise events, the `project` object contains additional fields.
+
+```diff del={"Crowdin:":18-20} ins={"Crowdin Enterprise:":22-24} lang="json"
+{
+  "project": {
+    "id": "777",
+    "userId": "1",
+    "sourceLanguageId": "en",
+    "targetLanguageIds": [
+      "uk",
+      "pl"
+    ],
+    "identifier": "umbrella",
+    "name": "Project Name",
+    "createdAt": "2022-04-20T11:05:24+00:00",
+    "updatedAt": "2022-04-21T11:07:29+00:00",
+    "lastActivity": "2022-04-21T11:07:29+00:00",
+    "description": "Project Description",
+    "url": "https://crowdin.com/project/umbrella",
+    "cname": null,
+
+-    "languageAccessPolicy": "moderate",
+-    "visibility": "private",
+-    "publicDownloads": true,
+
++    "logo": ""data:image/png;base64,iVBORw0KGgoAAAANSU....",
++    "isExternal": false,
++    "externalType": null,
++    "hasCrowdsourcing": true
+  }
+}
+```
