@@ -1,6 +1,219 @@
 ---
-title: In-Context Setup
+title: In-Context
 slug: developer/in-context-localization
 sidebar:
   order: 0
 ---
+
+import { Steps, Aside, Tabs, TabItem, Code, LinkButton } from '@astrojs/starlight/components';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import ReadMore from '~/components/ReadMore.astro';
+import { Image } from 'astro:assets';
+import strings from '!/developer/in_context_strings.png';
+import tab from '!/developer/in_context_tab.png';
+import tabE from '!/developer/in_context_tab_e.png';
+import login from '!/developer/in_context_login.png';
+import loginClose from '!/developer/in_context_login_close.png';
+import addScreenshot from '!/developer/in_context_add_screenshot.png';
+import editStringsContextCode from '/src/assets/code/in-context/edit_strings_context.html?raw';
+
+Crowdin In-Context works with the help of a one-line Javascript snippet and pseudo-language package. It creates a pseudo-language package based on the localization files uploaded to your project, which later will be integrated into your application as an additional localization language.
+
+## Quick Demo
+
+<div style="margin-top: 1.5rem; position: relative; width: 100%; height: 0; padding-bottom: 56.25%; box-shadow: 0 5px 20px rgb(0 0 0 / 10%); border-radius: 6px;overflow:hidden;">
+  <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" height="100%" width="100%" src="https://www.youtube.com/embed/ktfw7UsW3qw" allow="autoplay; encrypted-media"></iframe>
+</div>
+
+In-Context localization is tied up with your Crowdin project, where translatable files are stored. Translations made using In-Context are added to your project in the same way as translations made directly in the Editor.
+
+This tool provides a view of your application with editable texts, so the translation process is real-time visible. Even the dynamic part of the application and strings containing placeholders can be translated this way.
+
+<div>
+  <LinkButton href="https://demo.crowdin.com/" icon="external" target="_blank">See in Action</LinkButton>
+  <LinkButton href="https://crowdin.com/demo-request" variant="secondary" icon="right-arrow" target="_blank">Get Personalized Demo</LinkButton>
+</div>
+
+Integrated pseudo-language contains special identifiers instead of the original texts. Thus when switching your app to that language, all labels are converted to special identifiers. Javascript searches for those identifiers and replaces them with editable labels. So, the In-context page of your web app will look the same as your application, with the only difference that translatable strings will be editable.
+
+<Image src={strings} alt="In-Context View" />
+
+Translations are made directly in the app, with no need to open the Editor. A simplified version of Crowdin Editor will be displayed, with all the functionality (TM, machine translation, approve/vote option, comments, terms) provided. Thus, it's easier to make and review translations since translators can preview them in a real context.
+
+## Integration
+
+There are two common approaches to integrate Crowdin In-Context with your application:
+
+* **Staging or translation environment**  
+If you are not planning to invite your end-users to help with translations or not considering using a “translation mode” in your production application, integrating Crowdin In-Context to your staging or dedicated translation app environment would be a good solution.
+
+* **Production environment**  
+Crowdin In-Context doesn't require any code changes in your application so that you can use it even on production. You decide how to turn it on and which segment of users will use it. The most common use cases are the following:
+  * You can create a mirror website that is a complete copy of your application but under a different URL (for example, instead of `crowdin.com` it can be `translate.crowdin.com`), where translators will make translations as if it was your actual application.
+  * You can also add In-context as an additional language. So, when translators open your application, they will choose this additional language from the list, which will open In-context for them.
+
+Follow the integration setup guide in your Crowdin project to set up In-Context. The guide can be found in your project, under **Tools > In-Context**.
+
+<Tabs syncKey="product">
+  <TabItem label="Crowdin">
+    <Image src={tab} alt="In-Context Tab in Crowdin" />
+  </TabItem>
+  <TabItem label="Crowdin Enterprise">
+    <Image src={tabE} alt="In-Context Tab in Enterprise" />
+  </TabItem>
+</Tabs>
+
+<Aside>
+  If you use CSP, ensure to add the following rules to the policy: for loading the In-Context resource files, for CORS requests to <code>&lt;organization_domain&gt;.crowdin.com</code>.
+</Aside>
+
+After the integration is successfully set up and you have refreshed your application, you should see the invitation dialog and Crowdin login box.
+
+<Image src={login} alt="Login Window" />
+
+### Adding String URLs to Context
+
+When integrating In-Context for your website, you can add an optional script that can collect and add URLs to the [context section](/online-editor/#middle-top-area) of each string used on the website. 
+
+As a result, translators can click the URL for a particular string and be redirected to the website page where this string is used and get additional context for accurate translation.
+
+To add string URLs to context, follow these steps:
+
+<Steps>
+  1. Copy the following JavaScript snippet and paste it right after the primary In-Context JavaScript snippet (which could be found in your Crowdin project's **Tools** tab) at the `head` section on every page with localizable text. <Code code={editStringsContextCode}  lang="html"/>
+      Once finished, each website's page you'd like to translate via In-Context should contain two JavaScript snippets:
+        * Primary JavaScript snippet that launches the In-Context feature.
+        * Additional JavaScript snippet that collects and adds URLs to the source string context.
+  1. After adding JavaScript snippets, you should open each website page where In-Context is integrated. That will allow the additional JavaScript snippet to collect and add string URLs to your Crowdin project.  
+</Steps>
+
+When you add a new page to your website, upload the related source files to your Crowdin project. Afterward, repeat the steps above to collect and add URLs for strings from the new page.
+
+If some website page's URL changes, open it in In-Context to refresh the string URLs collected initially.
+
+## Optional Parameters
+
+You can add these parameters to the `_jipt` array in the configuration snippet.
+
+### Texts Preloading
+
+```js
+_jipt.push(['preload_texts', true]);
+```
+
+Speeds up dynamic content displaying within the In-Context tool by preloading all source strings.
+Automatically disabled for large projects (5000+ strings). Acceptable values: true, false.
+
+### Translation Button Always Visible
+
+```js
+_jipt.push(['touch_optimized', true]);
+```
+
+This option is enabled on touchscreens by default and makes the translation button next to each translatable string permanently visible instead of showing on hover. Acceptable values: true, false.
+
+### Before Commit Callback
+
+```js
+_jipt.push(['before_commit', function(source, translation, context, language_code) {
+  return status_obj;
+}]);
+```
+
+Function to validate the suggestion before committing.
+
+<table>
+  <tbody>
+    <tr><td colSpan="2"><b>Parameters</b></td></tr>
+    <tr><td>source</td><td>Source text</td></tr>
+    <tr><td>translation</td><td>Translation text</td></tr>
+    <tr><td>context</td><td>Source string context</td></tr>
+    <tr><td>language_code</td><td>Target language code (<a href="/developer/language-codes/">language codes</a>)</td></tr>
+    <tr><td colSpan="2"><b>Return Values</b></td></tr>
+    <tr>
+      <td>status_obj</td>
+      <td>Object. The <code>status_obj.status</code> may be <code>"ok"</code>, <code>"error"</code> or <code>"corrected"</code>.
+        In case of error, <code>status_obj.message</code> contains error description.
+        When status is <code>corrected</code>, <code>status_obj.correction</code> contains the corrected translation</td>
+    </tr>
+  </tbody>
+</table>
+
+### Before DOM Insert Callback
+
+```js
+_jipt.push(['before_dom_insert', function(text, node, attribute) {
+  return 'text';
+}]);
+```
+
+Function to transform the string before it gets inserted into the DOM.
+
+<table>
+  <tbody>
+    <tr><td colspan="2"><b>Parameters</b></td></tr>
+    <tr><td>text</td><td>String for insertion</td></tr>
+    <tr><td>node <br/><span class="text-muted">optional</span></td><td>DOM element in which the text must be inserted. It may be omitted if the text doesn't have a target element (text inside the browser's pop-ups)</td></tr>
+    <tr><td>attribute <br/><span class="text-muted">optional</span></td><td>The attribute of DOM element, if the text is part of an attribute</td></tr>
+    <tr><td colspan="2"><b>Return Values</b></td></tr>
+    <tr><td>text</td><td>String for insertion</td></tr>
+    <tr><td>false</td><td>If the function returns <i>false</i>, DOM will not be updated</td></tr>
+  </tbody>
+</table>
+
+### Close the In-Context Overlay Callback
+
+```js
+_jipt.push(['escape', function() {
+  window.location.href = "http://app_domain.com";
+}]);
+```
+
+If defined, users can close the In-Context overlay if they don't want to translate. Implement this feature on your side. Depending on the In-Context integration approach, it must change the app's language or redirect from the translation environment to the production app.
+
+<Image src={loginClose} alt="Close Login Window" />
+
+## Adding Screenshots via In-Context
+
+This feature allows you to take a screenshot of the opened website page, upload it to the Crowdin project and automatically tag all strings used on the page.
+
+<Aside title="Permissions">
+  This feature is available to project members with manager permissions (or higher).
+</Aside>
+
+<ReadMore>
+  Read more about [Screenshots](/screenshots).
+</ReadMore>
+
+<Image src={addScreenshot} alt="Add Screenshot" />
+
+## Troubleshooting and Common Questions
+
+<QuestionAnswer title="Error: Crowdin In-Context was unable to identify translatable texts (Nothing to translate)">
+  This error may occur if some strings have been updated in the Crowdin project, but these texts are missing on your website. In this case, download the latest version of the pseudo-language from your project in **Tools > In-Context** and update the pseudo-language on your website.
+</QuestionAnswer>
+
+<QuestionAnswer title="Can I use In-Context with the React app?">
+  In-Context is technology-independent. Users can configure it according to the regular instructions, simply using a `script` tag.
+</QuestionAnswer>
+
+<QuestionAnswer title="Can I use In-Context if multiple packages compose one application in production?">
+  It doesn't matter how many packages and repositories are involved. You can connect multiple repositories within one Crowdin project. If they relate to the same web app, it should work seamlessly.
+</QuestionAnswer>
+
+<QuestionAnswer title="Limitation to use In-Context in only one Crowdin project">
+  As long as the texts that are displayed on the website page come from one Crowdin project, In-Context will handle them just fine. The key point is that the texts on your website must be in the regular DOM, not in the shadow DOM.
+</QuestionAnswer>
+
+<QuestionAnswer title="Ability of extracting In-Context strings from Shadow DOM">
+  This is technically impossible. The Shadow DOM is invisible to our scripts. It can only be manipulated by the code that created the Shadow DOM.
+</QuestionAnswer>
+
+<QuestionAnswer title="Ability to configure so that the source file updates are automatically added into the pseudo-language package and then into the website">
+  This can be done using the Crowdin API. Use the [Get Project](https://developer.crowdin.com/api/v2/#operation/api.projects.get) API method to extract the `inContextPseudoLanguage` object, which contains the language code of the pseudo-language. With this language code, you can build the pseudo-language separately, download it, and integrate it into your website. All other methods are regular - upload/update the file, get the list of target languages with the [Get Project](https://developer.crowdin.com/api/v2/#operation/api.projects.get) API method, and build the target languages. Alternatively, you can also build and download the entire Crowdin project archive at once, which will include the pseudo-language.
+</QuestionAnswer>
+
+<QuestionAnswer title="Recently added new source strings on the website displayed as `unrecognized text`">
+  The "Unrecognized text" label is displayed on the website if in the Crowdin project strings have been deleted or string keys have been changed in the source files, but the same strings are still present in the pseudo-language that is integrated into the website.
+    To fix this, you just need to update the source files in the Crowdin project again, download the pseudo-language, and update it on the website.
+</QuestionAnswer>
