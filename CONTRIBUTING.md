@@ -133,3 +133,9 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 Common content
 ```
+
+## API Documentation
+
+The yml specification for the API documentation is located in the `src/assets/api` directory.
+
+It is implemented using custom pages (`src/pages/**`). These pages are not processed by Astro during the build process, so we need to manually move their dependencies to the `dist` directory. This is done in the `vite` configuration within the `astro.config.mjs` file. Also, scss files should be compiled using the `npm run build-api-css` command, since Vite doesn't "see" them (due to the use of custom html pages).
