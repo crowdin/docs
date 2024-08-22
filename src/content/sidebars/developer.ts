@@ -49,6 +49,10 @@ export default [
     label: 'API',
     items: [
       {
+        slug: path('api'),
+        label: 'Overview',
+      },
+      {
         label: 'Crowdin API (File-based)',
         link: 'developer/api/v2'
       },
@@ -66,7 +70,6 @@ export default [
       },
       { slug: path('graphql-api') },
       { slug: path('croql') },
-      { slug: path('api-clients') },
       { slug: path('language-codes') },
     ],
     collapsed: true,
