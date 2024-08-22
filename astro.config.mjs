@@ -7,6 +7,7 @@ import { rehypeHeadingIds } from '@astrojs/markdown-remark';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeExternalLinks from 'rehype-external-links';
 import { remarkHeadingId } from 'remark-custom-heading-id';
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 import icon from 'astro-icon';
 
 import crowdinSidebar from './src/content/sidebars/crowdin.ts';
@@ -133,6 +134,26 @@ const config = defineConfig({
       ]
     ],
   },
+  vite: {
+    plugins: [
+      viteStaticCopy({
+        targets: [
+          {
+            src: 'src/scripts',
+            dest: 'src'
+          },
+          {
+            src: 'node_modules/redoc/bundles/redoc.standalone.js',
+            dest: 'node_modules/redoc/bundles'
+          },
+          {
+            src: 'src/assets/api',
+            dest: 'src/assets'
+          }
+        ]
+      })
+    ]
+  }
 });
 
 export default config;
