@@ -20,9 +20,25 @@ The File Processors are implemented as Crowdin Apps. You can create your own Fil
 
 To manage File Processors, go to the **File Processors** section of your project settings.
 
-### Configuring the processing order
+### Configuring the Processing Order
 
-You can configure the order of the File Processors. The files will be processed according to the order you set.
+The processing order of File Processors determines how modules of the same type are executed in your project. The order value sets the priority, starting with 0 (highest priority) and increasing incrementally. The sequence you set can significantly impact the outcome.
+
+For example, if you are translating a CSV file and have installed two apps with `file-post-export` modules:
+
+- The first module escapes HTML tags in strings, transforming `</h1>` into `\<\/h1\>`.
+- The second module checks if all closing tags are present and adds them if they are missing.
+
+The processing order of these modules will lead to different results:
+
+<Steps>
+  1. If the HTML tag escaping module runs first, followed by the tag verification module, the output might be:
+     - `<h1>Hello World!` => `\<h1\>Hello World!` => `\<h1\>Hello World!</h1>`
+  2. If the order is reversed, with the tag verification module running first, the output will be:
+     - `<h1>Hello World!` => `<h1>Hello World!</h1>` => `\<h1\>Hello World!\<\/h1\>`
+</Steps>
+
+When multiple file-processing modules of the same type (e.g., `file-post-export`) share the default order value of 0, unexpected behavior may occur. In such cases, the system might randomly select which module to execute first, potentially disrupting the intended processing sequence. So, it is recommended to adjust the default order (0) to ensure the files are processed in the desired sequence.
 
 ### Editing File Processor settings
 
