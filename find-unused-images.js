@@ -33,13 +33,19 @@ function getAllFiles(dir, fileList = []) {
   return fileList;
 }
 
+console.log(`Scanning src/assets/screenshots for images...`);
+
 // Get all PNG and GIF files in screenshots directory
 const screenshotFiles = getAllFiles(screenshotsDir)
   .filter(file => file.endsWith('.png') || file.endsWith('.gif'))
   .map(file => path.relative(screenshotsDir, file));
 
+console.log(`Found ${screenshotFiles.length} images.`);
+
 const mdxFiles = getAllFiles(docsDir).filter(file => file.endsWith('.mdx'));
 let usedImages = [];
+
+console.log(`Checking ${mdxFiles.length} MDX files for image references...`);
 
 mdxFiles.forEach(file => {
   const content = fs.readFileSync(file, 'utf-8');
@@ -53,6 +59,8 @@ mdxFiles.forEach(file => {
 });
 
 usedImages = new Set(usedImages); // Remove duplicates
+
+console.log(`Found ${usedImages.size} images used in MDX files.`);
 
 // Find unused images
 const unusedImages = screenshotFiles.filter(image => !usedImages.has(image));
