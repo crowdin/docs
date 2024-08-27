@@ -167,47 +167,76 @@ To set up Crowdin Enterprise SAML SSO in your Microsoft Azure, follow the steps 
 
 <Steps>
   1. Open the [Azure portal](https://portal.azure.com/) using an administrator account.
-  2. On the left navigation panel, select the *Azure Active Directory* service.
-  3. Navigate to *Enterprise applications* and select *All applications*.
+  2. On the left navigation panel, select the *Microsoft Entra ID* service.
+  3. Click on the *Manage* section and select *Enterprise applications* from the list. You'll be redirected to *Enterprise applications > All applications*.
   4. To add a new application, click <Icon name="mdi:plus" class="inline-icon" /> New application.
-  5. In the *Add from the gallery* section, type **Confluence SAML SSO by Microsoft** in the search box.
-  6. Select **Confluence SAML SSO by Microsoft** from the results panel and then click **Add**. Wait a few seconds while the app is being added.
+  5. In the *Search application* field, type **Confluence SAML SSO by Microsoft**.
+  6. Select **Confluence SAML SSO by Microsoft** from the results panel and then click **Create**. Wait a few seconds while the app is being added.
 </Steps>
 
-#### Configure Azure AD SSO
+#### Configure Microsoft Entra ID SSO
 
-Follow these steps to enable Azure AD SSO in the Azure portal.
+##### Configurations on the Azure Portal
+
+Follow these steps to set up Microsoft Entra ID SSO in the Azure portal:
 
 <Steps>
-1. As soon as the application is added, you’ll be redirected to its *Overview* page. On the **Confluence SAML SSO by Microsoft** application *Overview* page, find the *Manage* section and select *Single sign-on*.
-2. On the *Select a single sign-on method* page, select **SAML**.
-3. On the *Set up single sign-on with SAML* page, copy the *Login URL*, *Azure AD Identifier* from the *Set up Confluence SAML SSO by Microsoft* section, and download the *Certificate (Base64)* from the *SAML Signing Certificate* section.
-4. In a separate browser tab or window, log in to your Crowdin Enterprise Organization, open the  *Organization Settings* > *Authentication* page, and click on SAML at the bottom of the *Authentication methods* list.
-5. Enter the information you copied in Step 3 (paste the *Login URL* in the *SAML SSO Endpoint* field, *Azure AD Identifier* in the *Identity Provider Issuer* field, and drag and drop your certificate file to the *Public Certificate* field), click **Save**.
-6. You'll be redirected back to the *Organization Settings* > *Authentication* page. Select the checkbox next to the SAML in the bottom of the *Authentication methods* list and then click on SAML.
-7. On the *SAML Single Sign-On* page, copy the *Service Provider Issuer*, *SAML SSO Endpoint*, and *Start URL* from the *Credentials* section.
-8. Switch back to the *Set up Single Sign-On with SAML* page on your Azure portal and click <Icon name="mdi:pencil" class="inline-icon" /> on the *Basic SAML Configuration* section.
-9. Enter the information you copied in Step 7 (paste the *Service Provider Issuer* in the *Identifier (Entity ID)* field, *SAML SSO Endpoint* in the *Reply URL (Assertion Consumer Service URL)* field, and *Start URL* in the *Sign on URL* field), click **Save**.
-10. Click <Icon name="mdi:pencil" class="inline-icon" /> on the *User Attributes & Claims* section.
-11. Click on the claim in the *Required Claim* section.
-12. On the *Manage claim* page, select **Persistent** for the name identifier format and select **user.mail** for the *Source attribute* field, click **Save**.
-13. Go back to the *Set up Single Sign-On with SAML* page and click <Icon name="mdi:pencil" class="inline-icon" /> on the *SAML Signing Certificate* section.
-14. Select **Sign SAML response and assertion** for the *Signing Option*, click **Save**.
+  1. As soon as the application is added, you'll be redirected to its *Overview* page. On the **Confluence SAML SSO by Microsoft** application *Overview* page, find the *Manage* section and select *Single sign-on*.
+  2. On the *Select a single sign-on method* page, select **SAML**.
+  3. You are now on the *Set up single sign-on with SAML* page. The following configurations will be happening in the different sections of this page.
 </Steps>
 
-#### Authentication Method Settings
+###### Basic SAML Configuration
+
+<Steps>
+  1. Click <Icon name="mdi:pencil" class="inline-icon" /> on the *Basic SAML Configuration* section.
+  2. Enter your Crowdin Enterprise service provider details here and click **Save**.
+      - *Identifier (Entity ID)*: `https://accounts.crowdin.com/saml2/{your-organization-name}/metadata`<br/>
+      - *Reply URL (Assertion Consumer Service URL)*: `https://accounts.crowdin.com/saml2/{your-organization-name}/acs`<br/>
+      - *Sign on URL*: `https://accounts.crowdin.com/saml2/{your-organization-name}/login`
+      <Aside>Make sure to replace `{your-organization-name}` with your real Crowdin Enterprise organization name.</Aside>  
+</Steps>
+
+###### Attributes & Claims
+
+<Steps>
+  1. Click <Icon name="mdi:pencil" class="inline-icon" /> on the *Attributes & Claims* section.
+  2. Click on the claim in the *Required claim* section.
+  3. On the *Manage claim* page, select **Persistent** for the *Name identifier format* and select **user.mail** for the *Source attribute*, click **Save**.
+</Steps>
+
+###### SAML Certificates
+
+<Steps>
+  1. Click <Icon name="mdi:pencil" class="inline-icon" /> on the *SAML Certificates* section.
+  2. Select **Sign SAML response and assertion** for the *Signing Option* and click **Save**.
+  3. Click **Download** toward the *Certificate (Base64)* from the *SAML Certificates* section.
+</Steps>
+
+###### Set up Confluence SAML SSO by Microsoft
+
+<Steps>
+  1. Go to the *Set up Confluence SAML SSO by Microsoft* section.
+  2. Copy the *Login URL*, *Microsoft Entra Identifier*, *Logout URL*.
+</Steps>
+
+##### Configurations in Crowdin Enterprise
+
+<Steps>
+  1. In a separate browser tab or window, log in to your Crowdin Enterprise Organization, open the *Organization Settings* > *Authentication* page, and click on SAML at the bottom of the *Authentication methods* list.
+  2. Enter the information you copied in the Azure portal and click **Save**.
+      * Paste the *Login URL* in the *SAML SSO Endpoint* field.
+      * Paste *Microsoft Entra Identifier* in the *Identity Provider Issuer* field.
+      * Paste *Logout URL* in the *SAML SLO Endpoint* field.
+      * Drag and drop your certificate file to the *Public Certificate* field.
+  3. You'll be redirected back to the *Organization Settings* > *Authentication* page. Select the checkbox next to the SAML in the bottom of the *Authentication methods* list so that your users could use it as the desired authentication method to log in to your Crowdin Enterprise organization from the login page.
+</Steps>
+
+##### Authentication Method Settings
 
 Depending on the authentication method you use in the Azure portal, in some cases, it might be necessary to change the default value for the `AuthnContextClassRef` parameter on the *SAML Single Sign-On* page in Crowdin Enterprise.
 
-Select the appropriate value from the table below.
-
-| Authentication Method                                | Authentication context class URI (AuthnContextClassRef)             |
-|------------------------------------------------------|---------------------------------------------------------------------|
-| Password protected transport (username and password) | `urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport` |
-| Transport Layer Security (TLS) client                | `urn:oasis:names:tc:SAML:2.0:ac:classes:TLSClient`                  |
-| X.509 certificate                                    | `urn:oasis:names:tc:SAML:2.0:ac:classes:X509`                       |
-| Integrated Windows authentication                    | `urn:federation:authentication:windows`                             |
-| Kerberos                                             | `urn:oasis:names:tc:SAML:2.0:ac:classes:Kerberos`                   |
+To allow all possible authentication methods, change `AuthnContextClassRef` parameter to the `unspecified` value.
 
 #### Assign Users {#assign-users-azure}
 
@@ -217,8 +246,8 @@ In this section, you'll enable users to use Azure single sign-on by granting acc
   1. In the Azure portal, select Enterprise Applications, and then select All applications.
   2. In the applications list, select **Confluence SAML SSO by Microsoft**.
   3. In the app's overview page, find the *Manage* section, and select *Users and groups*.
-  4. Click **Add user**, then select *Users and groups* in the *Add Assignment* dialog.
-  5. In the *Users and groups* dialog, select your own account from the *Users* list to be able to test the SAML SSO, then click the **Select** button at the bottom of the screen. The same way you'll be able to assign more users anytime.
+  4. Click **Add user/group**, then on the *Add Assignment* pane, click *None Selected* under *Users and groups*.
+  5. In the *Users and groups* dialog, select your own account from the *Users* list to be able to test the SAML SSO, then click the **Select** button at the bottom of the screen, then click **Assign**. In the same way, you'll be able to assign more users anytime.
 </Steps>
 
 #### Test SSO {#test-sso-azure}
