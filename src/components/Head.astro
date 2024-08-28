@@ -1,4 +1,12 @@
 ---
+/**
+  Override the default Head component to:
+    - Add custom styles for the Nav buttons in the header (https://github.com/lorenzolewis/starlight-utils/issues/43)
+    - Add the `og:image` and `twitter:image` meta tags containing the URL of the generated image for all documentation pages.
+    - Add some custom styles (these styles will be applied before the default styles)
+*/
+
+import type { Props } from '@astrojs/starlight/props';
 import Default from '@astrojs/starlight/components/Head.astro';
 
 const currentProduct = Astro.props.entry.slug.split('/')[0];
@@ -8,11 +16,16 @@ const isEnterprise = currentProduct === 'enterprise';
 const isDeveloper = currentProduct === 'developer';
 const isCrowdin = currentProduct && !isEnterprise && !isDeveloper;
 
-// Override the default Head component to add custom styles for the Nav buttons in the header.
-// https://github.com/lorenzolewis/starlight-utils/issues/43
+const ogImageUrl = new URL(
+    `/og/${Astro.props.id.replace(/\.\w+$/, '.png')}`,
+    Astro.site,
+)
 ---
 
-<Default {...Astro.props as any}><slot /></Default>
+<Default {...Astro.props}><slot /></Default>
+
+<meta property="og:image" content={ogImageUrl} />
+<meta name="twitter:image" content={ogImageUrl} />
 
 <style>
   :root {
