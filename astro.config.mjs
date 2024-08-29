@@ -15,12 +15,15 @@ import crowdinSidebar from './src/content/sidebars/crowdin.ts';
 import enterpriseSidebar from './src/content/sidebars/enterprise.ts';
 import developerSidebar from './src/content/sidebars/developer.ts';
 
-const VERCEL_PREVIEW_SITE =
-  process.env.VERCEL_ENV !== 'production' &&
-  process.env.VERCEL_URL &&
-  `https://${process.env.VERCEL_URL}`;
+let site;
 
-const site = VERCEL_PREVIEW_SITE || 'https://support.crowdin.com/';
+if (process.env.VERCEL_ENV === 'production' && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+  site = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+} else if (process.env.VERCEL_URL) {
+  site = `https://${process.env.VERCEL_URL}`;
+} else {
+  site = 'https://support.crowdin.com/';
+}
 
 // https://astro.build/config
 const config = defineConfig({
