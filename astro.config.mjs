@@ -15,9 +15,16 @@ import crowdinSidebar from './src/content/sidebars/crowdin.ts';
 import enterpriseSidebar from './src/content/sidebars/enterprise.ts';
 import developerSidebar from './src/content/sidebars/developer.ts';
 
+const VERCEL_PREVIEW_SITE =
+  process.env.VERCEL_ENV !== 'production' &&
+  process.env.VERCEL_URL &&
+  `https://${process.env.VERCEL_URL}`;
+
+const site = VERCEL_PREVIEW_SITE || 'https://support.crowdin.com/';
+
 // https://astro.build/config
 const config = defineConfig({
-  site: 'https://support.crowdin.com',
+  site: site,
   integrations: [
     starlight({
       title: 'Crowdin Docs',
