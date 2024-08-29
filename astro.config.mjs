@@ -39,11 +39,11 @@ const config = defineConfig({
       },
       sidebar: [
         {
-          label: 'Crowdin KB',
+          label: 'Crowdin Help',
           items: [...crowdinSidebar],
         },
         {
-          label: 'Enterprise KB',
+          label: 'Enterprise Help',
           items: [...enterpriseSidebar],
         },
         {
@@ -54,8 +54,8 @@ const config = defineConfig({
         {
           label: "leading",
           items: [
-            { label: "Crowdin KB", link: "/introduction", attrs: { id: "crowdin-nav-button", class: "nav-link" } },
-            { label: "Enterprise KB", link: "/enterprise/introduction", attrs: { id: "enterprise-nav-button", class: "nav-link" } },
+            { label: "Crowdin Help", link: "/introduction", attrs: { id: "crowdin-nav-button", class: "nav-link" } },
+            { label: "Enterprise Help", link: "/enterprise/introduction", attrs: { id: "enterprise-nav-button", class: "nav-link" } },
             { label: "Developer Portal", link: "/developer/crowdin-apps-about", attrs: { id: "developer-nav-button", class: "nav-link" } },
             { label: "Store", link: "https://store.crowdin.com", attrs: { target: "_blank", class: "nav-link" } },
             { label: "Community", link: "https://community.crowdin.com/", attrs: { target: "_blank", class: "nav-link" } },
