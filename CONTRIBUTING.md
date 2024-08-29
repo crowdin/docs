@@ -16,22 +16,6 @@ There are a couple of custom components in this project that you can use:
   </ReadMore>
   ```
 
-- `FormatsBanner` - A component that displays a banner with a number of formats supported by Crowdin and a link to the store. It's used to highlight the supported formats in the documentation.
-
-  ```mdx
-  import FormatsBanner from '~/components/FormatsBanner.astro';
-
-  <FormatsBanner />
-  ```
-
-- `Include` - A component that allows you to include content from another file. It's useful when you want to reuse content across multiple pages.
-
-  ```mdx
-  import Include from '~/components/Include.astro';
-
-  <Include file="file.mdx" />
-  ```
-
 - `QuestionAnswer` - A component that displays a question and answer pair. It's useful when you want to provide a question and answer in a single block. It's a wrapper around the `details` and `summary` HTML elements.
 
   ```mdx
@@ -43,6 +27,22 @@ There are a couple of custom components in this project that you can use:
   ```
 
   It is closed by default, but you can open it by passing the `open` prop.
+
+- `Include` - A component that allows you to include content from another file. It's useful when you want to reuse content across multiple pages.
+
+  ```mdx
+  import Include from '~/components/Include.astro';
+
+  <Include file="file.mdx" />
+  ```
+
+- `HelpBanner` - A component that displays a banner with a title, description, and a button. The button text and link are customizable as well as the title and description.
+
+- `Modal` - A simple modal component.
+
+- `FormatsBanner` - A component that displays a banner with a number of formats supported by Crowdin and a link to the store. It's used to highlight the supported formats in the documentation.
+
+- `RepoCard` - A component that displays a card with a repository details like stars and forks count.
 
 ## Icons
 
