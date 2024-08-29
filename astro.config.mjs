@@ -4,6 +4,7 @@ import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 import starlightUtils from '@lorenzo_lewis/starlight-utils';
 import starlightLinksValidator from 'starlight-links-validator';
+import starlightHeadingBadges from 'starlight-heading-badges';
 import { rehypeHeadingIds } from '@astrojs/markdown-remark';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeExternalLinks from 'rehype-external-links';
@@ -107,6 +108,7 @@ const config = defineConfig({
             '/developer/enterprise/api/v2/string-based/**',
           ],
         }),
+        starlightHeadingBadges(),
       ],
       social: {
         'x.com': 'https://x.com/crowdin',
