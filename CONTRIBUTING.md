@@ -134,6 +134,14 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 Common content
 ```
 
+## Badges
+
+You can use badges in the documentation in a several ways:
+
+- [`Badge`](https://starlight.astro.build/guides/components/) component from Starlight to use in the markdown files.
+- Sidebar item by specifying the `sidebar.badge` in the [document frontmatter](https://starlight.astro.build/reference/frontmatter/#sidebar).
+- Add a badge to the heading in the markdown file: `### Example :badge[New]`. [More examples](https://starlight-heading-badges.vercel.app/usage/).
+
 ## API Documentation
 
 The yml specification for the API documentation is located in the `src/assets/api` directory.
