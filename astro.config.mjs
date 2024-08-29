@@ -20,7 +20,7 @@ const config = defineConfig({
   site: 'https://support.crowdin.com',
   integrations: [
     starlight({
-      title: 'Crowdin',
+      title: 'Crowdin Docs',
       logo: {
         replacesTitle: true,
         light: './src/assets/logo/dark.svg',
