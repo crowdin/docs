@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
+import sitemap from '@astrojs/sitemap';
 import starlightUtils from '@lorenzo_lewis/starlight-utils';
 import starlightLinksValidator from 'starlight-links-validator';
 import { rehypeHeadingIds } from '@astrojs/markdown-remark';
@@ -19,7 +20,7 @@ const config = defineConfig({
   site: 'https://support.crowdin.com',
   integrations: [
     starlight({
-      title: 'Crowdin',
+      title: 'Crowdin Docs',
       logo: {
         replacesTitle: true,
         light: './src/assets/logo/dark.svg',
@@ -102,6 +103,15 @@ const config = defineConfig({
         linkedin: 'https://www.linkedin.com/company/crowdin',
         youtube: 'https://youtube.com/@crowdin-localization',
         github: 'https://github.com/crowdin',
+      }
+    }),
+    // https://docs.astro.build/en/guides/integrations-guide/sitemap/#configuration
+    sitemap({
+      i18n: {
+        defaultLocale: 'en',
+        locales: {
+          en: 'en-US',
+        },
       }
     }),
     tailwind({ applyBaseStyles: false }),
