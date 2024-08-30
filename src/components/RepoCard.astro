@@ -2,15 +2,16 @@
 import { Icon } from 'astro-icon/components';
 
 export interface Props {
+    organization: string;
     slug: string;
     title: string;
-    official?: boolean;
 }
 
-const { slug, title, official = false } = Astro.props;
+const { organization, slug, title } = Astro.props;
+const official = Astro.props.organization === 'crowdin';
 ---
 
-<a href={`https://github.com/crowdin/${slug}`} target="_blank" class="no-underline">
+<a href={`https://github.com/${organization}/${slug}`} target="_blank" class="no-underline">
     <div id={slug} class="repo-card block p-4 rounded-lg duration-200 hover:-translate-y-1 hover:shadow-lg">
         {official && (
             <div class="mb-2">
@@ -22,7 +23,7 @@ const { slug, title, official = false } = Astro.props;
         )}
 
         <div class="flex items-center h-8 gap-x-2">
-            <img src={`/images/client-card/${slug}.png`} class="w-10 no-shadow" alt={title} />
+            <img src={`/images/repo-card/${slug}.png`} class="w-10 no-shadow" alt={title} />
             <h5 class="text-lg font-semibold !mt-0">{title}</h5>
         </div>
 
@@ -59,16 +60,16 @@ const { slug, title, official = false } = Astro.props;
     }
 </style>
 
-<script is:inline define:vars={{slug}}>
-    async function fetchRepoData(repoSlug) {
+<script is:inline define:vars={{organization, slug}}>
+    async function fetchRepoData(organization, repoSlug) {
         try {
             // Fetch GitHub stars data
-            const starsResponse = await fetch(`https://img.shields.io/github/stars/crowdin/${repoSlug}`);
+            const starsResponse = await fetch(`https://img.shields.io/github/stars/${organization}/${repoSlug}`);
             const starsText = await starsResponse.text();
             const starsSvg = new DOMParser().parseFromString(starsText, "image/svg+xml");
 
             // Fetch GitHub forks data
-            const forksResponse = await fetch(`https://img.shields.io/github/forks/crowdin/${repoSlug}`);
+            const forksResponse = await fetch(`https://img.shields.io/github/forks/${organization}/${repoSlug}`);
             const forksText = await forksResponse.text();
             const forksSvg = new DOMParser().parseFromString(forksText, "image/svg+xml");
 
@@ -83,7 +84,7 @@ const { slug, title, official = false } = Astro.props;
 
     const repoElement = document.getElementById(slug);
 
-    fetchRepoData(slug).then(response => {
+    fetchRepoData(organization, slug).then(response => {
         repoElement.querySelector('.stars').innerHTML = `<span>${response.stars}</span>`;
         repoElement.querySelector('.forks').innerHTML = `<span>${response.forks}</span>`;
     })

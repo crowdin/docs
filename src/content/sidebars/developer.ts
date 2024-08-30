@@ -78,6 +78,10 @@ export default [
     label: 'Dev Tools',
     items: [
       {
+        slug: path('dev-tools'),
+        label: 'Overview',
+      },
+      {
         slug: path('configuration-file')
       },
       {
