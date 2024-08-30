@@ -67,7 +67,9 @@ const config = defineConfig({
           tag: 'script',
           attrs: {
             id: 'cookieyes',
-            src: 'https://cdn-cookieyes.com/client_data/2dabfbbec8b71e267115f6a5/script.js',
+            src: process.env.COOKIEYES_ID
+              ? `https://cdn-cookieyes.com/client_data/${process.env.COOKIEYES_ID}/script.js`
+              : undefined,
             defer: true,
           }
         }
