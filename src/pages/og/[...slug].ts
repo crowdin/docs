@@ -18,22 +18,22 @@ export const { getStaticPaths, GET } = OGImageRoute({
         return {
             title: page.data.title,
             description: page.data.description,
-            padding: 60,
+            padding: 55,
             logo: {
                 path: './src/assets/og/logo.png',
             },
             bgImage: {
-                path: './src/assets/og/background.png',
+                path: './src/assets/og/background.jpg',
             },
             font: {
                 title: {
                     color: [255, 255, 255],
-                    size: 75,
+                    size: 70,
                     families: ['Plus Jakarta Sans'],
                 },
                 description: {
                     color: [227, 227, 227],
-                    size: 30,
+                    size: 35,
                     families: ['Noto Sans'],
                 },
             },
