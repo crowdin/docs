@@ -18,7 +18,7 @@ export const { getStaticPaths, GET } = OGImageRoute({
         return {
             title: page.data.title,
             description: page.data.description,
-            padding: 80,
+            padding: 60,
             logo: {
                 path: './src/assets/og/logo.png',
             },
@@ -27,14 +27,20 @@ export const { getStaticPaths, GET } = OGImageRoute({
             },
             font: {
                 title: {
-                    color: [24, 24, 27],
-                    size: 40,
+                    color: [255, 255, 255],
+                    size: 75,
+                    families: ['Plus Jakarta Sans'],
                 },
                 description: {
-                    color: [67, 70, 73],
-                    size: 20,
+                    color: [227, 227, 227],
+                    size: 30,
+                    families: ['Noto Sans'],
                 },
-            }
+            },
+            fonts: [
+                './node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2',
+                './node_modules/@fontsource-variable/noto-sans/files/noto-sans-latin-standard-normal.woff2',
+            ]
         }
     },
 })
