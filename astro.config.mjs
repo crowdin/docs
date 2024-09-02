@@ -29,6 +29,7 @@ if (process.env.VERCEL_ENV === 'production' && process.env.VERCEL_PROJECT_PRODUC
 // https://astro.build/config
 const config = defineConfig({
   site: site,
+  trailingSlash: 'always',
   integrations: [
     starlight({
       title: 'Crowdin Docs',

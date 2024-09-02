@@ -6,7 +6,7 @@ export default [
     label: 'Crowdin Apps',
     items: [
       { slug: path('crowdin-apps-about') },
-      { slug: path('quick-start') },
+      { slug: path('crowdin-apps-quick-start') },
       { slug: path('crowdin-apps-app-descriptor') },
       { slug: path('crowdin-apps-js') },
       { slug: path('crowdin-apps-installation') },
