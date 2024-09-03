@@ -5,6 +5,7 @@ slug: enterprise/machine-translation
 ---
 
 import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
 import { Icon } from 'astro-icon/components';
 import { Image } from 'astro:assets';
 import machineTranslationSuggestions from '!/crowdin/localization-resources/mt_suggestions.png';
@@ -78,6 +79,48 @@ To use your [Custom Terminology](https://docs.aws.amazon.com/translate/latest/dg
   1. Specify your AWS Region (e.g., us-east-2).
   2. Select your Custom Terminology from the respective drop-down menu.
 </Steps>
+
+<QuestionAnswer title="What are the minimal scopes for an IAM user required to set up Amazon Translate to be used in Crowdin?">
+  The minimal IAM scopes required depend on whether you're using terminologies or not:
+
+  - **Without terminologies:**
+
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "translate:TranslateText",
+        "Resource": "*"
+      }
+    ]
+  }
+  ```
+
+  - **With terminologies:**
+
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "translate:TranslateText",
+          "translate:GetTerminology",
+          "translate:ListTerminologies"
+        ],
+        "Resource": "*"
+      }
+    ]
+  }
+  ```
+
+  Alternatively, you can use the [AWS managed policy: TranslateReadOnly](https://docs.aws.amazon.com/translate/latest/dg/security-iam-awsmanpol.html#security-iam-awsmanpol-TranslateReadOnly), which provides the necessary read-only access to Amazon Translate.
+
+  <Aside>The `"Resource": "*"` allows access to all resources. For stricter security, consider limiting this to specific AWS regions or resources if applicable.</Aside>
+</QuestionAnswer>
 
 ### Google Translate
 
