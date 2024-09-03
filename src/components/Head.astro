@@ -1,12 +1,12 @@
 ---
 /**
-  Override the default Head component to:
-    - Add custom styles for the Nav buttons in the header (https://github.com/lorenzolewis/starlight-utils/issues/43)
-    - Add the `og:image` and `twitter:image` meta tags containing the URL of the generated image for all documentation pages.
-    - Add some custom styles (these styles will be applied before the default styles)
-    - Set custom site title for the Enterprise and Developer portals
+    Override the default Head component to:
+        - Add custom styles for the Nav buttons in the header (https://github.com/lorenzolewis/starlight-utils/issues/43)
+        - Add the `og:image` and `twitter:image` meta tags containing the URL of the generated image for all documentation pages.
+        - Add some custom styles (these styles will be applied before the default styles)
+        - Set custom site title for the Enterprise and Developer portals
+        - Hide the header if the `hideHeader` frontmatter property is set to `true`
 */
-
 import type { Props } from '@astrojs/starlight/props';
 import Default from '@astrojs/starlight/components/Head.astro';
 
@@ -16,6 +16,7 @@ const isHomepage = Astro.props.slug === '';
 const isEnterprise = currentProduct === 'enterprise';
 const isDeveloper = currentProduct === 'developer';
 const isCrowdin = currentProduct && !isEnterprise && !isDeveloper;
+const hideHeader = Astro.props.entry?.data?.hideHeader || false;
 
 const ogImageUrl = new URL(
     `/og/${Astro.props.id.replace(/\.\w+$/, '.png')}`,
@@ -23,11 +24,11 @@ const ogImageUrl = new URL(
 );
 
 if (isEnterprise) {
-  Astro.props.siteTitle = "Enterprise Docs";
+    Astro.props.siteTitle = "Enterprise Docs";
 }
 
 if (isDeveloper) {
-  Astro.props.siteTitle = "Developer Portal";
+    Astro.props.siteTitle = "Developer Portal";
 }
 ---
 
@@ -37,66 +38,78 @@ if (isDeveloper) {
 <meta name="twitter:image" content={ogImageUrl} />
 
 <style>
-  :root {
-    .nav-link {
-      display: none;
-      padding: .25rem .75rem;
-      border-radius: .5rem;
-      white-space: nowrap;
+    :root {
+        .nav-link {
+            display: none;
+            padding: .25rem .75rem;
+            border-radius: .5rem;
+            white-space: nowrap;
 
-      &:hover {
-        background-color: rgba(var(--crowdin-cards-color), .05);
-      }
+            &:hover {
+                background-color: rgba(var(--crowdin-cards-color), .05);
+            }
 
-      @media (min-width: 640px) {
-        display: inline-block;
-      }
+            @media (min-width: 640px) {
+                display: inline-block;
+            }
+        }
+
+        .social-icons a {
+            color: var(--sl-color-gray-1);
+        }
+
+        select {
+            outline: none;
+        }
     }
-
-    .social-icons a {
-      color: var(--sl-color-gray-1);
-    }
-
-    select {
-      outline: none;
-    }
-  }
 </style>
 
 {isHomepage && (
-  <style>
-      .content-panel:first-child {
-        overflow: hidden;
-      }
-  </style>
+    <style>
+        .content-panel:first-child {
+            overflow: hidden;
+        }
+    </style>
 )}
 
 {isCrowdin && (
-  <style>
-    #crowdin-nav-button {
-      font-weight: 600;
-      color: var(--sl-color-black);
-      background-color: var(--sl-color-white);
-    }
-  </style>
+    <style>
+        #crowdin-nav-button {
+            font-weight: 600;
+            color: var(--sl-color-black);
+            background-color: var(--sl-color-white);
+        }
+    </style>
 )}
 
 {isEnterprise && (
-  <style>
-    #enterprise-nav-button {
-      font-weight: 600;
-      color: var(--sl-color-black);
-      background-color: var(--sl-color-white);
-    }
-  </style>
+    <style>
+        #enterprise-nav-button {
+            font-weight: 600;
+            color: var(--sl-color-black);
+            background-color: var(--sl-color-white);
+        }
+    </style>
 )}
 
 {isDeveloper && (
-  <style>
-    #developer-nav-button {
-      font-weight: 600;
-      color: var(--sl-color-black);
-      background-color: var(--sl-color-white);
-    }
-  </style>
+    <style>
+        #developer-nav-button {
+            font-weight: 600;
+            color: var(--sl-color-black);
+            background-color: var(--sl-color-white);
+        }
+    </style>
+)}
+
+{hideHeader && (
+    <style>
+        header {
+            display: none;
+        }
+
+        .main-frame {
+            padding-top: 0 !important;
+        }
+    </style>
 )}
