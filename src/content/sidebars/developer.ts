@@ -131,6 +131,11 @@ export default [
     label: 'Security',
     autogenerate: { directory: path('security') },
     collapsed: true,
+  },
+  {
+    label: 'Guides',
+    autogenerate: { directory: path('guides') },
+    collapsed: true,
   }
 ]
 
