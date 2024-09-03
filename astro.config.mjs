@@ -23,7 +23,7 @@ if (process.env.VERCEL_ENV === 'production' && process.env.VERCEL_PROJECT_PRODUC
 } else if (process.env.VERCEL_URL) {
   site = `https://${process.env.VERCEL_URL}`;
 } else {
-  site = 'https://support.crowdin.com/';
+  site = 'https://support.crowdin.com';
 }
 
 // https://astro.build/config
@@ -127,7 +127,10 @@ const config = defineConfig({
         locales: {
           en: 'en-US',
         },
-      }
+      },
+      filter: (page) =>
+        page !== `${site}/iframe/privacy-policy/` &&
+        page !== `${site}/iframe/terms/`,
     }),
     tailwind({ applyBaseStyles: false }),
     icon({
