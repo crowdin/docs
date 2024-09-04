@@ -1,0 +1,127 @@
+---
+import { Icon } from 'astro-icon/components';
+---
+
+<div class="flex flex-col border p-3 rounded-lg w-72">
+    <div id="vote-buttons" class="flex gap-4">
+        <span>Was this page helpful?</span>
+        <div class="flex gap-3">
+            <Icon id="like" name="mdi:thumb-up" size="20" class="!mt-1 cursor-pointer hover:text-accent-700" />
+            <Icon id="dislike" name="mdi:thumb-down" size="20" class="!mt-1 cursor-pointer hover:text-accent-700" />
+        </div>
+    </div>
+
+    <div id="feedback-form" class="mt-2 hidden">
+        <div>
+            <textarea
+                id="feedback-comment"
+                class="w-full p-2 border border-gray-300 rounded-md resize-none text-base"
+                rows="3"
+                maxlength="250"
+                placeholder="Tell us more..."></textarea>
+        </div>
+        <button
+            id="submit-button"
+            class="bg-accent-600 hover:bg-accent-700 text-white py-1 px-4 !mt-1 rounded-md cursor-pointer transition">
+            Submit
+        </button>
+    </div>
+    <span id="feedback-success" class="hidden text-accent-800 mx-auto">Thank you for your feedback!</span>
+</div>
+
+<script>
+    type FeedbackType = 'like' | 'dislike';
+    import { createDirectus, rest, createItem } from '@directus/sdk';
+
+    function getFeedbackForm(): HTMLElement {
+        return document.getElementById('feedback-form') as HTMLElement;
+    }
+
+    function getLikeButton(): HTMLElement {
+        return document.getElementById('like') as HTMLElement;
+    }
+
+    function getDislikeButton(): HTMLElement {
+        return document.getElementById('dislike') as HTMLElement;
+    }
+
+    function getCommentTextarea() {
+        return document.getElementById('feedback-comment') as HTMLTextAreaElement;
+    }
+
+    getLikeButton().addEventListener('click', function() {
+        toggleForm('like');
+    });
+
+    getDislikeButton().addEventListener('click', function() {
+        toggleForm('dislike');
+    });
+
+    document.getElementById('submit-button')?.addEventListener('click', async function() {
+        await submitFeedback();
+    });
+
+    getCommentTextarea().addEventListener('keydown', function(event) {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+            event.preventDefault();
+            submitFeedback();
+        }
+    });
+
+    function toggleForm(type: FeedbackType): void {
+        const feedbackForm = getFeedbackForm();
+        const activeClass = 'text-accent-700';
+        const isSameType = type === feedbackForm.dataset.feedbackType;
+
+        getLikeButton().classList.toggle(activeClass, type === 'like' && !isSameType);
+        getDislikeButton().classList.toggle(activeClass, type === 'dislike' && !isSameType);
+
+        if (isSameType) {
+            feedbackForm.classList.add('hidden');
+            feedbackForm.dataset.feedbackType = '';
+
+            getLikeButton().classList.remove(activeClass);
+            getDislikeButton().classList.remove(activeClass);
+            getCommentTextarea().value = '';
+            return;
+        }
+
+        feedbackForm.classList.remove('hidden');
+        feedbackForm.dataset.feedbackType = type;
+        getCommentTextarea().focus();
+        document.getElementById('submit-button')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeForm(feedbackType: FeedbackType): void {
+        toggleForm(feedbackType);
+        document.getElementById('feedback-success')?.classList.remove('hidden');
+        document.getElementById('vote-buttons')?.classList.add('hidden');
+    }
+
+    async function submitFeedback() {
+        const host = import.meta.env.PUBLIC_DIRECTUS_HOST;
+        const feedbackType = getFeedbackForm().dataset.feedbackType as FeedbackType;
+
+        if (!host) {
+            console.error('Directus host is not set');
+            closeForm(feedbackType);
+            return;
+        }
+
+        const client = createDirectus(host).with(rest());
+
+        try {
+            await client.request(
+                createItem('feedback' as never, {
+                    type: feedbackType,
+                    page: window.location.pathname,
+                    comment: getCommentTextarea().value,
+                })
+            );
+        } catch (error) {
+            console.log(error);
+        }
+
+        closeForm(feedbackType);
+    }
+</script>
