@@ -62,13 +62,13 @@ import { Icon } from '@astrojs/starlight/components';
 <Icon name="approve-check" />
 ```
 
-Also, you can use [Astro Icon](https://www.astroicon.dev/guides/components/) component. It supports Local Icons and various Icon Packs.
+Also, you can use [Astro Icon](https://www.astroicon.dev/guides/components/) component. It supports Local Icons (`/src/icons/*.svg`) and various Icon Packs.
 
 Installed Icon packs:
 
 - `mdi` - [Material Design Icons](https://icones.js.org/collection/mdi)
-- `material-symbols` - [Material Symbols](https://icones.js.org/collection/material-symbols)
-- `heroicons` - [Heroicons](https://icones.js.org/collection/heroicons)
+- `material-symbols` - [Material Symbols](https://icones.js.org/collection/material-symbols) (available icons are explicitly configured in `astro.config.mjs`)
+- `heroicons` - [Heroicons](https://icones.js.org/collection/heroicons) (available icons are explicitly configured in `astro.config.mjs`)
 
 For example:
 
@@ -84,7 +84,7 @@ Use the `inline-icon` class to display icons inline with text:
 <Icon name="mdi:cloud-download" class="inline-icon" />
 ```
 
-It's always better to use these icons instead of local, as they are already support for dark mode and are accessible.
+It's always better to use these icons instead of local ones, as they already support dark mode and are accessible.
 
 ## Screenshots
 

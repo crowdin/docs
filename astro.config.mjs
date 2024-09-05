@@ -73,7 +73,16 @@ const config = defineConfig({
               : undefined,
             defer: true,
           }
-        }
+        },
+        // Add ICO favicon fallback for Safari.
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'icon',
+            href: '/favicon.ico',
+            sizes: '32x32',
+          },
+        },
       ],
       tableOfContents: {
         minHeadingLevel: 2,
@@ -135,10 +144,18 @@ const config = defineConfig({
     tailwind({ applyBaseStyles: false }),
     icon({
       include: {
-        // Include only specific icons in the bundle (https://www.astroicon.dev/reference/configuration#include)
         mdi: ['*'],
-        heroicons: ['*'],
-        'material-symbols': ['*'],
+        heroicons: ['arrows-up-down-solid'],
+        'material-symbols': [
+          'open-in-new',
+          'table-chart',
+          'terminal',
+          'format-ink-highlighter',
+          'file-copy',
+          'cleaning-services',
+          'create-new-folder-sharp',
+          'folder-data-sharp'
+        ],
       }
     })
   ],
