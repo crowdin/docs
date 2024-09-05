@@ -36,6 +36,14 @@ There are a couple of custom components in this project that you can use:
   <Include file="file.mdx" />
   ```
 
+- `KBD` - A component that displays a keyboard key. It's useful when you want to highlight a key that the user should press.
+
+  ```mdx
+  import KBD from '~/components/KBD.astro';
+
+  Press <KBD>Ctrl</KBD> + <KBD>C</KBD> to copy the text.
+  ```
+
 - `HelpBanner` - A component that displays a banner with a title, description, and a button. The button text and link are customizable as well as the title and description.
 
 - `Modal` - A simple modal component.
