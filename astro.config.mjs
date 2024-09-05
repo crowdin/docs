@@ -73,7 +73,16 @@ const config = defineConfig({
               : undefined,
             defer: true,
           }
-        }
+        },
+        // Add ICO favicon fallback for Safari.
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'icon',
+            href: '/favicon.ico',
+            sizes: '32x32',
+          },
+        },
       ],
       tableOfContents: {
         minHeadingLevel: 2,
