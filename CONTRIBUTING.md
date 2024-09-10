@@ -121,6 +121,10 @@ Custom classes available:
 
 By default, images take up the entire width of the content container. To make the image smaller, use the appropriate classes. Don't use the `width` attribute to resize images, as this will degrade quality. Instead, use the `width-*` classes.
 
+### Criteria for including a screenshot
+
+See the GitHub's [Creating screenshots](https://docs.github.com/en/contributing/writing-for-github-docs/creating-screenshots) guide.
+
 ## File-based/String-based content differentiation
 
 To differentiate between file-based and string-based content, you can use the `Tabs` component with the `syncKey` prop. This prop allows you to switch between tabs and keep the selected tab in sync across multiple components.
@@ -141,6 +145,9 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 Common content
 ```
+
+> **Note!**
+> Make sure to consistently use the same `syncKey` value across all `Tabs` components that you want to keep in sync.
 
 ## Badges
 
