@@ -79,7 +79,7 @@ const config = defineConfig({
           tag: 'script',
           attrs: {
             src: process.env.GA_ID
-              ? `https://www.googletagmanager.com/gtag/js?id=${process.env.GA_ID}`
+              ? `https://gtm-sst.crowdin.com/gtm.js?id=${process.env.GA_ID}`
               : undefined,
             defer: true,
           },
