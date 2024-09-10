@@ -16,6 +16,8 @@ import crowdinSidebar from './src/content/sidebars/crowdin.ts';
 import enterpriseSidebar from './src/content/sidebars/enterprise.ts';
 import developerSidebar from './src/content/sidebars/developer.ts';
 
+import customConsentScript from './src/scripts/custom-consent-mode.js?raw';
+
 let site;
 
 if (process.env.VERCEL_ENV === 'production' && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
@@ -65,6 +67,22 @@ const config = defineConfig({
         }
       ],
       head: [
+        // Custom consent mode https://www.cookieyes.com/documentation/implementing-google-consent-mode-using-cookieyes/
+        {
+          tag: 'script',
+          content: customConsentScript,
+        },
+        // Google Tag Manager
+        {
+          tag: 'script',
+          attrs: {
+            src: process.env.GA_ID
+              ? `https://gtm-sst.crowdin.com/gtm.js?id=${process.env.GA_ID}`
+              : undefined,
+            defer: true,
+          },
+        },
+        // CookieYes
         {
           tag: 'script',
           attrs: {
@@ -74,15 +92,6 @@ const config = defineConfig({
               : undefined,
             defer: true,
           }
-        },
-        {
-          tag: 'script',
-          attrs: {
-            src: process.env.GA_ID
-              ? `https://gtm-sst.crowdin.com/gtm.js?id=${process.env.GA_ID}`
-              : undefined,
-            defer: true,
-          },
         },
         // Add ICO favicon fallback for Safari.
         {
