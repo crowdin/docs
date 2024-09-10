@@ -59,6 +59,7 @@ const config = defineConfig({
             { label: "Enterprise Help", link: "/enterprise/introduction", attrs: { id: "enterprise-nav-button", class: "nav-link" } },
             { label: "Developer Portal", link: "/developer/crowdin-apps-about", attrs: { id: "developer-nav-button", class: "nav-link" } },
             { label: "Store", link: "https://store.crowdin.com", attrs: { target: "_blank", class: "nav-link" } },
+            { label: "Blog", link: "https://crowdin.com/blog", attrs: { target: "_blank", class: "nav-link" } },
             { label: "Community", link: "https://community.crowdin.com/", attrs: { target: "_blank", class: "nav-link" } },
           ],
         }
@@ -73,6 +74,15 @@ const config = defineConfig({
               : undefined,
             defer: true,
           }
+        },
+        {
+          tag: 'script',
+          attrs: {
+            src: process.env.GA_ID
+              ? `https://www.googletagmanager.com/gtag/js?id=${process.env.GA_ID}`
+              : undefined,
+            defer: true,
+          },
         },
         // Add ICO favicon fallback for Safari.
         {
