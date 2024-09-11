@@ -8,25 +8,21 @@ sidebar:
 
 import { Icon } from 'astro-icon/components';
 import { Image } from 'astro:assets';
-import { Steps, Aside } from '@astrojs/starlight/components';
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
 import ReadMore from '~/components/ReadMore.astro';
 import KBD from '~/components/KBD.astro';
-import sections from '!/crowdin/online-editor/sections.png';
 import htmlPreview from '!/crowdin/online-editor/html_preview.png';
 import stringSearch from '!/crowdin/online-editor/string_search.png';
 import stringsFilter from '!/crowdin/online-editor/strings_filter.png';
 import taskMenu from '!/crowdin/online-editor/task_menu.png';
 import taskName from '!/crowdin/online-editor/task_name.png';
-import terminology from '!/crowdin/online-editor/terminology.png';
 import terms from '!/crowdin/online-editor/terms.png';
-import textForTranslation from '!/crowdin/online-editor/text_for_translation.png';
 import requestContext from '!/crowdin/online-editor/request_context.png';
 import saveTranslation from '!/crowdin/online-editor/save_translation.png';
 import qaPopUp from '!/crowdin/online-editor/qa_pop-up.png';
 import pluralTabs from '!/crowdin/online-editor/plural_tabs.png';
 import section2 from '!/crowdin/online-editor/section_2.png';
 import otherLanguagesTab from '!/crowdin/online-editor/other_languages_tabs.png';
-import validators from '!/crowdin/online-editor/validators.png';
 import vote from '!/crowdin/online-editor/vote.png';
 import commentNew from '!/crowdin/online-editor/comment_new.png';
 import commentWithIssue from '!/crowdin/online-editor/comment_with_issue.png';
@@ -38,36 +34,33 @@ import votingView from '!/crowdin/online-editor/voting_view.png';
 import multiApprove from '!/crowdin/online-editor/multi_approve.png';
 import qaChecksOn from '!/crowdin/online-editor/qa_checks_on.png';
 import save from '!/crowdin/online-editor/save.png';
+import sections from '!/crowdin/online-editor/comfortable.png';
 import multilingualMode from '!/crowdin/online-editor/multilingual_mode.png';
 import multilingualModeGrid from '!/crowdin/online-editor/multilingual_mode_grid.png';
 import rtlLanguages from '!/crowdin/online-editor/rtl.png';
 import commandPalette from '!/crowdin/online-editor/command_palette.png';
 import quickAccessToMenuTabs from '!/crowdin/online-editor/quick_access.png';
 import searchTmTab from '!/crowdin/online-editor/search_tm_tab.png';
-import replaceInSuggestionsMenu from '!/crowdin/online-editor/replace_in_suggestions_menu.png';
-import replaceInSuggestions from '!/crowdin/online-editor/replace_in_suggestions.png';
 import replaceInSuggestionsResults from '!/crowdin/online-editor/replace_in_suggestions_results.png';
-import replaceInSourcesMenu from '!/crowdin/online-editor/replace_in_sources_menu.png';
-import replaceInSources from '!/crowdin/online-editor/replace_in_sources.png';
 import replaceInSourcesResults from '!/crowdin/online-editor/replace_in_sources_results.png';
 import advancedFilter from '!/crowdin/online-editor/advanced_filter.png';
 
-The Editor is the main place in Crowdin where project members can suggest, vote, and approve translations online. It can be viewed in **Comfortable**, **Side-by-Side**, or **Multilingual** mode. The **Comfortable** mode is enabled by default.
+The Editor is the main place in Crowdin where project members can work on translations. It allows users to suggest, vote on, review, and approve translations online.
+
+The Editor provides all the necessary tools for translators and proofreaders, including:
+
+* List of strings available for translation, which may vary in different [Editor modes](#editor-modes).
+* Context, labels, and additional information to guide the work.
+* String search and filtering options for efficient translation management.
+* [AI Assistant](/crowdin-ai/#using-ai-in-the-editor), [Translation Memory (TM)](/translation-memory/) suggestions, and [Machine Translation (MT)](/machine-translation/) suggestions.
+* [Glossary](/glossary/) terms to ensure consistency.
+* Comments section for collaboration and reporting issues.
 
 Using the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, you can switch between files for translation, change translation languages, contact a manager, change the view, and access help materials.
 
-## Comfortable Mode
+## Core Features
 
-Comfortable mode is primarily used for translation and consists of four main sections:
-
-- [Section 1 - Left sidebar](#left-sidebar)
-- [Section 2 - Middle-top area](#middle-top-area)
-- [Section 3 - Middle-bottom area](#middle-bottom-area)
-- [Section 4 - Right sidebar](#right-sidebar)
-
-<Image src={sections} alt="Editor Sections" />
-
-### Left Sidebar
+### String List
 
 This section displays the list of strings, with the active one highlighted. Strings are text elements that are either individual words, phrases, or sentences. Some strings might have replacement tokens (e.g., {0}, {1}, %1, etc.) or elements of the [ICU message syntax](/icu-message-syntax/). Such items themselves should not be translated but are used by the website code to dynamically insert some information into strings. To work with such strings, you should copy the source string and translate only the real words.
 
@@ -84,8 +77,17 @@ There also might be the following icons besides strings:
 
 - <Icon name="mdi:comment-outline" class="inline-icon" /> - the string has comments from contributors
 - <Icon name="mdi:comment-alert-outline" class="inline-icon" /> - the string has an unresolved issue
+- <Icon name="mdi:tag-outline" class="inline-icon" /> - the string has labels
 
-When translating the content of an HTML, XML, TXT, DOCX, XLSX, HAML, Web XML, Markdown, MDX, DITA, Wiki, ADOC, Coffee, FTL, JS, TS, and FTLH file formats, a list of strings is displayed as a file preview (i.e., WYSIWYG). The string status is indicated by the following colors:
+Enter the translation in the field next to the original text in the string list section and click **Save**. You will be automatically redirected to the next string.
+
+<Image src={saveTranslation} alt="Save translation" />
+
+#### WYSIWYG File Preview
+
+When translating the content of an HTML, XML, TXT, DOCX, XLSX, HAML, Web XML, Markdown, MDX, DITA, Wiki, ADOC, Coffee, FTL, JS, TS, and FTLH file formats, you can toggle a bottom panel (for Side-by-side and Multilingual modes) to see a file preview (i.e., WYSIWYG). For Comfortable mode, the file preview is displayed by default when working with the formats mentioned above.
+
+The string status is indicated by the following colors:
 
 - Red - untranslated
 - Blue - translated
@@ -98,10 +100,10 @@ An active string is highlighted in yellow.
 
 The following options are available to manage the above view:
 
-- <Icon name="mdi:format-list-bulleted" class="inline-icon" /> - *Load basic list view*. Use it to switch to a standard mode and see a list of strings.
+- <Icon name="mdi:format-list-bulleted" class="inline-icon" /> - *Load basic list view*. Use it to switch to a standard mode and see a list of strings (Comfortable mode only).
 - <Icon name="material-symbols:format-ink-highlighter" class="inline-icon" /> - *Highlight untranslated, translated, and approved strings*. Use it to toggle the color highlighting of strings on and off.
 - <Icon name="mdi:eye" class="inline-icon" /> - *Show translation preview*. Use it to toggle the translation preview mode on and off.
-- <Icon name="mdi:magnify-plus" class="inline-icon" /> - *Scale Toggle*. Use it to toggle between a zoomed-in and zoomed-out view.
+- <Icon name="mdi:magnify-plus" class="inline-icon" /> - *Scale Toggle*. Use it to toggle between a zoomed-in and zoomed-out view (Comfortable mode only).
 
 #### String Search
 
@@ -179,27 +181,7 @@ Here are some other use case examples of how you can use Verbal Expressions:
   When you enable verbal expressions, you can't use the regular string search.
 </Aside>
 
-### Middle-Top Area
-
-The main working area with the source string at the top and the translation section below. To add a translation, you need to select a string from the left section, and it will appear in the middle-top *Source String* field.
-
-<Image src={textForTranslation} alt="Text for translation" />
-
-This area also displays the context of a string. Context can include the technical details, an explanation of where the line appears in the actual product, or a screenshot showing the location of the string in a user interface. If the source string has no context and it's not clear how to translate it, click **Request** and a project manager will be notified that additional explanation is needed.
-
-<Image src={requestContext} alt="Request context" />
-
-Some strings may have underlined words or phrases. This means that the word or phrase is part of the project terminology and should be translated according to the term description. You can view additional explanations added to the specific term for accurate translation. This can be done by hovering over the underlined text or by going to the *[Terms](#terms)* section in the right sidebar.
-
-Some terms may have translations. Previously translated terms increase the consistency of project texts. To reuse the term translation, click on the underlined term, and its translation will appear in the translation field.
-
-<Image src={terminology} alt="Terminology" />
-
-Enter the translation in the field below the original text in the middle section and click **Save**. You will be automatically redirected to the next string.
-
-<Image src={saveTranslation} alt="Save translation" />
-
-#### Plural Forms
+### Plural Forms
 
 Some strings may have plural forms. Depending on the language, the number of plural forms may vary. For example, Chinese has one plural form, English has two plural forms, and other languages may have up to six plural forms. Crowdin works with plural forms according to the CLDR Language Plural Rules.
 
@@ -207,32 +189,37 @@ Some strings may have plural forms. Depending on the language, the number of plu
   Read more about [CLDR Language Plural Rules](https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html).
 </ReadMore>
 
-If a string has multiple plural forms, all variants of the string are displayed in the section where you type in translations. Enter translations in the appropriate tabs that display the plural forms of the target language.
+If a string has multiple plural forms, all variants of the string are displayed in the section where you type in translations. Enter translations in the appropriate sections that display the plural forms of the target language.
 
 <Image src={pluralTabs} alt="Plural tabs" />
+
+### QA Checks
 
 You might also get automatic Quality Assurance (QA) check pop-up messages to avoid some translation inaccuracy. For example, you can see notifications about inconsistency in punctuation, space mismatch, missing variables, and more.
 
 <Image src={qaPopUp} alt="QA pop-up" />
 
+### String Menu
+
 Clicking <Icon name="mdi:dots-vertical" class="inline-icon" /> in the upper-right allows you to:
 
 * *Copy String URL* to access a specific string using its unique link or share it with colleagues.
 * *Copy Source Skeleton* to copy untranslatable elements to the translation section. Useful when translating strings with ICU message syntax and strings with HTML tags.
+* *Clear Selected Input* to clear the translation field for the selected string.
 * Access *Translation History* to see all the modifications done to the string.
 * *View String In Context* to display a string along with other strings surrounding it in the source file, which gives a better understanding of how the string should be translated.
 
 In the translation window, you will also see the *Maximum length of translation* limit if it’s exceeded.
 
-<Image src={section2} alt="Section 2" />
+<Image src={section2} alt="String Menu" />
 
-Additional buttons available in the translations section:
+Additional action buttons available when translating a string:
 
 - <Icon name="copy-source" class="inline-icon dark:invert" /> - _Copy Source_. Use it to keep the initial string structure while translating messages with replacement tokens or elements of ICU message syntax.
-- <Icon name="mdi:delete-outline" class="inline-icon" /> - _Clear_. Use it when you need to erase the whole suggestion quickly.
-- <Icon name="mdi:form-textbox" class="inline-icon" /> - _Text selection mode_. Use it when you want to copy a part of the translation from Translation Memory (TM) or Machine Translations (MT).
+- <Icon name="mdi:delete-outline" class="inline-icon" /> - _Clear_. Use it when you need to clear the translation field quickly. Alternatively, use the *Clear Selected Input* option from the string menu.
+- <Icon name="mdi:form-textbox" class="inline-icon" /> - _Text selection mode_. Use it when you want to copy a part of the translation from Translation Memory (TM) or Machine Translations (MT) (Comfortable mode only).
 
-### Middle-Bottom Area
+### Suggestions and Translations
 
 This section contains the resources that might be useful:
 
@@ -249,23 +236,21 @@ To quickly copy the TM or MT suggestion to the translation field and save it, cl
 
 <Image src={otherLanguagesTab} alt="Other languages" />
 
-If you see that there is already a correct suggestion, vote for it. To vote for multiple translations, it would be more convenient to switch to [*Side-by-Side Mode*](#for-translators).
+If you see that there is already a correct suggestion, vote for it. When voting on multiple translations, it's more convenient to use the [*Side-by-Side mode*](#for-translators).
 
 <Image src={vote} alt="Vote" />
 
-If you are a proofreader and plan to review and approve more than one translation — switch to [*Side-by-Side Mode*](#for-proofreaders).
+If you are a proofreader and plan to review and approve more than one translation — use the [*Side-by-Side mode*](#for-proofreaders).
 
-### Right Sidebar
+### Comments
 
-#### Comments
-
-Using the *Comments* tab, you can discuss the meaning of the source string or other related questions. It is recommended to use a source language of the project so other translators can understand it. Use “@” and a username to direct your message to the specific person.
+Using the *Comments* section, you can discuss the meaning of the source string or other related questions. It is recommended to use a source language of the project so other translators can understand it. Use “@” and a username to direct your message to the specific person.
 
 <Image src={commentNew} alt="Comment" />
 
 #### Reporting Issues
 
-Additionally, in the *Comments* tab, you can report the issues regarding the source strings or translations to the project managers by selecting the *Issue* checkbox.
+Additionally, in the *Comments* section, you can report the issues regarding the source strings or translations to the project managers by selecting the *Issue* checkbox.
 
 Available issue types:
 
@@ -292,11 +277,11 @@ If the project owner or managers configured the integration with Jira, all repor
   Read more about [Jira Integration](/jira-integration/).
 </ReadMore>
 
-#### Search TM
+### Search TM
 
-Using the *Search TM* tab, you can check for all the available translations from [Translation Memory](/translation-memory/), which is the vault of translations uploaded to the system by project managers.
+Using the *Search TM* section, you can check for all the available translations from [Translation Memory](/translation-memory/), which is the vault of translations uploaded to the system by project managers.
 
-The Search TM tab provides the following options:
+The Search TM section provides the following options:
 
 * Source &ndash; Search for matches in a source language.
 * Target &ndash; Search for matches in target languages.
@@ -321,16 +306,16 @@ Example: "Save as"
 
 <Image src={searchTm} alt="Search TM" />
 
-#### Editing TM Suggestions in the Editor
+### Editing TM Suggestions in the Editor
 
-When working in the Editor, you can view the TM suggestions displayed in the TM and MT Suggestions section and in the right sidebar found through the Search TM tab. There may be situations where TM suggestions contain inaccuracies or need to be updated.
+When working in the Editor, you can view the TM suggestions displayed in the TM and MT Suggestions section and in the right sidebar found through the Search TM section. There may be situations where TM suggestions contain inaccuracies or need to be updated.
 
-Project members with manager permissions (or higher) can edit or delete TM records directly in the Editor, both in the TM and MT Suggestions section and in the Search TM tab, rather than having to go to the Translation Memories page in the Resources or Project Settings. This ensures that TM suggestions are updated safely and quickly, improving the overall quality of the TM.
+Project members with manager permissions (or higher) can edit or delete TM records directly in the Editor, both in the TM and MT Suggestions section and in the Search TM section, rather than having to go to the Translation Memories page in the Resources or Project Settings. This ensures that TM suggestions are updated safely and quickly, improving the overall quality of the TM.
 
 To edit the TM suggestion, follow these steps:
 
 <Steps>
-  1. Click <Icon name="mdi:pencil" class="inline-icon" /> in the TM and MT Suggestions section or **Edit** in the Search TM tab. <Image src={editTmSuggestions} alt="Edit TM Suggestions" />
+  1. Click <Icon name="mdi:pencil" class="inline-icon" /> in the TM and MT Suggestions section or **Edit** in the Search TM section. <Image src={editTmSuggestions} alt="Edit TM Suggestions" />
   2. In the appeared dialog, make the necessary edits (i.e., modify or delete) to the TM suggestions for each language present in the TM segment.
   3. To revert accidental deletions or unwanted changes, click **Undo** next to the TM suggestions or click **Cancel** to revert all modifications before saving.
   4. Once the desired edits are completed, click **Save** to confirm and apply these changes to the TM segment.
@@ -338,31 +323,42 @@ To edit the TM suggestion, follow these steps:
 
 To completely delete a TM segment from the TM, delete all TM records across all languages and click **Save**.
 
-#### Terms
+### Terms
 
-*Terms* tab can be used to view the existing glossary available for the string (if any). You can also search for terms in the project glossary. If the specific term is not available in the project glossary, the system will show you Wikipedia explanations.
+Underlined words or phrases in strings indicate project-specific terminology, which should be translated according to the provided term description. You can view detailed explanations by hovering over the underlined text or visiting the Terms section.
+
+The Terms section allows you to browse the project glossary (if available) and search for specific terms. If a term is not found in the glossary, Wikipedia explanations will be displayed as a reference.
+
+Some terms may already have translations, which help maintain consistency across the project. To reuse a translated term, simply click on the underlined text, and its translation will automatically appear in the translation field.
 
 <Image src={terms} alt="Terms" />
 
-#### File Context
+### File Context
 
-*File Context* tab can contain additional context or instructions for translators to better understand how to translate a particular file. File context can be added in the [File Settings](/file-management/#file-context) as plain text or Markdown by either an owner or a project manager.
+*File Context* section can contain additional context or instructions for translators to better understand how to translate a particular file. File context can be added in the [File Settings](/file-management/#file-context) as plain text or Markdown by either an owner or a project manager.
 
 <Image src={fileContext} alt="File context" />
 
-## Side-by-Side Mode
+## Editor Modes
 
-In Side-by-Side mode, translators can also translate, although this mode is mostly intended for comfortable voting for multiple best translations in a row, while managers and proofreaders can approve the best translations.
+The Editor offers several viewing modes to accommodate different translation workflows. The available modes include **Side-by-Side**, **Comfortable**, and **Multilingual**, each providing a unique layout for presenting and managing translations. The **Side-by-Side** mode is enabled by default, but you can easily switch as needed.
 
-To switch to the Side-by-Side mode, click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner and choose **View** > **Side-by-Side**.
+You can switch between Editor modes using the following methods:
 
-### For Translators
+- **Via Main menu**: Click on the **Main menu** <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, select **View**, and choose the preferred mode.
+- **Via Editor View icon**: Click the **Editor View** icon in the upper-right corner and choose the preferred mode.
+
+### Side-by-Side Mode
+
+Side-by-Side mode is perfect for handling multiple translations at once. Translators can work on several strings simultaneously or quickly review and vote on existing translations. Managers and proofreaders can efficiently approve the best options, all within the same view.
+
+#### For Translators
 
 To vote, click the *plus* <Icon name="mdi:plus" class="inline-icon" /> sign if you like the translation, or the *minus* <Icon name="mdi:minus" class="inline-icon" /> sign if you don't think the translation is correct. Translations that receive the most positive votes will have a higher rating and will appear at the top of all available translations for the string.
 
-<Image src={votingView} alt="Voting view" />
+<Image src={vote} alt="Vote" />
 
-### For Proofreaders
+#### For Proofreaders
 
 Review the translations to make sure they are ready for export, and click *Approve* <Icon name="mdi:check" class="inline-icon" /> icon next to the suggestion to approve each translation separately.
 
@@ -376,21 +372,33 @@ To approve all or a couple of the strings at once, check the boxes on the left a
 
 <Image src={qaChecksOn} alt="QA issues" />
 
-### Suggesting Translations
+#### Suggesting Translations
 
 To suggest another translation, click on the text you want to change, and when done, click **Save**. Your translation will be added to the list of other suggestions.
 
 <Image src={save} alt="Save suggestion" />
 
-## Multilingual Mode
+### Comfortable Mode
+
+Comfortable mode allows translators and proofreaders to focus on one string at a time, ensuring accuracy without distractions. It emphasizes the active string, making it easier to review context and related resources. This mode is ideal for handling complex translations or performing detailed proofreading, where precision and thoroughness are essential.
+
+The main working area with the source string at the top and the translation section below. To add a translation, you need to select a string from the left section, and it will appear in the middle-top *Source String* field.
+
+<Image src={sections} alt="Editor Sections" />
+
+#### Requesting Context
+
+Next to a string is its context section. Context can include the technical details, an explanation of where the line appears in the actual product, or a screenshot showing the location of the string in a user interface. If the source string does not have context and it's not clear how to translate it, click **Request** and a project manager will be notified that additional explanation is needed.
+
+<Image src={requestContext} alt="Request context" />
+
+### Multilingual Mode
 
 The multilingual mode provides similar features as the side-by-side mode and allows multilingual translators and proofreaders to work with multiple languages at the same time. You can select up to ten languages to work with simultaneously. The right panel shows the string's translations of the language you're entering a translation for or the one that was selected last.
 
 <Image src={multilingualMode} alt="Multilingual Mode" />
 
-To switch to the multilingual mode, click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, choose **View** > **Multilingual**, select the languages you'd like to work with, and click **Apply**.
-
-To add new languages or remove some of the earlier selected ones, click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, choose **Language**, alternatively click on the **Languages** in the upper-left corner, then do the necessary modifications to the language list and click **Apply**.
+Once you switch to the multilingual mode, select the languages you'd like to work with, and click **Apply**. To add new languages or remove some of the earlier selected ones, click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, choose **Language**, alternatively click on the **Languages** in the upper-left corner, then do the necessary modifications to the language list and click **Apply**.
 
 When working in multilingual mode, you can switch between two possible views: List View, Grid View.
 
@@ -399,11 +407,11 @@ To adjust the columns displayed in the Grid view, click on the drop-down toggle 
 
 <Image src={multilingualModeGrid} alt="Multilingual Mode Grid View" />
 
-### For Proofreaders
+#### For Proofreaders
 
 The proofreading process works mainly the same way as in side-by-side mode, except when approving or removing approvals for all or a couple of strings at once, the system performs the action for all languages selected for the multilingual mode.
 
-### Using Filter in Multilingual Mode
+#### Using Filter in Multilingual Mode
 
 When using filter options in multilingual mode, the system will show strings that meet the selected criteria for at least one of the selected languages.
 
@@ -443,21 +451,48 @@ The Command Palette in the Editor is your hub for accessing various commands eff
 
 To open the Command Palette, click <Icon name="material-symbols:terminal" class="inline-icon" /> in the upper-right corner.
 
-<Image src={commandPalette} alt="Command Palette" />
+<Image src={commandPalette} alt="Command Palette" class="dialog width-xl" />
+
+## Managing Unsaved Translations
+
+When you enter translations but haven't saved them, a green indicator appears next to the <Icon name="mdi:playlist-edit" class="inline-icon" />**Unsaved Translations** icon. Hovering over or clicking <Icon name="mdi:playlist-edit" class="inline-icon" /> displays a tooltip with the number of unsaved translations, like: *Unsaved translations (\{number-of-unsaved-translations})*.
+
+This feature offers the following options:
+
+- Check the number of unsaved translations.
+- Save all unsaved translations with a single click.
+- View and manage all strings with unsaved translations.
+
+To view unsaved translations, click <Icon name="mdi:playlist-edit" class="inline-icon" /> in the upper-right corner and select **View Strings**. Alternatively, click <Icon name="mdi:filter-variant" class="inline-icon" /> and select **Unsaved translations**.
+
+Once filtered, you can continue editing unsaved translations. If they are ready to be saved, click **Save All** to apply the changes.
 
 ## Editor Settings
 
 To open the Editor settings, click <Icon name="mdi:cog" class="inline-icon" /> in the upper-right corner.
 
-Editor Settings include the following options:
+The Editor settings are grouped into tabs that contain various options for configuring the Editor according to your preferences.
+
+### General
 
 - *Translation Memory Suggestions* &ndash; you can specify the minimum similarity match (in percentages) for translation memory suggestions shown under the translation field.
 - *QA checks* &ndash; if enabled, the pop-up messages with warnings will appear each time you try to save a translation with some inaccuracy (punctuation/tags/spaces mismatch, missing variables, etc.)
-  <Image src={validators} alt="Validators" />
+  <Image src={qaPopUp} alt="QA pop-up" />
 - *Auto-complete* &ndash; if enabled, the pop-up with translation prediction and automatic translation completion will appear while you type the translation.
 - *Auto-approve* &ndash; if enabled, the translations added by proofreaders or members with higher permissions are automatically approved.
 - *Automatically move to next string* &ndash; if enabled, you'll be automatically moved to the next string after saving a new translation or approving an existing one.
-- *Themes* &ndash; set the **Light** or **Dark** theme, or select **Auto** to allow the Editor to set the theme based on your device system settings.
+
+### AI
+
+The AI tab allows to configure custom prompts and shortcuts for AI Assistant. This tab will appear in the Editor settings once the project owner configures AI provider and sets up the **AI in editor** prompt.
+
+<ReadMore>
+  Read more about [Using AI in the Editor](/crowdin-ai/#using-ai-in-the-editor).
+</ReadMore>
+
+### Appearance
+
+- *Default Editor View* &ndash; set the default view mode that will be used each time you open the Editor.
 - *Compact strings view* &ndash; if enabled, only the beginnings of the long strings will be shown in the string list.
 - *Translation Preview* &ndash; if enabled, a translation preview will be displayed for translated strings in the string list.
 - *HTML Tags Displaying* &ndash; you can choose **Show** or **Hide** option that applies to all HTML tags. If you choose **Auto**, tags will be hidden in HTML, Haml, XML, Web XML, Markdown, and DOCX files but shown in other file formats. When tags are hidden, you can expect the following:
@@ -470,7 +505,7 @@ Editor Settings include the following options:
   ```
 - *Non-printable characters displaying* &ndash; if enabled, non-printable characters (e.g., space, tab character, line break, etc.) will be displayed in source texts and translations.
 - *Translation field highlighting* &ndash; if enabled, words with potential QA issues will be underlined in the translation field.
-- *Real time spellcheck displaying* &ndash; instantly view spelling issues as you type a translation.
+- *Real time spellcheck displaying* &ndash; instantly view spelling issues as you type a translation. <Icon name="mdi:spellcheck" class="inline-icon" /> displayed next to the translation means that no spelling issues were found. Otherwise, you'll see a red label with the number of spelling issues detected. Click it for more details.
 - *UI Language* &ndash; select your preferred language for the Crowdin UI. The chosen language will be applied to the Editor and other parts of Crowdin.
 
 <Aside type="caution">
@@ -480,20 +515,38 @@ Editor Settings include the following options:
   </details>
 </Aside>
 
+### Themes
+
+Set the **Light** or **Dark** theme, or select **Auto** to allow the Editor to set the theme based on your device system settings. In addition to the default themes, you can also install custom themes from the Crowdin Store or create your own custom theme.
+
+<CardGrid>
+  <LinkCard
+    title="Explore Existing Themes"
+    description="Browse the collection of available themes in the Crowdin Store."
+    href="https://store.crowdin.com/collections/themes"
+    target="_blank"
+  />
+  <LinkCard
+    title="Create Custom Themes"
+    description="Learn how to create your own custom themes."
+    href="/developer/editor-themes/"
+  />
+</CardGrid>
+
 ## Helpful Tips
 
 ### Keyboard Shortcuts
 
 Use keyboard shortcuts to take actions in the editor quickly. Check the list of keyboard shortcuts by clicking the *keyboard* <Icon name="mdi:keyboard" class="inline-icon" /> icon in the upper-right corner. Most of the hotkeys can be customized to your personal preferences. Click on the necessary key combination, and modify it with the help of your keyboard.
 
-### Quick Access to Menu Tabs
+### Quick Access to Menu Sections
 
 Easy access to most-used menu items in one click:
 
 - *Language* &ndash; click on the current language (*French* in the below screenshot)
-- *Files* &ndash; click on the current file name (*impact.xml* in the below screenshot)
+- *Files* &ndash; click on the current file name (*strings.xml* in the below screenshot)
 
-<Image src={quickAccessToMenuTabs} alt="Quick Access to Menu Tabs" />
+<Image src={quickAccessToMenuTabs} alt="Quick Access to Menu Sections" />
 
 ### Useful Options for Source Words
 
@@ -503,7 +556,7 @@ To check Translation Memory suggestions for a particular word or phrase, select 
   The *Create Term* option is available for project managers only.
 </Aside>
 
-<Image src={searchTmTab} alt="Search TM tab" />
+<Image src={searchTmTab} alt="Search TM section" />
 
 ### Switching to Another File
 
@@ -517,6 +570,14 @@ To translate strings from the other files, follow these steps:
 
 To see all strings of the project, click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, and go to **File** > **All Strings**. Alternatively, click on the current file name in the upper-left corner > **All Strings**.
 
+To quickly find and reopen one of the files you recently worked on, click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, go to **File** and select the needed file from the **Recent files** section.
+
+### Source and Translated File Preview
+
+In addition to the [WYSIWYG file preview](#wysiwyg-file-preview), which shows files as they would appear when rendered, there are **Source File Preview** and **Translated File Preview** modes that allow users to view the raw content of both source and translated files directly within the Editor. These previews provide insight into the file's structure, layout, and formatting, helping users ensure accurate translations within the correct context. This is particularly helpful for identifying discrepancies or formatting issues without leaving the Editor. While the **Translated File Preview** is available to all users, the **Source File Preview** is restricted to members with Developer permissions or higher.
+
+To open a file in either of these previews, click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, go to **File**, and select the needed file preview mode.
+
 ### Replace in Suggested Translations
 
 You can easily find and replace suggested translations using the *Replace in Translations* feature.
@@ -525,11 +586,11 @@ To replace previously added translations with the new ones, follow these steps:
 
 <Steps>
   1. In the project *Dashboard* tab, select the necessary language.
-  2. Click **Translated All** or choose a file for translation.
+  2. Click **Translate All** or choose a file for translation.
   3. Click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner.
-  4. Go to **File** > **Replace in Translations**. <Image src={replaceInSuggestionsMenu} alt="Replace translations menu" />
+  4. Go to **File** > **Replace in Translations**.
   5. Enter the word, phrase, or sentence you want to substitute and the text to replace it with. Similarly to [string search](#string-search), you can use the *Match case* and *Exact match* options to refine the search results.
-  6. From the drop-down menu, specify the scope of your search, selecting between *File*, *All files*, or *Filtered strings* options. <Image src={replaceInSuggestions} alt="Find and Replace" class="width-xl" />
+  6. From the drop-down menu, specify the scope of your search, selecting between *File*, *All files*, or *Filtered strings* options.
   7. Click **Find** to preview the strings that will be replaced. <Image src={replaceInSuggestionsResults} alt="Find and Replace results" class="width-xl" />
   8. *(Optional)* Click the *Settings* drop-down menu on the right and select what information to display in the search results other than translations. You can choose between *Key*, *Context*, and *Source*.
   9. Select the translations you want to replace and click **Replace Selected** to finish.
@@ -547,9 +608,9 @@ To replace source texts, follow these steps:
   1. In the project *Dashboard* tab, select the necessary language.
   2. Click **Translate All** or choose a file for translation.
   3. Click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner.
-  4. Go to **File** > **Replace in Sources**. <Image src={replaceInSourcesMenu} alt="Replace sources menu" />
+  4. Go to **File** > **Replace in Sources**.
   5. Enter the word, phrase, or sentence you want to substitute and the text to replace it with. Similarly to [string search](#string-search), you can use the *Match case* and *Exact match* options to refine the search results.
-  6. From the drop-down menu, specify the scope of your search, selecting between *File*, *All files*, or *Filtered strings* options. <Image src={replaceInSources} alt="Find and Replace" class="width-xl" />
+  6. From the drop-down menu, specify the scope of your search, selecting between *File*, *All files*, or *Filtered strings* options.
   7. Click **Find** to preview the strings that will be replaced. <Image src={replaceInSourcesResults} alt="Find and Replace results" class="width-xl" />
   8. *(Optional)* Click the *Settings* drop-down menu on the right and select what information to display in the search results other than strings. You can choose between *Key* and *Context*.
   9. In the lower-left corner, click the drop-down menu and select the preferred behavior for the translations of the source strings to be replaced. You can choose between *Keep Translations*, *Remove Approvals*, or *Delete Translations*.
@@ -565,6 +626,10 @@ You can choose multiple filter parameters (e.g., strings added, strings updated,
 In the below screenshot, you may see the strings are filtered by *Translations updated* interval, the *Labels* that the filtered strings should be marked with, the *Comments*, *Visibility*, and *Approved by* parameters as well as sorted by *Alphabet* in *Descending* order.
 
 <Image src={advancedFilter} alt="Advanced Filter" />
+
+### Pinning Sections
+
+In Side-by-Side or Multilingual modes, you can pin <Icon name="mdi:pin" class="inline-icon" /> specific sections to keep them visible while navigating through other parts of the interface. This helps you access the pinned content quickly without losing sight of essential information.
 
 ## Tasks in the Editor
 
