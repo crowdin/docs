@@ -17,6 +17,7 @@ import enterpriseSidebar from './src/content/sidebars/enterprise.ts';
 import developerSidebar from './src/content/sidebars/developer.ts';
 
 import customConsentScript from './src/scripts/custom-consent-mode.js?raw';
+import gtmScript from './src/scripts/gtm.js?raw';
 
 let site;
 
@@ -81,6 +82,12 @@ const config = defineConfig({
               : undefined,
             defer: true,
           },
+        },
+        {
+          tag: 'script',
+          content: process.env.GA_ID
+            ? gtmScript.replace('<GTM-ID>', process.env.GA_ID)
+            : undefined,
         },
         // CookieYes
         {
