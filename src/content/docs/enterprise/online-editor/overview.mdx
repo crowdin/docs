@@ -11,17 +11,16 @@ import { Image } from 'astro:assets';
 import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
 import ReadMore from '~/components/ReadMore.astro';
 import KBD from '~/components/KBD.astro';
+import sbsEditor from '!/crowdin/online-editor/sbs_editor.png';
+import suggestingTranslations from '!/crowdin/online-editor/suggesting_translations.png';
 import htmlPreview from '!/crowdin/online-editor/html_preview.png';
 import stringSearch from '!/crowdin/online-editor/string_search.png';
 import stringsFilter from '!/crowdin/online-editor/strings_filter.png';
-import taskMenu from '!/crowdin/online-editor/task_menu.png';
-import taskName from '!/crowdin/online-editor/task_name.png';
 import terms from '!/crowdin/online-editor/terms.png';
 import requestContext from '!/crowdin/online-editor/request_context.png';
-import saveTranslation from '!/crowdin/online-editor/save_translation.png';
 import qaPopUp from '!/crowdin/online-editor/qa_pop-up.png';
-import pluralTabs from '!/crowdin/online-editor/plural_tabs.png';
-import section2 from '!/crowdin/online-editor/section_2.png';
+import pluralForms from '!/crowdin/online-editor/plural_forms.png';
+import stringMenu from '!/crowdin/online-editor/string_menu.png';
 import otherLanguagesTab from '!/crowdin/online-editor/other_languages_tabs.png';
 import vote from '!/crowdin/online-editor/vote.png';
 import commentNew from '!/crowdin/online-editor/comment_new.png';
@@ -30,11 +29,9 @@ import issueOptions from '!/crowdin/online-editor/issue_options.png';
 import searchTm from '!/crowdin/online-editor/search_tm.png';
 import editTmSuggestions from '!/crowdin/online-editor/edit_tm_suggestions.png';
 import fileContext from '!/crowdin/online-editor/file_context.png';
-import votingView from '!/crowdin/online-editor/voting_view.png';
 import multiApprove from '!/crowdin/online-editor/multi_approve.png';
 import qaChecksOn from '!/crowdin/online-editor/qa_checks_on.png';
-import save from '!/crowdin/online-editor/save.png';
-import sections from '!/crowdin/online-editor/comfortable.png';
+import comfortable from '!/crowdin/online-editor/comfortable.png';
 import multilingualMode from '!/crowdin/online-editor/multilingual_mode.png';
 import multilingualModeGrid from '!/crowdin/online-editor/multilingual_mode_grid.png';
 import rtlLanguages from '!/crowdin/online-editor/rtl.png';
@@ -47,8 +44,14 @@ import advancedFilter from '!/crowdin/online-editor/advanced_filter.png';
 import workflowFilter from '!/enterprise/online-editor/workflow_filter.png';
 import sharedComments from '!/enterprise/online-editor/shared_comments.png';
 import multipleApprovals from '!/enterprise/online-editor/multiple_approvals.png';
+import taskName from '!/crowdin/online-editor/task_name.png';
+import taskMenu from '!/crowdin/online-editor/task_menu.png';
 
 The Editor is the main place in Crowdin Enterprise where project members can work on translations. It allows users to suggest, vote on, review, and approve translations online.
+
+Using the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, you can switch between files for translation, change translation languages, contact a manager, change the view, and access help materials.
+
+## Core Features
 
 The Editor provides all the necessary tools for translators and proofreaders, including:
 
@@ -59,9 +62,7 @@ The Editor provides all the necessary tools for translators and proofreaders, in
 * [Glossary](/glossary/) terms to ensure consistency.
 * Comments section for collaboration and reporting issues.
 
-Using the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, you can switch between files for translation, change translation languages, contact a manager, change the view, and access help materials.
-
-## Core Features
+<Image src={sbsEditor} alt="Side-by-side Editor mode" />
 
 ### String List
 
@@ -82,9 +83,52 @@ There also might be the following icons besides strings:
 - <Icon name="mdi:comment-alert-outline" class="inline-icon" /> - the string has an unresolved issue
 - <Icon name="mdi:tag-outline" class="inline-icon" /> - the string has labels
 
-Enter the translation in the field next to the original text in the string list section and click **Save**. You will be automatically redirected to the next string.
+#### Suggesting Translations
 
-<Image src={saveTranslation} alt="Save translation" />
+To suggest a translation, select a string from the list and enter your suggestion in the field next to the original text. When you're done, click **Save**. Your suggestion will be added to the string's translation suggestions list, and you'll automatically move on to the next string.
+
+<Image src={suggestingTranslations} alt="Suggesting Translations" />
+
+#### Proofreading {#for-proofreaders}
+
+Review the translations to make sure they are ready for export, and click *Approve* <Icon name="mdi:check" class="inline-icon" /> icon next to the suggestion to approve each translation separately.
+
+To approve all or a couple of the strings at once, check the boxes on the left and then click **Approve**.
+
+<Image src={multiApprove} alt="Side-by-Side Proofreading" />
+
+<Aside>
+  Make sure to enable [QA checks](/enterprise/project-settings/qa-checks/) to help you find strings that require review. Issues found will be highlighted in red under the translated strings that require revision.
+</Aside>
+
+<Image src={qaChecksOn} alt="QA issues" />
+
+##### Managing Approvals
+
+Each translation can be approved either once or multiple times by multiple proofreaders and project members with manager permissions (or higher). Once a translation is approved at least once, it will be displayed as such on all workflow steps of a project.
+
+<Image src={multipleApprovals} alt="Multiple Approvals" />
+
+If necessary, a proofreader or project member with manager permissions (or higher) can edit the list of approvals for translations approved twice and more by removing approvals one by one or all at once.
+
+To edit the list of approvals, follow these steps:
+
+<Steps>
+  1. Open the needed string in the Editor.
+  1. Click on the profile pictures of the proofreaders that approved a translation.
+  1. In the unfolded translation details, click <Icon name="mdi:delete-outline" class="inline-icon" /> next to the approval you want to remove.
+</Steps>
+
+The translations with the highest number of approvals have the highest priority. They will be displayed at the top of the translation list in the Editor and used on translation download.
+
+When a string has more than one translation, the translation list is formed based on the following priority:
+
+<Steps>
+  1. Translation with the highest number of approvals &ndash; Among translations approved multiple times, the translation with the highest number of approvals has a top priority.
+  1. Translation with the last added approval &ndash; Among translations approved only once, the translation with the last added approval has a top priority.
+  1. Most voted translation &ndash; Among translations that don't have approvals, the translation with the highest number of votes has a top priority.
+  1. Last added translation &ndash; Among translations that don't have approvals or votes, the last added translation has a top priority.
+</Steps>
 
 #### WYSIWYG File Preview
 
@@ -202,7 +246,7 @@ Some strings may have plural forms. Depending on the language, the number of plu
 
 If a string has multiple plural forms, all variants of the string are displayed in the section where you type in translations. Enter translations in the appropriate sections that display the plural forms of the target language.
 
-<Image src={pluralTabs} alt="Plural tabs" />
+<Image src={pluralForms} alt="Plural forms" />
 
 ### QA Checks
 
@@ -222,7 +266,7 @@ Clicking <Icon name="mdi:dots-vertical" class="inline-icon" /> in the upper-righ
 
 In the translation window, you will also see the *Maximum length of translation* limit if it’s exceeded.
 
-<Image src={section2} alt="String Menu" />
+<Image src={stringMenu} alt="String Menu" />
 
 Additional action buttons available when translating a string:
 
@@ -247,11 +291,11 @@ To quickly copy the TM or MT suggestion to the translation field and save it, cl
 
 <Image src={otherLanguagesTab} alt="Other languages" />
 
-If you see that there is already a correct suggestion, vote for it. When voting on multiple translations, it's more convenient to use the [*Side-by-Side mode*](#for-translators).
+#### Voting
+
+If you see that there is already a correct suggestion, vote for it by clicking the *plus* <Icon name="mdi:plus" class="inline-icon" /> sign if you like the translation, or the *minus* <Icon name="mdi:minus" class="inline-icon" /> sign if you don't think the translation is correct. Translations that receive the most positive votes will have a higher rating and will appear at the top of all available translations for the string.
 
 <Image src={vote} alt="Vote" />
-
-If you are a proofreader and plan to review and approve more than one translation — use the [*Side-by-Side mode*](#for-proofreaders).
 
 ### Comments
 
@@ -367,60 +411,7 @@ You can switch between Editor modes using the following methods:
 
 ### Side-by-Side Mode
 
-Side-by-Side mode is perfect for handling multiple translations at once. Translators can work on several strings simultaneously or quickly review and vote on existing translations. Managers and proofreaders can efficiently approve the best options, all within the same view.
-
-#### For Translators
-
-To vote, click the *plus* <Icon name="mdi:plus" class="inline-icon" /> sign if you like the translation, or the *minus* <Icon name="mdi:minus" class="inline-icon" /> sign if you don't think the translation is correct. Translations that receive the most positive votes will have a higher rating and will appear at the top of all available translations for the string.
-
-<Image src={vote} alt="Vote" />
-
-#### For Proofreaders
-
-Review the translations to make sure they are ready for export, and click *Approve* <Icon name="mdi:check" class="inline-icon" /> icon next to the suggestion to approve each translation separately.
-
-To approve all or a couple of the strings at once, check the boxes on the left and then click **Approve**.
-
-<Image src={multiApprove} alt="Side-by-Side Proofreading" />
-
-<Aside>
-  Make sure to enable [QA checks](/enterprise/project-settings/qa-checks/) to help you find strings that require review. Issues found will be highlighted in red under the translated strings that require revision.
-</Aside>
-
-<Image src={qaChecksOn} alt="QA issues" />
-
-#### Suggesting Translations
-
-To suggest another translation, click on the text you want to change, and when done, click **Save**. Your translation will be added to the list of other suggestions.
-
-<Image src={save} alt="Save suggestion" />
-
-#### Translation Approvals
-
-Each translation can be approved either once or multiple times by multiple proofreaders and project members with manager permissions (or higher). Once a translation is approved at least once, it will be displayed as such on all workflow steps of a project.
-
-<Image src={multipleApprovals} alt="Multiple Approvals" />
-
-If necessary, a proofreader or project member with manager permissions (or higher) can edit the list of approvals for translations approved twice and more by removing approvals one by one or all at once.
-
-To edit the list of approvals, follow these steps:
-
-<Steps>
-  1. Open the needed string in the Editor.
-  1. Click on the profile pictures of the proofreaders that approved a translation.
-  1. In the unfolded translation details, click <Icon name="mdi:delete-outline" class="inline-icon" /> next to the approval you want to remove.
-</Steps>
-
-The translations with the highest number of approvals have the highest priority. They will be displayed at the top of the translation list in the Editor and used on translation download.
-
-When a string has more than one translation, the translation list is formed based on the following priority:
-
-<Steps>
-  1. Translation with the highest number of approvals &ndash; Among translations approved multiple times, the translation with the highest number of approvals has a top priority.
-  1. Translation with the last added approval &ndash; Among translations approved only once, the translation with the last added approval has a top priority.
-  1. Most voted translation &ndash; Among translations that don't have approvals, the translation with the highest number of votes has a top priority.
-  1. Last added translation &ndash; Among translations that don't have approvals or votes, the last added translation has a top priority.
-</Steps>
+Side-by-Side mode, detailed in the [Core Features](#core-features) section, is ideal for managing multiple translations at once. Translators can work on several strings simultaneously or swiftly review and vote on existing translations. Managers and proofreaders can efficiently approve the best options all within the same view.
 
 ### Comfortable Mode
 
@@ -428,7 +419,7 @@ Comfortable mode allows translators and proofreaders to focus on one string at a
 
 The main working area with the source string at the top and the translation section below. To add a translation, you need to select a string from the left section, and it will appear in the middle-top *Source String* field.
 
-<Image src={sections} alt="Editor Sections" />
+<Image src={comfortable} alt="Comfortable Editor Mode" />
 
 #### Requesting Context
 
@@ -499,7 +490,7 @@ To open the Command Palette, click <Icon name="material-symbols:terminal" class=
 
 ## Managing Unsaved Translations
 
-When you enter translations but haven't saved them, a green indicator appears next to the <Icon name="mdi:playlist-edit" class="inline-icon" />**Unsaved Translations** icon. Hovering over or clicking <Icon name="mdi:playlist-edit" class="inline-icon" /> displays a tooltip with the number of unsaved translations, like: *Unsaved translations (\{number-of-unsaved-translations})*.
+When you enter translations but haven't saved them, a green indicator appears next to the <Icon name="mdi:playlist-edit" class="inline-icon" />**Unsaved Translations** icon. Hovering over or clicking <Icon name="mdi:playlist-edit" class="inline-icon" /> displays a tooltip with the number of unsaved translations.
 
 This feature offers the following options:
 
