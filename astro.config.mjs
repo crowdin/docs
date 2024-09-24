@@ -129,6 +129,9 @@ const config = defineConfig({
         '@fontsource-variable/plus-jakarta-sans',
       ],
       pagination: false,
+      editLink: {
+        baseUrl: 'https://github.com/crowdin/docs/edit/main',
+      },
       plugins: [
         starlightUtils({
           multiSidebar: {
