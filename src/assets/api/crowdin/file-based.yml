@@ -123,6 +123,110 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/users/{userId}/ai/prompts/{aiPromptId}/fine-tuning/jobs/{jobIdentifier}/events':
+    get:
+      tags:
+        - AI
+      summary: 'List AI Prompt Fine-Tuning Events'
+      operationId: api.ai.prompts.fine-tuning.jobs.events.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/UserId'
+        -
+          $ref: '#/components/parameters/AiPromptId'
+        -
+          $ref: '#/components/parameters/AiPromptFineTuningJobId'
+      responses:
+        '200':
+          description: 'AI Prompt Fine-Tuning Events list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiFineTuningEventCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'User, AI prompt or job with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/users/{userId}/ai/prompts/fine-tuning/jobs':
+    get:
+      tags:
+        - AI
+      summary: 'List AI Prompt Fine-Tuning Jobs'
+      operationId: api.ai.prompts.fine-tuning.jobs.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/UserId'
+        -
+          $ref: '#/components/parameters/AiFineTuningJobCollectionStatuses'
+        -
+          $ref: '#/components/parameters/AiFineTuningJobCollectionOrderBy'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'AI Prompt Fine-Tuning Jobs list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiFineTuningJobCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'User or AI prompt with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
   '/users/{userId}/ai/prompts/{aiPromptId}/fine-tuning/jobs':
     post:
       tags:
@@ -1326,7 +1430,7 @@ paths:
           $ref: '#/components/parameters/PaginationOffset'
       responses:
         '200':
-          description: 'Applicaiton Installation list'
+          description: 'Application Installation list'
           content:
             application/json:
               schema:
@@ -6603,7 +6707,7 @@ paths:
           $ref: '#/components/parameters/FileFormatSettingsId'
       responses:
         '204':
-          description: 'File Format Settings Custom Segmentations was successfully reseted'
+          description: 'File Format Settings Custom Segmentations was successfully reset'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -14105,6 +14209,44 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/AiFineTuningDataset'
+    AiFineTuningEventCollectionResource:
+      description: 'AI Fine-Tuning Event Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/AiFineTuningEventResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    AiFineTuningEventResource:
+      description: 'AI Fine-Tuning Event Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AiFineTuningEvent'
+    AiFineTuningJobCollectionResource:
+      description: 'AI Fine-Tuning Job Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/AiFineTuningJobResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
     AiFineTuningJobResource:
       description: 'AI Fine-Tuning Job Resource'
       type: object
@@ -14176,6 +14318,48 @@ components:
           format: date-time
           example: '2019-09-23T11:26:54+00:00'
       type: object
+    AiFineTuningEvent:
+      properties:
+        id:
+          type: string
+          example: ftevent-0HOW0hqwQ7G1b70qOC8S7UsT
+        type:
+          type: string
+          enum:
+            - message
+            - metrics
+        message:
+          type: string
+          example: 'Created fine-tuning job: ftjob-EhnfVT9MnddMBLfjMcme71if'
+        data:
+          properties:
+            step:
+              type: integer
+              example: 135
+            totalSteps:
+              type: integer
+              example: 135
+            trainingLoss:
+              type: number
+              format: float
+              example: 0.0031
+            validationLoss:
+              type: number
+              format: float
+              example: 0.0449
+              nullable: true
+            fullValidationLoss:
+              type: number
+              format: float
+              example: 0.0275
+              nullable: true
+          type: object
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          example: '2019-09-23T11:26:54+00:00'
+      type: object
     AiFineTuningJob:
       properties:
         identifier:
@@ -14192,6 +14376,8 @@ components:
           properties:
             dryRun:
               type: boolean
+            aiPromptId:
+              type: integer
             hyperparameters:
               properties:
                 batchSize:
@@ -14256,12 +14442,24 @@ components:
                   nullable: true
               type: object
               nullable: true
+            baseModel:
+              type: string
+              example: gpt-4o-mini-2024-07-18
+              nullable: true
             fineTunedModel:
               type: string
               example: 'ft:gpt-4o-mini-2024-07-18:2024-08-12:9vQgFOfp'
               nullable: true
             trainedTokensCount:
               type: integer
+              nullable: true
+            trainingDatasetUrl:
+              type: string
+              example: 'https://crowdin-tmp.s3.eu-central-1.amazonaws.com/72057531/ai_fine_tuning/0fc00e9e-3a80-49d1-a8cb-39c9a81c0ae2/training-dataset.jsonl'
+              nullable: true
+            validationDatasetUrl:
+              type: string
+              example: 'https://crowdin-tmp.s3.eu-central-1.amazonaws.com/72057531/ai_fine_tuning/0fc00e9e-3a80-49d1-a8cb-39c9a81c0ae2/validation-dataset.jsonl'
               nullable: true
             metadata:
               properties:
@@ -14878,7 +15076,7 @@ components:
             -
               $ref: '#/components/schemas/ai.provider.credentials.custom_ai'
         config:
-          $ref: '#/components/schemas/ai.provider.configutation'
+          $ref: '#/components/schemas/ai.provider.configuration'
         isEnabled:
           description: 'Defines whether to AI provider is enabled.'
           type: boolean
@@ -14888,7 +15086,7 @@ components:
           type: boolean
           default: false
       type: object
-    ai.provider.configutation:
+    ai.provider.configuration:
       title: 'AI Provider configuration'
       description: 'AI provider configuration'
       properties:
@@ -14896,9 +15094,9 @@ components:
           description: 'Configuration of available models for actions'
           type: array
           items:
-            $ref: '#/components/schemas/ai.provider.configutation.actionRule'
+            $ref: '#/components/schemas/ai.provider.configuration.actionRule'
       type: object
-    ai.provider.configutation.actionRule:
+    ai.provider.configuration.actionRule:
       title: 'Action rule'
       properties:
         action:
@@ -15073,7 +15271,7 @@ components:
             -
               $ref: '#/components/schemas/ai.provider.credentials.custom_ai'
         config:
-          $ref: '#/components/schemas/ai.provider.configutation'
+          $ref: '#/components/schemas/ai.provider.configuration'
         isEnabled:
           type: boolean
           default: true
@@ -15289,7 +15487,7 @@ components:
             value:
               oneOf:
                 -
-                  type: int
+                  type: integer
     AiSettingsOperationTest:
       description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
@@ -15303,7 +15501,7 @@ components:
             value:
               oneOf:
                 -
-                  type: int
+                  type: integer
     AiSettingsResource:
       description: 'AI Settings Resource'
       type: object
@@ -15336,7 +15534,7 @@ components:
         name:
           description: 'Shortcut name'
           type: string
-          example: 'My first shorcut'
+          example: 'My first shortcut'
         prompt:
           description: 'Shortcut prompt'
           type: string
@@ -15725,7 +15923,7 @@ components:
             iframe:
               type: object
     ExternalQaCheckModule:
-      title: 'Extrenal QA Check Module'
+      title: 'External QA Check Module'
       type: object
       allOf:
         -
@@ -18329,9 +18527,9 @@ components:
         description:
           description: 'Field description'
           type: string
-          example: 'Client company field is appointed to store infor about client company'
+          example: 'Client company field is appointed to store info about client company'
         entities:
-          description: 'Entitites that will be associated with field'
+          description: 'Entities that will be associated with field'
           type: array
           items:
             type: string
@@ -18386,7 +18584,7 @@ components:
           type: string
           example: custom-field
         description:
-          type: description
+          type: string
           example: 'Custom field description'
         type:
           type: string
@@ -22565,7 +22763,7 @@ components:
               type: string
               example: uk
             tmContextType:
-              description: "TM perfect match searching mode. Available values:\n * segmentContext - searching by context\n * auto - context search for key-value formats and segment search for others\n * prevAndNextSegment - search by previos and next segment"
+              description: "TM perfect match searching mode. Available values:\n * segmentContext - searching by context\n * auto - context search for key-value formats and segment search for others\n * prevAndNextSegment - search by previous and next segment"
               type: string
               default: segmentContext
               enum:
@@ -22775,12 +22973,12 @@ components:
           description: 'Report Settings Templates Identifier. Get via [List Report Settings Templates](#operation/api.projects.reports.settings-templates.getMany)'
           type: integer
         defaultTmId:
-          description: 'Translation Memory ID. If ommited new translation memory will be created. Get via [List TMs](#operation/api.tms.getMany)'
+          description: 'Translation Memory ID. If omitted new translation memory will be created. Get via [List TMs](#operation/api.tms.getMany)'
           type: integer
           default: null
           example: 1
         defaultGlossaryId:
-          description: 'Glossary ID. If ommited new Glossary will be created. Get via [List Glossaries](#operation/api.glossaries.getMany)'
+          description: 'Glossary ID. If omitted new Glossary will be created. Get via [List Glossaries](#operation/api.glossaries.getMany)'
           type: integer
           default: null
           example: 1
@@ -23743,7 +23941,7 @@ components:
               type: boolean
               default: false
             convertLineBreaks:
-              description: 'Сonverts simple line breaks (Enter) to \n (e.g. New\nLine).'
+              description: 'Сonvert simple line breaks (Enter) to \n (e.g. New\nLine).'
               type: boolean
               default: false
           type: object
@@ -23766,7 +23964,7 @@ components:
               type: boolean
               default: false
             convertLineBreaks:
-              description: 'Сonverts simple line breaks (Enter) to \n (e.g. New\nLine).'
+              description: 'Сonvert simple line breaks (Enter) to \n (e.g. New\nLine).'
               type: boolean
               default: false
           type: object
@@ -25207,7 +25405,7 @@ components:
           type: boolean
           default: false
         convertLineBreaks:
-          description: 'Сonverts simple line breaks (Enter) to \n (e.g. New\nLine).'
+          description: 'Сonvert simple line breaks (Enter) to \n (e.g. New\nLine).'
           type: boolean
           default: false
       type: object
@@ -25219,7 +25417,7 @@ components:
           type: boolean
           default: false
         convertLineBreaks:
-          description: 'Сonverts simple line breaks (Enter) to \n (e.g. New\nLine).'
+          description: 'Сonvert simple line breaks (Enter) to \n (e.g. New\nLine).'
           type: boolean
           default: false
       type: object
@@ -27841,7 +28039,7 @@ components:
           example: '2019-09-23T09:35:31+00:00'
       type: object
     SecurityLogCollectionResource:
-      description: 'Secutiry Log Collection Resource'
+      description: 'Security Log Collection Resource'
       type: object
       allOf:
         -
@@ -31902,8 +32100,8 @@ components:
       discriminator:
         propertyName: op
         mapping:
-          replace: '#/components/schemas/TmSegmemtRecordOperationReplace'
-    TmSegmemtRecordOperationReplace:
+          replace: '#/components/schemas/TmSegmentRecordOperationReplaceFromDiscriminator'
+    TmSegmentRecordOperationReplaceFromDiscriminator:
       description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       type: object
       allOf:
@@ -34263,7 +34461,7 @@ components:
               default: false
               example: false
             languagesAccess:
-              description: 'needed if `allLangauges` equal `false`'
+              description: 'needed if `allLanguages` equal `false`'
               properties:
                 it:
                   description: 'Language Identifier. Get via [Project Target Languages](#operation/api.projects.get)'
@@ -34292,7 +34490,7 @@ components:
               default: false
               example: false
             languagesAccess:
-              description: 'needed if `allLangauges` equal `false`'
+              description: 'needed if `allLanguages` equal `false`'
               properties:
                 it:
                   description: 'Language Identifier. Get via [Project Target Languages](#operation/api.projects.get)'
@@ -34501,7 +34699,47 @@ components:
           type: integer
           example: 5
       type: object
+    EnterpriseAdditionalFields:
+      title: Fields
+      description: 'Fields. Keys get via [List Fields](#operation/api.fields.getMany)'
+      type: object
+      example:
+        some-field-1: 'some value 1'
+        some-field-2: 12
+        some-field-3: true
+        some-field-4:
+          - en
+          - ja
+      additionalProperties:
+        anyOf:
+          -
+            type: string
+          -
+            type: integer
+          -
+            type: boolean
+          -
+            type: object
   parameters:
+    AiFineTuningJobCollectionStatuses:
+      name: statuses
+      in: query
+      description: "Filter the collection by the specified status. It can be one status or a list of comma-separated ones.\n\nPossible values: `created`, `in_progress`, `canceled`, `failed`, `finished`"
+      schema:
+        type: string
+      example: 'created,in_progress'
+    AiFineTuningJobCollectionOrderBy:
+      name: orderBy
+      in: query
+      description: 'Read more about [sorting rules](#section/Introduction/Sorting)'
+      schema:
+        type: string
+        enum:
+          - createdAt
+          - updatedAt
+          - startedAt
+          - finishedAt
+      example: 'createdAt desc'
     PaginationLimit:
       name: limit
       in: query
@@ -34643,17 +34881,17 @@ components:
     CrowdinReportArchiveScopeId:
       name: scopeId
       in: query
-      description: 'Filter archives by spicific scope id'
+      description: 'Filter archives by specific scope id'
       required: false
       schema:
-        type: int
+        type: integer
     EnterpriseReportArchiveScopeId:
       name: scopeId
       in: query
-      description: "Filter archives by spicific scope id\n\n __Note__: Use only if `scopeType` set to `group` or `project`"
+      description: "Filter archives by specific scope id\n\n __Note__: Use only if `scopeType` set to `group` or `project`"
       required: false
       schema:
-        type: int
+        type: integer
     EnterpriseReportArchiveScopeType:
       name: scopeType
       in: query
