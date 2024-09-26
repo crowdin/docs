@@ -1,6 +1,6 @@
 # Crowdin Docs
 
-This repository contains the documentation website code and Markdown source files for support.crowdin.com.
+This repository contains the website code and Markdown articles for [Crowdin Docs](https://support.crowdin.com).
 
 If you would like to contribute to the documentation, please read the [Contribution Guidelines](CONTRIBUTING.md).
 
