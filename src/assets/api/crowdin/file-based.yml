@@ -593,6 +593,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
   '/users/{userId}/ai/prompts/{aiPromptId}/completions/{completionId}':
     get:
       tags:
@@ -6031,6 +6037,130 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalServerErrorExceptionResource'
+  '/projects/{projectId}/pre-translations':
+    get:
+      tags:
+        - Translations
+      summary: 'List Pre-Translations'
+      operationId: api.projects.pre-translations.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Pre-translation list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrowdinPreTranslationCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '503':
+          description: 'Service Unavailable'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+    post:
+      tags:
+        - Translations
+      summary: 'Apply Pre-Translation'
+      operationId: api.projects.pre-translations.post
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreTranslationForm'
+      responses:
+        '202':
+          description: 'Pre-translation was successfully started'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrowdinPreTranslationResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '402':
+          description: 'Payment required'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRequiredExceptionResource'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '422':
+          description: 'Unprocessable Entity'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
+        '503':
+          description: 'Service Unavailable'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
   '/projects/{projectId}/pre-translations/{preTranslationId}':
     get:
       tags:
@@ -6048,13 +6178,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PreTranslationResource'
-        '400':
-          description: 'Invalid Request Parameters'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorCollectionResource'
+                $ref: '#/components/schemas/CrowdinPreTranslationResource'
         '401':
           description: Unauthorized
           content:
@@ -6085,27 +6209,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
-  '/projects/{projectId}/pre-translations':
-    post:
+    patch:
       tags:
         - Translations
-      summary: 'Apply Pre-Translation'
-      operationId: api.projects.pre-translations.post
+      summary: 'Edit Pre-Translation'
+      operationId: api.projects.pre-translations.patch
       parameters:
         -
           $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/PreTranslationId'
       requestBody:
+        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PreTranslationForm'
+              $ref: '#/components/schemas/PreTranslationPatch'
       responses:
-        '202':
-          description: 'Pre-translation was successfully started'
+        '200':
+          description: 'Pre-translation was successfully updated'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PreTranslationResource'
+                $ref: '#/components/schemas/CrowdinPreTranslationResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -6118,12 +6244,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthenticateError'
-        '402':
-          description: 'Payment required'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaymentRequiredExceptionResource'
         '403':
           description: Forbidden
           content:
@@ -6131,7 +6251,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
         '404':
-          description: 'Project, language, file, MT engine or AI prompt with specified id was not found'
+          description: 'Project or pre-translation with specified id was not found'
           content:
             application/json:
               schema:
@@ -6520,7 +6640,7 @@ paths:
           $ref: '#/components/parameters/ProjectId'
       responses:
         '200':
-          description: "Project data\n* Translators and proofreaders – receive the response `Project Info` (all the project data, that's visible to all the project members within the ui)\n* Project owners, organization admins, and managers – receive the response `Project Settings` (all the basic project info plus extended details, including project settings, resources, QA checks, and more)"
+          description: "Project data\n     * Translators and proofreaders – receive the response `Project Info` (all the project data, that's visible to all the project members within the ui)\n     * Project owners, organization admins, and managers – receive the response `Project Settings` (all the basic project info plus extended details, including project settings, resources, QA checks, and more)"
           content:
             application/json:
               schema:
@@ -8118,6 +8238,12 @@ paths:
       parameters:
         -
           $ref: '#/components/parameters/ProjectId'
+        -
+          name: search
+          in: query
+          description: 'Search screenshots by name, tagged strings or file names that include screenshots.'
+          schema:
+            type: string
         -
           name: orderBy
           in: query
@@ -14084,11 +14210,14 @@ paths:
 components:
   schemas:
     AiFineTuningDatasetGenerateForm:
-      required:
-        - projectIds
       properties:
         projectIds:
-          description: 'Project identifiers from which the dataset will be generated. Get via [List Projects](#operation/api.projects.getMany)'
+          description: "Project identifiers from which the dataset will be generated. Get via [List Projects](#operation/api.projects.getMany).\n\n__Note__: Required if `tmIds` are not specified."
+          type: array
+          items:
+            type: integer
+        tmIds:
+          description: "TM identifiers from which the dataset will be generated. Get via [List TMs](#operation/api.tms.getMany).\n\n__Note__: This parameter is not supported for the prompt with the external configuration."
           type: array
           items:
             type: integer
@@ -14142,11 +14271,14 @@ components:
           type: object
         trainingOptions:
           description: 'Options for generating the training dataset.'
-          required:
-            - projectIds
           properties:
             projectIds:
-              description: 'Project identifiers from which the dataset will be generated. Get via [List Projects](#operation/api.projects.getMany)'
+              description: "Project identifiers from which the dataset will be generated. Get via [List Projects](#operation/api.projects.getMany).\n\n__Note__: Required if `tmIds` are not specified."
+              type: array
+              items:
+                type: integer
+            tmIds:
+              description: "TM identifiers from which the dataset will be generated. Get via [List TMs](#operation/api.tms.getMany).\n\n__Note__: This parameter is not supported for the prompt with the external configuration."
               type: array
               items:
                 type: integer
@@ -14174,7 +14306,12 @@ components:
           description: 'Options for generating the validation dataset.'
           properties:
             projectIds:
-              description: 'Project identifiers from which the dataset will be generated. Get via [List Projects](#operation/api.projects.getMany)'
+              description: "Project identifiers from which the dataset will be generated. Get via [List Projects](#operation/api.projects.getMany).\n\n__Note__: Required if `tmIds` are not specified."
+              type: array
+              items:
+                type: integer
+            tmIds:
+              description: "TM identifiers from which the dataset will be generated. Get via [List TMs](#operation/api.tms.getMany).\n\n__Note__: This parameter is not supported for the prompt with the external configuration."
               type: array
               items:
                 type: integer
@@ -14275,6 +14412,12 @@ components:
               type: array
               items:
                 type: integer
+              nullable: true
+            tmIds:
+              type: array
+              items:
+                type: integer
+              nullable: true
             purpose:
               type: string
               default: training
@@ -14396,6 +14539,11 @@ components:
                 projectIds:
                   type: array
                   items: { type: integer }
+                  nullable: true
+                tmIds:
+                  type: array
+                  items: { type: integer }
+                  nullable: true
                 dateFrom:
                   type: string
                   format: date-time
@@ -14421,6 +14569,11 @@ components:
                 projectIds:
                   type: array
                   items: { type: integer }
+                  nullable: true
+                tmIds:
+                  type: array
+                  items: { type: integer }
+                  nullable: true
                 dateFrom:
                   type: string
                   format: date-time
@@ -14751,6 +14904,8 @@ components:
         screenshots:
           type: boolean
         publicProjectDescription:
+          type: boolean
+        siblingsStrings:
           type: boolean
       type: object
     ai.prompt.config.basic_mode.assist:
@@ -15466,8 +15621,8 @@ components:
           format: json-pointer
           enum:
             - /assistActionAiPromptId
+            - /editorSuggestionAiPromptId
             - /shortcuts
-            - /showSuggestion
       type: object
       discriminator:
         propertyName: op
@@ -15518,9 +15673,9 @@ components:
         assistActionAiPromptId:
           type: integer
           example: 2
-        showSuggestion:
-          type: boolean
-          example: true
+        editorSuggestionAiPromptId:
+          type: integer
+          example: 5
         shortcuts:
           type: array
           items:
@@ -22000,9 +22155,65 @@ components:
           format: date-time
           example: '2019-09-23T09:19:07+00:00'
       type: object
-    EnterpriseFallbackLanguagesScheme:
+    PreTranslationPatch:
+      type: array
+      items:
+        $ref: '#/components/schemas/PreTranslationOperation'
+    PreTranslationOperation:
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+            - test
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - /status
+      type: object
+      discriminator:
+        propertyName: op
+        mapping:
+          replace: '#/components/schemas/PreTranslationOperationReplace'
+          test: '#/components/schemas/PreTranslationOperationTest'
+    PreTranslationOperationReplace:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/PreTranslationOperation'
+        -
+          properties:
+            value:
+              oneOf:
+                -
+                  type: string
+    PreTranslationOperationTest:
+      description: 'A JSON Patch `Test` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.6)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/PreTranslationOperation'
+        -
+          properties:
+            value:
+              oneOf:
+                -
+                  type: string
+    FallbackLanguagesScheme:
       title: 'Fallback Languages'
-      description: "Defines fallback languages mapping. The passed value should be an associative array containing both language id and array of fallback language ids:\n\n * `{languageId}` – Crowdin id for the specified language. Get via [List Supported Languages](#operation/api.languages.getMany)\n * `Array of strings` – an array containing fallback language ids. Get via [List Supported Languages](#operation/api.languages.getMany)\n\n__Note:__ Available only for TM Pre-Translation"
+      description: "Defines fallback languages mapping. The passed value should be an associative array containing both language id and array of fallback language ids:\n\n - `{languageId}` – Crowdin id for the specified language. Get via [List Supported Languages](#operation/api.languages.getMany)\n - `Array of strings` – an array containing fallback language ids. Get via [List Supported Languages](#operation/api.languages.getMany)\n\n__Note:__ Available only for TM Pre-Translation"
       properties:
         languageId:
           type: array
@@ -22029,7 +22240,7 @@ components:
           x-doc-sections:
             - file-based
         method:
-          description: "Defines pre-translation method. Available values:\n * 'tm' – pre-translation via Translation Memory\n * 'mt' – pre-translation via Machine Translation. 'mt' should be used with `engineId` parameter\n * 'ai' – pre-translation via AI. 'ai' should be used with `aiPromptId` parameter"
+          description: "Defines pre-translation method. Available values:\n- 'tm' – pre-translation via Translation Memory\n- 'mt' – pre-translation via Machine Translation. 'mt' should be used with `engineId` parameter\n- 'ai' – pre-translation via AI. 'ai' should be used with `aiPromptId` parameter"
           type: string
           default: tm
           enum:
@@ -22044,7 +22255,7 @@ components:
           description: 'AI Prompt Identifier. Get via [List AI Prompts](#operation/api.ai.prompts.getMany)'
           type: integer
         autoApproveOption:
-          description: "Defines which translations added by TM pre-translation should be auto-approved. Available values:\n * 'all' – all\n * 'perfectMatchOnly' – with perfect TM match\n * 'exceptAutoSubstituted' – all (skip auto-substituted suggestions)\n * 'perfectMatchApprovedOnly' - with perfect TM match (approved previously)\n * 'none' – no auto-approve"
+          description: "Defines which translations added by TM pre-translation should be auto-approved. Available values:\n- 'all' – all\n- 'perfectMatchOnly' – with perfect TM match\n- 'exceptAutoSubstituted' – all (skip auto-substituted suggestions)\n- 'perfectMatchApprovedOnly' - with perfect TM match (approved previously)\n- 'none' – no auto-approve"
           type: string
           default: none
           enum:
@@ -22070,7 +22281,7 @@ components:
           type: boolean
           default: false
         fallbackLanguages:
-          $ref: '#/components/schemas/EnterpriseFallbackLanguagesScheme'
+          $ref: '#/components/schemas/FallbackLanguagesScheme'
         labelIds:
           description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
           type: array
@@ -22082,8 +22293,36 @@ components:
           items:
             type: integer
       type: object
-    PreTranslationResource:
-      description: 'Pre Translation Resource'
+    CrowdinPreTranslationCollectionResource:
+      description: 'Pre-Translation Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CrowdinPreTranslation'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    EnterprisePreTranslationCollectionResource:
+      description: 'Pre-Translation Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/EnterprisePreTranslation'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    CrowdinPreTranslationResource:
+      description: 'Pre-Translation Resource'
       type: object
       allOf:
         -
@@ -22091,21 +22330,37 @@ components:
         -
           properties:
             data:
-              $ref: '#/components/schemas/PreTranslation'
-    PreTranslation:
+              $ref: '#/components/schemas/CrowdinPreTranslation'
+    EnterprisePreTranslationResource:
+      description: 'Pre-Translation Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/EnterprisePreTranslation'
+    CrowdinPreTranslation:
       properties:
         identifier:
           type: string
           example: 9e7de270-4f83-41cb-b606-2f90631f26e2
         status:
           type: string
+          enum:
+            - created
+            - in_progress
+            - canceled
+            - failed
+            - finished
           example: created
         progress:
           description: 'in percentages'
           type: integer
           example: 90
         attributes:
-          $ref: '#/components/schemas/PreTranslateAttributes'
+          $ref: '#/components/schemas/CrowdinPreTranslateAttributes'
         createdAt:
           type: string
           format: date-time
@@ -22121,7 +22376,16 @@ components:
           type: string
           format: date-time
       type: object
-    PreTranslateAttributes:
+    EnterprisePreTranslation:
+      allOf:
+        -
+          $ref: '#/components/schemas/CrowdinPreTranslation'
+        -
+          properties:
+            attributes:
+              $ref: '#/components/schemas/EnterprisePreTranslateAttributes'
+          type: object
+    CrowdinPreTranslateAttributes:
       properties:
         languageIds:
           type: array
@@ -22153,16 +22417,17 @@ components:
         translateWithPerfectMatchOnly:
           type: boolean
           example: true
-        fallbackLanguages:
-          properties:
-            '{languageId}':
-              type: array
-              items:
-                type: string
-                example: uk
-          type: object
-          nullable: true
       type: object
+    EnterprisePreTranslateAttributes:
+      allOf:
+        -
+          $ref: '#/components/schemas/CrowdinPreTranslateAttributes'
+        -
+          properties:
+            minimumMatchRatio:
+              type: integer
+              example: 90
+          type: object
     FileProgressCollectionResource:
       description: 'Language Translation File Progress Collection Resource'
       type: object
@@ -22399,6 +22664,7 @@ components:
             - /visibility
             - /languageAccessPolicy
             - /glossaryAccess
+            - /glossaryAccessOption
             - /description
             - /translateDuplicates
             - /isMtAllowed
@@ -22440,6 +22706,7 @@ components:
             - /mtPreTranslate
             - /aiPreTranslate
             - /assistActionAiPromptId
+            - /editorSuggestionAiPromptId
             - /savingsReportSettingsTemplateId
           x-doc-sections:
             - file-based
@@ -22898,6 +23165,16 @@ components:
           type: boolean
           default: false
           example: false
+          deprecated: true
+        glossaryAccessOption:
+          description: 'Defines how project members will manage glossary terms. The project owner and managers always can add and edit terms.'
+          type: string
+          default: readOnly
+          enum:
+            - readOnly
+            - fullAccess
+            - manageDrafts
+          example: readOnly
         normalizePlaceholder:
           description: 'Enable the transformation of the placeholders to the unified format to improve the work with TM suggestions'
           type: boolean
@@ -22966,9 +23243,13 @@ components:
                 $ref: '#/components/schemas/PromptAiPreTranslateProjectSettings'
           type: object
         assistActionAiPromptId:
-          description: 'AI Prompt ID to be used as prompt for Assist action'
+          description: 'AI Prompt ID to be used as prompt for AI Assist action in Editor'
           type: integer
           example: 12
+        editorSuggestionAiPromptId:
+          description: 'AI Prompt ID to be used as prompt for AI Suggestion action in Editor'
+          type: integer
+          example: 13
         savingsReportSettingsTemplateId:
           description: 'Report Settings Templates Identifier. Get via [List Report Settings Templates](#operation/api.projects.reports.settings-templates.getMany)'
           type: integer
@@ -24310,6 +24591,15 @@ components:
               type: boolean
               default: false
               example: false
+              deprecated: true
+            glossaryAccessOption:
+              type: string
+              default: readOnly
+              enum:
+                - readOnly
+                - fullAccess
+                - manageDrafts
+              example: readOnly
             isMtAllowed:
               type: boolean
               example: false
@@ -24420,6 +24710,10 @@ components:
             assistActionAiPromptId:
               type: integer
               example: 1
+              nullable: true
+            editorSuggestionAiPromptId:
+              type: integer
+              example: 2
               nullable: true
     language-mapping-uk:
       title: "Language Mapping 'uk'"
@@ -25365,9 +25659,9 @@ components:
         assistActionAiPromptId:
           type: integer
           example: 2
-        showSuggestion:
-          type: boolean
-          example: true
+        editorSuggestionAiPromptId:
+          type: integer
+          example: 2
       type: object
     SystemStringsExporterSettings:
       title: 'String Exporter Settings'
@@ -25733,6 +26027,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/post-edit-report-settings-template-form.net-rate-schemes.mt-match.net-rate'
+        aiMatch:
+          description: "\n\n __Note:__ The `aiMatch` field is optional. If this field is not filled in, the schema will be taken from the `mtMatch` field."
+          type: array
+          items:
+            $ref: '#/components/schemas/post-edit-report-settings-template-form.net-rate-schemes.ai-match.net-rate'
         suggestionMatch:
           type: array
           items:
@@ -25759,6 +26058,25 @@ components:
           example: 0.1
       type: object
     post-edit-report-settings-template-form.net-rate-schemes.mt-match.net-rate:
+      required:
+        - matchType
+        - price
+      properties:
+        matchType:
+          description: 'Match type, %'
+          type: string
+          enum:
+            - '100'
+            - 99-82
+            - 81-60
+          example: '100'
+        price:
+          description: 'Price, %'
+          type: number
+          format: float
+          example: 0.1
+      type: object
+    post-edit-report-settings-template-form.net-rate-schemes.ai-match.net-rate:
       required:
         - matchType
         - price
@@ -26477,6 +26795,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/translation-costs-pe.report.net-rate-schemes.mt-match.net-rate'
+        aiMatch:
+          description: "\n\n __Note:__ The `aiMatch` field is optional. If this field is not filled in, the schema will be taken from the `mtMatch` field."
+          type: array
+          items:
+            $ref: '#/components/schemas/translation-costs-pe.report.net-rate-schemes.ai-match.net-rate'
         suggestionMatch:
           type: array
           items:
@@ -26503,6 +26826,25 @@ components:
           example: 0.1
       type: object
     translation-costs-pe.report.net-rate-schemes.mt-match.net-rate:
+      required:
+        - matchType
+        - price
+      properties:
+        matchType:
+          description: 'Match type, %'
+          type: string
+          enum:
+            - '100'
+            - 99-82
+            - 81-60
+          example: '100'
+        price:
+          description: 'Price, %'
+          type: number
+          format: float
+          example: 0.1
+      type: object
+    translation-costs-pe.report.net-rate-schemes.ai-match.net-rate:
       required:
         - matchType
         - price
@@ -27104,6 +27446,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/group-translation-costs-pe.report.net-rate-schemes.mt-match.net-rate'
+        aiMatch:
+          description: "\n\n__Note:__ The `aiMatch` field is optional. If this field is not filled in, the schema will be taken from the `mtMatch` field."
+          type: array
+          items:
+            $ref: '#/components/schemas/group-translation-costs-pe.report.net-rate-schemes.ai-match.net-rate'
         suggestionMatch:
           type: array
           items:
@@ -27130,6 +27477,25 @@ components:
           example: 0.1
       type: object
     group-translation-costs-pe.report.net-rate-schemes.mt-match.net-rate:
+      required:
+        - matchType
+        - price
+      properties:
+        matchType:
+          description: 'Match type, %'
+          type: string
+          enum:
+            - '100'
+            - 99-82
+            - 81-60
+          example: '100'
+        price:
+          description: 'Price, %'
+          type: number
+          format: float
+          example: 0.1
+      type: object
+    group-translation-costs-pe.report.net-rate-schemes.ai-match.net-rate:
       required:
         - matchType
         - price
@@ -27399,6 +27765,7 @@ components:
       required:
         - tmMatch
         - mtMatch
+        - aiMatch
         - suggestionMatch
       properties:
         tmMatch:
@@ -27409,6 +27776,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/post-edit-report-settings-template.net-rate-schemes.mt-match.net-rate'
+          nullable: true
+        aiMatch:
+          type: array
+          items:
+            $ref: '#/components/schemas/post-edit-report-settings-template.net-rate-schemes.ai-match.net-rate'
           nullable: true
         suggestionMatch:
           type: array
@@ -27437,6 +27809,25 @@ components:
           example: 0.1
       type: object
     post-edit-report-settings-template.net-rate-schemes.mt-match.net-rate:
+      required:
+        - matchType
+        - price
+      properties:
+        matchType:
+          description: 'Match type, %'
+          type: string
+          enum:
+            - '100'
+            - 99-82
+            - 81-60
+          example: '100'
+        price:
+          description: 'Price, %'
+          type: number
+          format: float
+          example: 0.1
+      type: object
+    post-edit-report-settings-template.net-rate-schemes.ai-match.net-rate:
       required:
         - matchType
         - price
@@ -27827,6 +28218,10 @@ components:
         name:
           description: 'Screenshot name'
           type: string
+        usePreviousTags:
+          description: 'Use previous tags'
+          type: boolean
+          default: true
       type: object
     TagCollectionReplaceForm:
       title: 'Replace Tags'
@@ -31839,6 +32234,7 @@ components:
             - admitted
             - 'not recommended'
             - obsolete
+            - draft
           example: preferred
         type:
           description: 'Term type'
@@ -32535,17 +32931,17 @@ components:
           example: false
           deprecated: true
         skipUntranslatedStrings:
-          description: "Defines whether to export only translated strings\n\n__Note:__ `true` value can't be used with `skipUntranslatedFiles=true` in same request\n\n [More info](https://support.crowdin.com/advanced-project-setup/#export)"
+          description: "Defines whether to export only translated strings\n\n__Note:__ `true` value can't be used with `skipUntranslatedFiles=true` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
         skipUntranslatedFiles:
-          description: "Defines whether to export only translated file\n\n__Note:__ `true` value can't be used with `skipUntranslatedStrings=true` in same request\n\n [More info](https://support.crowdin.com/advanced-project-setup/#export)"
+          description: "Defines whether to export only translated file\n\n__Note:__ `true` value can't be used with `skipUntranslatedStrings=true` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
         exportApprovedOnly:
-          description: "Defines whether to export only approved strings\n\n [More info](https://support.crowdin.com/advanced-project-setup/#export)"
+          description: "Defines whether to export only approved strings\n\n [More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
@@ -32559,17 +32955,17 @@ components:
             type: string
             example: uk
         skipUntranslatedStrings:
-          description: "Defines whether to export only translated strings\n\n__Note:__ `true` value can't be used with `skipUntranslatedFiles=true` in same request\n\n [More info](https://support.crowdin.com/advanced-project-setup/#export)"
+          description: "Defines whether to export only translated strings\n\n__Note:__ `true` value can't be used with `skipUntranslatedFiles=true` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
         skipUntranslatedFiles:
-          description: "Defines whether to export only translated file\n\n__Note:__ `true` value can't be used with `skipUntranslatedStrings=true` in same request\n\n [More info](https://support.crowdin.com/advanced-project-setup/#export)"
+          description: "Defines whether to export only translated file\n\n__Note:__ `true` value can't be used with `skipUntranslatedStrings=true` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
         exportApprovedOnly:
-          description: "Defines whether to export only approved strings\n\n [More info](https://support.crowdin.com/advanced-project-setup/#export)"
+          description: "Defines whether to export only approved strings\n\n [More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
@@ -32592,15 +32988,15 @@ components:
             type: string
             example: uk
         skipUntranslatedStrings:
-          description: "Defines whether to export only translated strings\n\n__Note:__ `true` value can't be used with `skipUntranslatedFiles=true` in same request\n\n [More info](https://support.crowdin.com/advanced-project-setup/#export)"
+          description: "Defines whether to export only translated strings\n\n__Note:__ `true` value can't be used with `skipUntranslatedFiles=true` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           example: false
         skipUntranslatedFiles:
-          description: "Defines whether to export only translated files\n\n__Note:__ `true` value can't be used with `skipUntranslatedStrings=true` in same request\n\n [More info](https://support.crowdin.com/advanced-project-setup/#export)"
+          description: "Defines whether to export only translated files\n\n__Note:__ `true` value can't be used with `skipUntranslatedStrings=true` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           example: false
         exportApprovedOnly:
-          description: "Defines whether to export only approved strings\n\n [More info](https://support.crowdin.com/advanced-project-setup/#export)"
+          description: "Defines whether to export only approved strings\n\n [More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           example: false
       type: object
@@ -32641,17 +33037,17 @@ components:
             type: integer
             example: 1
         skipUntranslatedStrings:
-          description: "Defines whether to export only translated strings\n\n__Note:__ Can't be used with `skipUntranslatedFiles` in same request\n\n [More info](https://support.crowdin.com/advanced-project-setup/#export)"
+          description: "Defines whether to export only translated strings\n\n__Note:__ Can't be used with `skipUntranslatedFiles` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
         skipUntranslatedFiles:
-          description: "Defines whether to export only translated file\n\n__Note:__ Can't be used with `skipUntranslatedStrings` in same request\n\n [More info](https://support.crowdin.com/advanced-project-setup/#export)"
+          description: "Defines whether to export only translated file\n\n__Note:__ Can't be used with `skipUntranslatedStrings` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
         exportApprovedOnly:
-          description: "Defines whether to export only approved strings\n\n [More info](https://support.crowdin.com/advanced-project-setup/#export)"
+          description: "Defines whether to export only approved strings\n\n [More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
