@@ -1,0 +1,255 @@
+---
+title: External QA Check Module
+description: Add an external QA check for advanced, AI-powered, and other specialized verifications.
+slug: developer/crowdin-apps-module-external-qa-check
+sidebar:
+  label: External QA Check
+---
+
+This module allows for the integration of advanced, AI-powered, and other specialized QA checks, enabling verification of translations for nuanced issues that cannot be detected by [default QA checks](/enterprise/project-settings/qa-checks/) or JavaScript-based [Custom QA checks](/enterprise/custom-qa-checks/).
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+* Only organization admins
+* All users in the organization projects
+* Selected users
+
+## Structure
+
+```json title="manifest.json"
+{
+  "modules": {
+    "external-qa-check": [
+      {
+        "key": "custom-check-qa",
+        "name": "QA Check",
+        "description": "Description",
+        "runQaCheckUrl": "/validate",
+        "getBatchSizeUrl": "/batch-size",
+        "url": "/settings/index.html"
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The human-readable name of the module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The human-readable description of what the module does.<br/>
+         The description will be visible in the Crowdin Enterprise UI.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>runQaCheckUrl</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL triggered when sending texts for QA validation.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">getBatchSizeUrl</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> The relative URL triggered when retrieving the batch size supported by the module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> The relative URL to the module settings page.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>Description:</strong> Set of environments where a module could be installed.<br/>
+        This parameter is needed for cross-product applications.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Communication between External QA Check App and Crowdin
+
+The system sends texts for QA validation using `runQaCheckUrl` either from the Editor after saving translation or when QA Checks are performed. The app then processes the texts and responds back to the system with one of the two possible types of responses: [without QA issues](#expected-response-from-the-app-without-qa-issues) or [with QA issues](#expected-response-from-the-app-with-qa-issues). When the app needs to determine the maximum batch size for the QA check, it sets the `getBatchSizeUrl` key in the `manifest.json` with the URL to an endpoint that provides the optimal batch size.
+
+## Request to the App from Crowdin for runQaCheckUrl
+
+Request payload example:
+
+```json collapse={26-82}
+{
+  "data": {
+    "translations": [
+      {
+        "id": 12345,
+        "stringId": 1234567,
+        "languageId": "fr",
+        "userId": 1,
+        "text": "La mise à jour est installé avec succès.",
+        "provider": null,
+        "pluralCategoryName": null,
+        "isPreTranslated": false,
+        "rating": 0
+      }
+    ],
+    "strings": [
+      {
+        "id": 1234567,
+        "key": "update_success",
+        "context": "Confirmation of successful software update",
+        "maxLength": null,
+        "text": "The update was successfully installed.",
+        "fields": []
+      }
+    ],
+    "sourceLanguage": {
+      "id": "en",
+      "name": "English",
+      "twoLettersCode": "en",
+      "threeLettersCode": "eng",
+      "locale": "en-US",
+      "pluralCategoryNames": ["one", "other"],
+      "pluralRules": "(n != 1)",
+      "pluralExamples": [1, 2],
+      "textDirection": "ltr",
+      "dialectOf": null
+    },
+    "targetLanguage": {
+      "id": "fr",
+      "name": "French",
+      "twoLettersCode": "fr",
+      "threeLettersCode": "fra",
+      "locale": "fr-FR",
+      "pluralCategoryNames": ["one", "other"],
+      "pluralRules": "(n > 1)",
+      "pluralExamples": [1, 2],
+      "textDirection": "ltr",
+      "dialectOf": null
+    },
+    "project": {
+      "id": 123,
+      "type": 0,
+      "sourceLanguage": {
+        "id": "en",
+        "name": "English",
+        "twoLettersCode": "en",
+        "threeLettersCode": "eng",
+        "locale": "en-US",
+        "pluralCategoryNames": ["one", "other"],
+        "pluralRules": "(n != 1)",
+        "pluralExamples": [1, 2],
+        "textDirection": "ltr",
+        "dialectOf": null
+      },
+      "targetLanguages": [
+        {
+          "id": "fr",
+          "name": "French",
+          "twoLettersCode": "fr",
+          "threeLettersCode": "fra",
+          "locale": "fr-FR",
+          "pluralCategoryNames": ["one", "other"],
+          "pluralRules": "(n > 1)",
+          "pluralExamples": [1, 2],
+          "textDirection": "ltr",
+          "dialectOf": null
+        }
+      ],
+      "name": "Project Name",
+      "description": "Project Description",
+      "fields": []
+    },
+    "file": {
+      "id": 123,
+      "name": "filename.csv",
+      "title": null,
+      "context": null,
+      "type": "csv",
+      "path": "/filename.csv",
+      "fields": []
+    }
+  }
+}
+```
+
+## Expected Response from the App (Without QA issues)
+
+Response payload example:
+
+```json
+{
+  "data": {
+    "validations": [
+      {
+        "translationId": 123,
+        "passed": true
+      }
+    ]
+  }
+}
+```
+
+## Expected Response from the App (With QA issues)
+
+Response payload example:
+
+```json
+{
+  "data": {
+    "validations": [
+      {
+        "translationId": 456,
+        "passed": false,
+        "error": {
+          "message": "Example error message"
+        }
+      }
+    ]
+  }
+}
+```
+
+## Response from the App to Crowdin for getBatchSizeUrl
+
+Response payload example:
+
+```json
+{
+  "data": {
+    "size": 10
+  }
+}
+```
+
+The structure of the responses from the app should correspond to the presented examples; otherwise, Crowdin will consider them invalid.
