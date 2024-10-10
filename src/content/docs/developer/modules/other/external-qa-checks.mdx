@@ -1,12 +1,12 @@
 ---
 title: External QA Check Module
-description: Add an external QA check for advanced AI-powered verifications.
+description: Add an external QA check for advanced, AI-powered, and other specialized verifications.
 slug: developer/crowdin-apps-module-external-qa-check
 sidebar:
   label: External QA Check
 ---
 
-This module allows for the integration of advanced AI-powered QA checks, enabling verification of translations for nuanced issues that cannot be detected by [default QA checks](/enterprise/project-settings/qa-checks/) or JavaScript-based [Custom QA checks](/enterprise/custom-qa-checks/).
+This module allows for the integration of advanced, AI-powered, and other specialized QA checks, enabling verification of translations for nuanced issues that cannot be detected by [default QA checks](/enterprise/project-settings/qa-checks/) or JavaScript-based [Custom QA checks](/enterprise/custom-qa-checks/).
 
 ## Access
 
@@ -75,7 +75,7 @@ You can grant access to this module to one of the following user categories:
       <td><code class="whitespace-nowrap">getBatchSizeUrl</code></td>
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
-        <p><strong>Required:</strong> yes</p>
+        <p><strong>Required:</strong> no</p>
         <p><strong>Description:</strong> The relative URL triggered when retrieving the batch size supported by the module.</p>
       </td>
     </tr>
@@ -83,7 +83,7 @@ You can grant access to this module to one of the following user categories:
       <td><code>url</code></td>
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
-        <p><strong>Required:</strong> yes</p>
+        <p><strong>Required:</strong> no</p>
         <p><strong>Description:</strong> The relative URL to the module settings page.</p>
       </td>
     </tr>
@@ -101,13 +101,13 @@ You can grant access to this module to one of the following user categories:
 
 ## Communication between External QA Check App and Crowdin
 
-The system sends texts for QA validation using `runQaCheckUrl` either from the Editor after saving translation or when QA Checks are performed. The app then processes the texts and responds back to the system with one of the two possible types of responses: [without QA issues](#expected-response-from-the-app-without-qa-issues) or [with QA issues](#expected-response-from-the-app-with-qa-issues). When Crowdin needs to determine the maximum batch size for the QA check, it sends a request to the app using `getBatchSizeUrl`, which responds with the appropriate batch size.
+The system sends texts for QA validation using `runQaCheckUrl` either from the Editor after saving translation or when QA Checks are performed. The app then processes the texts and responds back to the system with one of the two possible types of responses: [without QA issues](#expected-response-from-the-app-without-qa-issues) or [with QA issues](#expected-response-from-the-app-with-qa-issues). When the app needs to determine the maximum batch size for the QA check, it sets the `getBatchSizeUrl` key in the `manifest.json` with the URL to an endpoint that provides the optimal batch size.
 
 ## Request to the App from Crowdin for runQaCheckUrl
 
 Request payload example:
 
-```json collapse={30-54}
+```json collapse={26-82}
 {
   "data": {
     "translations": [
@@ -133,6 +133,30 @@ Request payload example:
         "fields": []
       }
     ],
+    "sourceLanguage": {
+      "id": "en",
+      "name": "English",
+      "twoLettersCode": "en",
+      "threeLettersCode": "eng",
+      "locale": "en-US",
+      "pluralCategoryNames": ["one", "other"],
+      "pluralRules": "(n != 1)",
+      "pluralExamples": [1, 2],
+      "textDirection": "ltr",
+      "dialectOf": null
+    },
+    "targetLanguage": {
+      "id": "fr",
+      "name": "French",
+      "twoLettersCode": "fr",
+      "threeLettersCode": "fra",
+      "locale": "fr-FR",
+      "pluralCategoryNames": ["one", "other"],
+      "pluralRules": "(n > 1)",
+      "pluralExamples": [1, 2],
+      "textDirection": "ltr",
+      "dialectOf": null
+    },
     "project": {
       "id": 123,
       "type": 0,
@@ -200,7 +224,7 @@ Response payload example:
 
 Response payload example:
 
-```json {"Optional; only applicable if running the QA check synchronously":9-16}
+```json
 {
   "data": {
     "validations": [
@@ -208,15 +232,7 @@ Response payload example:
         "translationId": 456,
         "passed": false,
         "error": {
-          "message": "Example error message",
-
-          "suggestedFixes": [
-            {
-              "indexStart": 0,
-              "indexEnd": 10,
-              "replacement": "Correct translation"
-            }
-          ]
+          "message": "Example error message"
         }
       }
     ]
