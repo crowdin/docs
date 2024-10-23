@@ -58,7 +58,7 @@ Depending on the current page on which this method is used, the payload may cont
 
 Payload example:
 
-```json
+```json collapse={11-45}
 {
   "project_id": "12",
   "organization_id": "200000000",
@@ -68,6 +68,43 @@ Payload example:
     "source_language_id": "en",
     "target_language_id": "fr",
     "file": 12345,
+    "fileData": {
+      "id": "12345",
+      "is_plain_text": true,
+      "type": "android8",
+      "status": "1",
+      "parent_id": "0",
+      "node_type": "1",
+      "created": "2024-10-17 00:41:39",
+      "extension": "xml",
+      "priority": "1",
+      "name": "test.xml",
+      "upload_ready": 1,
+      "export_ready": 1,
+      "export_xliff_ready": 1,
+      "can_change": 1,
+      "plural_support": 1,
+      "excluded_languages": [],
+      "html_preview": 0,
+      "identifier_required": 1,
+      "total": 45,
+      "translated": 0,
+      "approved": 0,
+      "preTranslated": 0,
+      "translated_percent": 0,
+      "approved_percent": 0,
+      "progress": {
+          "total": 45,
+          "translated": 0,
+          "approved": 0,
+          "translated_percent": 0,
+          "approved_percent": 0,
+          "pre_translated": 0,
+          "file_id": 12345,
+          "language_id": 52,
+          "translation_link": "/editor/ubrella/12345/en-uk"
+      }
+    },
     "workflow_step": {
       "id": 7777,
       "title": "Translation",
@@ -135,6 +172,13 @@ Properties:
     <td>
       <p><strong>Type:</strong> <code>integer</code></p>
       <p><strong>Description:</strong> The numeric identifier of a file in the Crowdin project that is open in the Editor.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>editor.fileData</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object</code></p>
+      <p><strong>Description:</strong> Contains data related to a file in the Crowdin project that is open in the Editor.</p>
     </td>
   </tr>
   <tr>
@@ -226,7 +270,7 @@ Editor module actions provide a possibility to get information from the Editor U
 
 ### AP.editor.getString(callback) {#get-string}
 
-The method retrieves information about the currently selected string in the Editor.
+The method retrieves information about the active string currently highlighted in the Editor.
 
 Example:
 
@@ -234,6 +278,36 @@ Example:
 AP.editor.getString(function(stringData) {
   console.log("Object: source string", stringData);
 });
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the response object.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### AP.editor.getSelectedStrings(callback) {#get-selected-strings}
+
+This method retrieves information about the currently selected strings in the Editor, along with their translations for the currently selected language.
+
+<Aside>
+  This method is only available for Side-by-side and Multilingual Editor views.
+</Aside>
+
+Example:
+
+```js
+AP.editor.getSelectedStrings(function(stringData) {
+  console.log("Array: objects with source string and translations for selected languages", stringData);
+})
 ```
 
 Properties:
@@ -1174,6 +1248,47 @@ Check out the list of supported events that could be passed to the Crowdin Apps 
             "file": {
             "id": 26588,
             "name": "file name.csv"
+          }
+        }
+        ```
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code>string.selected</code></td>
+    <td>
+      The event emitted when a user selects strings.<br/>
+      <div>
+        ```json
+        {
+          "string": {
+            "id": 3939912,
+            "identifier": "",
+            "text": "source string",
+            "context": "string context",
+            "max_length": 0,
+            "file": {
+              "id": 26588,
+              "name": "file name.csv"
+            }
+          },
+          "translations": {
+            "fr": [
+              {
+                "id": 14861530,
+                "string_id": 3939912,
+                "text": "chaîne source",
+                "target_language_id": "fr",
+                "approved": false,
+                "author": {
+                  "id": "1",
+                  "login": "user.login",
+                  "name": "User Name",
+                  "avatar_url": "https://avatar.com/avatar.png"
+                },
+                "created_at": "2025-05-05T05:05:34-04:00"
+              }
+            ]
           }
         }
         ```
