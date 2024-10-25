@@ -112,7 +112,15 @@ For Crowdin Enterprise:
 
 ## Communication between Custom AI App and Crowdin
 
-The system sends prompts to the app using `chatCompletionsUrl`, the app then processes the prompts and responds to the system with a reply. When configuring a Custom AI provider in the **AI > Providers** page, Crowdin sends a request to the app using `modelsUrl`. Particularly to display available models in the respective input field in the Custom AI provider settings page. A user can select and save needed models, which then will be used for content pre-translation and communication with the assistant using `chatCompletionsUrl`.
+Crowdin sends prompts to the app using `chatCompletionsUrl`, and the app then processes these prompts and responds to Crowdin with a reply.
+
+For an improved experience when interacting with your Custom AI as an assistant in the Crowdin Editor, it is recommended to implement the `stream` parameter using [server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#event_stream_format).
+
+When streaming is supported, AI-generated content can be delivered progressively, providing real-time feedback to users. This improves the workflow by offering immediate suggestions or corrections without waiting for a complete response, ensuring a smooth, interactive experience for tasks like confirming terminology, checking consistency, or refining translations.
+
+Crowdin includes the `stream` parameter set to `true` in requests to the app for `chatCompletions` and expects a response in [the corresponding format](#expected-response-from-the-app-streaming).
+
+When configuring a Custom AI provider in the **AI > Providers** page, Crowdin sends a request to the app using `modelsUrl`, specifically to display available models in the respective input field in the Custom AI provider settings page. You can select and save needed models, which then will be used for content pre-translation and communication with the assistant using `chatCompletionsUrl`.
 
 ## Request to the App from Crowdin for сhatCompletions
 
@@ -128,9 +136,11 @@ The request to `chatCompletionsUrl` will contain authorization headers (e.g., `A
 
 Request payload example:
 
-```json
+```json {"Optional; used to enable streaming responses if set to true":3-4}
 {
   "model": "gpt-3.5-turbo",
+
+  "stream": false,
   "messages": [
     {
       "role": "user",
@@ -175,6 +185,22 @@ Response payload example:
 }
 ```
 
+## Expected Response from the App (Streaming)
+
+Response payload example:
+
+```json
+data: {"choices":[{"delta":{"role":"assistant","content":"Your"}}]}
+
+data: {"choices":[{"delta":{"role":"assistant","content":" rephrased"}}]}
+
+....
+
+data: {"choices":[{"delta":{"role":"assistant","content":" translation"}}]}
+
+[DONE]
+```
+
 ## Response from the App to Crowdin for modelsUrl
 
 Response payload example:
@@ -210,6 +236,7 @@ Response payload example:
       "id": "gpt-6-devil",
       "supportsJsonMode": true,
       "supportsFunctionCalling": true,
+      "supportsStreaming": true,
       "supportsVision": true,
       "contextWindowLimit": 1000000,
       "outputLimit": 8192
@@ -218,6 +245,7 @@ Response payload example:
       "id": "gpt-7-magic",
       "supportsJsonMode": true,
       "supportsFunctionCalling": true,
+      "supportsStreaming": true,
       "supportsVision": true,
       "contextWindowLimit": 1000000,
       "outputLimit": 8192
@@ -230,6 +258,7 @@ Default values:
 
 * **supportsJsonMode**: `false`
 * **supportsFunctionCalling**: `false`
+* **supportsStreaming**: `false`
 * **supportsVision**: `false`
 * **contextWindowLimit**: `4096`
 * **outputLimit**: `4096`
