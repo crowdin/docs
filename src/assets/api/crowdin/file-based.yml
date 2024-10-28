@@ -400,7 +400,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AiPromptResource'
+                $ref: '#/components/schemas/CrowdinAiPromptResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -465,7 +465,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AiPromptCollectionResource'
+                $ref: '#/components/schemas/CrowdinAiPromptCollectionResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -508,14 +508,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AiPromptCreateForm'
+              $ref: '#/components/schemas/CrowdinAiPromptCreateForm'
       responses:
         '201':
           description: 'AI prompt was added successfully'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AiPromptResource'
+                $ref: '#/components/schemas/CrowdinAiPromptResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -743,7 +743,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AiPromptResource'
+                $ref: '#/components/schemas/CrowdinAiPromptResource'
         '401':
           description: Unauthorized
           content:
@@ -833,7 +833,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AiPromptResource'
+                $ref: '#/components/schemas/CrowdinAiPromptResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -883,7 +883,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AiProviderCollectionResource'
+                $ref: '#/components/schemas/CrowdinAiProviderCollectionResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -926,14 +926,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AiProviderCreateForm'
+              $ref: '#/components/schemas/CrowdinAiProviderCreateForm'
       responses:
         '201':
           description: 'AI provider was successfully added'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AiProviderResource'
+                $ref: '#/components/schemas/CrowdinAiProviderResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -981,7 +981,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AiProviderResource'
+                $ref: '#/components/schemas/CrowdinAiProviderResource'
         '401':
           description: Unauthorized
           content:
@@ -1071,7 +1071,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AiProviderResource'
+                $ref: '#/components/schemas/CrowdinAiProviderResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -1356,7 +1356,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AiSettingsResource'
+                $ref: '#/components/schemas/CrowdinAiSettingsResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -1401,7 +1401,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AiSettingsResource'
+                $ref: '#/components/schemas/CrowdinAiSettingsResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -9301,7 +9301,7 @@ paths:
         -
           name: fileId
           in: query
-          description: "File Identifier. Get via [List Files](#operation/api.projects.files.getMany)\n\n__Note:__ Can't be used with `directoryId` or `branchId` in same request"
+          description: "File Identifier. Get via [List Files](#operation/api.projects.files.getMany)\n\n__Note:__ Can't be used with `taskId`, `directoryId` or `branchId` in same request"
           schema:
             type: integer
           x-doc-sections:
@@ -9309,7 +9309,7 @@ paths:
         -
           name: branchId
           in: query
-          description: "Branch Identifier. Get via [List Branches](#operation/api.projects.branches.getMany)\n\n__Note:__ Can't be used with `fileId` or `directoryId` in the same request"
+          description: "Branch Identifier. Get via [List Branches](#operation/api.projects.branches.getMany)\n\n__Note:__ Can't be used with `taskId`, `fileId` or `directoryId` in the same request"
           schema:
             type: integer
           x-doc-sections:
@@ -9317,7 +9317,15 @@ paths:
         -
           name: directoryId
           in: query
-          description: "Directory Identifier. Get via [List Directories](#operation/api.projects.directories.getMany)\n\n__Note:__ Can't be used with `fileId` or `branchId` in same request"
+          description: "Directory Identifier. Get via [List Directories](#operation/api.projects.directories.getMany)\n\n__Note:__ Can't be used with `taskId`, `fileId` or `branchId` in same request"
+          schema:
+            type: integer
+          x-doc-sections:
+            - file-based
+        -
+          name: taskId
+          in: query
+          description: "Task Identifier. Get via [List Tasks](#operation/api.projects.tasks.getMany)\n\n__Note:__ Can't be used with `fileId`, `directoryId` or `branchId` in same request"
           schema:
             type: integer
           x-doc-sections:
@@ -14870,10 +14878,6 @@ components:
             example: 78253
       type: object
     AiPromptCreateForm:
-      required:
-        - name
-        - action
-        - config
       properties:
         name:
           description: 'AI prompt name'
@@ -14902,18 +14906,66 @@ components:
           items:
             type: integer
             example: 23
-        config:
-          description: 'AI prompt configuration'
-          oneOf:
-            -
-              $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
-            -
-              $ref: '#/components/schemas/ai.prompt.config.basic_mode.assist'
-            -
-              $ref: '#/components/schemas/ai.prompt.config.advanced_mode'
-            -
-              $ref: '#/components/schemas/ai.prompt.config.external_mode'
       type: object
+    CrowdinAiPromptCreateForm:
+      required:
+        - name
+        - action
+        - config
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AiPromptCreateForm'
+        -
+          properties:
+            action:
+              description: 'AI prompt action'
+              type: string
+              enum:
+                - pre_translate
+                - assist
+            config:
+              description: 'AI prompt configuration'
+              oneOf:
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.assist'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.advanced_mode'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.external_mode'
+    EnterpriseAiPromptCreateForm:
+      required:
+        - name
+        - action
+        - config
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AiPromptCreateForm'
+        -
+          properties:
+            action:
+              description: 'AI prompt action'
+              type: string
+              enum:
+                - pre_translate
+                - assist
+                - alignment
+            config:
+              description: 'AI prompt configuration'
+              oneOf:
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.assist'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.alignment'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.enterprise_advanced_mode'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.external_mode'
     ai.prompt.config.basic_mode.pre_translate:
       title: 'Basic mode (pre-translate action)'
       required:
@@ -15000,6 +15052,24 @@ components:
         filteredStrings:
           type: boolean
       type: object
+    ai.prompt.config.basic_mode.alignment:
+      title: 'Basic mode (alignment action)'
+      required:
+        - mode
+      properties:
+        mode:
+          type: string
+          enum:
+            - basic
+        companyDescription:
+          type: string
+        projectDescription:
+          type: string
+        audienceDescription:
+          type: string
+        publicProjectDescription:
+          type: boolean
+      type: object
     ai.prompt.config.advanced_mode:
       title: 'Advanced mode'
       required:
@@ -15027,6 +15097,28 @@ components:
                 example: uk
           type: object
       type: object
+    ai.prompt.config.enterprise_advanced_mode:
+      title: 'Advanced mode'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ai.prompt.config.advanced_mode'
+        -
+          properties:
+            screenshots:
+              description: '__Note:__ Not available for alignment action'
+              type: boolean
+            otherLanguageTranslations:
+              description: '__Note:__ Not available for alignment action'
+              properties:
+                isEnabled:
+                  type: boolean
+                  default: true
+                languageIds:
+                  description: 'Array of language ids. Get via [List Supported Languages](#operation/api.languages.getMany)'
+                  type: array
+                  items: { type: string, example: uk }
+              type: object
     ai.prompt.config.external_mode:
       title: 'External mode'
       required:
@@ -15049,7 +15141,7 @@ components:
           type: object
           additionalProperties: true
       type: object
-    AiPromptCollectionResource:
+    EnterpriseAiPromptCollectionResource:
       description: 'AI Prompt Collection Resource'
       type: object
       allOf:
@@ -15060,7 +15152,21 @@ components:
             data:
               type: array
               items:
-                $ref: '#/components/schemas/AiPromptResource'
+                $ref: '#/components/schemas/EnterpriseAiPromptResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    CrowdinAiPromptCollectionResource:
+      description: 'AI Prompt Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CrowdinAiPromptResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
     AiPromptCompletionResource:
@@ -15073,7 +15179,7 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/AiPromptCompletion'
-    AiPromptResource:
+    EnterpriseAiPromptResource:
       description: 'AI Prompt Resource'
       type: object
       allOf:
@@ -15082,7 +15188,17 @@ components:
         -
           properties:
             data:
-              $ref: '#/components/schemas/AiPrompt'
+              $ref: '#/components/schemas/EnterpriseAiPrompt'
+    CrowdinAiPromptResource:
+      description: 'AI Prompt Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/CrowdinAiPrompt'
     AiPromptCompletion:
       title: 'AI Prompt Completion'
       properties:
@@ -15153,29 +15269,58 @@ components:
         config:
           description: 'AI prompt configuration'
           type: object
-          oneOf:
-            -
-              $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
-            -
-              $ref: '#/components/schemas/ai.prompt.config.basic_mode.assist'
-            -
-              $ref: '#/components/schemas/ai.prompt.config.advanced_mode'
-            -
-              $ref: '#/components/schemas/ai.prompt.config.external_mode'
         promptPreview:
           type: string
           nullable: true
         isFineTuningAvailable:
           type: boolean
         createdAt:
-          type: string
           format: date-time
           example: '2019-09-20T11:11:05+00:00'
         updatedAt:
-          type: string
           format: date-time
           example: '2019-09-20T12:22:20+00:00'
       type: object
+    EnterpriseAiPrompt:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AiPrompt'
+        -
+          properties:
+            config:
+              description: 'AI prompt configuration'
+              type: object
+              oneOf:
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.assist'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.alignment'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.enterprise_advanced_mode'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.external_mode'
+    CrowdinAiPrompt:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AiPrompt'
+        -
+          properties:
+            config:
+              description: 'AI prompt configuration'
+              type: object
+              oneOf:
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.assist'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.advanced_mode'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.external_mode'
     AiProviderPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -15280,8 +15425,7 @@ components:
               $ref: '#/components/schemas/ai.provider.credentials.anthropic'
             -
               $ref: '#/components/schemas/ai.provider.credentials.custom_ai'
-        config:
-          $ref: '#/components/schemas/ai.provider.configuration'
+        config: {  }
         isEnabled:
           description: 'Defines whether to AI provider is enabled.'
           type: boolean
@@ -15291,7 +15435,25 @@ components:
           type: boolean
           default: false
       type: object
-    ai.provider.configuration:
+    EnterpriseAiProviderCreateForm:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AiProviderCreateForm'
+        -
+          properties:
+            config:
+              $ref: '#/components/schemas/ai.provider.enterprise_configuration'
+    CrowdinAiProviderCreateForm:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AiProviderCreateForm'
+        -
+          properties:
+            config:
+              $ref: '#/components/schemas/ai.provider.crowdin_configuration'
+    ai.provider.enterprise_configuration:
       title: 'AI Provider configuration'
       description: 'AI provider configuration'
       properties:
@@ -15299,16 +15461,22 @@ components:
           description: 'Configuration of available models for actions'
           type: array
           items:
-            $ref: '#/components/schemas/ai.provider.configuration.actionRule'
+            $ref: '#/components/schemas/ai.provider.enterprise_configuration.actionRule'
+      type: object
+    ai.provider.crowdin_configuration:
+      title: 'AI Provider configuration'
+      description: 'AI provider configuration'
+      properties:
+        actionRules:
+          description: 'Configuration of available models for actions'
+          type: array
+          items:
+            $ref: '#/components/schemas/ai.provider.crowdin_configuration.actionRule'
       type: object
     ai.provider.configuration.actionRule:
-      title: 'Action rule'
       properties:
         action:
           type: string
-          enum:
-            - pre_translate
-            - assist
         availableAiModelIds:
           description: 'Available AI provider model ids. Get via [List AI Provider Models](#operation/api.ai.providers.models.getMany)'
           type: array
@@ -15316,6 +15484,33 @@ components:
             type: string
             example: gpt-3.5-turbo-instruct
       type: object
+    ai.provider.enterprise_configuration.actionRule:
+      title: 'Action rule'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ai.provider.configuration.actionRule'
+        -
+          properties:
+            action:
+              type: string
+              enum:
+                - pre_translate
+                - assist
+                - alignment
+    ai.provider.crowdin_configuration.actionRule:
+      title: 'Action rule'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ai.provider.configuration.actionRule'
+        -
+          properties:
+            action:
+              type: string
+              enum:
+                - pre_translate
+                - assist
     ai.provider.credentials.open_ai:
       title: OpenAI
       required:
@@ -15394,7 +15589,7 @@ components:
           description: 'AI Provider module key'
           type: string
       type: object
-    AiProviderCollectionResource:
+    EnterpriseAiProviderCollectionResource:
       description: 'AI Provider Collection Resource'
       type: object
       allOf:
@@ -15405,7 +15600,21 @@ components:
             data:
               type: array
               items:
-                $ref: '#/components/schemas/AiProviderResource'
+                $ref: '#/components/schemas/EnterpriseAiProviderResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    CrowdinAiProviderCollectionResource:
+      description: 'AI Provider Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CrowdinAiProviderResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
     AiProviderModelCollectionResource:
@@ -15430,7 +15639,7 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/AiProviderModel'
-    AiProviderResource:
+    EnterpriseAiProviderResource:
       description: 'AI Provider Resource'
       type: object
       allOf:
@@ -15439,7 +15648,17 @@ components:
         -
           properties:
             data:
-              $ref: '#/components/schemas/AiProvider'
+              $ref: '#/components/schemas/EnterpriseAiProvider'
+    CrowdinAiProviderResource:
+      description: 'AI Provider Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/CrowdinAiProvider'
     AiProviderModel:
       title: 'AiProvider Model'
       properties:
@@ -15476,7 +15695,7 @@ components:
             -
               $ref: '#/components/schemas/ai.provider.credentials.custom_ai'
         config:
-          $ref: '#/components/schemas/ai.provider.configuration'
+          type: object
         isEnabled:
           type: boolean
           default: true
@@ -15484,17 +15703,27 @@ components:
           type: boolean
           default: false
         createdAt:
-          type: string
           format: date-time
           example: '2019-09-20T11:11:05+00:00'
         updatedAt:
-          type: string
           format: date-time
           example: '2019-09-20T12:22:20+00:00'
         promptsCount:
           type: number
           format: integer
           example: '42'
+      type: object
+    EnterpriseAiProvider:
+      title: 'AI Provider'
+      properties:
+        config:
+          $ref: '#/components/schemas/ai.provider.enterprise_configuration'
+      type: object
+    CrowdinAiProvider:
+      title: 'AI Provider'
+      properties:
+        config:
+          $ref: '#/components/schemas/ai.provider.crowdin_configuration'
       type: object
     AiProxyChatCompletionCreateForm:
       oneOf:
@@ -15707,7 +15936,7 @@ components:
               oneOf:
                 -
                   type: integer
-    AiSettingsResource:
+    CrowdinAiSettingsResource:
       description: 'AI Settings Resource'
       type: object
       allOf:
@@ -15716,8 +15945,8 @@ components:
         -
           properties:
             data:
-              $ref: '#/components/schemas/AiSettings'
-    AiSettings:
+              $ref: '#/components/schemas/CrowdinAiSettings'
+    CrowdinAiSettings:
       title: 'AI Settings'
       properties:
         assistActionAiPromptId:
@@ -17990,6 +18219,73 @@ components:
           type: string
           format: date-time
           example: '2019-09-19T14:14:00+00:00'
+          nullable: true
+      type: object
+    CustomSpellcheckerCollectionResource:
+      description: 'Custom Spellchecker Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CustomSpellcheckerResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    CustomSpellcheckerResource:
+      description: 'Custom Spellchecker Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/CustomSpellchecker'
+    CustomSpellchecker:
+      title: 'Custom Spellchecker'
+      properties:
+        id:
+          type: integer
+          example: 2
+        name:
+          type: string
+          example: 'Custom Spellchecker'
+        config:
+          properties:
+            identifier:
+              type: string
+              example: app-identifier
+            key:
+              type: string
+              example: app-module-key
+            realTimeCheckEnabled:
+              type: boolean
+              example: 'true'
+            enabledLanguageIds:
+              type: array
+              items:
+                type: string
+              example:
+                - en
+                - es
+                - pl
+                - de
+                - fr
+                - zh-CN
+                - ja
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+          example: '2019-09-23T07:19:47+00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2019-09-23T07:19:47+00:00'
           nullable: true
       type: object
     DictionaryPatch:
@@ -21993,7 +22289,6 @@ components:
           format: json-pointer
           enum:
             - /name
-            - /url
             - /isActive
             - /batchingEnabled
             - /contentType
@@ -24491,7 +24786,7 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/ProjectPlaceholderResponse'
-    ProjectAiSettingsResource:
+    CrowdinProjectAiSettingsResource:
       description: 'Project AI Settings Resource'
       type: object
       allOf:
@@ -24500,7 +24795,7 @@ components:
         -
           properties:
             data:
-              $ref: '#/components/schemas/ProjectAiSettingsResource'
+              $ref: '#/components/schemas/CrowdinProjectAiSettingsResource'
     SystemStringsExporterSettingsCollectionResource:
       description: 'File Format Settings Collection Resource'
       type: object
@@ -25720,7 +26015,7 @@ components:
             - docbook
             - adoc
       type: object
-    ProjectAiSettings:
+    CrowdinProjectAiSettings:
       title: 'Project AI Settings'
       properties:
         assistActionAiPromptId:
@@ -34060,7 +34355,6 @@ components:
           format: json-pointer
           enum:
             - /name
-            - /url
             - /isActive
             - /batchingEnabled
             - /contentType
