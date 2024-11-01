@@ -561,7 +561,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AiPromptCompletionCreateForm'
+              $ref: '#/components/schemas/CrowdinAiPromptCompletionCreateForm'
       responses:
         '201':
           description: 'AI prompt completion job was added successfully'
@@ -13684,15 +13684,7 @@ components:
       required:
         - resources
       properties:
-        resources:
-          description: 'AI prompt context resources'
-          oneOf:
-            -
-              $ref: '#/components/schemas/ai.prompt.completion.resources.pre_translate'
-            -
-              $ref: '#/components/schemas/ai.prompt.completion.resources.assist'
-            -
-              $ref: '#/components/schemas/ai.prompt.completion.resources.custom'
+        resources: {  }
         tools:
           description: 'List of AI Tools'
           type: array
@@ -13715,35 +13707,176 @@ components:
             -
               type: object
       type: object
+    CrowdinAiPromptCompletionCreateForm:
+      required:
+        - resources
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AiPromptCompletionCreateForm'
+        -
+          properties:
+            resources:
+              description: 'AI prompt context resources'
+              oneOf:
+                -
+                  $ref: '#/components/schemas/ai.prompt.completion.resources.pre_translate'
+                -
+                  $ref: '#/components/schemas/ai.prompt.completion.resources.assist'
+                -
+                  $ref: '#/components/schemas/ai.prompt.completion.resources.custom'
+    EnterpriseAiPromptCompletionCreateForm:
+      required:
+        - resources
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AiPromptCompletionCreateForm'
+        -
+          properties:
+            resources:
+              description: 'AI prompt context resources'
+              oneOf:
+                -
+                  $ref: '#/components/schemas/ai.prompt.completion.resources.pre_translate'
+                -
+                  $ref: '#/components/schemas/ai.prompt.completion.resources.assist'
+                -
+                  $ref: '#/components/schemas/ai.prompt.completion.resources.alignment'
+                -
+                  $ref: '#/components/schemas/ai.prompt.completion.resources.custom'
+    ai.prompt.completion.resources.overridePromptValues.common:
+      properties:
+        sourceLanguage:
+          type: string
+          example: English
+        targetLanguage:
+          type: string
+          example: Ukrainian
+        strings:
+          description: "Example: `{\"strings\":[{\"id\":5515318,\"text\":\"About...\",\"key\":\"about\",\"context\":\"about\",\"maxLength\":null},{\"id\":5515319,\"text\":\"About Me\",\"key\":\"about_me\",\"context\":\"about_me\",\"maxLength\":null},{\"id\":5515320,\"text\":\"Current Password\",\"key\":\"current_password\",\"context\":\"current_password\",\"maxLength\":null}]}`\n\n__Note:__ The provided data should follow the structure shown. Each object in the array must include a 'text' field. Other fields such as 'id', 'key', 'context', and 'maxLength' are optional. You can also include custom properties as needed."
+          type: string
+          example: '{"strings":[{"id":5515318,"text":"About...","key":"about","context":"about","maxLength":null},{"id":5515319,"text":"About Me","key":"about_me","context":"about_me","maxLength":null},{"id":5515320,"text":"Current Password","key":"current_password","context":"current_password","maxLength":null}]}'
+        tm:
+          type: string
+          example: "About... => Про...\nAbout Me => Про мене\nCreate Password => Створити пароль"
+        terms:
+          type: string
+          example: "Term: Password. Translation: Пароль. Part of speech: N/A.\nTerm: password. Term doesn\\'t have a defined translation. Please translate it yourself. Part of speech: N/A."
+        fileName:
+          type: string
+          example: crowdin_sample_android.xml
+        fileContext:
+          type: string
+          example: N/A
+        siblingsStrings:
+          type: string
+          example: N/A
+        projectName:
+          type: string
+          example: Crowdin
+        projectPublicDescription:
+          type: string
+          example: 'Crowdin Translations. Official effort.'
+      type: object
+    ai.prompt.completion.resources.overridePromptValues.pre_translate:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ai.prompt.completion.resources.overridePromptValues.common'
+        -
+          properties:
+            pluralForms:
+              type: string
+              example: 'one,few,many,other'
+            fileContent:
+              type: string
+              example: N/A
+      additionalProperties:
+        type: string
+    ai.prompt.completion.resources.overridePromptValues.assist:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ai.prompt.completion.resources.overridePromptValues.common'
+        -
+          properties:
+            pluralForms:
+              type: string
+              example: 'one,few,many,other'
+            filteredStrings:
+              type: string
+              example: N/A
+      additionalProperties:
+        type: string
+    ai.prompt.completion.resources.overridePromptValues.alignment:
+      properties:
+        sourceLanguage:
+          type: string
+          example: English
+        targetLanguage:
+          type: string
+          example: Ukrainian
+        alignmentPairs:
+          description: "Example: `{\"pairs\":[{\"id\":\"c61f9e77-1d0d-469a-b1ad-8c25c2c7e05c\",\"source\":\"About...\",\"translation\":\"Про...\"},{\"id\":\"8e0cdbd9-60c0-4be8-b51e-1cd6bf890902\",\"source\":\"About Me\",\"translation\":\"Про мене\"},{\"id\":\"6dbed810-353b-400d-975e-53723ab448a5\",\"source\":\"Current Password\",\"translation\":\"Створити пароль\"}]}`\n\n__Note:__ The provided data should follow the structure shown. Each object in the array must include a 'source' and 'translation' field. Other fields such as 'id' are optional. You can also include custom properties as needed."
+          type: string
+          example: '{"pairs":[{"id":"c61f9e77-1d0d-469a-b1ad-8c25c2c7e05c","source":"About...","translation":"Про..."},{"id":"8e0cdbd9-60c0-4be8-b51e-1cd6bf890902","source":"About Me","translation":"Про мене"},{"id":"6dbed810-353b-400d-975e-53723ab448a5","source":"Current Password","translation":"Створити пароль"}]}'
+        projectPublicDescription:
+          type: string
+          example: 'Crowdin Translations. Official effort.'
+      type: object
+      additionalProperties:
+        type: string
+    ai.prompt.completion.resources.overridePromptValues.custom:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ai.prompt.completion.resources.overridePromptValues.common'
+        -
+          properties:
+            fileContent:
+              type: string
+              example: N/A
+            filteredStrings:
+              type: string
+              example: N/A
+      additionalProperties:
+        type: string
     ai.prompt.completion.resources.pre_translate:
       title: 'Resources for prompt with pre-translate action'
       required:
         - projectId
-        - targetLanguageId
-        - stringIds
       properties:
         projectId:
           type: integer
+        sourceLanguageId:
+          description: '__Note__: If not specified, the source language of the project will be used'
+          type: string
         targetLanguageId:
           type: string
         stringIds:
+          description: '__Note:__ Must be used together with `targetLanguageId`'
           type: array
           items:
             type: integer
             example: 78253
+        overridePromptValues:
+          $ref: '#/components/schemas/ai.prompt.completion.resources.overridePromptValues.pre_translate'
       type: object
     ai.prompt.completion.resources.assist:
       title: 'Resources for prompt with assist action'
       required:
         - projectId
-        - targetLanguageId
-        - stringIds
       properties:
         projectId:
           type: integer
+        sourceLanguageId:
+          description: '__Note__: If not specified, the source language of the project will be used'
+          type: string
         targetLanguageId:
           type: string
         stringIds:
+          description: '__Note:__ Must be used together with `targetLanguageId`'
           type: array
           items:
             type: integer
@@ -13753,23 +13886,50 @@ components:
           items:
             type: integer
             example: 78254
+        overridePromptValues:
+          $ref: '#/components/schemas/ai.prompt.completion.resources.overridePromptValues.assist'
+      type: object
+    ai.prompt.completion.resources.alignment:
+      title: 'Resources for prompt with alignment action'
+      required:
+        - projectId
+      properties:
+        projectId:
+          type: integer
+        sourceLanguageId:
+          description: '__Note__: If not specified, the source language of the project will be used'
+          type: string
+        targetLanguageId:
+          type: string
+        stringIds:
+          description: '__Note:__ Must be used together with `targetLanguageId`'
+          type: array
+          items:
+            type: integer
+            example: 78253
+        overridePromptValues:
+          $ref: '#/components/schemas/ai.prompt.completion.resources.overridePromptValues.alignment'
       type: object
     ai.prompt.completion.resources.custom:
       title: 'Resources for prompt with custom action'
       required:
         - projectId
-        - targetLanguageId
-        - stringIds
       properties:
         projectId:
           type: integer
+        sourceLanguageId:
+          description: '__Note__: If not specified, the source language of the project will be used'
+          type: string
         targetLanguageId:
           type: string
         stringIds:
+          description: '__Note:__ Must be used together with `targetLanguageId`'
           type: array
           items:
             type: integer
             example: 78253
+        overridePromptValues:
+          $ref: '#/components/schemas/ai.prompt.completion.resources.overridePromptValues.custom'
       type: object
     AiPromptCreateForm:
       properties:
@@ -15460,6 +15620,32 @@ components:
               type: object
             iframe:
               type: object
+    WorkflowStepTypeModule:
+      title: 'Workflow Step Type Module'
+      description: 'Class WorkflowStepTypeModuleResponseModel'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Module'
+        -
+          properties:
+            identifier:
+              type: string
+              example: example-application
+            updateSettingsUrl:
+              type: string
+              nullable: true
+            deleteSettingsUrl:
+              type: string
+              nullable: true
+            boundaries:
+              type: object
+            scopes:
+              type: object
+              nullable: true
+            iframe:
+              type: object
+              nullable: true
     BranchPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -33444,6 +33630,110 @@ components:
             config:
               type: object
           type: object
+      type: object
+    StringStatusMassPatch:
+      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      type: array
+      items:
+        $ref: '#/components/schemas/StringStatusMassOperation'
+      example:
+        -
+          op: replace
+          path: /2814/output
+          value: untranslated
+    StringStatusMassOperation:
+      description: 'A JSON Patch (222) operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - '/{stringId}/output'
+          example: '/{stringId}/output'
+      type: object
+      discriminator:
+        propertyName: op
+        mapping:
+          replace: '#/components/schemas/StringStatusMassOperationReplace'
+    StringStatusMassOperationReplace:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/StringStatusMassOperation'
+        -
+          properties:
+            value:
+              example: untranslated
+              oneOf:
+                -
+                  type: string
+    StringStatusCollectionResource:
+      description: 'String Status Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/StringStatusResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    StringStatusResource:
+      description: 'String Status Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/StringStatus'
+    StringStatusUpdateCollectionResource:
+      description: 'String Status Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/StringStatusResource'
+    StringStatus:
+      properties:
+        stringId:
+          type: integer
+          example: 1
+        languageId:
+          type: string
+          example: uk
+        stepId:
+          type: integer
+          example: 1
+        status:
+          type: string
+          example: todo
+        output:
+          type: string
+          example: translated
       type: object
     WorkflowTemplateCollectionResource:
       description: 'Workflow Templates Collection'
