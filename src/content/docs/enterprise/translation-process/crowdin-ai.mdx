@@ -40,7 +40,7 @@ To configure AI prompts, follow these steps:
   2. In the **Prompts** tab, click **New prompt**. Alternatively, you can go ahead with creating prompt samples clicking **Try a sample**. Crowdin allows you to quickly set up pre-configured prompts that are ready to perform effectively from the moment they are created. While these samples are designed to work good initially, you can customize them to your personal preferences.
   3. In the appeared dialog, set the prompt parameters:
       * Select **Enabled**
-      * Select the prompt type (i.e., Pre-translate, AI in editor, Alignment (available only for the Business [subscription plan](https://crowdin.com/pricing#enterprise-plans)), or Create custom type)
+      * Select the prompt type (i.e., [Pre-translate](#pre-translation-via-ai), [AI in editor](#using-ai-in-the-editor), [Alignment](#ai-alignment), or Create custom type)
       * Custom type name (Specific to the custom type prompt)
       * Title
       * AI Provider
@@ -232,9 +232,9 @@ Select the default prompt for AI suggestions that will appear in the Editor acro
   Using **AI Assistant in editor** and **AI Suggestion in editor** may increase token usage.
 </Aside>
 
-#### AI Alignment
+#### AI Alignment {#ai-alignment-organization-settings}
 
-When enabled, AI Alignment automatically generates bilingual draft terms based on the translations made in the project, providing additional context for both human translators and AI. This feature enhances translation accuracy and consistency without requiring additional input.
+When enabled, [AI Alignment](#ai-alignment) automatically generates bilingual draft terms based on the translations made in the project, providing additional context for both human translators and AI. This feature enhances translation accuracy and consistency without requiring additional input.
 
 #### Shortcuts for chat with AI in editor
 
@@ -328,6 +328,36 @@ When sending prompts to the AI Assistant, the instruction priorities are conside
 1. Instructions specified in the [**AI in editor** prompt settings](#configuring-ai-prompts).
 2. Instructions specified in the custom prompt settings.
 3. Instructions specified in the prompt shortcut or manually entered in the AI Assistant chat.
+
+## AI Alignment
+
+AI Alignment uses AI to analyze human translations, automatically generating glossary term drafts based on recurring terminology patterns. These terms add valuable context for both translators and AI, supporting consistent terminology across all project translations. Note that AI Alignment only analyzes translations submitted by users in the Editor or those uploaded to the project; pre-translations are not considered.
+
+<Aside>
+  AI Alignment is available only for the Business [subscription plan](https://crowdin.com/pricing#enterprise-plans) on Crowdin Enterprise.
+</Aside>
+
+### How AI Alignment Works
+
+When a translator submits a translation, AI Alignment analyzes the terminology used to identify and suggest draft glossary terms. This process involves reviewing translations for recurring terms and phrases that represent core project terminology. AI Alignment then generates glossary records in simplified forms (e.g., `location` rather than `locations`) to create a unified set of terms for the project.
+
+For example, in a project with the source string `Remove this location`, the initial AI suggestion for translation might be `Видалити це місце`. However, a human translator chooses `Видалити цю локацію`, using `локація` consistently for `location`. Based on this choice, AI Alignment creates a draft glossary term that pairs `location` with `локація`.
+
+Later, when another source string `Add location` is translated, the AI now aligns with this glossary term and suggests `Додати локацію`, ensuring consistency. This will happen if the AI Prompt for AI Suggestion in editor is set to consider glossary terms.
+
+Additionally, when human translators encounter source strings that contain `location`, they will see the glossary term `location` along with its translation `локація`. This helps translators use the preferred terminology, enhancing consistency across the project.
+
+If an existing term differs from the suggested AI translation, AI Alignment will add a draft term to the current record, allowing project managers to review and confirm preferred terminology. This approach ensures new terms don’t overwrite or conflict with established glossary records.
+
+### Setting Up AI Alignment
+
+To use AI Alignment, [configure a prompt](#configuring-ai-prompts) with the **Alignment** type and [apply it](/enterprise/project-settings/ai/#selecting-ai-prompts) to the needed projects. This prompt type enables AI Alignment to process and generate draft glossary terms as translators add their translation suggestions.
+
+In Advanced mode, project managers can further customize specific criteria for generating glossary terms from translations. This includes filtering terms to draft only those relevant to specific domains or adjusting tolerance levels to minimize irrelevant suggestions. Such customization allows AI Alignment to focus on essential terminology for the project.
+
+For example, managers can set AI Alignment to create term drafts only for industry-specific terminology, ensuring that only relevant records are included.
+
+Once configured, all draft terms generated by AI Alignment appear in the glossary with a draft status, allowing managers to review and confirm these terms before they become part of the active glossary. This review step provides control over terminology consistency and accuracy across the project.
 
 ## See Also
 
