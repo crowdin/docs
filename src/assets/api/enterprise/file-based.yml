@@ -12896,7 +12896,7 @@ paths:
         -
           $ref: '#/components/parameters/PaginationOffset'
         -
-          $ref: '#/components/parameters/TaskStatus'
+          $ref: '#/components/parameters/EnterpriseTaskStatus'
       responses:
         '200':
           description: 'Tasks list'
@@ -13195,7 +13195,7 @@ paths:
         -
           $ref: '#/components/parameters/PaginationOffset'
         -
-          $ref: '#/components/parameters/TaskStatus'
+          $ref: '#/components/parameters/EnterpriseTaskStatus'
         -
           $ref: '#/components/parameters/IsArchived'
       responses:
@@ -17594,7 +17594,7 @@ components:
         targetLanguageId:
           type: string
         stringIds:
-          description: '__Note:__ Must be used together with `targetLanguageId`'
+          description: '__Note:__ Must be used together with `targetLanguageId`. You can assign up to 500 strings at a time.'
           type: array
           items:
             type: integer
@@ -17615,12 +17615,13 @@ components:
         targetLanguageId:
           type: string
         stringIds:
-          description: '__Note:__ Must be used together with `targetLanguageId`'
+          description: '__Note:__ Must be used together with `targetLanguageId`. You can assign up to 500 strings at a time.'
           type: array
           items:
             type: integer
             example: 78253
         filteredStringsIds:
+          description: '__Note:__ You can assign up to 500 strings at a time.'
           type: array
           items:
             type: integer
@@ -17641,7 +17642,7 @@ components:
         targetLanguageId:
           type: string
         stringIds:
-          description: '__Note:__ Must be used together with `targetLanguageId`'
+          description: '__Note:__ Must be used together with `targetLanguageId`. You can assign up to 500 strings at a time.'
           type: array
           items:
             type: integer
@@ -17662,7 +17663,7 @@ components:
         targetLanguageId:
           type: string
         stringIds:
-          description: '__Note:__ Must be used together with `targetLanguageId`'
+          description: '__Note:__ Must be used together with `targetLanguageId`. You can assign up to 500 strings at a time.'
           type: array
           items:
             type: integer
@@ -26356,6 +26357,7 @@ components:
             - /translateDuplicates
             - /isMtAllowed
             - /taskBasedAccessControl
+            - /taskReviewerIds
             - /autoSubstitution
             - /skipUntranslatedStrings
             - /skipUntranslatedFiles
@@ -26776,7 +26778,7 @@ components:
           type: integer
           example: 52760
         mtEngineId:
-          description: "Specify Machine Translation engine Identifier, if no MT engine is assigned to Workflow step yet. Get via [List MTs](#operation/api.mts.getMany)\n\n __Note:__ Use only if MT is part of your Workflow Template\n\n__Note:__ Can't be used with `steps` in same request"
+          description: "Specify Machine Translation engine Identifier, if no MT engine is assigned to Workflow step yet. Get via [List MTs](#operation/api.mts.getMany)\n\n__Note:__ Use only if MT is part of your Workflow Template\n\n__Note:__ Can't be used with `steps` in same request"
           type: integer
           example: 2
         description:
@@ -26814,6 +26816,16 @@ components:
           type: boolean
           default: false
           example: false
+        taskReviewerIds:
+          description: 'Array of manager user ids.'
+          type: array
+          items:
+            type: integer
+          example:
+            - 1
+            - 2
+            - 3
+            - 4
         autoSubstitution:
           description: 'Allows auto-substitution'
           type: boolean
@@ -28417,6 +28429,15 @@ components:
             taskBasedAccessControl:
               type: boolean
               example: false
+            taskReviewerIds:
+              type: array
+              items:
+                type: integer
+              example:
+                - 1
+                - 2
+                - 3
+                - 4
             hiddenStringsProofreadersAccess:
               type: boolean
               default: true
@@ -39274,13 +39295,26 @@ components:
         type: integer
         default: 0
         minimum: 0
-    TaskStatus:
+    CrowdinTaskStatus:
       name: status
       in: query
       description: 'List tasks with specified statuses. It can be one status or a list of comma-separated status values'
       schema:
         type: string
         enum:
+          - todo
+          - in_progress
+          - done
+          - closed
+      example: done
+    EnterpriseTaskStatus:
+      name: status
+      in: query
+      description: 'List tasks with specified statuses. It can be one status or a list of comma-separated status values'
+      schema:
+        type: string
+        enum:
+          - review
           - todo
           - in_progress
           - done
