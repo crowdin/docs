@@ -7513,7 +7513,7 @@ paths:
           $ref: '#/components/parameters/ProjectId'
       responses:
         '200':
-          description: "Project data\n     * Translators and proofreaders – receive the response `Project Info` (all the project data, that's visible to all the project members within the ui)\n     * Project owners, organization admins, and managers – receive the response `Project Settings` (all the basic project info plus extended details, including project settings, resources, QA checks, and more)"
+          description: "Project data\n     * Translators and proofreaders – receive the response `Project Info` (all the project data, that's visible to all the project members within the ui)\n     * Project owners, organization admins, managers and developers – receive the response `Project Settings` (all the basic project info plus extended details, including project settings, resources, QA checks, and more)"
           content:
             application/json:
               schema:
@@ -17670,6 +17670,8 @@ components:
             example: 78253
         overridePromptValues:
           $ref: '#/components/schemas/ai.prompt.completion.resources.overridePromptValues.custom'
+        customInstruction:
+          type: string
       type: object
     AiPromptCreateForm:
       properties:
@@ -19978,6 +19980,9 @@ components:
           example:
             - 5
             - 8
+        webUrl:
+          type: string
+          example: 'https://crowdin.com/project/test/translations#bundles:100'
         createdAt:
           type: string
           format: date-time
@@ -21993,6 +21998,7 @@ components:
             - /importOptions/contentSegmentation
             - /importOptions/translatableElements
             - /importOptions/srxStorageId
+            - /importOptions/hideAttributeValues
             - /importOptions/customSegmentation
             - /importOptions/excludedElements
             - /importOptions/excludeIncludeDirectives
@@ -22216,6 +22222,9 @@ components:
         maxLength:
           description: 'Defines max length column number'
           type: integer
+        translatable:
+          description: 'Defines visible status `yes` as show and `no` as hidden'
+          type: integer
         labels:
           description: 'Defines labels column number'
           type: integer
@@ -22315,6 +22324,10 @@ components:
             - code
             - pre
             - item
+        hideAttributeValues:
+          description: 'HTML attributes (e.g., src, href, data) will be imported as hidden strings.'
+          type: boolean
+          default: false
         contentSegmentation:
           description: 'Defines whether to split long texts into smaller text segments.'
           type: boolean
@@ -22385,6 +22398,10 @@ components:
             - code
             - pre
             - item
+        hideAttributeValues:
+          description: 'HTML attributes (e.g., src, href, data) will be imported as hidden strings.'
+          type: boolean
+          default: false
         contentSegmentation:
           description: 'Defines whether to split long texts into smaller text segments.'
           type: boolean
@@ -22446,6 +22463,10 @@ components:
             - code
             - pre
             - item
+        hideAttributeValues:
+          description: 'HTML attributes (e.g., src, href, data) will be imported as hidden strings.'
+          type: boolean
+          default: false
         contentSegmentation:
           description: 'Defines whether to split long texts into smaller text segments.'
           type: boolean
@@ -22746,7 +22767,7 @@ components:
       title: 'Other Files Import Options'
       properties:
         contentSegmentation:
-          description: "Defines whether to split long texts into smaller text segments. Only for __xml__, __flsnp__, __docx__, __mif__, __idml__, __dita__, __android8__ files.\n\n__Note:__ When Content segmentation is enabled, the translation upload is handled by an experimental machine learning technology. To achieve the best results, we recommend uploading translation files with the same or as close as possible file structure as in source files."
+          description: "Defines whether to split long texts into smaller text segments. Only for __xml__, __flsnp__, __docx__, __mif__, __idml__, __dita__, __android8__, __xliff13__ files.\n\n__Note:__ When Content segmentation is enabled, the translation upload is handled by an experimental machine learning technology. To achieve the best results, we recommend uploading translation files with the same or as close as possible file structure as in source files."
           type: boolean
         srxStorageId:
           description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany).\n\n  Storage identifier of the SRX segmentation rules file. Read more about [Custom Segmentation](https://support.crowdin.com/custom-segmentation/#segmentation-examples)."
@@ -23401,6 +23422,9 @@ components:
             - keywords
             - internal.description
             - tag
+        hideAttributeValues:
+          type: boolean
+          example: true
       type: object
     GeneralFileExportOptionsResponseModel:
       title: 'General File Export Options'
@@ -23435,6 +23459,9 @@ components:
             - code
             - pre
             - item
+        hideAttributeValues:
+          type: boolean
+          example: true
       type: object
     JavaScriptFileExportOptionsResponseModel:
       title: 'JavaScript File Export Options'
@@ -23662,6 +23689,9 @@ components:
             - code
             - pre
             - item
+        hideAttributeValues:
+          type: boolean
+          example: true
       type: object
     XlsxFileImportOptionsResponseModel:
       title: 'XLSX File Import Options'
@@ -27115,6 +27145,8 @@ components:
             -
               $ref: '#/components/schemas/XlsxFileFormatSettings'
             -
+              $ref: '#/components/schemas/XliffFileFormatSettings'
+            -
               $ref: '#/components/schemas/ReactIntlFileFormatSettings'
             -
               $ref: '#/components/schemas/TxtFileFormatSettings'
@@ -27532,6 +27564,27 @@ components:
           example: 61
         exportPattern:
           description: "File format export pattern. Defines file name and path in resulting translations bundle\n\n __Note:__ Can't contain `: * ? \" < > |` symbols"
+          type: string
+          default: null
+          nullable: true
+          x-doc-sections:
+            - file-based
+      type: object
+    XliffFileFormatSettings:
+      title: 'Xliff file format settings'
+      properties:
+        contentSegmentation:
+          description: "Defines whether to split long texts into smaller text segments.\n\n__Important!__ This option disables the possibility to upload existing translations for xliff files when enabled."
+          type: boolean
+          default: false
+        srxStorageId:
+          description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany).\n\nStorage identifier of the SRX segmentation rules file. Read more about [Custom Segmentation](https://support.crowdin.com/custom-segmentation/#segmentation-examples)."
+          type: integer
+          format: int64
+          default: null
+          example: 61
+        exportPattern:
+          description: "File format export pattern. Defines file name and path in resulting translations bundle\n\n__Note:__ Can't contain `: * ? \" < > |` symbols"
           type: string
           default: null
           nullable: true
@@ -28670,6 +28723,8 @@ components:
             -
               $ref: '#/components/schemas/XlsxFileFormatSettingsResponse'
             -
+              $ref: '#/components/schemas/XliffFileFormatSettingsResponse'
+            -
               $ref: '#/components/schemas/ReactIntlFileFormatSettingsResponse'
             -
               $ref: '#/components/schemas/JavaScriptFileFormatSettingsResponse'
@@ -28791,6 +28846,10 @@ components:
           description: 'Specifies whether custom segmentation rules are used.'
           type: boolean
           default: false
+        hideAttributeValues:
+          description: 'HTML attributes (e.g., src, href, data) will be imported as hidden strings.'
+          type: boolean
+          default: false
         inlineTags:
           description: 'Specify tags that should be considered inline'
           type: array
@@ -28815,6 +28874,10 @@ components:
           default: true
         customSegmentation:
           description: 'Specifies whether custom segmentation rules are used.'
+          type: boolean
+          default: false
+        hideAttributeValues:
+          description: 'HTML attributes (e.g., src, href, data) will be imported as hidden strings.'
           type: boolean
           default: false
         inlineTags:
@@ -29090,6 +29153,25 @@ components:
           x-doc-sections:
             - file-based
       type: object
+    XliffFileFormatSettingsResponse:
+      title: 'Xliff file format settings'
+      properties:
+        contentSegmentation:
+          description: "Defines whether to split long texts into smaller text segments.\n\n     Important! This option disables the possibility to upload existing translations for xliff files when enabled."
+          type: boolean
+          default: false
+        customSegmentation:
+          description: 'Specifies whether custom segmentation rules are used.'
+          type: boolean
+          default: false
+        exportPattern:
+          description: "File format export pattern. Defines file name and path in resulting translations bundle\n\nNote: Can't contain `: * ? \" < > |` symbols"
+          type: string
+          default: null
+          nullable: true
+          x-doc-sections:
+            - file-based
+      type: object
     CsvFileFormatSettingsResponse:
       title: 'CSV file format settings'
       properties:
@@ -29231,6 +29313,10 @@ components:
           default: true
         customSegmentation:
           description: 'Specifies whether custom segmentation rules are used.'
+          type: boolean
+          default: false
+        hideAttributeValues:
+          description: 'HTML attributes (e.g., src, href, data) will be imported as hidden strings.'
           type: boolean
           default: false
         inlineTags:
@@ -30212,7 +30298,7 @@ components:
           type: string
           example: ach
         userIds:
-          description: 'Array of user ids. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          description: 'Array of user ids'
           type: array
           items:
             type: integer
