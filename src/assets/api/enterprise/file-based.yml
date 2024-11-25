@@ -13936,6 +13936,12 @@ paths:
           schema:
             type: integer
         -
+          name: croql
+          in: query
+          description: "Filter strings by [CroQL](https://developer.crowdin.com/croql/)\n\n__Note:__ Can be used only with `orderBy`, `offset` and `limit` in same request"
+          schema:
+            type: string
+        -
           $ref: '#/components/parameters/PaginationLimit'
         -
           $ref: '#/components/parameters/PaginationOffset'
@@ -16796,6 +16802,89 @@ paths:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
         '404':
           description: 'Project or step with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/projects/{projectId}/workflow-steps/{stepId}/strings':
+    get:
+      tags:
+        - Workflows
+      summary: 'List Strings on the Workflow Step'
+      operationId: api.projects.workflow-steps.strings.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/StepId'
+        -
+          $ref: '#/components/parameters/LanguageIds'
+        -
+          name: orderBy
+          in: query
+          description: 'Read more about [sorting rules](#section/Introduction/Sorting)'
+          schema:
+            type: string
+            default: id
+            enum:
+              - id
+              - text
+              - identifier
+              - context
+              - createdAt
+              - updatedAt
+          example: 'createdAt desc,text,identifier'
+        -
+          name: status
+          in: query
+          description: 'String status on the workflow step'
+          schema:
+            type: string
+            enum:
+              - todo
+              - done
+              - pending
+              - incomplete
+              - need_review
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Project strings list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseFileBasedStringCollectionResource'
+          x-doc-sections:
+            - file-based
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or workflow step with specified id was not found'
           content:
             application/json:
               schema:
@@ -32613,7 +32702,7 @@ components:
           type: string
           example: 'Not all videos are shown to users. See more'
         identifier:
-          description: 'Defines unique string identifier'
+          description: "Defines unique string identifier. Max. length is 512 characters\n\n __Note:__ Required for YAML files and XLSX files with identifiers in their schema"
           type: string
           example: 6a1821e6499ebae94de4b880fd93b985
         fileId:
@@ -32657,7 +32746,7 @@ components:
           type: string
           example: 'Not all videos are shown to users. See more'
         identifier:
-          description: 'Defines unique string identifier'
+          description: 'Defines unique string identifier. Max. length is 512 characters'
           type: string
           example: 6a1821e6499ebae94de4b880fd93b985
         branchId:
@@ -32702,7 +32791,7 @@ components:
             one: string
             other: strings
         identifier:
-          description: 'Defines unique string identifier'
+          description: "Defines unique string identifier. Max. length is 512 characters\n\n __Note:__ Required for YAML files and XLSX files with identifiers in their schema"
           type: string
           example: 6a1821e6499ebae94de4b880fd93b985
         fileId:
@@ -32743,7 +32832,7 @@ components:
             one: string
             other: strings
         identifier:
-          description: 'Defines unique string identifier'
+          description: 'Defines unique string identifier. Max. length is 512 characters'
           type: string
           example: 6a1821e6499ebae94de4b880fd93b985
         branchId:
@@ -36993,6 +37082,11 @@ components:
           type: boolean
           default: false
           example: false
+        addToTm:
+          description: 'Defines whether to add translation to TM'
+          type: boolean
+          default: true
+          example: false
         markAddedTranslationsAsDone:
           description: "Strings marked as done follow your project's workflow and appear on the corresponding step"
           type: boolean
@@ -37084,6 +37178,11 @@ components:
           description: 'Allow translations upload to hidden source strings'
           type: boolean
           default: false
+          example: false
+        addToTm:
+          description: 'Defines whether to add translation to TM'
+          type: boolean
+          default: true
           example: false
       type: object
     EnterpriseTranslationDirectoryBuildResource:
