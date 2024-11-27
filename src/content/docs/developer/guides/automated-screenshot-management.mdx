@@ -1,0 +1,126 @@
+---
+title: Automating Screenshot Management
+description: Learn how to automate screenshot creation and updates with Crowdin In-Context and Playwright
+slug: developer/automating-screenshot-management
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+This guide explains how to automate generating and updating screenshots in Crowdin [In-Context](/developer/in-context-localization/).
+
+By automating screenshot creation, translators gain accurate and up-to-date visual context, improving the localization process and translation quality. The guide covers prerequisites, setup instructions, capturing screenshots across web pages, and uploading them to Crowdin via API.
+
+## Prerequisites
+
+Before proceeding, ensure that your website integrates [Crowdin In-Context functionality](/developer/in-context-localization/#integration).
+
+### Account Setup
+
+To configure your account for automation to function properly, follow these steps:
+
+<Steps>
+  1. **Enable 2FA in Crowdin**: Open your project and go to **Settings > Privacy & collaboration > Privacy** to set up Two-factor authentication for login.
+  2. **Disable Device Verification**: Device verification ensures account security but can interrupt automated workflows. Disabling it for testing environments ensures uninterrupted automation.
+      * For Crowdin: Go to **Account Settings > Account > New device verification** and disable the setting.
+      * For Crowdin Enterprise: Go to **Account Settings > Security > Device Verification** and disable the setting.
+  3. **Generate a Secret Key**: Obtain the secret key for generating 2FA tokens. This key is required for programmatically creating one-time passwords (OTPs) using the `otplib` library.
+</Steps>
+
+### Dependencies
+
+This guide uses the following dependencies for browser automation and OTP generation:
+
+- [Playwright](https://playwright.dev/): A modern testing framework for browser automation, ideal for navigating and interacting with web pages.
+- [`otplib`](https://www.npmjs.com/package/otplib): A library for generating one-time passwords (OTPs) programmatically, essential for bypassing 2FA in automated workflows.
+
+Run the following command to install the dependencies:
+
+<Tabs syncKey="pkg">
+  <TabItem label="npm">
+
+    ```bash
+    npm install -D @playwright/test otplib
+    ```
+
+  </TabItem>
+  <TabItem label="Yarn">
+
+    ```bash
+    yarn add -D @playwright/test otplib
+    ```
+
+  </TabItem>
+  <TabItem label="pnpm">
+
+    ```bash
+    pnpm add -D @playwright/test otplib
+    ```
+
+  </TabItem>
+</Tabs>
+
+## Capturing Screenshots with Crowdin In-Context
+
+Crowdin provides the `window.jipt.capture_screenshot(name: string, options: object | null)` method to automate screenshot generation. In addition to screenshots, this method collects metadata to provide translators with detailed and accurate context for their work. The following sections explain how to implement this functionality using Playwright.
+
+### Code Example
+
+The following script illustrates navigating a website, logging in, capturing screenshots, and uploading them to Crowdin for translators' reference:
+
+```js
+// @ts-check
+const { test, expect } = require('@playwright/test');
+const { authenticator } = require('otplib');
+
+test('Capture Crowdin Screenshots', async ({ page }) => {
+  const siteUrl = 'https://example.com';
+
+  // Navigate to the application
+  await page.goto(siteUrl);
+
+  // Log in
+  await page.locator('#jipt-login-panel iframe').contentFrame().getByRole('button', { name: 'Log In' }).click();
+  await page.getByLabel('Email or Username').fill('username');
+  await page.getByLabel('Password').fill('password');
+  await page.getByRole('button', { name: 'Log In' }).click();
+
+  // Handle Two-Factor Authentication (if applicable)
+  const token = authenticator.generate('KEY'); // Replace 'KEY' with your 2FA secret
+  await page.getByLabel('Verification Code').fill(token);
+  await page.getByRole('button', { name: 'Log In' }).click();
+
+  // Confirm login and start capturing screenshots
+  await page.getByRole('button', { name: 'Keep Me Logged In' }).click();
+
+  // Capture the first screenshot
+  await page.goto(siteUrl);
+  await page.locator('#crowdin-jipt-mask').click();
+  await expect(page.locator('h1')).toContainText('Crowdin HTML Sample');
+  await page.evaluate(() => {
+    return new Promise((resolve, reject) => {
+      window.jipt.capture_screenshot('HTML Sample File', { success: resolve, error: reject });
+    });
+  });
+
+  // Capture a second screenshot on another page
+  await page.goto(`${siteUrl}/second`);
+  await expect(page.locator('h1')).toContainText('Second Crowdin HTML Sample');
+  await page.evaluate(() => {
+    return new Promise((resolve, reject) => {
+      window.jipt.capture_screenshot('Second HTML Sample File', { override: false, success: resolve, error: reject });
+    });
+  });
+});
+```
+
+### Key Code Implementation Details
+
+* **Navigating Pages**: Use `page.goto(url)` to navigate to specific pages in your application.
+* **Logging In**: Simulate user actions, such as filling out forms and clicking buttons, using Playwright’s locators like `getByRole()` and `getByLabel()`.
+* **Capturing Screenshots**: Use `window.jipt.capture_screenshot()` to generate and upload screenshots to Crowdin. The method accepts the following parameters:
+   * `name: string`: The name of the screenshot.
+   * `options: object | null`: Custom settings:
+     * `override: boolean`: The `override` parameter determines how Crowdin handles screenshots with duplicate names. Use `true` (default) to overwrite the first matching screenshot or `false` to create a new one, even if the name matches.
+     * `success: function`: A callback function triggered on successful upload. It receives an object with `{msg_type: 'make_screenshot_data', screenshot_name: string}`, which provides the type of the message and the name of the uploaded screenshot.
+     * `error: function`: A callback function triggered on upload failure. It receives an object with `{msg_type: 'make_screenshot_error', response: object}` or an `Error`, containing details about the failure.
+* **Two-Factor Authentication**: Use the `otplib` library to programmatically generate OTP tokens when 2FA is enabled. Replace `'KEY'` with your project's secret key for valid OTP generation.
