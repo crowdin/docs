@@ -8493,6 +8493,8 @@ paths:
                 -
                   $ref: '#/components/schemas/PreTranslateEfficiency'
                 -
+                  $ref: '#/components/schemas/TranslatorAccuracy'
+                -
                   $ref: '#/components/schemas/CostsEstimationPostEditing'
                 -
                   $ref: '#/components/schemas/TranslationCostsPostEditing'
@@ -21493,7 +21495,7 @@ components:
       title: 'Other Files Import Options'
       properties:
         contentSegmentation:
-          description: "Defines whether to split long texts into smaller text segments. Only for __xml__, __flsnp__, __docx__, __mif__, __idml__, __dita__, __android8__, __xliff13__ files.\n\n__Note:__ When Content segmentation is enabled, the translation upload is handled by an experimental machine learning technology. To achieve the best results, we recommend uploading translation files with the same or as close as possible file structure as in source files."
+          description: "Defines whether to split long texts into smaller text segments. Only for __xml__, __flsnp__, __docx__, __mif__, __idml__, __dita__, __android8__, __xliff13__, __xliff_two4__ files.\n\n__Note:__ When Content segmentation is enabled, the translation upload is handled by an experimental machine learning technology. To achieve the best results, we recommend uploading translation files with the same or as close as possible file structure as in source files."
           type: boolean
         srxStorageId:
           description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany).\n\n  Storage identifier of the SRX segmentation rules file. Read more about [Custom Segmentation](https://support.crowdin.com/custom-segmentation/#segmentation-examples)."
@@ -21567,6 +21569,14 @@ components:
               enum:
                 - consolidate
                 - evenly_distribute_cells
+            frontMatterQuotes:
+              description: 'Export front matter values in quotes.'
+              type: string
+              default: auto
+              enum:
+                - auto
+                - single
+                - double
     MdxV1FileExportOptions:
       title: 'Mdx v1 File Export Options'
       type: object
@@ -22219,6 +22229,9 @@ components:
         tableColumnWidth:
           type: string
           example: consolidate
+        frontMatterQuotes:
+          type: string
+          example: single
       type: object
     MdFileImportOptionsResponseModel:
       title: 'Md File Import Options'
@@ -25794,9 +25807,11 @@ components:
             -
               $ref: '#/components/schemas/MacOSXFileFormatSettings'
             -
-              $ref: '#/components/schemas/XlsxFileFormatSettings'
-            -
               $ref: '#/components/schemas/XliffFileFormatSettings'
+            -
+              $ref: '#/components/schemas/XliffTwoFileFormatSettings'
+            -
+              $ref: '#/components/schemas/XlsxFileFormatSettings'
           x-doc-sections:
             - string-based
       type: object
@@ -26039,6 +26054,14 @@ components:
           enum:
             - consolidate
             - evenly_distribute_cells
+        frontMatterQuotes:
+          description: 'Export front matter values in quotes.'
+          type: string
+          default: auto
+          enum:
+            - auto
+            - single
+            - double
       type: object
     MdxV1FileFormatSettings:
       title: 'Mdx v1 file format settings'
@@ -26220,6 +26243,20 @@ components:
           default: true
         srxStorageId:
           description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany).\n\nStorage identifier of the SRX segmentation rules file. Read more about [Custom Segmentation](https://support.crowdin.com/custom-segmentation/#segmentation-examples)."
+          type: integer
+          format: int64
+          default: null
+          example: 61
+      type: object
+    XliffTwoFileFormatSettings:
+      title: 'xliff 2.0 file format settings'
+      properties:
+        contentSegmentation:
+          description: "Defines whether to split long texts into smaller text segments.\n\n __Important!__ This option disables the possibility to upload existing translations for xliff 2.0 files when enabled."
+          type: boolean
+          default: false
+        srxStorageId:
+          description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany).\n\n Storage identifier of the SRX segmentation rules file. Read more about [Custom Segmentation](https://support.crowdin.com/custom-segmentation/#segmentation-examples)."
           type: integer
           format: int64
           default: null
@@ -27275,6 +27312,8 @@ components:
             -
               $ref: '#/components/schemas/MacOSXFileFormatSettingsResponse'
             -
+              $ref: '#/components/schemas/XliffTwoFileFormatSettingsResponse'
+            -
               $ref: '#/components/schemas/XlsxFileFormatSettingsResponse'
             -
               $ref: '#/components/schemas/XliffFileFormatSettingsResponse'
@@ -27685,6 +27724,18 @@ components:
       properties:
         contentSegmentation:
           description: "Defines whether to split long texts into smaller text segments.\n\n     Important! This option disables the possibility to upload existing translations for xliff files when enabled."
+          type: boolean
+          default: false
+        customSegmentation:
+          description: 'Specifies whether custom segmentation rules are used.'
+          type: boolean
+          default: false
+      type: object
+    XliffTwoFileFormatSettingsResponse:
+      title: 'xliff 2.0 file format settings'
+      properties:
+        contentSegmentation:
+          description: "Defines whether to split long texts into smaller text segments.\n\n     Important! This option disables the possibility to upload existing translations for xliff 2.0 files when enabled."
           type: boolean
           default: false
         customSegmentation:
@@ -28335,6 +28386,67 @@ components:
         taskId:
           description: 'Task Identifier for which the report should be generated. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
           type: integer
+      type: object
+    TranslatorAccuracy:
+      title: 'Translator Accuracy'
+      description: "Calculate the accuracy of the user process\n\n__Note:__ The strings included in this report must be approved and translated by a human. Any other translations, including those that are only self-approved, will not be included unless they are also approved by another party and used as a reference."
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: translator-accuracy
+          type: string
+          example: translator-accuracy
+        schema:
+          $ref: '#/components/schemas/translator-accuracy.report.general'
+      type: object
+    translator-accuracy.report.general:
+      title: General
+      properties:
+        unit:
+          description: 'Defines report unit'
+          type: string
+          default: words
+          enum:
+            - strings
+            - words
+            - chars
+            - chars_with_spaces
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        postEditingCategories:
+          description: 'Split into categories by edit distance'
+          type: array
+          items:
+            type: string
+            example: 0-10
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        userIds:
+          description: 'Array of user ids. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 13
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2019-09-23T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2019-09-27T07:00:14+00:00'
       type: object
     CostsEstimationPostEditing:
       title: 'Costs Estimation Post-Editing'
@@ -29693,6 +29805,7 @@ components:
           enum:
             - user
             - language
+            - project
           example: user
         dateFrom:
           description: 'Report date from in UTC, ISO 8601'
@@ -31276,7 +31389,7 @@ components:
       title: 'Other Files Import Options'
       properties:
         contentSegmentation:
-          description: "Defines whether to split long texts into smaller text segments. Only for __android__, __arb__, __macosx__, __json__, __xlsx__, __csv__ files.\n\n__Note:__ When Content segmentation is enabled, the translation upload is handled by an experimental machine learning technology. To achieve the best results, we recommend uploading translation files with the same or as close as possible file structure as in source files."
+          description: "Defines whether to split long texts into smaller text segments. Only for __android__, __arb__, __macosx__, __json__, __xlsx__, __csv__, __xliff13__, __xliff_two4__ files.\n\n__Note:__ When Content segmentation is enabled, the translation upload is handled by an experimental machine learning technology. To achieve the best results, we recommend uploading translation files with the same or as close as possible file structure as in source files."
           type: boolean
         srxStorageId:
           description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany).\n\nStorage identifier of the SRX segmentation rules file. Read more about [Custom Segmentation](https://support.crowdin.com/custom-segmentation/#segmentation-examples)."
