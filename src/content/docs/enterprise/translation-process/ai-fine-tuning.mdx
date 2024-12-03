@@ -1,0 +1,229 @@
+---
+title: AI Fine-tuning
+description: Refine AI models with fine-tuning for improved localization results
+slug: enterprise/ai-fine-tuning
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import fineTuningCreate from '!/enterprise/translation-process/fine_tuning_create.png';
+import fineTuningJobsList from '!/enterprise/translation-process/fine_tuning_jobs_list.png';
+import fineTuningGraph from '!/enterprise/translation-process/fine_tuning_graph.png';
+
+Fine-tuning in Crowdin Enterprise enhances AI models using your project-specific data, tailoring translations to your style, tone, and terminology. By leveraging approved translations from your projects and translation memories (TMs), fine-tuning improves translation quality, reduces operational costs, and adapts AI performance to your localization workflows.
+
+Fine-tuning is available for Pre-translate prompts that use supported AI models and providers with custom API credentials, enabling the creation of AI models tailored to your localization needs.
+
+<Aside>
+  For Pre-translate prompts using Crowdin-managed providers or models that do not support fine-tuning, you can generate and [download datasets](#downloading-datasets) for external fine-tuning.
+</Aside>
+
+## Key Benefits of Fine-tuning
+
+Fine-tuning enhances the performance of AI models, offering the following advantages:
+
+* **Improved Accuracy** &ndash; Models trained on your data align closely with your style, tone, and domain-specific terminology.
+* **Better Context Handling** &ndash; Handle edge cases and complex scenarios by training the model with real-world examples from your projects.
+* **Cost Savings** &ndash; Fine-tuning reduces token usage by enabling shorter and more precise prompts.
+* **Incremental Updates** &ndash; Train models on new data without starting from scratch, saving time and resources.
+
+<Aside type="tip">
+  Start with small datasets and incrementally expand based on results to maximize efficiency and minimize costs.
+</Aside>
+
+## Managing Fine-tuning Jobs
+
+You can create new fine-tuning jobs, monitor their progress, and review detailed metrics for completed jobs.
+
+### Creating Fine-tuning Job
+
+To create a fine-tuning job, follow these steps:
+
+<Steps>
+  1. Open your organization's **Workspace** and select **AI** on the left sidebar.
+  2. In the **Fine-tuning** tab, click **Create** to set up a new fine-tuning job.
+  3. Configure the [basic parameters](#basic-parameters) and optional [advanced parameters](#advanced-parameters). Advanced parameters are typically adjusted for complex datasets or when fine-tuning a model for specific domain requirements.
+  4. *(Optional)* [Estimate the fine-tuning cost](#estimating-fine-tuning-cost) before proceeding.
+  5. Click **Start fine-tuning**. <Image src={fineTuningCreate} alt="Create Fine-tuning Job" />
+  6. Monitor the fine-tuning progress in the **Fine-tuning Jobs** section and [evaluate results](#evaluating-fine-tuned-models) after completion.
+</Steps>
+
+### Estimating Fine-tuning Cost
+
+Estimating the cost of fine-tuning before running the process helps you ensure that the training fits within your budget and allows you to adjust parameters for optimal results. This step is particularly useful if you're working with a large dataset or running multiple fine-tuning jobs.
+
+To estimate the cost of fine-tuning, follow these steps:
+
+1. Go to **Advanced Parameters** and set the **Epochs Number** to 1.
+2. Click **Start fine-tuning**.
+3. The system will calculate and display the approximate fine-tuning price. At this point, you can:
+   * Click **Proceed** to start the actual fine-tuning if the price aligns with your expectations.
+   * Click **Back** to adjust the parameters and refine your configuration to potentially lower the cost.
+
+By estimating costs upfront, you avoid unnecessary expenses and can experiment with different configurations to strike the right balance between performance and budget.
+
+### Viewing and Filtering Fine-tuning Jobs
+
+Once you open the **Fine-tuning** tab on the **AI** page, you can view and filter fine-tuning jobs to monitor their progress and results.
+
+You can view a list of all created fine-tuning jobs with the following details:
+
+* Job ID &ndash; the unique identifier of the fine-tuning job.
+* Status &ndash; the current state of the job (e.g., In Progress, Finished, Failed).
+* Created At &ndash; the date and time the job was created.
+
+<Image src={fineTuningJobsList} alt="Fine-tuning Jobs List" />
+
+To filter jobs, click <Icon name="mdi:filter-variant" class="inline-icon" /> and apply the following filters:
+
+* Status: All, Finished, In Progress, Failed.
+
+Click **Clear** to reset filters and display all jobs.
+
+Clicking on a job opens its detailed metrics, including parameters, results, logs, and other relevant information.
+
+### Fine-tuning Configuration Parameters
+
+You can configure a fine-tuning job using basic and advanced parameters.
+
+#### Basic Parameters
+
+The following parameters are required for initiating fine-tuning:
+
+* **Prompt** &ndash; Choose the Pre-translate prompt to be fine-tuned.
+* **Projects** &ndash; Select projects whose translations will be used for training. Ensure the selected projects contain approved translations.
+* **Translation Memories** &ndash; Include TM segments for training data. Leave blank to exclude TMs.
+* **Date Range** *(Optional)* &ndash; Specify the approval date range for filtering translations.
+
+#### Advanced Parameters
+
+Advanced parameters provide greater control over the fine-tuning process and include options for both training and validation datasets.
+
+##### Training Dataset Parameters
+
+Training dataset parameters control the data used to train your model. These settings determine the size and scope of the dataset, ensuring it's sufficient for effective training:
+
+* **Batch Size** &ndash; The number of examples in each batch during training. Larger batch sizes reduce variance but increase training time.
+* **Learning Rate Multiplier** &ndash; Adjust the scaling factor for the learning rate. Smaller values help prevent overfitting, while larger values speed up learning.
+* **Epochs Number** &ndash; The number of complete passes through the training dataset. Higher values improve accuracy but increase costs.
+* **Dataset Size Constraints** &ndash;
+  * **Maximum Dataset File Size (in bytes)** &ndash; Restricts the size of the training dataset.
+  * **Minimum Number of Examples in Dataset** &ndash; Sets the lower limit for training data size.
+  * **Maximum Number of Examples in Dataset** &ndash; Sets the upper limit for training data size.
+
+<Aside type="caution">
+  Adjust these parameters only if you fully understand their impact on the fine-tuning process and model performance.
+</Aside>
+
+##### Validation Dataset Parameters
+
+Validation datasets are used to test how well the fine-tuned model performs on unseen data. Configuring a validation dataset is optional but recommended for assessing model performance.
+
+* **Projects** &ndash; Select different projects from those used for training.
+* **Translation Memories** &ndash; Include TM segments for validation.
+* **Date Range** &ndash; Filter translations by approval dates for validation.
+* **Dataset Size Constraints** &ndash;
+  * **Maximum Dataset File Size (in bytes)** &ndash; Restricts the size of the validation dataset.
+  * **Minimum Number of Examples in Dataset** &ndash; Sets the lower limit for validation data size.
+  * **Maximum Number of Examples in Dataset** &ndash; Sets the upper limit for validation data size.
+
+<Aside>
+  Validation datasets should differ from training datasets to accurately measure model performance.
+</Aside>
+
+## Evaluating Fine-tuned Models
+
+After fine-tuning is complete, a new model is generated along with detailed metrics, including training and validation losses, job parameters, and logs. Use this data to evaluate your model’s performance and determine if it’s ready to integrate into your Pre-translate prompt.
+
+### Model Details
+
+Key information about your fine-tuned model includes:
+
+* **Model**: Name of the fine-tuned model.
+* **Status**: Job status (e.g., In progress, Finished, Failed).
+* **Job ID**: Unique identifier for the fine-tuning job.
+* **Base Model**: Initial model used as a starting point for fine-tuning.
+* **Output Model**: Name of the resulting fine-tuned model.
+* **Created At**: Date and time when the job was initiated.
+
+### Fine-tuning Parameters
+
+Details about the parameters configured for the fine-tuning job:
+
+* **Trained Tokens**: Total tokens processed during training.
+* **Epochs Number**: Number of full passes through the dataset.
+* **Batch Size**: Number of examples in each training batch.
+* **Learning Rate Multiplier**: Scaling factor for the learning rate, determining how quickly the model adjusts weights during training.
+
+### Dataset Files
+
+Dataset files used for fine-tuning, allowing you to download them for further analysis or external processing:
+
+* **Training**: File containing the training dataset used to train the fine-tuned model.
+* **Validation**: File containing the validation dataset used to evaluate the fine-tuned model’s accuracy and generalization performance.
+
+### Fine-tuning Results
+
+Metrics and tools available for assessing your fine-tuned model’s performance:
+
+* **Training Loss**: Indicates how well the model fits the training data. Lower values indicate better learning.
+* **Validation Loss**: Assesses who well the model performs on unseen data. Available only if a validation dataset is configured.
+* **Full Validation Loss**: Represents the model's overall performance on the entire validation dataset, if applicable.
+
+Review the results to determine whether they meet your requirements. If so, you can [integrate](/enterprise/crowdin-ai/#configuring-ai-prompts) the fine-tuned model into your Pre-translate prompt for immediate use.
+
+#### Metrics and Graphs
+
+Crowdin Enterprise provides multiple ways to evaluate fine-tuning results, including interactive graphs and a detailed metrics table.
+
+* **Interactive Graphs** &ndash; Visualize fine-tuning metrics such as Training Loss, Validation Loss, and Full Validation Loss over the course of training. Hover over points on the graph for step-specific details. You can highlight or hide specific metrics by clicking their titles below the graph. <Image src={fineTuningGraph} alt="Fine-tuning Graph" />
+* **Metrics Tab** &ndash; Access the same data in table format for a comprehensive overview. The table provides a step-by-step breakdown, making it easier to identify patterns or issues during fine-tuning. A steady decline in loss values across steps reflects effective training, with values closer to zero indicating better results.
+
+Both tools are available in the Fine-tuning Job Details page, allowing you to analyze performance trends and troubleshoot any anomalies effectively.
+
+#### Messages Tab
+
+The **Messages** tab provides logs returned by the AI provider, offering a detailed timeline of the job's progress, including key milestones (e.g., checkpoint creation, job completion) and troubleshooting insights.
+
+## Incremental Fine-tuning
+
+Update fine-tuned models iteratively to include newly approved translations. Use the **Date Range** parameter to avoid retraining from scratch.
+
+Example workflow:
+
+* **Initial Fine-tuning** &ndash; Train a base model using the full dataset.
+* **Subsequent Fine-tuning** &ndash; Train on newly approved translations only to create an updated model while retaining prior training data.
+
+Incremental fine-tuning is ideal for projects with ongoing updates, allowing you to keep your model optimized without retraining from scratch.
+
+<LinkCard
+  title="Continuous Fine-tuning"
+  description="Automate the fine-tuning process with incremental updates to your AI models based on new translations in Crowdin Enterprise projects."
+  href="https://store.crowdin.com/continuous-fine-tuning"
+  target="_blank"
+/>
+
+## Downloading Datasets
+
+Crowdin Enterprise allows you to download datasets for external use if fine-tuning cannot be performed directly in Crowdin, if you prefer to use external tools, or if you want to validate your dataset locally before starting fine-tuning.
+
+Available dataset options:
+
+* **Training Dataset** &ndash; Contains data used for model training, including translations from selected projects and translation memories.
+* **Validation Dataset** &ndash; Contains data used to evaluate model accuracy, ensuring the trained model performs well on unseen data.
+
+To download a dataset, follow these steps:
+
+<Steps>
+  1. Open your organization's **Workspace** and select **AI** on the left sidebar.
+  2. In the **Fine-tuning** tab, click **Create**.
+  3. Configure the datasets using [basic parameters](#basic-parameters) and [advanced parameters](#advanced-parameters).
+  4. Click **Download dataset** and select your preferred dataset type for export.
+</Steps>
+
+<Aside>
+  Downloading datasets is available only for the Business [subscription plan](https://crowdin.com/pricing#enterprise-plans).
+</Aside>
