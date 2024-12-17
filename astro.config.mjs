@@ -17,6 +17,7 @@ import enterpriseSidebar from './src/content/sidebars/enterprise.ts';
 import developerSidebar from './src/content/sidebars/developer.ts';
 
 import customConsentScript from './src/scripts/custom-consent-mode.js?raw';
+import postHogScript from './src/scripts/posthog.js?raw';
 import gtmScript from './src/scripts/gtm.js?raw';
 
 let site;
@@ -72,6 +73,13 @@ const config = defineConfig({
         {
           tag: 'script',
           content: customConsentScript,
+        },
+        // PostHog
+        {
+          tag: 'script',
+          content: process.env.VERCEL_ENV === 'production'
+            ? postHogScript.replace('<POSTHOG_CLIENT_API_HOST>', process.env.POSTHOG_CLIENT_API_HOST).replace('<POSTHOG_PROJECT_API_KEY>', process.env.POSTHOG_PROJECT_API_KEY)
+            : undefined,
         },
         // Google Tag Manager
         {
