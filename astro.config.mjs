@@ -126,7 +126,8 @@ const config = defineConfig({
         Head: './src/components/Head.astro',
         Footer: './src/components/Footer.astro',
         Hero: './src/components/Hero.astro',
-        Search: './src/components/Search.astro'
+        Search: './src/components/Search.astro',
+        SocialIcons: './src/components/SocialIcons.astro',
       },
       customCss: [
         './src/style/tailwind.css',
