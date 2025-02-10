@@ -1,0 +1,136 @@
+---
+title: Webhook
+description: Subscribe
+slug: developer/crowdin-apps-module-webhook
+sidebar:
+  label: Webhook
+  badge: New
+---
+
+import ReadMore from '~/components/ReadMore.astro';
+
+The Webhook module allows Crowdin Apps to listen for specific events and trigger actions when those events occur. This module is useful for automating workflows, synchronizing external systems, or logging project activities.
+
+## Structure
+
+```json title="manifest.json"
+{
+  "modules": {
+    "webhook": [
+      {
+        "key": "webhook-key-module-key",
+        "url": "/integration-page",
+        "events": [
+          "project.translated",
+          "project.approved"
+        ],
+        "environments": [
+          "crowdin",
+          "crowdin-enterprise"
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL of the webhook handler in the app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>events</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> A list of events that trigger the webhook. See the list of <a href="/developer/webhooks/#events" target="_blank">available webhook events</a>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">environments</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>crowdin</code>, <code>crowdin-enterprise</code></p>
+        <p><strong>Description:</strong> Set of environments where a module could be installed.<br/>
+        This parameter is needed for cross-product applications.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Communication between App and Crowdin
+
+All webhooks are triggered via an HTTP POST request with a JSON-formatted payload. The request may contain a single event or multiple events (always delivered in bulk mode).
+
+<ReadMore>
+  Read more about [Webhook Payload Examples](/developer/webhooks/#webhook-payload-examples).
+</ReadMore>
+
+### Request to the App
+
+When an event occurs, Crowdin sends an HTTP POST request to your webhook endpoint, complete with necessary headers for authentication and security. Below is an example of such a request.
+
+**HTTP request:**
+
+```
+POST /webhooks HTTP/1.1
+User-Agent: Crowdin-Webhook
+Content-Type: application/json
+X-Crowdin-Id: <organization-id>
+X-Crowdin-Domain: <organization-domain>
+X-Crowdin-Signature: <signature>
+X-Module-Key: <your-module-key>
+```
+
+**Request Body:**
+
+```json
+{
+  "events": [
+    {
+      "event": "project.translated",
+      "project": {
+        "id": "777",
+        // ...
+      },
+      "targetLanguage": {
+        "id": "uk",
+        // ...
+      }
+    },
+    {
+      "event": "project.translated",
+      "project": {
+        "id": "777",
+        // ...
+      },
+      "targetLanguage": {
+        "id": "uk",
+        // ...
+      }
+    }
+  ]
+}
+```
+
+During the app installation process, a unique secret called the [`app_secret`](/developer/crowdin-apps-installation/#:~:text=the%20app%20descriptor.-,app_secret,-Type%3A%20string) is provided to your app. This secret is used to generate the webhook signature using the HMAC algorithm with SHA-256.
+
+### Expected Response from the App
+
+Crowdin expects your app to respond with a successful HTTP status code (i.e., any 2XX status) to acknowledge receipt of the webhook payload.
