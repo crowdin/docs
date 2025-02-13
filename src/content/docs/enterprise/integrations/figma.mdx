@@ -369,3 +369,24 @@ Furthermore, the Crowdin for Figma plugin seamlessly integrates with Figma for V
 <ReadMore>
   Read more about [Figma for VS Code](https://help.figma.com/hc/en-us/articles/15023121296151-Figma-for-VS-Code).
 </ReadMore>
+
+## Troubleshooting
+
+### Screenshot Generation Issues in Large Figma Files
+
+When uploading strings with screenshots from large Figma files, users may experience slow performance or Figma freezing. This issue occurs when text elements are placed within a large top-level frame.
+
+When you add a string from Figma to Crowdin Enterprise, the plugin:
+
+1. Identifies the top-level frame containing the text element.
+2. Converts this frame into an image using the Figma API.
+3. Uploads the image to Crowdin Enterprise as a screenshot.
+
+The plugin always searches for the highest-level frame in the hierarchy and stops when encountering a non-frame element (such as a section or group). If the top-level frame is too large, generating a screenshot can cause performance issues.
+
+For example:
+
+- `section` > `group` > **`frame`** > `text` → The plugin captures the screenshot from `frame`.
+- **`frame 1`** > `frame 2` > `frame 3` > `text` → The plugin captures the screenshot from `frame 1`.
+
+To prevent slowdowns, restructure your Figma file so that top-level frames contain only the relevant UI context. Instead of placing all UI elements in a single large frame, break them into smaller, logical sections.
