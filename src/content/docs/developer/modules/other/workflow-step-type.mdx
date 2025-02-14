@@ -1,0 +1,541 @@
+---
+title: Workflow Step Type
+description: Create a new workflow step type for Crowdin Enterprise workflows
+slug: developer/crowdin-apps-module-workflow-step-type
+sidebar:
+  label: Workflow Step Type
+  badge: New
+---
+
+This module allows you to create custom workflow step types to extend the default list of workflow steps in Crowdin Enterprise. With this app installed, the new workflow steps type become available in the workflow editor, where they can be added to workflows and templates, enabling greater customization and flexibility.
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+* Only organization admins
+* All users in the organization projects
+* Selected users
+
+## Structure
+
+```json title="manifest.json"
+{
+  "modules": {
+    "workflow-step-type": [
+      {
+        "key": "custom-workflow-step",
+        "name": "Custom Workflow Step",
+        "logo": "/logo.png",
+        "description": "A sample custom step for Crowdin Enterprise workflows",
+        "boundaries": {
+          "input": {
+            "title": "Input Strings",
+            "ports": [
+              "untranslated",
+              "translated",
+              "approved",
+              "all",
+              "false",
+              "true",
+              "skipped",
+              "initial"
+            ]
+          },
+          "outputs": [
+            {
+              "title": "Processed Strings",
+              "port": "translated"
+            },
+            {
+              "title": "Unprocessed Strings",
+              "port": "untranslated"
+            }
+          ]
+        },
+        "editorMode": "comfortable",
+        "updateSettingsUrl": "/settings/custom-workflow-step",
+        "deleteSettingsUrl": "/delete/custom-workflow-step",
+        "url": "/workflow-step/custom-workflow-step",
+        "environments": [
+          "crowdin-enterprise"
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The human-readable name of the module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>logo</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL to the custom AI's logo that will be displayed in the Crowdin Enterprise UI.<br/>
+         The recommended resolution is 48x48 pixels.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The human-readable description of what the module does.<br/>
+         The description will be visible in the Crowdin Enterprise UI.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Defines the input and output ports for the workflow step, determining how strings enter and exit the step.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries.input</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Specifies the properties of the input data for the workflow step, including available ports.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">boundaries.input.title</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The title for the input section of the workflow step.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries.input.ports</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Allowed values:</strong> <code>untranslated</code>, <code>translated</code>, <code>approved</code>, <code>all</code>, <code>false</code>, <code>true</code>, <code>skipped</code>, <code>initial</code></p>
+        <p><strong>Description:</strong> Defines the string statuses that can be processed by this workflow step.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries.outputs</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Specifies the possible outputs of the workflow step, determining how processed strings move forward.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries.outputs.[]</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Defines the outputs of the workflow step. Each object in the array contains:</p>
+        <ul>
+          <li><code>title</code> (<strong>string</strong>) – The title for the output section of the workflow step.</li>
+          <li><code>port</code> (<strong>string</strong>) – The port type used for connecting outputs.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editorMode</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Allowed values:</strong> <code>side-by-side</code>, <code>comfortable</code>, <code>multilingual</code></p>
+        <p><strong>Description:</strong> Defines the Crowdin Enterprise Editor mode for this workflow step.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>updateSettingsUrl</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> The relative URL for sending updated workflow step settings after a user saves changes in the workflow editor. Used if the custom workflow step has a configuration.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>deleteSettingsUrl</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> The relative URL for deleting the workflow step in the workflow editor.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> The relative URL to the iframe for configuring the workflow step settings.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>Description:</strong> Set of environments where a module could be installed.<br/>
+        This parameter is needed for cross-product applications.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Communication Between App and Crowdin
+
+The Workflow Step Type module relies on webhooks and API methods to communicate with Crowdin Enterprise. Apps that include this module must also define the [Webhook module](/developer/crowdin-apps-module-webhook/) to receive string-related events (i.e., `string.status_on_step.recalculation_triggered`) and process them accordingly.
+
+### Receiving Webhook Events from Crowdin
+
+Crowdin Enterprise periodically sends a batched webhook payload to the app’s Webhook module whenever strings reach a custom workflow step provided by the app.
+
+This payload contains the `string.status_on_step.recalculation_triggered` event and includes all relevant strings that need external processing (e.g., AI-based proofreading).
+
+Example webhook payload for the `string.status_on_step.recalculation_triggered` event:
+
+```json
+{
+  "events": [
+    {
+      "event": "string.status_on_step.recalculation_triggered",
+      "stringStatus": {
+        "status": "NEED_PROCESS",
+        "output": "",
+        "organizationId": "200007777",
+        "translation": {
+          "id": 1106423,
+          "identifier": "058eb6ea2bdcc79a6a7208783c8bfb50",
+          "key": "string_1",
+          "text": "Not all videos are shown to users. See more",
+          "type": "text",
+          "context": "string_1",
+          "maxLength": "50",
+          "isHidden": false,
+          "isDuplicate": false,
+          "masterStringId": null,
+          "revision": 1,
+          "hasPlurals": false,
+          "labelIds": [],
+          "url": "https://umbrella.crowdin.com/editor/173/743/en-et#1106423",
+          "createdAt": "2024-10-29T10:47:13+00:00",
+          "updatedAt": null,
+          "file": {
+            "id": 743,
+            "name": "umbrella_app.xml",
+            "title": null,
+            "type": "android8",
+            "path": "/umbrella_app.xml",
+            "status": "active",
+            "revision": "1",
+            "branch": {
+              "id": null
+            },
+            "directory": {
+              "id": null
+            },
+            "project": null
+          },
+          "project": {
+            "id": 173,
+            "userId": 1,
+            "sourceLanguageId": "en",
+            "targetLanguageIds": [
+              "uk",
+              "et"
+            ],
+            "identifier": "d3026ae4cff9820bc140a210d23b35ad",
+            "name": "Project Name",
+            "createdAt": "2024-10-25T14:37:47+00:00",
+            "updatedAt": "2024-10-25T14:37:47+00:00",
+            "lastActivity": "2025-01-30T09:32:58+00:00",
+            "description": "",
+            "url": "https://umbrella.crowdin.com/u/projects/173",
+            "cname": null,
+            "languageAccessPolicy": null,
+            "visibility": null,
+            "publicDownloads": null,
+            "logo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJY...<truncated>...BBQmCC",
+            "isExternal": false,
+            "externalType": null,
+            "hasCrowdsourcing": false
+          }
+        },
+        "sourceLanguage": {
+          "id": "en",
+          "name": "English",
+          "editorCode": "en",
+          "twoLettersCode": "en",
+          "threeLettersCode": "eng",
+          "locale": "en-US",
+          "androidCode": "en-rUS",
+          "osxCode": "en.lproj",
+          "osxLocale": "en",
+          "textDirection": "ltr",
+          "dialectOf": null
+        },
+        "affectedLanguage": {
+          "id": "et",
+          "name": "Estonian",
+          "editorCode": "et",
+          "twoLettersCode": "et",
+          "threeLettersCode": "est",
+          "locale": "et-EE",
+          "androidCode": "et-rEE",
+          "osxCode": "et.lproj",
+          "osxLocale": "et",
+          "textDirection": "ltr",
+          "dialectOf": null
+        },
+        "workflowStep": {
+          "id": 1035,
+          "title": "AI Review",
+          "type": "Application",
+          "languages": [],
+          "applicationModule": {
+            "applicationIdentifier": "custom-workflow-step",
+            "moduleKey": "review-step"
+          }
+        },
+        "user": {
+          "id": "1",
+          "username": "john_smith",
+          "fullName": "John Smith",
+          "avatarUrl": "https://avatar-url.com/avatar/1/small/1bc07ce78f415990547ba1b4fd5ac8a8_default.png"
+        }
+      }
+    }
+  ]
+}
+```
+
+### Processing Strings and Updating Their Status
+
+1. **App Logic** - The app processes the received strings according to its internal logic (e.g., sending them to an AI service or performing custom validations).
+2. [**Updating String Status via API**](#api-methods) - After processing, the app calls Crowdin Enterprise’s private API to update each string’s status on the custom workflow step. This action routes the strings to the appropriate workflow step outputs.
+
+#### API Methods
+
+Below are the API methods for managing string statuses on a custom workflow step. The **Update String Status** method is mandatory, as it finalizes string statuses and routes them to the correct workflow outputs. Another available method **Get Current String Status** is optional, but can help manage edge cases or advanced logic in your app.
+
+<details>
+  <summary><strong>Update String Status</strong></summary>
+
+  Use this endpoint to update the status of strings that have reached your custom workflow step.
+
+  ```shell title="Crowdin Enterprise" wrap
+  PATCH https://{organization_domain}.api.crowdin.com/api/v2/projects/{projectId}/workflow-steps/{stepId}/languages/{languageId}/status
+  ```
+
+  <table>
+    <thead>
+      <tr>
+        <th>Parameter</th>
+        <th>Required</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>organization_domain</code></td>
+        <td>Yes</td>
+        <td><code>string</code></td>
+        <td>Your Crowdin Enterprise organization’s domain.</td>
+      </tr>
+      <tr>
+        <td><code>projectId</code></td>
+        <td>Yes</td>
+        <td><code>integer</code></td>
+        <td>Numeric identifier of your Crowdin Enterprise project.</td>
+      </tr>
+      <tr>
+        <td><code>stepId</code></td>
+        <td>Yes</td>
+        <td><code>integer</code></td>
+        <td>Numeric identifier of the custom workflow step.</td>
+      </tr>
+      <tr>
+        <td><code>languageId</code></td>
+        <td>Yes</td>
+        <td><code>string</code></td>
+        <td>Target language code.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  **Request Body (example)**:
+  ```json
+  [
+    {
+      "op": "replace",
+      "path": "/1106423/output",
+      "value": "translated"
+    },
+    {
+      "op": "replace",
+      "path": "/1106430/output",
+      "value": "approved"
+    }
+  ]
+  ```
+
+  **Response Example**:
+  ```json
+  {
+    "data": [
+      {
+        "data": {
+          "stringId": 1106423,
+          "languageId": "uk",
+          "stepId": 889,
+          "status": "DONE",
+          "output": "true"
+        }
+      },
+      {
+        "data": {
+          "stringId": 1106430,
+          "languageId": "uk",
+          "stepId": 889,
+          "status": "DONE",
+          "output": "true"
+        }
+      }
+    ]
+  }
+  ```
+</details>
+
+<details>
+  <summary><strong>Get Current String Status</strong></summary>
+
+  Fetch the current statuses of strings on a custom workflow step.
+
+  ```shell title="Crowdin Enterprise" wrap
+  GET https://{organization_domain}.api.crowdin.com/api/v2/projects/{projectId}/workflow-steps/{stepId}/languages/{languageId}/status
+  ```
+
+  <table>
+    <thead>
+      <tr>
+        <th>Parameter</th>
+        <th>Required</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>organization_domain</code></td>
+        <td>Yes</td>
+        <td><code>string</code></td>
+        <td>Your Crowdin Enterprise organization’s domain.</td>
+      </tr>
+      <tr>
+        <td><code>projectId</code></td>
+        <td>Yes</td>
+        <td><code>integer</code></td>
+        <td>Numeric identifier of your Crowdin Enterprise project.</td>
+      </tr>
+      <tr>
+        <td><code>stepId</code></td>
+        <td>Yes</td>
+        <td><code>integer</code></td>
+        <td>Numeric identifier of the custom workflow step.</td>
+      </tr>
+      <tr>
+        <td><code>languageId</code></td>
+        <td>Yes</td>
+        <td><code>string</code></td>
+        <td>Target language code.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  **Response Example**:
+  ```json
+  {
+    "data": [
+      {
+        "data": {
+          "stringId": 1106423,
+          "languageId": "uk",
+          "stepId": 889,
+          "status": "DONE",
+          "output": "true"
+        }
+      },
+      {
+        "data": {
+          "stringId": 1106430,
+          "languageId": "uk",
+          "stepId": 889,
+          "status": "DONE",
+          "output": "true"
+        }
+      }
+    ]
+  }
+  ```
+</details>
+
+### Configuring the Workflow Step in the Workflow Editor
+
+Users can configure or delete a custom workflow step in the Crowdin Enterprise workflow editor:
+
+* **Updating Settings (`updateSettingsUrl`)**
+   - When a user clicks **Save** after changing step settings in the workflow editor, Crowdin Enterprise sends a **POST** request to the `updateSettingsUrl` defined in the manifest.
+   - The app responds with a **2XX status** to confirm successful handling of the updated configuration.
+
+* **Deleting a Step (`deleteSettingsUrl`)**
+   - When a user deletes the step in the workflow editor, Crowdin Enterprise sends a **DELETE** request to the `deleteSettingsUrl`.
+   - The app can safely remove any stored settings related to the deleted workflow step and respond with a **2XX status** to confirm success.
+
+### Implementing the Settings UI in Your App
+
+If the workflow step provides any settings through the UI, you need to implement validation and saving of the workflow step configuration.
+
+#### Validation Method
+
+In the iframe UI for your custom workflow step, you need to implement a method to validate the step configuration:
+
+```js
+window.formRef = {
+  validateForm: () => {
+    // Validate settings form
+    return true;
+  },
+}
+```
+
+This method is called whenever Crowdin Enterprise checks if the settings are valid before saving.
+
+#### Saving Settings
+
+To save the workflow step's configuration, use the following method:
+
+```js
+window.currentFormData = settings;
+AP.formDataUpdated(settings);
+```
