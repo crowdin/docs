@@ -1,0 +1,40 @@
+name: Update Crowdin API Docs
+
+on:
+  schedule:
+    - cron: '0 12 * * *' # Run every day at 12:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-api-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Crowdin API docs
+        run: |
+          curl -o src/assets/api/crowdin/file-based.yml https://api.crowdin.com/api/docs/rest/file-based.yaml
+          curl -o src/assets/api/enterprise/file-based.yml https://enterprise.api.crowdin.com/api/docs/rest/file-based.yaml
+          curl -o src/assets/api/crowdin/string-based.yml https://api.crowdin.com/api/docs/rest/string-based.yaml
+          curl -o src/assets/api/enterprise/string-based.yml https://enterprise.api.crowdin.com/api/docs/rest/string-based.yaml
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git diff --exit-code || echo "changes=true" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.check_changes.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(developer): update API docs"
+          title: "chore(developer): update API docs"
+          body: This automated PR updates the Crowdin API documentation files.
+          branch: update-crowdin-api-docs
+          base: main
