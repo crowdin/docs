@@ -693,6 +693,7 @@ paths:
             enum:
               - pre_translate
               - assist
+              - qa_check
         -
           $ref: '#/components/parameters/PaginationLimit'
         -
@@ -14324,6 +14325,8 @@ components:
                 -
                   $ref: '#/components/schemas/ai.prompt.completion.resources.assist'
                 -
+                  $ref: '#/components/schemas/ai.prompt.completion.resources.qa_check'
+                -
                   $ref: '#/components/schemas/ai.prompt.completion.resources.custom'
     EnterpriseAiPromptCompletionCreateForm:
       required:
@@ -14343,6 +14346,8 @@ components:
                   $ref: '#/components/schemas/ai.prompt.completion.resources.assist'
                 -
                   $ref: '#/components/schemas/ai.prompt.completion.resources.alignment'
+                -
+                  $ref: '#/components/schemas/ai.prompt.completion.resources.qa_check'
                 -
                   $ref: '#/components/schemas/ai.prompt.completion.resources.custom'
     ai.prompt.completion.resources.overridePromptValues.common:
@@ -14421,6 +14426,39 @@ components:
           description: "Example: `{\"pairs\":[{\"id\":\"c61f9e77-1d0d-469a-b1ad-8c25c2c7e05c\",\"source\":\"About...\",\"translation\":\"Про...\"},{\"id\":\"8e0cdbd9-60c0-4be8-b51e-1cd6bf890902\",\"source\":\"About Me\",\"translation\":\"Про мене\"},{\"id\":\"6dbed810-353b-400d-975e-53723ab448a5\",\"source\":\"Current Password\",\"translation\":\"Створити пароль\"}]}`\n\n__Note:__ The provided data should follow the structure shown. Each object in the array must include a 'source' and 'translation' field. Other fields such as 'id' are optional. You can also include custom properties as needed."
           type: string
           example: '{"pairs":[{"id":"c61f9e77-1d0d-469a-b1ad-8c25c2c7e05c","source":"About...","translation":"Про..."},{"id":"8e0cdbd9-60c0-4be8-b51e-1cd6bf890902","source":"About Me","translation":"Про мене"},{"id":"6dbed810-353b-400d-975e-53723ab448a5","source":"Current Password","translation":"Створити пароль"}]}'
+        projectPublicDescription:
+          type: string
+          example: 'Crowdin Translations. Official effort.'
+      type: object
+      additionalProperties:
+        type: string
+    ai.prompt.completion.resources.overridePromptValues.qa_check:
+      properties:
+        sourceLanguage:
+          type: string
+          example: English
+        targetLanguage:
+          type: string
+          example: Ukrainian
+        translationUnits:
+          description: "Example: `{\"translationUnits\":[{\"id\":\"c9f4b768-5d71-4fd6-a3db-85f1f8dbe664\",\"source\":{\"id\":5515320,\"text\":\"Current Password\",\"key\":\"current_password\",\"context\":\"current_password\",\"maxLength\":null},\"translation\":{\"id\":5515321,\"text\":\"Створити пароль\"}}]}`\n\n__Note:__ The provided data should follow the structure shown. Each object in the array must include a 'source.text' and 'translation.text' field. Other fields such as 'id' are optional. You can also include custom properties as needed."
+          type: string
+          example: '{"translationUnits":[{"id":"c9f4b768-5d71-4fd6-a3db-85f1f8dbe664","source":{"id":5515320,"text":"Current Password","key":"current_password","context":"current_password","maxLength":null},"translation":{"id":5515321,"text":"Створити пароль"}}]}'
+        tm:
+          type: string
+          example: 'Create Password => Створити пароль'
+        terms:
+          type: string
+          example: "Term: Password. Translation: Пароль. Part of speech: N/A.\nTerm: password. Term doesn\\'t have a defined translation. Please translate it yourself. Part of speech: N/A."
+        fileName:
+          type: string
+          example: crowdin_sample_android.xml
+        fileContext:
+          type: string
+          example: N/A
+        projectName:
+          type: string
+          example: Crowdin
         projectPublicDescription:
           type: string
           example: 'Crowdin Translations. Official effort.'
@@ -14511,6 +14549,27 @@ components:
         overridePromptValues:
           $ref: '#/components/schemas/ai.prompt.completion.resources.overridePromptValues.alignment'
       type: object
+    ai.prompt.completion.resources.qa_check:
+      title: 'Resources for prompt with QA Check action'
+      required:
+        - projectId
+      properties:
+        projectId:
+          type: integer
+        sourceLanguageId:
+          description: '__Note__: If not specified, the source language of the project will be used'
+          type: string
+        targetLanguageId:
+          type: string
+        stringIds:
+          description: '__Note:__ Must be used together with `targetLanguageId`. You can assign up to 500 strings at a time.'
+          type: array
+          items:
+            type: integer
+            example: 78253
+        overridePromptValues:
+          $ref: '#/components/schemas/ai.prompt.completion.resources.overridePromptValues.qa_check'
+      type: object
     ai.prompt.completion.resources.custom:
       title: 'Resources for prompt with custom action'
       required:
@@ -14546,6 +14605,7 @@ components:
           enum:
             - pre_translate
             - assist
+            - qa_check
         aiProviderId:
           description: "AI Provider identifier. Get via [List AI Providers](#operation/api.ai.providers.getMany)\n\n__Note:__ Required if `isEnabled === true`"
           type: integer
@@ -14581,6 +14641,7 @@ components:
               enum:
                 - pre_translate
                 - assist
+                - qa_check
             config:
               description: 'AI prompt configuration'
               oneOf:
@@ -14589,7 +14650,9 @@ components:
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.assist'
                 -
-                  $ref: '#/components/schemas/ai.prompt.config.advanced_mode'
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.qa_check'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.crowdin_advanced_mode'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.external_mode'
     EnterpriseAiPromptCreateForm:
@@ -14610,6 +14673,7 @@ components:
                 - pre_translate
                 - assist
                 - alignment
+                - qa_check
             config:
               description: 'AI prompt configuration'
               oneOf:
@@ -14619,6 +14683,8 @@ components:
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.assist'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.alignment'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.qa_check'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.enterprise_advanced_mode'
                 -
@@ -14760,6 +14826,37 @@ components:
         publicProjectDescription:
           type: boolean
       type: object
+    ai.prompt.config.basic_mode.qa_check:
+      title: 'Basic mode (QA check action)'
+      required:
+        - mode
+        - evaluationSteps
+      properties:
+        mode:
+          type: string
+          enum:
+            - basic
+        evaluationSteps:
+          type: array
+          items:
+            type: string
+            example: 'Verify that any technical terms, idioms, or domain-specific vocabulary are translated correctly.'
+        customPlaceholders:
+          type: array
+          items:
+            type: string
+            example: '%custom:companyDescription%'
+        glossaryTerms:
+          type: boolean
+        tmSuggestions:
+          type: boolean
+        fileContext:
+          type: boolean
+        screenshots:
+          type: boolean
+        publicProjectDescription:
+          type: boolean
+      type: object
     ai.prompt.config.advanced_mode:
       title: 'Advanced mode'
       required:
@@ -14787,6 +14884,25 @@ components:
                 example: uk
           type: object
       type: object
+    ai.prompt.config.crowdin_advanced_mode:
+      title: 'Advanced mode'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ai.prompt.config.advanced_mode'
+        -
+          properties:
+            otherLanguageTranslations:
+              description: '__Note:__ Not available for QA check action'
+              properties:
+                isEnabled:
+                  type: boolean
+                  default: true
+                languageIds:
+                  description: 'Array of language ids. Get via [List Supported Languages](#operation/api.languages.getMany)'
+                  type: array
+                  items: { type: string, example: uk }
+              type: object
     ai.prompt.config.enterprise_advanced_mode:
       title: 'Advanced mode'
       type: object
@@ -14799,7 +14915,7 @@ components:
               description: '__Note:__ Not available for alignment action'
               type: boolean
             otherLanguageTranslations:
-              description: '__Note:__ Not available for alignment action'
+              description: '__Note:__ Not available for alignment and QA check actions'
               properties:
                 isEnabled:
                   type: boolean
@@ -14989,6 +15105,8 @@ components:
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.alignment'
                 -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.qa_check'
+                -
                   $ref: '#/components/schemas/ai.prompt.config.enterprise_advanced_mode'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.external_mode'
@@ -15008,7 +15126,9 @@ components:
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.assist'
                 -
-                  $ref: '#/components/schemas/ai.prompt.config.advanced_mode'
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.qa_check'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.crowdin_advanced_mode'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.external_mode'
     AiProviderPatch:
@@ -15191,6 +15311,7 @@ components:
                 - pre_translate
                 - assist
                 - alignment
+                - qa_check
     ai.provider.crowdin_configuration.actionRule:
       title: 'Action rule'
       type: object
@@ -15204,6 +15325,7 @@ components:
               enum:
                 - pre_translate
                 - assist
+                - qa_check
     ai.provider.credentials.open_ai:
       title: OpenAI
       required:
@@ -15667,6 +15789,10 @@ components:
         editorSuggestionAiPromptId:
           type: integer
           example: 5
+        qaCheckActionAiPromptId:
+          type: integer
+          example: 8
+          nullable: true
         shortcuts:
           type: array
           items:
@@ -22675,6 +22801,7 @@ components:
             - /aiPreTranslate
             - /assistActionAiPromptId
             - /editorSuggestionAiPromptId
+            - /qaCheckActionAiPromptId
             - /savingsReportSettingsTemplateId
           x-doc-sections:
             - string-based
@@ -23187,6 +23314,10 @@ components:
           description: 'AI Prompt ID to be used as prompt for AI Suggestion action in Editor'
           type: integer
           example: 13
+        qaCheckActionAiPromptId:
+          description: 'AI Prompt ID to be used as prompt for QA check action'
+          type: integer
+          example: 8
         savingsReportSettingsTemplateId:
           description: 'Report Settings Templates Identifier. Get via [List Report Settings Templates](#operation/api.projects.reports.settings-templates.getMany)'
           type: integer
@@ -24607,6 +24738,10 @@ components:
               type: integer
               example: 2
               nullable: true
+            qaCheckActionAiPromptId:
+              type: integer
+              example: 8
+              nullable: true
             inContext:
               type: boolean
               example: true
@@ -25523,6 +25658,10 @@ components:
         editorSuggestionAiPromptId:
           type: integer
           example: 2
+        qaCheckActionAiPromptId:
+          type: integer
+          example: 8
+          nullable: true
       type: object
     SystemStringsExporterSettings:
       title: 'String Exporter Settings'
@@ -34874,6 +35013,10 @@ components:
           type: boolean
           default: true
           example: true
+        ai:
+          type: boolean
+          default: true
+          example: true
       type: object
     qaChecksIgnorableCategories:
       properties:
@@ -34938,6 +35081,10 @@ components:
           default: true
           example: true
         numbers:
+          type: boolean
+          default: true
+          example: true
+        ai:
           type: boolean
           default: true
           example: true
@@ -35523,6 +35670,7 @@ components:
           - spellcheck
           - icu_check
           - numbers_check
+          - ai_check
         example: 'capitalize_check,punctuation_check'
     QaCheckCategory:
       name: category
@@ -35543,6 +35691,7 @@ components:
           - spellcheck
           - icu
           - numbers
+          - ai
         example: 'variables,tags'
     TaskStatisticStatus:
       name: status
