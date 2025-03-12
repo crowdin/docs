@@ -7,33 +7,32 @@
         - Set custom site title for the Enterprise and Developer portals
         - Hide the header if the `hideHeader` frontmatter property is set to `true`
 */
-import type { Props } from '@astrojs/starlight/props';
 import Default from '@astrojs/starlight/components/Head.astro';
 
-const currentProduct = Astro.props.entry.slug.split('/')[0];
+const currentProduct = Astro.locals.starlightRoute.entry.slug.split('/')[0];
 
-const isHomepage = Astro.props.slug === '';
+const isHomepage = Astro.locals.starlightRoute.id === '';
 const isEnterprise = currentProduct === 'enterprise';
 const isDeveloper = currentProduct === 'developer';
 const isCrowdin = currentProduct && !isEnterprise && !isDeveloper;
-const hideHeader = Astro.props.entry?.data?.hideHeader || false;
-const metaRobots = Astro.props.entry?.data?.metaRobots || undefined;
+const hideHeader = Astro.locals.starlightRoute.entry?.data?.hideHeader || false;
+const metaRobots = Astro.locals.starlightRoute.entry?.data?.metaRobots || undefined;
 
 const ogImageUrl = new URL(
-    `/og/${Astro.props.id.replace(/\.\w+$/, '.png')}`,
+    `/og/${Astro.locals.starlightRoute.id.replace(/\.\w+$/, '.png')}`,
     Astro.site,
 );
 
 if (isEnterprise) {
-    Astro.props.siteTitle = "Enterprise Docs";
+    Astro.locals.starlightRoute.siteTitle = "Enterprise Docs";
 }
 
 if (isDeveloper) {
-    Astro.props.siteTitle = "Developer Portal";
+    Astro.locals.starlightRoute.siteTitle = "Developer Portal";
 }
 ---
 
-<Default {...Astro.props}><slot /></Default>
+<Default><slot /></Default>
 
 <meta property="og:image" content={ogImageUrl} />
 <meta name="twitter:image" content={ogImageUrl} />
