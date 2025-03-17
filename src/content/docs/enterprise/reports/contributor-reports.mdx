@@ -44,9 +44,9 @@ The Project Summary section provides a comprehensive visual analysis of the proj
 
 You can use this report to compare your contribution to overall project activity.
 
-There are four periods available: Last week, Last 30 days, Last 24 hours, and Last year. The graphs are generated based on the text unit type selected for the **Project Size** section.
+There are five periods available: Last week, Last 30 days, Last 24 hours, Last year, and Custom range. The graphs are generated based on the text unit type selected for the **Project Size** section.
 
-* **Translation activity:** displays the volume of translated units (words, strings, characters) over time. It displays three lines simultaneously - units translated by human translators, units translated by Translation Memory (TM), and units translated by Machine Translation (MT). By hovering over the data points, you can view daily or monthly totals for each category.
+* **Translation activity:** displays the volume of translated units (words, strings, characters) over time. It displays multiple lines simultaneously - units translated by human translators, units translated by Translation Memory (TM), units translated by Machine Translation (MT), and units translated by AI. By hovering over the data points, you can view daily or monthly totals for each category.
 
 * **Proofreading activity:** displays the approval and voting activities within your project. It shows two lines - approved units and vote quantities, allowing you to see how review activity is trending over time. By hovering over the data points, you can view the daily or monthly number of approved texts and votes.
 
@@ -64,7 +64,7 @@ Set the translation and approval rates to see the cost for untranslated and not 
 
 You can generate a Cost Estimate report based on the following filter parameters:
 
-* Tasks: Not selected, All tasks, or a specific task.
+* Tasks: All tasks, or a specific task.
 
 <Aside>
   Final translation cost might differ due to various factors such as added or deleted texts, multiple people translating the same string into the same language, and others.
@@ -143,23 +143,28 @@ On the other hand, with the **Include pre-translated strings** option cleared, t
 
 ### Calculate Internal Fuzzy Matches
 
-Internal Fuzzy Matches &ndash; Fuzzy TM matches found among the untranslated strings that potentially can be added to TM. For example, if the first string in the file is `Validate your username`, and the last one is `Validate your username again`, there will be an internal fuzzy match.
+Internal Fuzzy Matches are partial (fuzzy) TM matches found among untranslated strings in your project that can potentially be added to the Translation Memory. For example, if the first string in a file is `Validate your username` and the last one is `Validate your username again`, there is an internal fuzzy match.
 
-To get a more deliberate report that includes a prediction of internal fuzzy matches, select **Calculate Internal Fuzzy Matches**.
+To include fuzzy (99% and less) internal matches, as well as perfect (101%) and 100% matches, in your Cost Estimate report and get a more comprehensive prediction of how many strings can be added to the TM if translated in sequence, select **Calculate Internal Fuzzy Matches**. Note that these calculations are approximate because the actual translation order may differ.
 
-This way, all the internal matches would be counted to see how many strings can be added to TM if the strings are translated one by one as listed.
-Keep in mind that calculations are approximate because strings might be translated in a different order.
+If you clear **Calculate Internal Fuzzy Matches**, the Cost Estimate report will only show perfect (101%) and 100% internal matches (repetitions), and will not include any fuzzy matches.
 
 <Aside>
-  Internal Fuzzy Matches would be counted according to the Net Rate Schemes configurations.
+  Internal Fuzzy Matches are counted according to the [Net Rate Schemes](#net-rate-schemes-cost-estimate) configurations.
 </Aside>
 
 ### Result Analysis {#result-analysis-cost-estimate}
 
 When the report is generated, you will see the following amounts:
 
-* **Total** &ndash; general cost estimate for all languages.
-* **Subtotals** &ndash; cost estimate for each language which includes TM savings, translations and proofreading costs.
+* **Total** - General cost estimate for all tasks.
+* **Subtotals** - Cost estimate for each task:
+  * **Translation** – Cost for strings requiring new or updated translations (no high–percentage match leverage).
+  * **Proofreading** – Cost for reviewing translations.
+  * **TM Savings** – Savings from existing translations (in TM or within the project).
+  * **Weighted Words / Strings / Characters / Characters with Spaces** – Final word count for cost calculations after applying TM/internal match discounts.
+* The main table with details on match categories and statuses.
+* The second table showing data for each folder or file included in the task.
 
 To download the Cost Estimate report, click **Export** and select the preferred export format (CSV, XLSX, or JSON).
 
@@ -173,6 +178,8 @@ Default parameters:
 - *Sorted by*: translated text units. A member who translated the most is placed at the top of the list.
 - *Languages*: all languages
 - *Contributors*: all
+
+The **You** label appears next to your own username in the report table, making it easier to identify your personal contribution.
 
 Re-sort the members by clicking on the needed parameter. For example, if you are a proofreader, you might want to know who approved most of the strings. For this, click on the *Approved* parameter to redo sorting.
 
@@ -192,7 +199,8 @@ To look for your account or account of any other contributor, use the search fie
 
 The Top Members list includes the following columns:
 
-* *Name* &ndash; conributor's first name, last name and username.
+* *Rank* &ndash; contributor’s position in the list based on the currently selected sorting criteria (e.g., *Translated*, *Approved*, etc.).
+* *Name* &ndash; contributor's first name, last name and username.
 * *Languages* &ndash; project languages.
 * *Translated* &ndash; the number of translated source content units.
 * *Target* &ndash; the number of translated content units in a target language.
@@ -217,9 +225,9 @@ The My Activity report allows you to calculate the price of your contribution (i
 You can generate a My Activity report based on the following filter parameters:
 
 * Tasks: Not selected, All Tasks, or specific task.
-* Time period: All time, Today, Yesterday, Last 7 days, Last 30 days, or Custom range.
+* Time period: All time, Today, Yesterday, Last 7 days, Last 30 days, Last month, or Custom range.
 * Workflow step (Specific to [projects with a workflow](/enterprise/creating-project/#projects-with-a-workflow)): All or a specific workflow step.
-* Files: All files (including deleted) or Selected files (excluding deleted).
+* Files: All files (including deleted files and strings) or Selected files (including deleted strings).
 * Language: All or specific target language.
 * Labels (Specific to projects with [labels](/enterprise/project-settings/labels/)): Not selected, Strings with selected labels, or Strigns without selected labels.
 
@@ -267,6 +275,10 @@ By default, you can configure the percentage of the full translation rate for th
 
 - **100** &ndash; for translations made using 100% match MT suggestions (new suggested translations are identical to MT suggestion).
 
+**AI Match types:**
+
+- **100** &ndash; for translations made using 100% match AI suggestions (new suggested translations are identical to AI suggestion).
+
 **Other translations types:**
 
 - **100** &ndash; for translations made using existing translations (new suggested translations are identical to the existing translations).
@@ -304,8 +316,13 @@ To select the languages for custom rates, click the drop-down menus and select t
 
 When the report is generated, you will see the following amounts:
 
-* User Information: profile picture, full name, and username.
-* Costs: total for all contributions, contributions to a specific language, distinguished for translation & post-editing and proofreading, and the amount of savings for translations made with TM and MT suggestions.
+* **User Information** - profile picture, full name, and username.
+* **Total** - General cost for all contributions.
+* **Language Subtotals** - A breakdown of costs for each target language:
+  * **Savings** - The amount saved with leveraged matches from TM, MT, or AI.
+  * **Weighted Words / Strings / Characters / Characters with Spaces** – Shows the adjusted metric after applying repetitions and fuzzy matches, reflecting the actual translation effort.
+  * **Pre-translated Words / Strings / Characters / Characters with Spaces** - Shows how many units were pre-translated.
+* The table containing a further breakdown of work types (Translation & Post-editing and Proofreading) and match types (No Match, TM Match, MT Match, AI Match, Other translations Match).
 
 To download the My Activity report, click **Export report** and select the preferred export format (CSV, XLSX, or JSON).
 
