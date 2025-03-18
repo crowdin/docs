@@ -44,8 +44,8 @@ To configure AI prompts, follow these steps:
   2. In the **Prompts** tab, click **New prompt**. Alternatively, you can go ahead with creating prompt samples clicking **Try a sample**. Crowdin allows you to quickly set up pre-configured prompts that are ready to perform effectively from the moment they are created. While these samples are designed to work good initially, you can customize them to your personal preferences.
   3. In the appeared dialog, set the prompt parameters:
       * Select **Enabled**
-      * Select the prompt type (i.e., [Pre-translate](#pre-translation-via-ai), [AI in editor](#using-ai-in-the-editor), [Alignment](#ai-alignment), or Create custom type)
-      * Custom type name (Specific to the custom type prompt)
+      * Select the prompt type (i.e., [Pre-translate](#pre-translation-via-ai), [AI in editor](#using-ai-in-the-editor), [Alignment](#ai-alignment), [QA check](#ai-qa-check), or Create custom type)
+      * Custom type name (Specific to the custom prompt type)
       * Title
       * AI Provider
       * AI Model
@@ -65,15 +65,18 @@ To configure AI prompts, follow these steps:
           * File context &ndash; allows AI to consider a textual description of the file added in the [file settings](/enterprise/file-management/#file-context) or in the [Editor](/enterprise/online-editor/#file-context).
           * Screenshots &ndash; allows AI to consider a visual context in the form of screenshots where the strings are tagged. This enhances accuracy and context awareness. <ReadMore>Read more about [Screenshots](/enterprise/screenshots/).</ReadMore>
           * Public project description &ndash; allows AI to consider public project description.
+          * Evaluation steps (Specific to the QA check prompt type) &ndash; criteria the AI uses to evaluate translations. You can customize, remove, or create new steps tailored to your quality requirements.
           <Image src={configuringPromptBasic} alt="Configuring AI Prompt (Basic Mode)" />
       * Advanced mode &ndash; click **Advanced mode** to compose your prompt in the most precise way. While composing your prompt in the Advanced mode, you can increase translation quality by leveraging context information in your prompts using the following placeholders:
           * `%sourceLanguage%` &ndash; The name of the source language for the project.
           * `%targetLanguage%` &ndash; The name of the target language for translation.
           * `%pluralForms%` &ndash; A list of plural forms for the target language.
           * `%json%` &ndash; A collection of strings for the current segment, including the string identifier (key), context, text, maximum length, and translations to other languages (if the translations placeholder is specified).
+          * `%translationUnits%` &ndash; A list of translation units (source and translation) for the AI to evaluate during QA checks.
           * `%fileName%` &ndash; The file name of the current segment.
           * `%fileContext%` &ndash; The file context of the current segment (provided via the file settings modal in the 'Files' section).
           * `%siblingsStrings%` &ndash; The previous and next segments in the file, allowing for contextual translation.
+          * `%filteredStrings%` &ndash; Strings that match the current filter in the Editor, provided to AI for improved evaluation accuracy and efficiency.
           * `%tm%` &ndash; Translation Memory (TM) matches relevant to the current segment.
           * `%terms%` &ndash; All the glossary terms relevant to the current segment.
           * `%projectName%` &ndash; Crowdin Enterprise project name.
@@ -233,11 +236,11 @@ These default settings can be overridden for each project individually in the pr
 
 #### AI Assistant in editor
 
-Select the default prompt for interactions with AI Assistant in the Editor across all projects in your Crowdin account.
+Select the default prompt for interactions with AI Assistant in the Editor across all projects in your Crowdin Enterprise organization.
 
 #### AI Suggestion in editor
 
-Select the default prompt for AI suggestions that will appear in the Editor across all projects in your Crowdin account. If no account-wide setting is configured and no prompt is manually selected for a specific project, AI suggestions will not be displayed in the Editor for that project. Once a prompt is selected, Crowdin will use it to generate and display translation suggestions in the Editor.
+Select the default prompt for AI suggestions that will appear in the Editor across all projects in your Crowdin Enterprise organization. If no organization-wide setting is configured and no prompt is manually selected for a specific project, AI suggestions will not be displayed in the Editor for that project. Once a prompt is selected, Crowdin Enterprise will use it to generate and display translation suggestions in the Editor.
 
 <Aside type="caution" >
   Using **AI Assistant in editor** and **AI Suggestion in editor** may increase token usage.
@@ -246,6 +249,10 @@ Select the default prompt for AI suggestions that will appear in the Editor acro
 #### AI Alignment {#ai-alignment-organization-settings}
 
 When enabled, [AI Alignment](#ai-alignment) automatically generates bilingual draft terms based on the translations made in the project, providing additional context for both human translators and AI. This feature enhances translation accuracy and consistency without requiring additional input.
+
+#### AI QA Check {#ai-qa-check-organization-settings}
+
+Select the default prompt for AI-powered QA checks across all projects in your Crowdin Enterprise organization. If no organization-wide setting is configured and no prompt is manually selected for a specific project, the AI-powered check will not be applied in that project. Once a prompt is selected, Crowdin Enterprise will use it to automatically detect and suggest fixes for translation issues during the translation process.
 
 #### Shortcuts for chat with AI in editor
 
@@ -369,6 +376,47 @@ In Advanced mode, project managers can further customize specific criteria for g
 For example, managers can set AI Alignment to create term drafts only for industry-specific terminology, ensuring that only relevant records are included.
 
 Once configured, all draft terms generated by AI Alignment appear in the glossary with a draft status, allowing managers to review and confirm these terms before they become part of the active glossary. This review step provides control over terminology consistency and accuracy across the project.
+
+## AI QA Check
+
+AI QA Check uses AI to automatically evaluate translations against defined quality standards. It helps translators quickly identify and resolve issues, ensuring accuracy, consistency, and compliance with project-specific requirements. AI QA Check complements and extends other QA methods (i.e., default QA Checks, Custom QA Checks, and External QA Checks) by providing comprehensive flexibility, reducing manual review efforts, and enhancing overall translation quality.
+
+### How AI QA Check Works
+
+When enabled, AI QA Check evaluates each submitted translation against a set of customizable evaluation criteria (Evaluation steps) defined in the configured QA Check prompt. Issues detected by the AI appear directly within the Editor as warnings, along with concise suggestions for corrections.
+
+Evaluation steps may include:
+
+* **Accuracy** – Ensuring no content is omitted, added, or incorrectly translated.
+* **Fluency** – Checking grammar, spelling, punctuation, and readability.
+* **Terminology** – Confirming consistent and correct use of project-specific terms.
+* **Style** – Verifying translations align with defined stylistic guidelines.
+* **Design** – Ensuring translations fit design constraints, including length and markup.
+* **Locale Convention** – Adapting formats for dates, currencies, addresses, and more.
+* **Cultural Adaptation (Verity)** – Localizing culture-specific references appropriately.
+* **General Issues** – Identifying other miscellaneous quality issues.
+
+For example, if a translation deviates from established glossary terms or fails to meet local formatting standards, the AI will highlight this and offer recommendations, guiding translators to achieve compliance and consistency.
+
+### Setting Up AI QA Check
+
+To use AI QA Check, create and configure a [QA Check prompt](#configuring-ai-prompts). Each QA Check prompt contains clearly defined evaluation steps the AI follows to detect translation issues. Unlike other AI prompts, the QA Check prompt includes a dedicated **Evaluation steps** section, allowing you to customize, edit, or expand upon predefined checks.
+
+You can also enhance the accuracy of the AI’s analysis by including various types of additional context relevant to your project's content.
+
+After configuration, you can assign a QA Check prompt as the default for either your entire organization or individual projects.
+
+### Applying AI QA Check in Projects
+
+To enable AI QA Check in your projects, follow these steps:
+
+<Steps>
+  1. [Create and enable a QA Check prompt](#configuring-ai-prompts).
+  2. Set it as the default QA prompt in the project's **Settings > AI > Settings**.
+  3. Enable the **AI-powered check** in the project's **Settings > QA Checks**.
+</Steps>
+
+Once set, the AI continuously checks submitted translations, ensuring consistent compliance with your project's quality guidelines.
 
 ## See Also
 
