@@ -7,7 +7,7 @@ sidebar:
   label: Context Menu
 ---
 
-The module allows creating the item in the context menu where possible.
+This module allows creating custom items in Crowdin's context menus.
 
 Crowdin context menus:
 * Resources > TM > TM record
@@ -28,9 +28,9 @@ Crowdin Enterprise context menus:
 A context menu item can open a specified app module with additional context related to the selected record or custom URL.
 There are the following types of actions:
 
-* Open the specified app module in a modal dialog (see [Modal module](#modal))
-* Redirect to the specified app module
-* Open custom URL in new tab
+* Open a specified app module in a modal dialog (see [Modal module](#modal))
+* Redirect to a specified app module
+* Open a custom URL in a new tab
 
 ## Access
 
@@ -39,14 +39,14 @@ You can grant access to this module to one of the following user categories:
 For Crowdin:
 
 * Only me (i.e., project owner)
-* Me, project managers and developers (if location: language, screenshot, source_file, translated_file)
+* Me, project managers and developers (if location: `language`, `screenshot`, `source_file`, `translated_file`)
 * All project members
 * Selected users
 
 For Crowdin Enterprise:
 
 * Only organization admins
-* Organization admins, project managers and developers (if location: language, screenshot, source_file, translated_file)
+* Organization admins, project managers and developers (if location: `language`, `screenshot`, `source_file`, `translated_file`)
 * All users in the organization projects
 * Selected users
 
@@ -69,6 +69,10 @@ Context menu item shows the specified module in the modal.
           "type": "modal",
           "module": {
             "project-integrations": "integration-module-key"
+          },
+          "signaturePatterns": {
+            "fileName": ".*\\.json",
+            "nodeType": [0, 1]
           }
         }
       }
@@ -102,6 +106,10 @@ Context menu item redirects to the specified module.
           "type": "redirect",
           "module": {
             "project-integrations": "integration-module-key"
+          },
+          "signaturePatterns": {
+            "fileName": ".*\\.json",
+            "nodeType": [0, 1]
           }
         }
       }
@@ -134,7 +142,11 @@ Context menu item opens a new tab with the URL: `baseUrl/options.url`.
         "options": {
           "location": "source_file",
           "type": "new_tab",
-          "url": "/example/path"
+          "url": "/example/path",
+          "signaturePatterns": {
+            "fileName": ".*\\.json",
+            "nodeType": [0, 1]
+          }
         }
       }
     ]
@@ -159,7 +171,7 @@ Context menu item opens a new tab with the URL: `baseUrl/options.url`.
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Required:</strong> yes</p>
-        <p><strong>Description:</strong> The human-readable name of the module. Uses as Context menu text</p>
+        <p><strong>Description:</strong> The human-readable name displayed in the context menu.</p>
       </td>
     </tr>
     <tr>
@@ -196,7 +208,37 @@ Context menu item opens a new tab with the URL: `baseUrl/options.url`.
       </td>
     </tr>
     <tr>
-      <td><code class="whitespace-nowrap">environments</code></td>
+      <td><code>options.module</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p>Use it only with <code>modal</code> and <code>redirect</code> types</p>
+        <p><strong>Description:</strong> Module definition.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>signaturePatterns</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> Contains criteria used to detect the type of file or node, specifying when the context menu item is shown.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns.fileName</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Contains <code>fileName</code> regular expressions used to detect file type.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>signaturePatterns.nodeType</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Allowed values:</strong> <code>0</code> – folder, <code>1</code> – file, <code>2</code> – branch</p>
+        <p><strong>Description:</strong> Array of node types specifying when the context menu item appears.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Allowed values:</strong> <code>crowdin</code>, <code>crowdin-enterprise</code></p>
