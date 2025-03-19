@@ -40,16 +40,16 @@ To configure a distribution, follow these steps:
 
 <Steps>
   1. Open your project and select **Translations** on the left sidebar.
-  1. Click **Over-The-Air Content Delivery** to expand the respective section.
-  1. Add a new distribution using the <Icon name="mdi:plus" class="inline-icon" /> **Add distribution** button.
-  1. In the appeared dialog, name your distribution. <Image src={addDistribution} alt="Over-the-Air Content Delivery" class="width-lg" />
-  1. Select one of the following export options:
-      * *Original file format* &ndash; export translations in the original format of the selected files.
-      * *Target file bundles* &ndash; export translations in the selected format regardless of the original format of the selected files.
-  1. Select only the files, translations for which you want to be shown in your application.
-  1. Click **Next**.
-  1. Copy <Icon name="material-symbols:file-copy" class="inline-icon" /> the distribution hash so that you can use it for integration.
-  1. Create as many distributions as you need and select different files for each distribution. You’ll need to click **Release** next to the needed distribution each time you want to send new translations to the app. Alternatively, click **Release all** to send new translations to all apps at once. <Image src={releaseDistribution} alt="Over-the-Air Content Delivery" />
+  2. Click **Over-The-Air Content Delivery** to expand the respective section.
+  3. Add a new distribution using the <Icon name="mdi:plus" class="inline-icon" /> **Add distribution** button.
+  4. In the appeared dialog, name your distribution. <Image src={addDistribution} alt="Over-the-Air Content Delivery" class="width-lg" />
+  5. Select one of the following export options:
+     * *Original file format* - export translations in the original format of the selected files.
+     * *Target file bundles* - export translations in the selected format regardless of the original format of the selected files.
+  6. Select only the files whose translations you want to include in your application.
+  7. Click **Next**.
+  8. Copy <Icon name="material-symbols:file-copy" class="inline-icon" /> the **Distribution Hash** and **Distribution Manifest**. The manifest is a JSON file containing key distribution details (e.g., files, languages, paths) that can be used in your integration.
+  9. Create as many distributions as you need and select different files for each distribution. Whenever you want to send new translations to the app, click **Release** next to the desired distribution. Alternatively, click **Release all** to send new translations to all apps at once. <Image src={releaseDistribution} alt="Over-the-Air Content Delivery" />
 </Steps>
 
 <ReadMore>
@@ -57,7 +57,7 @@ To configure a distribution, follow these steps:
 </ReadMore>
 
 <Aside>
-  The CDN caches all the translations in release for up to 1 hour, and even when new translations are released in Crowdin Enterprise, the CDN may return them with a delay.
+  The CDN caches all the translations in release for up to 1 hour, so even after new translations are released in Crowdin Enterprise, the CDN may return them with a delay.
 </Aside>
 
 ## For Mobile Applications
@@ -95,7 +95,10 @@ To send the translated content to your web apps via content delivery, use the Cr
   Read more about the [Crowdin OTA JavaScript client](https://crowdin.github.io/ota-client-js/).
 </ReadMore>
 
-To manage the translated content delivery to your web apps manually, use the following instructions:
+To manage the translated content delivery to your web apps manually, you can either:
+
+* Use the **Distribution Manifest URL**, which displays a JSON file containing distribution details (files, languages, etc.), or
+* Form each file URL with the **distribution hash**, as shown below.
 
 Form the URL to the translation file as follows:
 
@@ -103,13 +106,29 @@ Form the URL to the translation file as follows:
 https://distributions.crowdin.net/{distribution_hash}/content/{path_to_file}
 ```
 
-`{path_to_file}` will be the same as for the regular translation build. If your files don’t have export patterns with the language code placeholders (e.g., `%locale%`, `%two_letters_code%`, etc.), the system will automatically add the Crowdin language code at the beginning of the path.
+`{path_to_file}` will match the path used in your regular translation build. If your files don’t have export patterns including language code placeholders (e.g., `%locale%`, `%two_letters_code%`, etc.), Crowdin Enterprise automatically adds the Crowdin language code at the beginning of the path.
 
-You can find the list of your project's language codes in the meta-information of your distribution content:
+To see all available files and languages for your distribution, copy the Distribution Manifest URL (provided in the Crowdin Enterprise UI) and open it in your browser.
 
-```shell
-https://distributions.crowdin.net/{distribution_hash}/manifest.json
+You’ll see a JSON structure like:
+
+```json
+{
+  "files": ["/crowdin_sample_android.xml"],
+  "languages": ["fr","de","uk"],
+  "language_mapping": [],
+  "custom_languages": [],
+  "timestamp": 1234567890,
+  "content": {
+    "fr": ["/content/fr/crowdin_sample_android.xml"],
+    "de": ["/content/de/crowdin_sample_android.xml"],
+    "uk": ["/content/uk/crowdin_sample_android.xml"]
+  },
+  "mapping": ["/mapping/en/crowdin_sample_android.xml"]
+}
 ```
+
+This JSON includes the exact paths to use with the distribution.
 
 ## Pricing
 
