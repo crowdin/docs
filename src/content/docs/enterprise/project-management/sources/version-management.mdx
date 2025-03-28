@@ -6,7 +6,7 @@ sidebar:
   order: 4
 ---
 
-import { Steps, Aside } from '@astrojs/starlight/components';
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
 import ReadMore from '~/components/ReadMore.astro';
 import { Image } from 'astro:assets';
@@ -18,8 +18,6 @@ import branchTranslationVerification from '!/crowdin/project-management/sources/
 
 Maintain an agile localization process and prevent translation delays for added texts or new product features. Integrate your project branches with Crowdin Enterprise and allow translators to access all new texts immediately.
 
-## Branches
-
 When several people work on product development, branches help manage different content versions. If you have a continuous project, you can add project branches to Crowdin Enterprise and allow translators to translate the texts in parallel with development to prevent deployment delays.
 
 Branches in Crowdin Enterprise look like regular folders marked with a specific icon and have special behavior for duplicate strings.
@@ -28,13 +26,43 @@ Example of branch structure in Crowdin Enterprise:
 
 <Image src={versionsBranches} alt="Branch Structure" />
 
-### Branch Creation
+## Managing Branches
 
-There are a few ways to add branches to Crowdin Enterprise:
+You can create, clone, merge, rename, prioritize, or delete branches in Crowdin to streamline localization alongside development. Use the available UI options, API, or CLI depending on your workflow and project type.
 
-* Integrate Crowdin Enterprise projects with [GitLab](/enterprise/gitlab-integration/), [GitHub](/enterprise/github-integration/), [Bitbucket](/enterprise/bitbucket-integration/), or [Azure Repos](/enterprise/azure-repos-integration/). It’s a recommended option, as branches selected for localization in your version control system (VCS) will be created in Crowdin Enterprise automatically.
-* Use [CLI](https://crowdin.github.io/crowdin-cli/commands/crowdin-branch) or [API](/developer/api/) to add new branches.
-* Create branches [manually](/enterprise/file-management/#branches-and-folders).
+### Creating Branches
+
+You can create branches manually using the web interface (UI), automatically by connecting your project to a version control system, or by using CLI or API. The method you choose may depend on your project type or integration preferences.
+
+#### Creating Branches via VCS Integration
+
+Integrate Crowdin projects with [GitLab](/enterprise/gitlab-integration/), [GitHub](/enterprise/github-integration/), [Bitbucket](/enterprise/bitbucket-integration/), or [Azure Repos](/enterprise/azure-repos-integration/). When you select branches for localization in your VCS, they’ll be created automatically in Crowdin.
+
+#### Creating Branches via Web Interface
+
+To create branches via the web interface (UI), follow these steps:
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Steps>
+      1. Open your project and go to **Sources > Files**.
+      2. Click **New Version Branch**.
+      3. In the appeared dialog, enter the branch name.
+      4. In the **Duplicate Strings** section, select how duplicated strings should be handled.
+      5. Click **Create** to finish.
+    </Steps>
+  </TabItem>
+  <TabItem label="String-based project">
+    <Steps>
+      1. Open your project and go to the **Branches** tab.
+      2. Click **New Version Branch**.
+      3. In the appeared dialog, enter the branch name.
+      4. Select **Create empty branch** or **Clone existing branch**.
+      5. If cloning, select the source branch from the dropdown that appears.
+      6. Click **Create** to finish.
+    </Steps>
+  </TabItem>
+</Tabs>
 
 <Aside type="caution">
   The first files you upload to the Crowdin Enterprise project must contain all the original strings and should be placed in the corresponding branch. For all article examples, a branch with original texts is named **Master**.
@@ -42,21 +70,73 @@ There are a few ways to add branches to Crowdin Enterprise:
 
 #### Branch Creation using API
 
-To create a branch via API, use the [Add Branch](/developer/enterprise/api/v2/#operation/api.projects.branches.post) method.
+You can use the Crowdin Enterprise API to programmatically create branches. The available method depends on the project type:
+
+* [Add Branch (File-based)](https://support.crowdin.com/developer/enterprise/api/v2/#tag/Source-Files/operation/api.projects.branches.post)
+* [Add Branch (String-based)](https://support.crowdin.com/developer/enterprise/api/v2/string-based/#tag/Branches/operation/api.projects.branches.post)
 
 #### Branch Management using CLI
 
-If you use CLI, you can add and delete version branches with dedicated commands. Alternatively, you can create version branches during the file upload.
+With the Crowdin CLI, you can manage branches directly from your local environment, using the dedicated commands. You can also create a branch automatically during file upload.
 
 <ReadMore>
   Read more about [Branch Management with CLI](https://crowdin.github.io/crowdin-cli/commands/crowdin-branch).
 </ReadMore>
 
+### Cloning Branches
+
+You can create a copy of an existing branch using the **New Version Branch** dialog or the **Clone** option in the context menu.
+
+To clone a branch, follow these steps:
+
+<Steps>
+  1. Open your project and go to the **Branches** tab.
+  2. Do one of the following:
+     - Click **New Version Branch**.
+     - Hover over the needed branch, click <Icon name="mdi:dots-vertical" class="inline-icon" /> (or right-click), and select **Clone**.
+  3. In the appeared dialog, enter the name for the new branch.
+  4. If cloning via **New Version Branch**, select **Clone existing branch** and choose the source branch from the dropdown.
+  5. Click **Create** to finish.
+</Steps>
+
+<Aside type="caution" title="Limitations">
+  Branch cloning is only available for [string-based](/enterprise/creating-project/#string-based-project) projects.
+</Aside>
+
+### Merging Branches
+
+You can merge one branch into another directly from the **Branches** tab using the context menu. During the merge process, Crowdin displays a summary of changes and allows you to resolve any conflicts before completing the merge.
+
+<Steps>
+  1. In the **Branches** tab, hover over the source branch you want to merge.
+  2. Click <Icon name="mdi:dots-vertical" class="inline-icon" /> (or right-click), and select **Merge**.
+  3. In the appeared dialog, choose the target branch to merge into.
+  4. Click **Continue** to proceed to the Merge Summary page.
+</Steps>
+
+On the **Merge Summary** page, you’ll see:
+
+* A summary of string changes — how many were added, removed, or changed.
+* An optional checkbox to **Delete the source branch after merge**.
+
+If any strings were changed, a conflict resolution step will follow. For each conflicting string, choose whether to keep the version from the source or the target branch. You can also:
+
+* Click **Accept all from `{source_branch}`** to apply all changes from the source.
+* Click **Accept all from `{target_branch}`** to keep all existing strings in the target.
+
+The **Merge** button becomes active only after all conflicts are resolved.
+
+Once the merge is complete, translations, approvals, and votes from both branches will be preserved.
+
+<Aside type="caution" title="Limitations">
+  Branch merging is only available for [string-based](/enterprise/creating-project/#string-based-project) projects.
+</Aside>
+
 ### Prioritizing Branches
 
-You can set a specific priority for each branch by clicking an arrow icon next to the needed branch. Then translators will see branches sorted according to their priority on the language page and in the Editor.
+You can set priorities to branches in file-based projects to help translators focus on the most important content first. Branches appear sorted by priority on the language page and in the Editor.
 
-Branches might have the following priorities:
+Available priorities:
 
 - <Icon name="mdi:arrow-down" class="inline-icon text-emerald-700" /> – low
 - <Icon name="mdi:arrow-up" class="inline-icon text-orange-700" /> – medium
@@ -66,34 +146,75 @@ To set a priority for your branches, follow these steps:
 
 <Steps>
   1. Open your project and go to **Sources > Files**.
-  1. Click an arrow icon next to the needed branch to set the preferred priority.
+  2. Click the arrow icon next to the needed branch to set the preferred priority.
 </Steps>
+
+<Aside type="caution" title="Limitations">
+  Branch prioritization is only available for [file-based](/creating-project/#file-based-project) projects.
+</Aside>
+
+### Other Actions from the Context Menu
+
+In addition to cloning and merging, the context menu for each branch includes the following options:
+
+* **Rename** – Allows you to change the name of the selected branch.
+* **Cost Estimate** – Opens the cost estimation dialog scoped to the branch.
+* **Delete** – Permanently deletes the branch from the project. Use with caution.
 
 ## Duplicates
 
-Because branches are different versions of the same product feature, their localization content is usually duplicated. To help translators translate versions consistently and avoid additional translation costs, we have the **Show within a version branch** option that allows hiding duplicated strings only between versions. If your source files contain strings with apparent identifiers (keys), it's better to use a *strict* version of this option. In other cases, feel free to use a *regular* one.
+Because branches are different versions of the same product feature, their localization content is usually duplicated. To help translators translate versions consistently and avoid additional translation costs, Crowdin Enterprise offers the **Show within a version branch** option, which hides duplicate strings between branches.
 
-When this option is chosen, only the master strings first uploaded to the system should be translated. All duplicated strings will automatically gain translations from the master strings.
+When this option is applied, only the original strings (usually from the master branch) need to be translated. All duplicates in other branches automatically receive translations from those originals.
 
-<Image src={versionsDuplicateStrings} alt="Duplicates" />
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    In file-based projects, you can configure how duplicates are handled in **Settings > Import > Source Strings**. If your source files contain clear identifiers (keys), it's recommended to use the *Strict* version of the **Show within a version branch** option. Otherwise, the *Regular* option will work well for most use cases.
+  <Image src={versionsDuplicateStrings} alt="Duplicates"/>
+  </TabItem>
+  <TabItem label="String-based project">
+    In string-based projects, the **Show within a version branch (regular detection)** behavior is applied automatically and cannot be changed. This ensures translations are reused between branches without requiring any additional configuration.
+  </TabItem>
+</Tabs>
 
 <ReadMore>
-  Read more about [Duplicates settings](/enterprise/project-settings/import/).
+  Read more about [Duplicates settings](/enterprise/project-settings/import/#duplicate-strings).
 </ReadMore>
 
 ## Suggested Workflow
 
-To make sure versions work smoothly for your Crowdin Enterprise project, we recommend the following workflow:
+To ensure smooth collaboration between developers and translators, version branches in Crowdin Enterprise can be used in different ways depending on how you manage source content and what project type you're using.
+
+### Managing Content Outside Crowdin Enterprise
+
+In both file-based and string-based projects, you can treat your external system (e.g., file storage or version control) as the source of truth. In this setup:
+
+* Source files are managed and updated outside of Crowdin Enterprise.
+* You upload project content using the web interface (UI), API, CLI, or integrations.
+* Selected branches are created in Crowdin Enterprise accordingly.
+* Translations are delivered back to your system once completed.
+
+To implement this approach for your Crowdin Enterprise project, we recommend the following workflow:
 
 <Steps>
-  1. Upload your project files to the Crowdin Enterprise project using one of the [available methods](#branch-creation).
-  1. Open your project and go to **Settings > Import > Source Strings**.
-  1. Switch the **Duplicates** option to **Show within a version branch**.
+  1. Upload your project files to the Crowdin Enterprise project using one of the [available methods](#creating-branches).
+  2. In file-based projects, open your project and go to **Settings > Import > Source Strings**.
+  3. Set the **Duplicates** option to **Show within a version branch**.
 </Steps>
 
-The screenshot below visualizes how the workflow works in practice. All texts from *Master*, *Branch 1*, and *Branch 2* are transferred to the translation server immediately after they appear, even though the branches are not merged to the *Master* branch yet.
+The screenshot below visualizes how this workflow works in practice. All texts from *Master*, *Branch 1*, and *Branch 2* are transferred to the translation server immediately after they appear, even though the branches are not merged into the *Master* branch yet.
 
 <Image src={branchesWorkflow} alt="Branches Workflow" class="no-shadow mb-8" />
+
+### Managing Content in Crowdin Enterprise (String-based Projects Only)
+
+For string-based projects, you can also manage branches directly in Crowdin Enterprise without relying on an external system to define structure or content updates. In this setup:
+
+* Source content can be added the web interface (UI), API, CLI, or integrations.
+* Version branches are created, cloned, and merged within Crowdin Enterprise using the UI or API.
+* Translations are optionally synced back to any connected integration, if used.
+
+This approach gives more flexibility for teams who prefer to organize content and manage version flows entirely within Crowdin Enterprise.
 
 ### Translation Download
 
@@ -102,6 +223,7 @@ Translations from all version branches are placed in one ZIP archive when downlo
 #### Translation Download using API
 
 To download translations of the specific version branch with API, you can use the following API methods:
+
 * [Build Project Translation](/developer/enterprise/api/v2/#operation/api.projects.translations.builds.post) - make sure to use the `EnterpriseTranslationCreateProjectBuildForm` schema.
 * [Check Project Build Status](/developer/enterprise/api/v2/#operation/api.projects.translations.builds.get).
 * [Download Project Translations](/developer/enterprise/api/v2/#operation/api.projects.translations.builds.download.download).
@@ -118,11 +240,13 @@ crowdin download -b branch_name
   Read more about [`crowdin download` command](https://crowdin.github.io/crowdin-cli/commands/crowdin-download).
 </ReadMore>
 
-### Merging Branches
+### Merging Branches Outside Crowdin Enterprise
 
 The *Master* branch will contain new texts from the *Feature* branches as soon as they are merged. While synchronizing with Crowdin Enterprise, texts in the *Master* branch are populated with translations from the appropriate branch.
 
 After synchronizing the updated *Master* branch with Crowdin Enterprise, you can remove the *Feature* branch from Crowdin Enterprise. All translations stored in the *Master* branch will remain.
+
+This approach is commonly used in file-based projects but can also apply to string-based ones if content is managed outside of Crowdin Enterprise.
 
 <Image src={branchMerging} alt="Merging Branches" class="no-shadow mb-8" />
 
