@@ -8,7 +8,7 @@ sidebar:
 
 import { Aside, LinkCard, Tabs, TabItem, Badge } from '@astrojs/starlight/components';
 
-Crowdin Query Language (CroQL) is a tool for Crowdin Editor and Crowdin Enterprise Editor and Crowdin and Crowdin Enterprise API that allows you to retrieve needed localization resources based on specific conditions. Using CroQL, you can filter source strings and their translations for a specific target language, as well as TM segments.
+Crowdin Query Language (CroQL) is a tool for Crowdin Editor and Crowdin Enterprise Editor and Crowdin and Crowdin Enterprise API that allows you to retrieve needed localization resources based on specific conditions. Using CroQL, you can filter source strings and their translations for a specific target language, TM segments, and Glossary Terms.
 
 You can use CroQL with the following API methods:
 
@@ -20,6 +20,8 @@ You can use CroQL with the following API methods:
     * [List Language Translations](/developer/api/v2/string-based/#operation/api.projects.languages.translations.getMany) <Badge text="String-based" variant="note" />
     * [List TM Segments](/developer/api/v2/#operation/api.tms.segments.getMany)
     * [List TM Segments](/developer/api/v2/string-based/#operation/api.tms.segments.getMany) <Badge text="String-based" variant="note" />
+    * [List Terms](/developer/api/v2/#tag/Glossaries/operation/api.glossaries.terms.getMany)
+    * [List Terms](/developer/api/v2/string-based/#tag/Glossaries/operation/api.glossaries.terms.getMany) <Badge text="String-based" variant="note" />
   </TabItem>
   <TabItem label="Crowdin Enterprise">
     * [List Strings](/developer/enterprise/api/v2/#operation/api.projects.strings.getMany)
@@ -28,6 +30,8 @@ You can use CroQL with the following API methods:
     * [List Language Translations](/developer/enterprise/api/v2/string-based/#operation/api.projects.languages.translations.getMany) <Badge text="String-based" variant="note" />
     * [List TM Segments](/developer/enterprise/api/v2/#operation/api.tms.segments.getMany)
     * [List TM Segments](/developer/enterprise/api/v2/string-based/#operation/api.tms.segments.getMany) <Badge text="String-based" variant="note" />
+    * [List Terms](/developer/enterprise/api/v2/#tag/Glossaries/operation/api.glossaries.terms.getMany)
+    * [List Terms](/developer/enterprise/api/v2/string-based/#tag/Glossaries/operation/api.glossaries.terms.getMany) <Badge text="String-based" variant="note" />
   </TabItem>
 </Tabs>
 
@@ -270,6 +274,65 @@ These queries are used to retrieve information about TM segments.
     | `{croql}`    | **Type:** `string`<br/>**Description:** CroQL expression.                                 |
 
     <Aside type="caution">Before executing the request, ensure to URL encode your CroQL expression.</Aside>
+</details>
+
+### Glossary Term Queries
+
+These queries are used to retrieve information about glossary terms.
+
+* Terms created by the user with a `crowdin` username for Ukrainian:
+  ```graphql
+  user = @user:"crowdin" and language = @language:"uk"
+  ```
+
+* Terms that contain "ABC" and have part of speech set to noun:
+  ```graphql
+  text contains "ABC" and partOfSpeech = "noun"
+  ```
+
+* Terms marked as not recommended or obsolete:
+  ```graphql
+  status = "not_recommended" or status = "obsolete"
+  ```
+
+* Terms that are of type abbreviation and have a note:
+  ```graphql
+  type = "abbreviation" and note contains "tooltip"
+  ```
+
+* Terms added after a specific date:
+  ```graphql
+  createdAt > '2024-12-01 00:00:00'
+  ```
+
+* Terms with lemma equal to "cancel" and in English:
+  ```graphql
+  lemma = "cancel" and language = @language:"en"
+  ```
+
+* Terms that include a reference URL:
+  ```graphql
+  url contains "https://"
+  ```
+
+<details>
+  <summary><strong>Using Glossary Term Queries in Crowdin API</strong></summary>
+  Use your query in the following Crowdin API endpoints:
+
+  ```shell title="Crowdin" wrap
+  GET https://api.crowdin.com/api/v2/glossaries/{glossaryId}/terms?croql={croql}
+  ```
+
+  ```shell title="Crowdin Enterprise" wrap
+  GET https://{organization_domain}.api.crowdin.com/api/v2/glossaries/{glossaryId}/terms?croql={croql}
+  ```
+
+  | Parameter        | Details                                                                                     |
+  |------------------|---------------------------------------------------------------------------------------------|
+  | `{glossaryId}`   | **Type:** `integer`<br/>**Description:** Numeric identifier of your Crowdin glossary.       |
+  | `{croql}`        | **Type:** `string`<br/>**Description:** CroQL expression to filter glossary term entries.   |
+
+  <Aside type="caution">Before executing the request, ensure to URL encode your CroQL expression.</Aside>
 </details>
 
 ### Examples based on the Editor Advanced Filter Options
@@ -1244,6 +1307,225 @@ CroQL can be used in the following contexts: source string context, translation 
     <td>
       <p><strong>Type:</strong> <code>datetime</code></p>
       <p><strong>Description:</strong> Date when a translation memory record was updated.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### Glossary Concept Context
+
+```json
+{
+  "id": 101,
+  "user": 12,
+  "subject": "User Interfact",
+  "definition": "A command used to save user progress in the application.",
+  "url": "https://example.com/concept/save",
+  "note": "Commonly used in forms and toolbars.",
+  "translatable": true,
+  "createdAt": "2027-09-16T13:48:04+00:00",
+  "updatedAt": "2027-09-16T13:48:04+00:00"
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the glossary concept.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the user who created the concept.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>subject</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Domain or area of knowledge the concept belongs to (e.g., UI, development, healthcare).</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>definition</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> General explanation or definition of the concept.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>url</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> URL linking to a resource with more information about the concept.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>note</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Additional information or clarification for translators.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">translatable</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>boolean</code></p>
+      <p><strong>Description:</strong> Indicates whether the concept can be translated into other languages.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>createdAt</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date and time when the concept was created.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updatedAt</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date and time when the concept was last updated.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### Glossary Term Context
+
+```json
+{
+  "id": 301,
+  "text": "Cancel",
+  "description": "A command to stop or abort an operation.",
+  "language": "en",
+  "user": 42,
+  "partOfSpeech": "verb",
+  "status": "admitted",
+  "type": "abbreviation",
+  "gender": "neuter",
+  "note": "Often used in confirmation dialogs.",
+  "lemma": "cancel",
+  "url": "https://example.com/term/cancel",
+  "concept": 101,
+  "createdAt": "2027-09-16T13:48:04+00:00",
+  "updatedAt": "2027-09-16T13:48:04+00:00"
+}
+```
+<table>
+  <tbody>
+  <tr>
+    <td><code>id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the glossary term.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The term itself, in the specified language.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>description</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Additional explanation or meaning of the term.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>language</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Language identifier specified as a string. Use the <a href="/developer/language-codes/">language codes</a>, for example, <code>"uk"</code> for Ukrainian. To specify in queries, use the format: <code>@language:"uk"</code>.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Numeric identifier of the user who added the term.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">partOfSpeech</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Allowed values:</strong> <code>noun</code>, <code>verb</code>, <code>adj</code>, <code>pron</code>, <code>propn</code>, <code>det</code>, <code>adv</code>, <code>adp</code>, <code>cconj</code>, <code>sconj</code>, <code>num</code>, <code>intj</code>, <code>aux</code>, <code>prt</code>, <code>sym</code>, <code>x</code></p>
+      <p><strong>Description:</strong> The grammatical category of the term.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>status</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Allowed values:</strong> <code>preferred</code>, <code>admitted</code>, <code>not_recommended</code>, <code>obsolete</code>, <code>draft</code></p>
+      <p><strong>Description:</strong> Indicates the approval or usage level of the term.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>type</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Allowed values:</strong> <code>full_form</code>, <code>acronym</code>, <code>abbreviation</code>, <code>short_form</code>, <code>phrase</code>, <code>variant</code></p>
+      <p><strong>Description:</strong> Classification of the term by structure or usage.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>gender</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Allowed values:</strong> <code>masculine</code>, <code>feminine</code>, <code>neuter</code>, <code>common</code>, <code>other</code></p>
+      <p><strong>Description:</strong> Grammatical gender of the term, if applicable.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>note</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Additional translator guidance or term-related notes.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>lemma</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The base form of the term.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>url</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Reference link for the term.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>concept</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> ID of the concept the term belongs to.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>createdAt</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date and time the term was created.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updatedAt</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>datetime</code></p>
+      <p><strong>Description:</strong> Date and time the term was last updated.</p>
     </td>
   </tr>
   </tbody>
