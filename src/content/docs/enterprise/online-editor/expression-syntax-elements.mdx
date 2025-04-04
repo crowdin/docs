@@ -4,14 +4,271 @@ description: Learn about the different elements of the expression syntax
 slug: enterprise/expression-syntax-elements
 ---
 
-import { LinkCard } from '@astrojs/starlight/components';
+import { Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
 import Include from '~/components/Include.astro';
+
+You can configure verbal expressions and custom placeholders using a shared set of expression syntax elements. These elements define how specific parts of a string should be matched, based on structure, character types, or formatting patterns.
+
+## Expression Elements
 
 <Include file="expression-syntax-elements.mdx" />
 
-<LinkCard
-  title="Verbal Tester"
-  description="Create, check and edit verbal expressions in Crowdin project with Verbal Tester application"
-  href="https://store.crowdin.com/verbal-tester"
-  target="_blank"
-/>
+## Verbal Expressions
+
+In the Editor, you can use verbal expressions in the [Advanced Filter](/enterprise/online-editor/#advanced-filter) to search for strings that match specific patterns, similar to regular expressions. You can use it to filter strings based on patterns like punctuation, character types, length, and more.
+
+For example, to find all strings that start with an uppercase letter and end with a period, use the following expression:
+
+```graphql
+start "true", range "A,Z", anything, range "a,z,A,Z,0,9", limit "1,50", then ".", end "true"
+```
+
+This expression means:
+- `start "true"` – the string begins at the start
+- `range "A,Z"` – starts with a capital letter
+- `anything` – followed by any characters
+- `range "a,z,A,Z,0,9"` – allows letters and numbers
+- `limit "1,50"` – string length between 1 and 50 characters
+- `then "."` – ends with a period
+- `end "true"` – end of the string
+
+<CardGrid>
+  <LinkCard
+    title="Verbal Tester"
+    description="Create, check and edit verbal expressions in Crowdin project with Verbal Tester application"
+    href="https://store.crowdin.com/verbal-tester"
+    target="_blank"
+  />
+  <LinkCard
+    title="Try Verbal Expressions GPT"
+    description="Helps with Verbal Expressions development in Crowdin."
+    href="https://chat.openai.com/g/g-NdFRRXHwm-crowdin-verbal-expressions-maker"
+    target="_blank"
+  />
+</CardGrid>
+
+### Verbal Expression Examples
+
+Below are several examples of verbal expressions along with the types of strings they help match in your project. These are useful when you want to filter strings with specific content or structure.
+
+<Aside>
+  All the examples below use the same argument delimiter `"`
+</Aside>
+
+##### Start with Uppercase and End with a Period
+
+String example:
+
+```
+A test string.
+```
+
+Expression:
+
+```graphql
+start "true", range "A,Z", anything, range "a,z,A,Z,0,9", limit "1,50", then ".", end "true"
+```
+
+##### Strings Containing URLs
+
+String example:
+
+```
+Visit http://example.com or https://www.example.com
+```
+
+Expression:
+
+```graphql
+then "http", maybe "s", then "://", maybe "www.", anythingbut " "
+```
+
+##### Strings with `%s` and `%d` Placeholders
+
+String example:
+
+```
+Welcome, %s! You have %d new messages.
+```
+
+Expression:
+
+```graphql
+then "%", anyof "s,d"
+```
+
+##### Strings with Variables in Double Curly Brackets
+
+String example:
+
+```
+Hello, {{user.name}}!
+```
+
+Expression:
+
+```graphql
+then "{{", range "a,z", multiple, then ".", range "a,z", multiple, then "}}"
+```
+
+<Aside>
+  This expression matches variables like `{{user.name}}` where both parts contain only lowercase letters.
+</Aside>
+
+##### Strings with Variables in Double Curly Brackets (Including Uppercase Letters and Digits)
+
+String example:
+
+```
+Hello, {{User123.name42}}!
+```
+
+Expression:
+
+```graphql
+then "{{", range "a,z,A,Z,0,9", multiple, then ".", range "a,z,A,Z,0,9", multiple, then "}}"
+```
+
+<Aside>
+  Use this version to match variables where names can contain uppercase letters or numbers.
+</Aside>
+
+##### Strings That Contain Floating Point Numbers
+
+String example:
+
+```
+The result is 3.14159
+```
+
+Expression:
+
+```graphql
+start, range "0,9", multiple, then ".", range "0,9", multiple, end
+```
+
+##### Strings That Start with Title Case (Two Capitalized Words)
+
+String example:
+
+```
+Quick Access is available now.
+```
+
+Expression:
+
+```graphql
+start, range "A,Z", range "a,z", multiple, then " ", range "A,Z", range "a,z", multiple
+```
+
+##### Strings with Trailing Whitespace
+
+String example:
+
+```
+This is a sentence with trailing space
+```
+
+Expression:
+
+```graphql
+start "true", range "A,Z", anything, range "a,z,A,Z,0,9", then " ", end "true"
+```
+
+##### Strings Starting with a Hash Symbol (e.g., Hashtags or Anchors)
+
+String example:
+
+```
+#GettingStarted
+```
+
+Expression:
+
+```graphql
+start "true", then "#", something, end "true"
+```
+
+##### Strings Containing HTML Tags
+
+String example:
+
+```
+Click <strong>here</strong> to continue.
+```
+
+Expression:
+
+```graphql
+then "<", something, then ">"
+```
+
+##### Strings Containing an Email Address Format
+
+String example:
+
+```
+Please contact us at support@example.com
+```
+
+Expression:
+
+```graphql
+then "@", somethingbut " "
+```
+
+##### Strings with Double Spaces (Possible Spacing Issue)
+
+String example:
+
+```
+This  string has extra space.
+```
+
+Expression:
+
+```graphql
+then "  "
+```
+
+##### Strings Ending with a Colon
+
+String example:
+
+```
+Enter your name:
+```
+
+Expression:
+
+```graphql
+then ":", end "true"
+```
+
+##### Strings with a Currency Symbol Followed by Digits
+
+String example:
+
+```
+Total: $29.99
+```
+
+Expression:
+
+```graphql
+then "$", range "0,9", multiple
+```
+
+##### Strings in camelCase Format
+
+String example:
+
+```
+lowerUpper
+```
+
+Expression:
+
+```graphql
+start, range "a,z", multiple, range "A,Z", range "a,z", multiple, end
+```
