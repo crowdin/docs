@@ -1,0 +1,171 @@
+---
+title: AI Tools Module
+description: Extend the Crowdin Editor’s AI Assistant with callable tools that trigger secure logic and return results for contextual use.
+slug: developer/crowdin-apps-module-ai-tools
+sidebar:
+  order: 15
+  label: AI Tools
+  badge: New
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This module helps you extend the AI Assistant in the Crowdin Editor with custom tools that provide access to functionality not available by default. Once you create this kind of app, you’ll be able to define callable functions using the function calling approach supported by modern AI models. For example, you can generate project-specific reports, fetch internal data, or trigger secure API calls. The results returned by your tools can then be processed and interpreted by the AI Assistant based on user prompts.
+
+<Aside type="tip">
+  To better understand how function calling works and how AI can interact with your tools, see the following platform-specific guides:
+
+  * [OpenAI – Function Calling](https://platform.openai.com/docs/guides/function-calling)
+  * [Anthropic – Tool Use with Claude](https://docs.anthropic.com/claude/docs/tool-use)
+  * [Google Gemini – Function Calling](https://ai.google.dev/gemini-api/docs/function-calling)
+</Aside>
+
+For rendering UI elements in the Crowdin Editor, see the [AI Tools Widget Module](/developer/crowdin-apps-module-ai-tools-widget/).
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+For Crowdin:
+
+* Only me (i.e., project owner)
+* All project members
+* Selected users
+
+For Crowdin Enterprise:
+
+* Only organization admins
+* All users in the organization projects
+* Selected users
+
+## Structure
+
+```json title="manifest.json"
+{
+  "modules": {
+    "ai-tools": [
+      {
+        "key": "custom-generate-report",
+        "toolType": "function",
+        "function": {
+          "name": "generate_project_report",
+          "description": "Generate a custom project report and return raw data for AI summarization.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "projectId": {
+                "type": "string",
+                "description": "The ID of the project to generate a report for."
+              },
+              "reportType": {
+                "type": "string",
+                "description": "The type of report to generate (e.g., 'activity', 'costs')."
+              }
+            },
+            "required": [
+              "projectId",
+              "reportType"
+            ]
+          }
+        },
+        "url": "/ai-tools/generate_report"
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>toolType</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Allowed value:</strong> <code>function</code></p>
+        <p><strong>Description:</strong> Type of the tool used in the module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>function.name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The human-readable name of the function.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">function.description</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The description of what the function does. Helps AI understand how and when to use it.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>function.parameters</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> The list of input parameters used by the function. Follows JSON Schema structure.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL to the endpoint that implements the function logic.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Example Request and Response
+
+When a tool from the AI Tools module is called by the AI Assistant, Crowdin sends a POST request to the defined `url`. The request includes project and organization context along with the function name and arguments.
+
+### Request
+
+```json
+{
+  "function": {
+    "name": "generate_project_report",
+    "arguments": "{\"projectId\":\"751531\",\"reportType\":\"translation activity\"}"
+  },
+  "organization": {
+    "id": 12345678,
+    "baseUrl": "https://{organization-name}.crowdin.com​",
+    "apiBaseUrl": "https://{organization-name}.api.crowdin.com​"
+  },
+  "project": {
+    "id": 123456,
+    "identifier": "sample-project",
+    "name": "Sample Project",
+    "sourceLanguageId": "en",
+    "targetLanguageIds": ["de", "uk"]
+  }
+}
+```
+
+### Response
+
+```json
+{
+  "data": {
+    "content": "Total translations this week: 4,512\nTop contributor: user_123\nTerm consistency: 98%"
+  }
+}
+```
+
+The `content` value will be passed to the AI Assistant, which will then process and present it based on the prompt or chat context.

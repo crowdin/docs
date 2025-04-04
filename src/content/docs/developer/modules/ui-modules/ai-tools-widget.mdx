@@ -1,0 +1,126 @@
+---
+title: AI Tools Widget Module
+description: Extend the Crowdin Editor’s AI Assistant with custom widgets that render interactive visualizations or interfaces.
+slug: developer/crowdin-apps-module-ai-tools-widget
+sidebar:
+  order: 16
+  label: AI Tools Widget
+  badge: New
+---
+
+The AI Tools Widget module allows you to enhance the Crowdin Editor's AI Assistant by integrating custom data visualizations. By creating this type of app, you can provide interactive graphical representations of project data, such as translation progress, contributor activity, quality metrics, etc. These visualizations are rendered directly in the Editor and enable the AI Assistant to present complex information in a more accessible and insightful manner, helping users make informed decisions.
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+For Crowdin:
+
+* Only me (i.e., project owner)
+* All project members
+* Selected users
+
+For Crowdin Enterprise:
+
+* Only organization admins
+* All users in the organization projects
+* Selected users
+
+## Structure
+
+```json title="manifest.json"
+{
+  "modules": {
+    "ai-tools-widget": [
+      {
+        "key": "custom-data-visualization",
+        "toolType": "function",
+        "function": {
+          "name": "display_custom_graph",
+          "description": "Render a custom graph based on project-specific data.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "dataType": {
+                "type": "string",
+                "description": "The type of data to visualize (e.g., 'translation progress', 'quality assurance')."
+              },
+              "timeFrame": {
+                "type": "string",
+                "description": "The time frame for the data (e.g., 'last_week', 'last_month')."
+              }
+            },
+            "required": ["dataType", "timeFrame"]
+          }
+        },
+        "url": "/ai-tools-widget/display_custom_graph/index.html"
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>toolType</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Allowed value:</strong> <code>function</code></p>
+        <p><strong>Description:</strong> Type of the tool used in the module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>function.name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The human-readable name of the function.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">function.description</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The description of what the function does. Helps AI understand how and when to use it.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>function.parameters</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> The list of input parameters used by the function. Follows JSON Schema structure.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL to the widget HTML file that will be rendered in the Crowdin Editor UI.<br/>
+    The <code>url</code> should point to a static HTML file bundled with your Crowdin App that contains the widget’s UI and logic.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Behavior
+
+Unlike the [AI Tools](/developer/crowdin-apps-module-ai-tools/) module, which receives a structured payload from the AI Assistant as a POST request, the AI Tools Widget module defines a function that renders a custom widget in the Crowdin Editor. This widget is loaded directly in the browser and can interact with the Crowdin UI or call APIs as needed.
+
+No server-side request is sent to the defined `url`. Instead, the widget runs entirely in the browser and relies on the HTML and JavaScript logic implemented at that path.
+
+The widget is fully responsible for handling its input, data fetching, rendering, and user interactions.
