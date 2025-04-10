@@ -65,6 +65,7 @@ const config = defineConfig({
             { label: "Store", link: "https://store.crowdin.com", attrs: { target: "_blank", class: "nav-link" } },
             { label: "Blog", link: "https://crowdin.com/blog", attrs: { target: "_blank", class: "nav-link" } },
             { label: "Community", link: "https://community.crowdin.com/", attrs: { target: "_blank", class: "nav-link" } },
+            { label: "Crowdin.com", link: "https://crowdin.com/", attrs: { target: "_blank", class: "nav-link" } },
           ],
         }
       ],
