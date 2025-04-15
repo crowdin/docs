@@ -1,0 +1,144 @@
+---
+title: AI Request Processor Modules
+description: Use AI Request Processor Modules to customize AI request and response flows at different stages of processing
+slug: developer/crowdin-apps-module-ai-request-processors
+sidebar:
+  label: AI Request Processors
+  badge: New
+---
+
+AI Request Processor Modules allow you to customize the way Crowdin handles AI-related requests and responses at different stages of processing. These modules give you full control over how data is prepared before it’s sent to an AI provider, and how the response is handled once it’s returned.
+
+Crowdin supports four types of processors that can be used independently or combined within an app:
+* **Pre-compile** – executed before the prompt is compiled. Used to modify raw data such as source strings, TM matches, or glossary terms.
+* **Post-compile** – executed after the prompt is compiled. Used to adjust request body or headers before it’s sent to the AI provider.
+* **Pre-parse** – executed after receiving the AI provider’s raw response. Used to modify the response body before parsing.
+* **Post-parse** – executed after the response has been parsed into structured Crowdin data. Used to adjust the final result based on the action, such as pre-translation or QA checks.
+
+These modules are designed to be backend-only and do not include a user interface. However, you can add UI functionality to your app using other modules (e.g., Project Tool, Organization Menu).
+
+## Access
+
+You can grant access to these modules to the following user categories:
+
+For Crowdin:
+
+* All project members
+
+For Crowdin Enterprise:
+
+* All users in the organization projects
+
+## Structure
+
+```json title="manifest.json"
+{
+  "modules": {
+    "ai-request-pre-compile": [
+      {
+        "key": "liquid-templates-everywhere-ai-request-pre-compile",
+        "processorUrl": "/ai-request-processor/ai-request-pre-compile"
+      }
+    ],
+    "ai-request-post-compile": [
+      {
+        "key": "liquid-templates-everywhere-ai-request-post-compile",
+        "processorUrl": "/ai-request-processor/ai-request-post-compile"
+      }
+    ],
+    "ai-request-pre-parse": [
+      {
+        "key": "liquid-templates-everywhere-ai-request-pre-parse",
+        "processorUrl": "/ai-request-processor/ai-request-pre-parse"
+      }
+    ],
+    "ai-request-post-parse": [
+      {
+        "key": "liquid-templates-everywhere-ai-request-post-parse",
+        "processorUrl": "/ai-request-processor/ai-request-post-parse"
+      }
+    ]
+  }
+}
+
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">processorUrl</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Relative path to the endpoint in your app that will handle incoming requests for this processor.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## How It Works
+
+Each AI Request Processor Module runs at a specific stage of the AI request lifecycle in Crowdin. These modules allow you to modify the data being sent to or received from an AI provider. They are backend-only and receive data via POST requests from Crowdin.
+
+Each request includes two parts:
+
+* `requestData` – the data object that can be modified and returned. Its structure depends on the processor type and the specific AI action. For example, it may contain source strings, prompt body and headers, or parsed results.
+* `requestContext` – a read-only object that provides metadata about the request. This includes the AI provider, model, limitations, project ID, and the prompt action being performed. You can use this to adjust your processing logic based on context.
+
+Crowdin will send the request to the `processorUrl` defined for the corresponding module. Your app must return the modified `requestData` in the same structure as received. Only update the parts that require transformation based on your logic.
+
+The following sections describe how each module type works and when it is triggered.
+
+### Pre-Compile Processor
+
+Runs **before** the prompt is compiled.
+
+* **Receives:** raw data used to build the prompt — such as strings, project name, glossary terms, and TM matches.
+* **Returns:** modified version of the input data.
+* **Use cases:**
+  - Inject additional placeholders before compilation.
+  - Filter or clean strings before building a prompt (e.g., remove unwanted patterns or binary data).
+  - Customize prompt input based on project metadata.
+
+### Post-Compile Processor
+
+Runs **after** the prompt is compiled but **before** it is sent to the AI provider.
+
+* **Receives:** full request details including `action`, `provider`, `model`, `limitation`, and compiled `payload`. The payload contains `body` and `headers`.
+* **Returns:** modified version of the payload (except for sensitive data like API keys, which are not included).
+* **Use cases:**
+  - Adjust the request format for specific providers.
+  - Inject tool definitions or metadata.
+  - Route requests through a proxy or log outgoing content.
+
+### Pre-Parse Processor
+
+Runs **after** receiving a response from the AI provider but **before** parsing.
+
+* **Receives:** `action` and the raw `body` from the provider’s response.
+* **Returns:** modified body for further parsing.
+* **Use cases:**
+  - Clean or normalize the AI response before parsing.
+  - Handle response transformations like extracting JSON from markdown blocks.
+  - Remove incomplete or invalid chunks from streamed content.
+
+### Post-Parse Processor
+
+Runs **after** the response is parsed into structured Crowdin data.
+
+* **Receives:** `action` and the parsed `payload`, which varies by context.
+* **Returns:** modified result payload.
+* **Use cases:**
+  - Apply final adjustments to AI-generated strings.
+  - Filter out unwanted suggestions based on custom rules.
+  - Post-process QA results or translation units before saving.
