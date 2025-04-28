@@ -1,0 +1,325 @@
+---
+title: Custom Bundle Generator Module
+description: Add support of new custom bundles to Crowdin
+slug: developer/crowdin-apps-module-custom-bundle-generator
+sidebar:
+  order: 2
+  label: Custom Bundle Generator
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Use this module to support custom formats of [Target File Bundles](/bundles/). The generation process is delegated to your Crowdin app that implements a custom bundle generator module. When translations are ready, Crowdin sends the translation data to your app, which returns the generated bundle in the desired format.
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+For Crowdin:
+
+* Only me (i.e., project owner)
+* All project members
+* Selected users
+
+For Crowdin Enterprise:
+
+* Only organization admins
+* All users in the organization projects
+* Selected users
+
+## Structure
+
+```json title="manifest.json"
+{
+  "modules": {
+    "custom-file-format": [
+      {
+        "key": "your-module-key-type-xyz",
+        "type": "type-xyz",
+        "url": "/process",
+        "multilingualExport": true,
+        "stringsExport": true,
+        "extensions": [
+          ".resx"
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Identifier of the custom bundle type. Can be used in the API to trigger the processing of this module when generating translation bundles.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL triggered during translation export. Crowdin sends a request to this URL to initiate custom bundle generation.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">multilingualExport</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>bool</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Allowed values:</strong> <code>true</code>, <code>false</code>. Default is <code>false</code></p>
+        <p><strong>Description:</strong> Enables export of strings for multiple target languages in a single request. Useful for file formats that support multiple languages within the same bundle.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>stringsExport</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>bool</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Must be set to <code>true</code> for bundle generator modules. Indicates that the app expects exported strings from Crowdin to generate a custom bundle.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>extensions</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> List of file extensions associated with the generated bundles (e.g., <code>.resx</code>, <code>.json</code>). Defines the expected output format and is used for file naming and export handling in Crowdin.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Communication between Custom Bundle Generator App and Crowdin
+
+When a user requests a translation bundle export, Crowdin sends an HTTP request to the app’s configured URL (`$baseUrl . $url`) with the necessary project, language, and translation data. The app processes the data and responds with the generated bundle file.
+
+The requests and responses to and from the custom bundle generator apps have two-minute timeouts. The maximum request and response payload size is limited to 5 MB.
+
+### Request to the App
+
+Request payload example:
+
+```json
+// max request payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "jobType": "export-strings",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name"
+  },
+  "sourceLanguage": {
+    "id": "es",
+    "name": "Spanish",
+    "editorCode": "es",
+    "twoLettersCode": "es",
+    "threeLettersCode": "spa",
+    "locale": "es-ES",
+    "androidCode": "es-rES",
+    "osxCode": "es.lproj",
+    "osxLocale": "es",
+    "pluralCategoryNames": ["one"],
+    "pluralRules": "(n != 1)"
+  },
+  "targetLanguages": [
+    {
+      // same structure as for sourceLanguage
+    }
+  ],
+  "strings": [...], // array of segments
+  "stringsUrl": "https://tmp.downloads.crowdin.com/strings.ndjson" // file with segments, in new-line delimited json format
+}
+```
+
+Properties:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>jobType</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Possible values:</strong> <code>export-strings</code></p>
+        <p><strong>Description:</strong> Specifies the action that should be executed by the app. Always set to <code>export-strings</code> for bundle generator modules. Crowdin sends translation data and expects a generated bundle in return.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>strings</code>, <code class="whitespace-nowrap">stringsUrl</code></td>
+      <td>
+        <p><strong>Type(strings):</strong> <code>array</code></p>
+        <p><strong>Type(stringsUrl):</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Contains the translation strings for the bundle generation. Either <code>strings</code> (inline array) or <code>stringsUrl</code> (public link to NDJSON) can be used.<br/>
+        <Aside type="tip">Use the <code>stringsUrl</code> field when working with large payloads or multilingual exports to avoid hitting the size limit.</Aside><br/>
+        <Aside title="Limitations">Maximum request payload size is 5 MB.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Expected Response from the App
+
+Response payload example:
+
+```json
+// max response payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "data": {
+    "content": "TWF5IHRoZSBGb3JjZSBiZSB3aXRoIHlvdS4=", // base64 encoded translation file content
+    "contentUrl": "https://app.example.com/p5uLEpq8p-result.xml", // translation file public URL
+  },
+  "error": {
+    "message": "Your error message"
+  }
+}
+```
+
+Properties:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>data.content</code>, <code class="whitespace-nowrap">data.contentUrl</code></td>
+      <td>
+        <p><strong>Type(data.content):</strong> <code>string</code></p>
+        <p><strong>Type(data.contentUrl):</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Use either <code>data.content</code> (base64 encoded) or <code>data.contentUrl</code> (publicly accessible URL) to return the generated bundle file. Only one of them should be present in the response.</p>
+        <p>The format of the file depends on your implementation.</p>
+        <p><Aside title="Limitations">Maximum response payload size is 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> An error message that can be passed from the app to Crowdin and will be visible to a user in the UI.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Translation Strings Structure
+
+Below is an example of the structure used to pass translation strings to the app for custom bundle generation.
+
+Payload example:
+
+```json
+// strings should be in "new-line delimited json" format if they passed by URL
+[
+  { // non plural string
+    "id": 1, // numeric identifier of the string in Crowdin
+    "identifier": "string-key-1", // required: unique string key
+    "context": "Some context", // optional: additional info for translators
+    "customData": "max 4 KB of custom data", // optional: preserved on export
+    "maxLength": 10, // optional, default null
+    "isHidden": false, // optional, default null
+    "hasPlurals": false, // optional, default false
+    "labels": ["label-one", "label-two"], // optional, default []
+    "text": "String source text", // required: source content
+    "translations": { // required: grouped by target language ID
+      "uk": { // targetLanguage.id
+        "text": "Переклад стрічки", // required: translation text
+        "status": "untranslated | translated | approved" // optional, default "translated"
+      },
+      // can be other languages for multilingual, check "targetLanguages" in the request payload
+    }
+  },
+  { // plural string
+    "id": 2,
+    "identifier": "string-key-2",
+    "context": "Some optional context",
+    "customData": "max 4 KB of custom data",
+    "maxLength": 15,
+    "isHidden": false,
+    "hasPlurals": true,
+    "labels": [],
+    "text": { // keys from sourceLanguage.pluralCategoryNames
+      "one": "One file",
+      "other": "%d files",
+    },
+    "translations": {
+      "uk": {
+        "text": { // keys from targetLanguage.pluralCategoryNames
+          "one": "One file",
+          "few": "%d файла",
+          "many": "%d файлів",
+        },
+        "status": {
+          "one": "untranslated",
+          "few": "translated",
+          "many": "approved",
+        }
+      }
+    }
+  }
+]
+```
+
+Properties:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Numeric identifier of the string in your Crowdin project. Required for mapping translations.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>identifier</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Unique string key within the file. Required.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>text</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code> (non-plural) or <code>object</code> (plural)</p>
+        <p><strong>Description:</strong> Source string text. Required for generating translations. For plural strings, this is an object with plural form keys from <code>sourceLanguage.pluralCategoryNames</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>customData</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> Any custom data that need to be linked to the string. Added custom data will be exported along the corresponding strings on translation export.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">translations</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Required translations for each target language. Each language ID maps to an object with a <code>text</code> field, and optionally <code>status</code>. For plural strings, <code>text</code> and <code>status</code> are also objects keyed by plural category names.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
