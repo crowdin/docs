@@ -8848,6 +8848,45 @@ paths:
         -
           $ref: '#/components/parameters/EnterpriseReportArchiveScopeId'
         -
+          name: userId
+          in: query
+          description: 'User Identifier'
+          schema:
+            type: integer
+        -
+          name: taskId
+          in: query
+          description: 'Task Identifier. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
+          schema:
+            type: integer
+        -
+          name: name
+          in: query
+          schema:
+            type: string
+            enum:
+              - costs-estimation-pe
+              - translation-costs-pe
+              - group-translation-costs-pe
+              - pre-translate-accuracy
+              - translator-accuracy
+        -
+          name: dateFrom
+          in: query
+          description: 'Archive date from in UTC, ISO 8601'
+          schema:
+            type: string
+            format: date-time
+          example: '2019-09-23T07:00:14+00:00'
+        -
+          name: dateTo
+          in: query
+          description: 'Archive date to in UTC, ISO 8601'
+          schema:
+            type: string
+            format: date-time
+          example: '2019-09-27T07:00:14+00:00'
+        -
           $ref: '#/components/parameters/PaginationLimit'
         -
           $ref: '#/components/parameters/PaginationOffset'
@@ -12023,6 +12062,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+    patch:
+      tags:
+        - 'String Comments'
+      summary: 'String Comment Batch Operations'
+      operationId: api.projects.comments.batchPatch
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnterpriseStringCommentMassPatch'
+      responses:
+        '200':
+          description: 'String Comments were successfully updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseStringCommentUpdatedCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorPatchCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or string comment with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '503':
+          description: 'Service Unavailable'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
   '/projects/{projectId}/comments/{commentId}':
     get:
       tags:
@@ -12397,6 +12493,69 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '503':
+          description: 'Service Unavailable'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+    patch:
+      tags:
+        - 'String Translations'
+      summary: 'Approval Batch Operations'
+      operationId: api.projects.approvals.patch
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        description: 'A JSON Patch document as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-3)'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalMassPatch'
+      responses:
+        '200':
+          description: 'Approvals were successfully updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationApprovalUpdatedCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorPatchCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or string with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
         '503':
           description: 'Service Unavailable'
           content:
@@ -12896,6 +13055,69 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '503':
+          description: 'Service Unavailable'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+    patch:
+      tags:
+        - 'String Translations'
+      summary: 'Translation Batch Operations'
+      operationId: api.projects.translations.patch
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        description: 'A JSON Patch document as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-3)'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslationMassPatch'
+      responses:
+        '200':
+          description: 'Translations were successfully updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationUpdatedCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorPatchCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or string with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
         '503':
           description: 'Service Unavailable'
           content:
@@ -18793,7 +19015,7 @@ components:
           description: "AI Provider identifier. Get via [List AI Providers](#operation/api.ai.providers.getMany)\n\n__Note:__ Required if `isEnabled === true`"
           type: integer
         aiModelId:
-          description: "Ai Model id. Get via [List AI Provider Models](#operation/api.ai.providers.models.getMany)\n\n__Note:__ Required if `isEnabled === true`"
+          description: "Ai Model id. Get via [List AI Provider Models](#operation/api.ai.providers.models.getMany)\n *\n * __Note:__ Required if `isEnabled === true`"
           type: string
           example: gpt-3.5-turbo-instruct
         isEnabled:
@@ -18977,6 +19199,8 @@ components:
           type: boolean
         screenshots:
           type: boolean
+        fileContent:
+          type: boolean
         publicProjectDescription:
           type: boolean
         siblingsStrings:
@@ -19060,6 +19284,10 @@ components:
           type: boolean
         prompt:
           type: string
+        fileContent:
+          description: '__Note:__ Available only for Assist action'
+          type: boolean
+          default: 'false'
         otherLanguageTranslations:
           properties:
             isEnabled:
@@ -35248,6 +35476,106 @@ components:
           format: date-time
           example: '2019-09-23T11:26:54+00:00'
       type: object
+    EnterpriseStringCommentMassPatch:
+      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      type: array
+      items:
+        $ref: '#/components/schemas/StringCommentMassOperation'
+      example:
+        -
+          op: replace
+          path: /2814/text
+          value: 'some issue edited'
+        -
+          op: replace
+          path: /2814/issueStatus
+          value: resolved
+        -
+          op: add
+          path: /-
+          value:
+            text: 'some issue'
+            stringId: 1
+            type: issue
+            targetLanguageId: en
+            isShared: true
+            issueType: translation_mistake
+        -
+          op: remove
+          path: /2815
+    StringCommentMassOperation:
+      description: 'A JSON Patch (222) operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+            - remove
+            - add
+      type: object
+      discriminator:
+        propertyName: op
+        mapping:
+          replace: '#/components/schemas/StringCommentMassOperationReplace'
+          remove: '#/components/schemas/StringCommentMassOperationRemove'
+          add: '#/components/schemas/StringCommentMassOperationAdd'
+    StringCommentMassOperationReplace:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/StringCommentMassOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - '/{commentId}/text'
+                - '/{commentId}/issueStatus'
+              example: '/{commentId}/text'
+            value:
+              type: string
+              example: true
+    StringCommentMassOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/StringCommentMassOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - '/{commentId}'
+    StringCommentMassOperationAdd:
+      description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/StringCommentMassOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - /-
+            value:
+              type: object
     EnterpriseStringCommentPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -35406,6 +35734,20 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/EnterpriseStringComment'
+    EnterpriseStringCommentUpdatedCollectionResource:
+      description: 'String Comment Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/EnterpriseStringCommentResource'
     StringCommentCollectionResource:
       description: 'String Comment Collection Resource'
       type: object
@@ -35432,6 +35774,20 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/StringComment'
+    StringCommentUpdatedCollectionResource:
+      description: 'String Comment Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/StringCommentResource'
     EnterpriseStringComment:
       title: 'String Comment'
       description: 'String Comment Response Model'
@@ -35681,6 +36037,138 @@ components:
           format: date-time
           example: '2019-09-20T11:05:24+00:00'
       type: object
+    ApprovalMassPatch:
+      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      type: array
+      items:
+        $ref: '#/components/schemas/ApprovalMassOperation'
+      example:
+        -
+          op: add
+          path: /-
+          value:
+            translationId: 200
+        -
+          op: remove
+          path: /2815
+    ApprovalMassOperation:
+      description: 'A JSON Patch (222) operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - remove
+            - add
+      type: object
+      discriminator:
+        propertyName: op
+        mapping:
+          remove: '#/components/schemas/ApprovalMassOperationRemove'
+          add: '#/components/schemas/ApprovalMassOperationAdd'
+    ApprovalMassOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ApprovalMassOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - '/{approvalId}'
+    ApprovalMassOperationAdd:
+      description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ApprovalMassOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - /-
+            value:
+              type: object
+    TranslationMassPatch:
+      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      type: array
+      items:
+        $ref: '#/components/schemas/TranslationMassOperation'
+      example:
+        -
+          op: add
+          path: /-
+          value:
+            stringId: 35434
+            languageId: fr
+            text: 'Цю стрічку перекладено'
+            pluralCategoryName: few
+            addToTm: false
+        -
+          op: remove
+          path: /2815
+    TranslationMassOperation:
+      description: 'A JSON Patch (222) operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - remove
+            - add
+      type: object
+      discriminator:
+        propertyName: op
+        mapping:
+          remove: '#/components/schemas/TranslationMassOperationRemove'
+          add: '#/components/schemas/TranslationMassOperationAdd'
+    TranslationMassOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/TranslationMassOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - '/{translationId}'
+    TranslationMassOperationAdd:
+      description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/TranslationMassOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - /-
+            value:
+              type: object
     TranslationAlignmentForm:
       required:
         - sourceLanguageId
@@ -35871,6 +36359,20 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/Approval'
+    TranslationApprovalUpdatedCollectionResource:
+      description: 'Translation Approval Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/TranslationApprovalResource'
     TranslationCollectionResource:
       description: 'A list of Translations for a String.'
       type: object
@@ -35897,6 +36399,20 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/StringTranslation'
+    TranslationUpdatedCollectionResource:
+      description: 'Translation Approval Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/TranslationResource'
     TranslationVoteCollectionResource:
       description: 'List Translation Votes'
       type: object
@@ -37389,6 +37905,10 @@ components:
         precedingTaskId:
           type: integer
           example: 1
+        estimatedCost:
+          $ref: '#/components/schemas/EstimatedTaskCost'
+        actualCost:
+          $ref: '#/components/schemas/ActualTaskCost'
       type: object
     TaskTranslateProgress:
       description: 'Is set for some type of vendor tasks, nullable otherwise'
@@ -37397,6 +37917,18 @@ components:
       allOf:
         -
           $ref: '#/components/schemas/TaskProgress'
+    EstimatedTaskCost:
+      type: object
+      nullable: true
+      allOf:
+        -
+          $ref: '#/components/schemas/TaskCost'
+    ActualTaskCost:
+      type: object
+      nullable: true
+      allOf:
+        -
+          $ref: '#/components/schemas/TaskCost'
     UserTask:
       title: 'User Task'
       type: object
@@ -37447,6 +37979,45 @@ components:
           type: integer
           example: 3
           nullable: true
+      type: object
+    TaskCost:
+      properties:
+        cost:
+          type: number
+          format: float
+          example: '24.12'
+        date:
+          description: 'in UTC'
+          type: string
+          format: date-time
+          example: '2019-09-23T09:04:29+00:00'
+        currency:
+          type: string
+          enum:
+            - USD
+            - EUR
+            - JPY
+            - GBP
+            - AUD
+            - CAD
+            - CHF
+            - CNY
+            - SEK
+            - NZD
+            - MXN
+            - SGD
+            - HKD
+            - NOK
+            - KRW
+            - TRY
+            - RUB
+            - INR
+            - BRL
+            - ZAR
+            - GEL
+            - UAH
+            - DDK
+          example: USD
       type: object
     EnterpriseTask:
       title: Task
