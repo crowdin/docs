@@ -6,6 +6,7 @@ export const collections = {
     schema: docsSchema({
       extend: z.object({
         hideHeader: z.boolean().optional(),
+        metaRobots: z.string().optional(),
       }),
     }),
   }),
