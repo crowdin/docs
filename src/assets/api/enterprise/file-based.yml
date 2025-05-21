@@ -8805,6 +8805,20 @@ paths:
           $ref: '#/components/parameters/QaCheckValidation'
         -
           $ref: '#/components/parameters/ProjectTargetLanguageIds'
+        -
+          $ref: '#/components/parameters/TaskIdInQuery'
+        -
+          parameter: FileIdInQuery
+          name: fileId
+          in: query
+          description: 'Filter the collection by the specified file id. Get via [List Files](#operation/api.projects.files.getMany)'
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+          example: '2'
+          x-doc-sections:
+            - file-based
       responses:
         '200':
           description: 'QA check issues list'
@@ -36225,6 +36239,33 @@ components:
           default: true
           example: false
       type: object
+    TranslationQaCheckValidateCollectionForm:
+      type: array
+      items:
+        $ref: '#/components/schemas/TranslationQaCheckValidateForm'
+    TranslationQaCheckValidateForm:
+      required:
+        - stringId
+        - languageId
+        - text
+      properties:
+        stringId:
+          description: 'String Identifier. Get via [List Strings](#operation/api.projects.strings.getMany)'
+          type: integer
+          example: 35434
+        languageId:
+          description: 'Language Identifier. Get via [Project Target Languages](#operation/api.projects.get)'
+          type: string
+          example: uk
+        text:
+          description: 'Translation text'
+          type: string
+          example: 'Цю стрічку перекладено'
+        pluralCategoryName:
+          description: 'Plural form. Acceptable keys are `zero`, `one`, `two`, `few`, `many`, and `other`'
+          type: string
+          example: few
+      type: object
     TranslationVoteCreateForm:
       required:
         - translationId
@@ -36389,6 +36430,32 @@ components:
                 $ref: '#/components/schemas/TranslationResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
+    TranslationQaCheckValidateCollectionResource:
+      description: 'QaCheck Validate Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/TranslationQaCheckValidateResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    TranslationQaCheckValidateResource:
+      description: 'QaCheck Validate Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/TranslationQaCheckValidate'
     TranslationResource:
       description: 'Translation Resource'
       type: object
@@ -36642,6 +36709,41 @@ components:
           type: string
           format: date-time
           example: '2019-09-19T12:42:12+00:00'
+      type: object
+    TranslationQaCheckValidate:
+      title: 'Text Quality Assurance'
+      description: 'QaCheck Validate Response Model'
+      properties:
+        stringId:
+          type: integer
+          example: 1
+        languageId:
+          type: string
+          example: uk
+        category:
+          type: string
+          example: spellcheck
+        categoryDescription:
+          type: string
+          example: Spelling
+        validation:
+          type: string
+          example: spellcheck
+        validationDescription:
+          type: string
+          example: Misspelling
+        pluralId:
+          type: integer
+          example: -1
+        pluralCategoryName:
+          type: string
+          example: none
+        text:
+          type: string
+          example: "Spellcheck failed for the following word: 'локалзація'."
+        translation:
+          type: string
+          example: 'Перша локалзація.'
       type: object
     StringTranslation:
       title: 'String Translation'
@@ -42987,6 +43089,15 @@ components:
       required: true
       schema:
         type: integer
+      example: '2'
+    TaskIdInQuery:
+      name: taskId
+      in: query
+      description: 'Filter the collection by the specified task id. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
+      required: false
+      schema:
+        type: integer
+        minimum: 0
       example: '2'
 tags:
   -
