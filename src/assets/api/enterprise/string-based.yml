@@ -7111,6 +7111,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+  '/projects/{projectId}/pre-translations/{preTranslationId}/report':
+    get:
+      tags:
+        - Translations
+      summary: 'Pre-Translation Report'
+      operationId: api.projects.pre-translations.report.getReport
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/PreTranslationId'
+      responses:
+        '200':
+          description: 'Pre-translation report'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreTranslationReportResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or pre-translation with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '503':
+          description: 'Service Unavailable'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
   '/projects/{projectId}/branches/{branchId}/languages/progress':
     get:
       tags:
@@ -26589,6 +26637,16 @@ components:
                 $ref: '#/components/schemas/EnterprisePreTranslation'
             pagination:
               $ref: '#/components/schemas/Pagination'
+    PreTranslationReportResource:
+      description: 'Pre-Translation Report Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/PreTranslationReport'
     CrowdinPreTranslationResource:
       description: 'Pre-Translation Resource'
       type: object
@@ -26609,6 +26667,17 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/EnterprisePreTranslation'
+    PreTranslationReport:
+      description: 'Pre-Translation Report'
+      properties:
+        languages:
+          type: array
+          items:
+            $ref: '#/components/schemas/TargetLanguage'
+        preTranslateType:
+          type: string
+          example: ai
+      type: object
     CrowdinPreTranslation:
       properties:
         identifier:
@@ -26695,6 +26764,37 @@ components:
               type: integer
               example: 90
           type: object
+    TargetLanguage:
+      description: 'Target Language'
+      properties:
+        id:
+          type: string
+          example: es
+        files:
+          type: array
+          items:
+            properties:
+              id:
+                type: string
+                example: '10191'
+              statistics:
+                properties:
+                  phrases: { type: integer, example: 6 }
+                  words: { type: integer, example: 13 }
+                type: object
+            type: object
+        skipped:
+          properties:
+            ai_error:
+              type: integer
+              example: 6
+          type: object
+        skippedQaCheckCategories:
+          type: array
+          items:
+            type: string
+            example: spellcheck
+      type: object
     FileProgressCollectionResource:
       description: 'Language Translation File Progress Collection Resource'
       type: object
@@ -35414,7 +35514,9 @@ components:
             - /dateFrom
             - /dateTo
             - /labelIds
+            - /labelMatchRule
             - /excludeLabelIds
+            - /excludeLabelMatchRule
             - /fields
             - '/fields/{fieldSlug}'
           x-doc-sections:
@@ -35496,6 +35598,9 @@ components:
             - /startedAt
             - /resolvedAt
             - /labelIds
+            - /labelMatchRule
+            - /excludeLabelIds
+            - /excludeLabelMatchRule
           x-doc-sections:
             - string-based
       type: object
@@ -35778,12 +35883,28 @@ components:
           items:
             type: integer
             example: 1
+        labelMatchRule:
+          description: "Match rule for labels:\n- \"all\" - all labels must be present in string\n- \"any\" - any of the labels must be present in string\n\n__Note:__ Can only be used when `labelIds` parameter is provided"
+          type: string
+          default: all
+          enum:
+            - all
+            - any
+          nullable: true
         excludeLabelIds:
           description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
           type: array
           items:
             type: integer
             example: 12
+        excludeLabelMatchRule:
+          description: "Match rule for excluded labels:\n- \"all\" - all labels must be present in string\n- \"any\" - any of the labels must be present in string\n\n__Note:__ Can only be used when `excludeLabelIds` parameter is provided"
+          type: string
+          default: all
+          enum:
+            - all
+            - any
+          nullable: true
         status:
           description: 'Task status'
           type: integer
@@ -35989,12 +36110,28 @@ components:
           items:
             type: integer
             example: 1
+        labelMatchRule:
+          description: "Match rule for labels:\n- \"all\" - all labels must be present in string\n- \"any\" - any of the labels must be present in string\n\n__Note:__ Can only be used when `labelIds` parameter is provided"
+          type: string
+          default: all
+          enum:
+            - all
+            - any
+          nullable: true
         excludeLabelIds:
           description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
           type: array
           items:
             type: integer
             example: 12
+        excludeLabelMatchRule:
+          description: "Match rule for excluded labels:\n- \"all\" - all labels must be present in string\n- \"any\" - any of the labels must be present in string\n\n__Note:__ Can only be used when `excludeLabelIds` parameter is provided"
+          type: string
+          default: all
+          enum:
+            - all
+            - any
+          nullable: true
         description:
           description: 'Task description'
           type: string
@@ -36057,6 +36194,20 @@ components:
           type: array
           items:
             type: integer
+        labelIds:
+          description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 1
+        labelMatchRule:
+          description: "Match rule for labels:\n- \"all\" - all labels must be present in string\n- \"any\" - any of the labels must be present in string\n\n__Note:__ Can only be used when `labelIds` parameter is provided"
+          type: string
+          default: all
+          enum:
+            - all
+            - any
+          nullable: true
         description:
           description: 'Task description'
           type: string
@@ -36445,6 +36596,12 @@ components:
           example:
             - 13
             - 27
+        labelMatchRule:
+          type: string
+          enum:
+            - all
+            - any
+          nullable: true
         excludeLabelIds:
           type: array
           items:
@@ -36452,6 +36609,12 @@ components:
           example:
             - 5
             - 8
+        excludeLabelMatchRule:
+          type: string
+          enum:
+            - all
+            - any
+          nullable: true
         precedingTaskId:
           type: integer
           example: 1
