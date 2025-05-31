@@ -6084,7 +6084,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrganizationWebhookCollectionResource'
+                $ref: '#/components/schemas/CrowdinOrganizationWebhookCollectionResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -6118,14 +6118,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OrganizationWebhookCreateForm'
+              $ref: '#/components/schemas/CrowdinOrganizationWebhookCreateForm'
       responses:
         '201':
           description: 'Webhook was successfully added'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrganizationWebhookResource'
+                $ref: '#/components/schemas/CrowdinOrganizationWebhookCreateForm'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -6165,7 +6165,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrganizationWebhookResource'
+                $ref: '#/components/schemas/CrowdinOrganizationWebhookResource'
         '401':
           description: Unauthorized
           content:
@@ -6245,7 +6245,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrganizationWebhookResource'
+                $ref: '#/components/schemas/CrowdinOrganizationWebhookResource'
         '400':
           description: 'Invalid Request Body'
           content:
@@ -14814,7 +14814,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookCollectionResource'
+                $ref: '#/components/schemas/CrowdinWebhookCollectionResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -14857,14 +14857,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WebhookCreateForm'
+              $ref: '#/components/schemas/CrowdinWebhookCreateForm'
       responses:
         '201':
           description: 'Webhook was successfully added'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookResource'
+                $ref: '#/components/schemas/CrowdinWebhookResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -14912,7 +14912,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookResource'
+                $ref: '#/components/schemas/CrowdinWebhookResource'
         '401':
           description: Unauthorized
           content:
@@ -14996,7 +14996,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookResource'
+                $ref: '#/components/schemas/CrowdinWebhookResource'
         '400':
           description: 'Invalid Request Body'
           content:
@@ -23703,7 +23703,7 @@ components:
               oneOf:
                 -
                   type: string
-    OrganizationWebhookCreateForm:
+    EnterpriseOrganizationWebhookCreateForm:
       required:
         - name
         - url
@@ -23779,13 +23779,93 @@ components:
                 isExternal: '{{projectIsExternal}}'
                 externalType: '{{projectExternalType}}'
                 hasCrowdsourcing: '{{projectHasCrowdsourcing}}'
+                groupId: '{{projectGroupId}}'
               user:
                 id: '{{creatorId}}'
                 username: '{{creatorUsername}}'
                 fullName: '{{creatorFullName}}'
                 avatarUrl: '{{creatorAvatarUrl}}'
       type: object
-    OrganizationWebhookCollectionResource:
+    CrowdinOrganizationWebhookCreateForm:
+      required:
+        - name
+        - url
+        - events
+        - requestType
+      properties:
+        name:
+          description: 'Webhook name'
+          type: string
+          example: Proofread
+        url:
+          description: 'Webhook URL'
+          type: string
+          example: 'https://webhook.site/1c20d9b5-6e6a-4522-974d-9da7ea7595c9'
+        events:
+          description: 'Webhook events'
+          type: array
+          items:
+            $ref: '#/components/schemas/Events'
+        requestType:
+          description: 'Webhook request type'
+          type: string
+          enum:
+            - POST
+            - GET
+          example: POST
+        isActive:
+          description: 'Defines whether webhook is active'
+          type: boolean
+          default: true
+        batchingEnabled:
+          description: 'Defines whether webhook batching is enabled'
+          type: boolean
+          default: false
+          example: true
+        contentType:
+          description: 'Webhook content type'
+          type: string
+          default: application/json
+          enum:
+            - multipart/form-data
+            - application/json
+            - application/x-www-form-urlencoded
+        headers:
+          description: 'Webhook headers'
+          type: object
+          example:
+            Accept: application/xml
+        payload:
+          description: 'Custom webhook payload'
+          properties:
+            project.created:
+              description: 'Read more about [Events payload examples](https://developer.crowdin.com/webhooks). Additionally, you can check out Events payloads while creating webhooks via UI in your Crowdin profile settings > Webhooks tab > click Add webhook.'
+              type: object
+          type: object
+          example:
+            project.created:
+              event: '{{event}}'
+              project:
+                id: '{{projectId}}'
+                userId: '{{projectUserId}}'
+                sourceLanguageId: '{{projectSourceLanguageId}}'
+                targetLanguageIds: '{{projectTargetLanguageIds}}'
+                identifier: '{{projectIdentifier}}'
+                name: '{{projectName}}'
+                createdAt: '{{projectCreatedAt}}'
+                updatedAt: '{{projectUpdatedAt}}'
+                lastActivity: '{{projectLastActivity}}'
+                description: '{{projectDescription}}'
+                url: '{{projectUrl}}'
+                cname: '{{projectCname}}'
+                logo: '{{projectLogo}}'
+              user:
+                id: '{{creatorId}}'
+                username: '{{creatorUsername}}'
+                fullName: '{{creatorFullName}}'
+                avatarUrl: '{{creatorAvatarUrl}}'
+      type: object
+    CrowdinOrganizationWebhookCollectionResource:
       description: 'Webhook Collection Resource'
       type: object
       allOf:
@@ -23798,10 +23878,10 @@ components:
             data:
               type: array
               items:
-                $ref: '#/components/schemas/OrganizationWebhookResource'
+                $ref: '#/components/schemas/CrowdinOrganizationWebhookResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
-    OrganizationWebhookResource:
+    CrowdinOrganizationWebhookResource:
       description: 'Webhook Resource'
       type: object
       allOf:
@@ -23810,10 +23890,9 @@ components:
         -
           properties:
             data:
-              $ref: '#/components/schemas/OrganizationWebhook'
-    OrganizationWebhook:
+              $ref: '#/components/schemas/CrowdinOrganizationWebhook'
+    CrowdinOrganizationWebhook:
       title: Webhook
-      description: 'Class OrganizationWebhookResponseModel'
       properties:
         id:
           type: integer
@@ -23856,9 +23935,6 @@ components:
                 url: '{{projectUrl}}'
                 cname: '{{projectCname}}'
                 logo: '{{projectLogo}}'
-                isExternal: '{{projectIsExternal}}'
-                externalType: '{{projectExternalType}}'
-                hasCrowdsourcing: '{{projectHasCrowdsourcing}}'
               user:
                 id: '{{creatorId}}'
                 username: '{{creatorUsername}}'
@@ -34441,6 +34517,9 @@ components:
         title:
           type: string
           example: French
+        batchId:
+          type: integer
+          example: 1
         assignees:
           type: array
           items:
@@ -36783,7 +36862,143 @@ components:
               oneOf:
                 -
                   type: string
-    WebhookCreateForm:
+    CrowdinWebhookCreateForm:
+      required:
+        - name
+        - url
+        - events
+        - requestType
+      properties:
+        name:
+          description: 'Webhook name'
+          type: string
+          example: Proofread
+        url:
+          description: 'Webhook URL'
+          type: string
+          example: 'https://webhook.site/1c20d9b5-6e6a-4522-974d-9da7ea7595c9'
+        events:
+          description: "You can configure webhooks for the following events:\n * 'file.added' — project file is added\n * 'file.updated' - project file is updated\n * 'file.reverted' - project file is reverted\n * 'file.deleted' - project file is deleted\n * 'file.translated' — project file is fully translated\n * 'file.approved' — project file is fully reviewed\n * 'project.translated' — all strings in project are translated\n * 'project.approved' — all strings in project are approved\n * 'project.built' - project are successfully built\n * 'translation.updated' — final translation of string is updated (using Replace in suggestions feature)\n * 'string.added' — source string is added\n * 'string.updated' — source string is updated\n * 'string.deleted' — source string is deleted\n * 'stringComment.created' - string comment/issue is added\n * 'stringComment.updated' - string comment/issue is updated\n * 'stringComment.deleted' - string comment/issue is deleted\n * 'stringComment.restored' - string comment/issue is restored\n * 'suggestion.added' — one of source strings is translated\n * 'suggestion.updated' — translation for source string is updated (using Replace in suggestions feature)\n * 'suggestion.deleted' — one of translations is deleted\n * 'suggestion.approved' — translation for string is approved\n * 'suggestion.disapproved' — approval for previously added translation is removed\n * 'task.added' - task is added\n * 'task.statusChanged' - task status was changed\n * 'task.updated' - task is updated\n * 'task.deleted' - task is deleted"
+          type: array
+          items:
+            type: string
+            enum:
+              - file.added
+              - file.updated
+              - file.reverted
+              - file.deleted
+              - file.translated
+              - file.approved
+              - project.translated
+              - project.approved
+              - project.built
+              - translation.updated
+              - string.added
+              - string.updated
+              - string.deleted
+              - stringComment.created
+              - stringComment.updated
+              - stringComment.deleted
+              - stringComment.restored
+              - suggestion.added
+              - suggestion.updated
+              - suggestion.deleted
+              - suggestion.approved
+              - suggestion.disapproved
+              - task.added
+              - task.statusChanged
+              - task.updated
+              - task.deleted
+            example: file.approved
+          x-doc-sections:
+            - file-based
+        requestType:
+          description: 'Webhook request type'
+          type: string
+          enum:
+            - POST
+            - GET
+          example: POST
+        isActive:
+          description: 'Defines whether webhook is active'
+          type: boolean
+          default: true
+        batchingEnabled:
+          description: 'Defines whether webhook batching is enabled'
+          type: boolean
+          default: false
+          example: true
+        contentType:
+          description: 'Webhook content type'
+          type: string
+          default: application/json
+          enum:
+            - multipart/form-data
+            - application/json
+            - application/x-www-form-urlencoded
+        headers:
+          description: 'Webhook headers'
+          type: object
+          example:
+            Authorization: 'Bearer ef231f493cafe336f98d486f596282205b3c2a41710f746cd1d37e905df85f696f5858701aa0b700'
+        payload:
+          description: 'Custom webhook payload'
+          properties:
+            project.created:
+              description: 'Read more about [Events payload examples](https://developer.crowdin.com/webhooks). Additionally, you can check out Events payloads while creating webhooks via UI in your Crowdin profile settings > Webhooks tab > click Add webhook.'
+              type: object
+          type: object
+          example:
+            string.added:
+              event: '{{event}}'
+              string:
+                id: '{{stringId}}'
+                identifier: '{{stringIdentifier}}'
+                key: '{{stringKey}}'
+                text: '{{stringText}}'
+                type: '{{stringType}}'
+                context: '{{stringContext}}'
+                maxLength: '{{stringMaxLength}}'
+                isHidden: '{{stringIsHidden}}'
+                isDuplicate: '{{stringIsDuplicate}}'
+                masterStringId: '{{stringMasterStringId}}'
+                revision: '{{stringRevision}}'
+                hasPlurals: '{{stringHasPlurals}}'
+                labelIds: '{{stringLabelIds}}'
+                url: '{{stringUrl}}'
+                createdAt: '{{stringCreatedAt}}'
+                updatedAt: '{{stringUpdatedAt}}'
+                file:
+                  id: '{{fileId}}'
+                  name: '{{fileName}}'
+                  title: '{{fileTitle}}'
+                  type: '{{fileType}}'
+                  path: '{{filePath}}'
+                  status: '{{fileStatus}}'
+                  revision: '{{fileRevision}}'
+                  branchId: '{{branchId}}'
+                  directoryId: '{{directoryId}}'
+                project:
+                  id: '{{projectId}}'
+                  userId: '{{projectUserId}}'
+                  sourceLanguageId: '{{projectSourceLanguageId}}'
+                  targetLanguageIds: '{{projectTargetLanguageIds}}'
+                  identifier: '{{projectIdentifier}}'
+                  name: '{{projectName}}'
+                  createdAt: '{{projectCreatedAt}}'
+                  updatedAt: '{{projectUpdatedAt}}'
+                  lastActivity: '{{projectLastActivity}}'
+                  description: '{{projectDescription}}'
+                  url: '{{projectUrl}}'
+                  cname: '{{projectCname}}'
+                  logo: '{{projectLogo}}'
+              user:
+                id: '{{userId}}'
+                username: '{{userUsername}}'
+                fullName: '{{userFullName}}'
+                avatarUrl: '{{userAvatarUrl}}'
+      type: object
+    EnterpriseWebhookCreateForm:
       required:
         - name
         - url
@@ -36916,13 +37131,14 @@ components:
                   isExternal: '{{projectIsExternal}}'
                   externalType: '{{projectExternalType}}'
                   hasCrowdsourcing: '{{projectHasCrowdsourcing}}'
+                  groupId: '{{projectGroupId}}'
               user:
                 id: '{{userId}}'
                 username: '{{userUsername}}'
                 fullName: '{{userFullName}}'
                 avatarUrl: '{{userAvatarUrl}}'
       type: object
-    WebhookCollectionResource:
+    CrowdinWebhookCollectionResource:
       description: 'Webhook Collection Resource'
       type: object
       allOf:
@@ -36935,10 +37151,10 @@ components:
             data:
               type: array
               items:
-                $ref: '#/components/schemas/WebhookResource'
+                $ref: '#/components/schemas/CrowdinWebhookResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
-    WebhookResource:
+    CrowdinWebhookResource:
       description: 'Webhook Resource'
       type: object
       allOf:
@@ -36947,10 +37163,9 @@ components:
         -
           properties:
             data:
-              $ref: '#/components/schemas/Webhook'
-    Webhook:
+              $ref: '#/components/schemas/CrowdinWebhook'
+    CrowdinWebhook:
       title: Webhook
-      description: 'Class WebhookResponseModel'
       properties:
         id:
           type: integer
@@ -37023,9 +37238,6 @@ components:
                   url: '{{projectUrl}}'
                   cname: '{{projectCname}}'
                   logo: '{{projectLogo}}'
-                  isExternal: '{{projectIsExternal}}'
-                  externalType: '{{projectExternalType}}'
-                  hasCrowdsourcing: '{{projectHasCrowdsourcing}}'
               user:
                 id: '{{userId}}'
                 username: '{{userUsername}}'
