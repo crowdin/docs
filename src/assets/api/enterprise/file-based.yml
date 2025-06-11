@@ -28883,6 +28883,21 @@ components:
                 type: array
                 items:
                   type: integer
+            assignedTeams:
+              description: 'Keys are the Languages Identifiers. Get via [List Supported Languages](#operation/api.languages.getMany), Values are the Team Identifiers. Get via [List Teams](#operation/api.teams.getMany)'
+              type: object
+              example:
+                it:
+                  - 5
+                  - 7
+                fr:
+                  - 5
+                zh-CN:
+                  - 3
+              additionalProperties:
+                type: array
+                items:
+                  type: integer
           type: object
       type: object
     WorkflowTemplateStepConfigVendor:
@@ -28923,6 +28938,25 @@ components:
           type: integer
           example: 12
       type: object
+    WorkflowTemplateStepConfigAIPreTranslate:
+      required:
+        - id
+      properties:
+        id:
+          description: 'Workflow Template Step Identifier. Get via [Get Workflow Template](#operation/api.workflow-templates.get)'
+          type: integer
+          example: 3
+        languages:
+          description: 'Target Languages Identifiers. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: array
+          items:
+            type: string
+            example: it
+        promptId:
+          description: 'Prompt Pre Translate Identifier. Get via [List Prompts](#operation/api.ai.prompts.getMany)'
+          type: integer
+          example: 12
+      type: object
     WorkflowTemplateStepConfigTMPreTranslate:
       required:
         - id
@@ -28948,6 +28982,16 @@ components:
               description: 'Improves TM suggestions'
               type: boolean
               example: true
+            autoApproveOption:
+              description: 'Approve added translations'
+              type: string
+              enum:
+                - all
+                - perfectMatchOnly
+                - exceptAutoSubstituted
+                - perfectMatchApprovedOnly
+                - none
+              example: all
           type: object
       type: object
     EnterpriseStringBasedProjectCreateForm:
@@ -28980,6 +29024,8 @@ components:
                 $ref: '#/components/schemas/WorkflowTemplateStepConfigTMPreTranslate'
               -
                 $ref: '#/components/schemas/WorkflowTemplateStepConfigMTPreTranslate'
+              -
+                $ref: '#/components/schemas/WorkflowTemplateStepConfigAIPreTranslate'
         groupId:
           description: 'Group Identifier. Get via [List Groups](#operation/api.groups.getMany)'
           type: integer
