@@ -1,79 +1,207 @@
 ---
 const { product } = Astro.props;
+
+const columns = [
+    { key: 'twoLetters', label: 'Two-letters', dataKey: 'twoLettersCode', width: '15%' },
+    { key: 'threeLetters', label: 'Three-letters', dataKey: 'threeLettersCode', width: '10%' },
+    { key: 'locale', label: 'Locale', dataKey: 'locale', width: '15%' },
+    { key: 'android', label: 'Android', dataKey: 'androidCode', width: '15%' },
+    { key: 'osx', label: 'OSX', dataKey: 'osxCode', width: '10%' },
+    { key: 'osxLocale', label: 'OSX Locale', dataKey: 'osxLocale', width: '10%' }
+];
+
+const cellClass = "animate-pulse h-6 bg-slate-200 dark:bg-slate-700 rounded"
 ---
 
-<crowdin-languages data-product={product}>
-    <table class="w-full">
-        <colgroup>
-            <col width="20%" />
-            <col width="80%" />
-        </colgroup>
-        <thead>
-            <tr>
-                <th class="w-72">Code</th>
-                <th class="w-full">Name</th>
-            </tr>
-        </thead>
-        <tbody id={`languages-list-${product}`}>
-            {Array.from({ length: 10 }).map(() => (
-                <tr>
-                    <td><div class="animate-pulse h-6 bg-slate-200 dark:bg-slate-700 rounded"></div></td>
-                    <td><div class="animate-pulse h-6 bg-slate-200 dark:bg-slate-700 rounded"></div></td>
-                </tr>
+<div class="languages-container">
+    <div class="mb-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg pt-1">
+        <div class="flex items-baseline flex-wrap gap-6">
+            <span class="text-sm">Code:</span>
+            {columns.map(column => (
+                <label class="flex items-baseline gap-2 text-sm whitespace-nowrap">
+                    <input type="checkbox" class="column-toggle m-0" data-column={column.key} />
+                    {column.label}
+                </label>
             ))}
-        </tbody>
-    </table>
-</crowdin-languages>
+        </div>
+    </div>
+
+    <crowdin-languages data-product={product}>
+        <table class="w-full">
+            <colgroup>
+                <col width="20%" />
+                <col width="30%" />
+                {columns.map(column => (
+                    <col width={column.width} data-column={column.key} />
+                ))}
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    {columns.map(column => (
+                        <th class={`column-${column.key} hidden`}>{column.label}</th>
+                    ))}
+                </tr>
+            </thead>
+            <tbody class="languages-list">
+                {Array.from({ length: 10 }).map(() => (
+                    <tr>
+                        <td><div class={cellClass}></div></td>
+                        <td><div class={cellClass}></div></td>
+                        {columns.map(column => (
+                            <td class={`column-${column.key} hidden`}><div class={cellClass}></div></td>
+                        ))}
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    </crowdin-languages>
+</div>
 
 <script>
-    import fetchJsonp from 'fetch-jsonp';
+    const COLUMNS = [
+        { key: 'twoLetters', dataKey: 'twoLettersCode' },
+        { key: 'threeLetters', dataKey: 'threeLettersCode' },
+        { key: 'locale', dataKey: 'locale' },
+        { key: 'android', dataKey: 'androidCode' },
+        { key: 'osx', dataKey: 'osxCode' },
+        { key: 'osxLocale', dataKey: 'osxLocale' }
+    ];
+
+    // Global state for column visibility shared across all instances
+    const globalColumnState = {
+        visibleColumns: new Set<string>(),
+        components: new Set<CrowdinLanguages>(),
+
+        addComponent(component: CrowdinLanguages) {
+            this.components.add(component);
+        },
+
+        removeComponent(component: CrowdinLanguages) {
+            this.components.delete(component);
+        },
+
+        updateVisibility(newVisibleColumns: Set<string>) {
+            this.visibleColumns = newVisibleColumns;
+
+            // Update all checkboxes across all instances
+            const allCheckboxes = document.querySelectorAll('.column-toggle') as NodeListOf<HTMLInputElement>;
+            allCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.visibleColumns.has(checkbox.dataset.column!);
+            });
+
+            // Update all component instances
+            this.components.forEach(component => {
+                component.updateFromGlobalState();
+            });
+        }
+    };
 
     class CrowdinLanguages extends HTMLElement {
+        private languagesData: any[] = [];
+
         constructor() {
             super();
+            globalColumnState.addComponent(this);
+            this.initializeEventListeners();
+            this.loadLanguages();
+        }
 
+        disconnectedCallback() {
+            globalColumnState.removeComponent(this);
+        }
+
+        private initializeEventListeners() {
+            const container = this.closest('.languages-container');
+            if (!container) return;
+
+            const checkboxes = container.querySelectorAll('.column-toggle') as NodeListOf<HTMLInputElement>;
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => this.handleColumnToggle());
+            });
+        }
+
+        private handleColumnToggle() {
+            const container = this.closest('.languages-container');
+            if (!container) return;
+
+            const checkboxes = container.querySelectorAll('.column-toggle') as NodeListOf<HTMLInputElement>;
+            const newVisibleColumns = new Set<string>();
+
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    newVisibleColumns.add(checkbox.dataset.column!);
+                }
+            });
+
+            // Update global state, which will update all instances
+            globalColumnState.updateVisibility(newVisibleColumns);
+        }
+
+        updateFromGlobalState() {
+            this.updateTableVisibility();
+            this.renderLanguages();
+        }
+
+        private updateTableVisibility() {
+            COLUMNS.forEach(column => {
+                const elements = this.querySelectorAll(`.column-${column.key}`);
+                elements.forEach(element => {
+                    element.classList.toggle('hidden', !globalColumnState.visibleColumns.has(column.key));
+                });
+            });
+        }
+
+        private renderLanguages() {
+            const tbody = this.querySelector('.languages-list');
+            if (!tbody || this.languagesData.length === 0) return;
+
+            tbody.innerHTML = this.languagesData.map(lang => {
+                const cells = [
+                    `<td>${this.escapeHtml(lang.code)}</td>`,
+                    `<td>${this.escapeHtml(lang.name)}</td>`,
+                    ...COLUMNS.map(column =>
+                        `<td class="column-${column.key}${globalColumnState.visibleColumns.has(column.key) ? '' : ' hidden'}">${this.escapeHtml(lang[column.dataKey])}</td>`
+                    )
+                ];
+                return `<tr>${cells.join('')}</tr>`;
+            }).join('');
+        }
+
+        private escapeHtml(text: string): string {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        private async loadLanguages() {
             const product = this.dataset.product;
-            if (!['crowdin', 'enterprise'].includes(this.dataset.product as string)) {
+            if (!product || !['crowdin', 'enterprise'].includes(product)) {
                 console.error('Invalid product');
                 return;
             }
 
-            const htmlspecialchars = (text: string) => {
-                const map: { [key: string]: string } = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;'
-                };
+            try {
+                const response = await fetch(`/languages/${product}.json`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-                return text.replace(/[&<>"']/g, (match: string) => ( map[match] ));
-            };
+                const data = await response.json();
+                this.languagesData = Object.entries(data)
+                    .map(([code, lang]: [string, any]) => ({ code, ...lang }))
+                    .sort((a, b) => a.name.localeCompare(b.name));
 
-            const getLanguages = (url: string) => {
-                fetchJsonp(url)
-                    .then(response => response.json())
-                    .then(data => {
-                        const table = this.querySelector(`#languages-list-${product}`);
+                this.renderLanguages();
 
-                        if (!table) {
-                            return;
-                        }
-
-                        table.innerHTML = data.data.map((lang: any) => `
-                            <tr>
-                                <td>${htmlspecialchars(lang.code)}</td>
-                                <td>${htmlspecialchars(lang.name)}</td>
-                            </tr>
-                        `).join('');
-                    })
-                    .catch(error => console.error('Error:', error));
-            }
-
-            if (product === 'crowdin') {
-                getLanguages('https://crowdin.com/backend/languages/list');
-            } else {
-                getLanguages('https://enterprise.crowdin.com/backend/languages/list');
+            } catch (error) {
+                console.error('Error loading languages:', error);
+                const tbody = this.querySelector('.languages-list');
+                if (tbody) {
+                    const colspan = 2 + COLUMNS.length;
+                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-red-500">Error loading languages</td></tr>`;
+                }
             }
         }
     }
