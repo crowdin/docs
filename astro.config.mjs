@@ -260,6 +260,9 @@ const config = defineConfig({
         ]
       })
     ]
+  },
+  redirects: {
+    "/enterprise/authentication/": "/enterprise/privacy/"
   }
 });
 
