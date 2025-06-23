@@ -1,6 +1,5 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 import starlightUtils from '@lorenzo_lewis/starlight-utils';
 import starlightLinksValidator from 'starlight-links-validator';
@@ -10,6 +9,7 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeExternalLinks from 'rehype-external-links';
 import { remarkHeadingId } from 'remark-custom-heading-id';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import tailwindcss from '@tailwindcss/vite';
 import icon from 'astro-icon';
 
 import crowdinSidebar from './src/content/sidebars/crowdin.ts';
@@ -131,7 +131,6 @@ const config = defineConfig({
         SocialIcons: './src/components/SocialIcons.astro',
       },
       customCss: [
-        './src/style/tailwind.css',
         './src/style/global.css',
         './src/style/using-logo.scss',
         './src/style/northern-lights.scss',
@@ -160,12 +159,12 @@ const config = defineConfig({
         }),
         starlightHeadingBadges(),
       ],
-      social: {
-        'x.com': 'https://x.com/crowdin',
-        linkedin: 'https://www.linkedin.com/company/crowdin',
-        youtube: 'https://youtube.com/@crowdin-localization',
-        github: 'https://github.com/crowdin',
-      }
+      social: [
+        { icon: 'x.com', label: 'X (Twitter)', href: 'https://x.com/crowdin' },
+        { icon: 'linkedin', label: 'LinkedIn', href: 'https://www.linkedin.com/company/crowdin' },
+        { icon: 'youtube', label: 'YouTube', href: 'https://youtube.com/@crowdin-localization' },
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/crowdin' },
+      ]
     }),
     // https://docs.astro.build/en/guides/integrations-guide/sitemap/#configuration
     sitemap({
@@ -179,7 +178,6 @@ const config = defineConfig({
         page !== `${site}/iframe/privacy-policy/` &&
         page !== `${site}/iframe/terms/`,
     }),
-    tailwind({ applyBaseStyles: false }),
     icon({
       include: {
         mdi: ['*'],
@@ -219,6 +217,7 @@ const config = defineConfig({
   },
   vite: {
     plugins: [
+      tailwindcss(),
       viteStaticCopy({
         targets: [
           {
