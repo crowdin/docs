@@ -130,6 +130,7 @@ const config = defineConfig({
         Hero: './src/components/Hero.astro',
         Search: './src/components/Search.astro',
         SocialIcons: './src/components/SocialIcons.astro',
+        EditLink: './src/components/EditLink.astro',
       },
       customCss: [
         './src/style/global.css',
