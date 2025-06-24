@@ -1,0 +1,76 @@
+---
+import Default from '@astrojs/starlight/components/EditLink.astro';
+import { Icon } from '@astrojs/starlight/components';
+
+const { editUrl } = Astro.locals.starlightRoute;
+---
+
+<div class="sl-flex sl-items-center gap-3">
+    <Default><slot /></Default>
+    {editUrl && (
+        <a class="sl-flex print:hidden" id="copy-to-clipboard" data-edit-url={editUrl}>
+            <Icon name="document" size="1.2em" />
+            Copy content
+        </a>
+    )}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const copyButton = document.getElementById('copy-to-clipboard');
+        if (!copyButton) {
+            return;
+        }
+
+        copyButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            const originalText = copyButton.innerHTML;
+            const editUrl = copyButton.getAttribute('data-edit-url')!;
+            const rawUrl = editUrl
+                .replace('github.com', 'raw.githubusercontent.com')
+                .replace('/edit/', '/');
+
+            try {
+                copyButton.innerHTML = '<span>Loading...</span>';
+                copyButton.style.pointerEvents = 'none';
+
+                const response = await fetch(rawUrl);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch content: ${response.status}`);
+                }
+
+                const content = await response.text();
+
+                await navigator.clipboard.writeText(content);
+
+                copyButton.innerHTML = '<span>Copied!</span>';
+            } catch (error) {
+                console.error('Error copying to clipboard:', error);
+                copyButton.innerHTML = '<span>Error!</span>';
+            } finally {
+                setTimeout(() => {
+                    copyButton.innerHTML = originalText;
+                    copyButton.style.color = '';
+                    copyButton.style.pointerEvents = '';
+                }, 2000);
+            }
+        });
+    });
+</script>
+
+<style>
+	@layer starlight.core {
+		a {
+			gap: 0.5rem;
+			align-items: center;
+			text-decoration: none;
+			color: var(--sl-color-gray-3);
+			cursor: pointer;
+			transition: color 0.2s ease;
+		}
+		a:hover {
+			color: var(--sl-color-white);
+		}
+	}
+</style>
