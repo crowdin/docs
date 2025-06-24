@@ -4,6 +4,7 @@ import sitemap from '@astrojs/sitemap';
 import starlightUtils from '@lorenzo_lewis/starlight-utils';
 import starlightLinksValidator from 'starlight-links-validator';
 import starlightHeadingBadges from 'starlight-heading-badges';
+import starlightLlmsTxt from 'starlight-llms-txt';
 import { rehypeHeadingIds } from '@astrojs/markdown-remark';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeExternalLinks from 'rehype-external-links';
@@ -158,6 +159,29 @@ const config = defineConfig({
           ],
         }),
         starlightHeadingBadges(),
+        // https://delucis.github.io/starlight-llms-txt/
+        starlightLlmsTxt({
+          description: 'Knowledge base for Crowdin users. It contains information about Crowdin features, Crowdin Enterprise, and the Developer Portal.',
+          customSets: [
+            {
+              label: 'Crowdin Help',
+              description: 'Crowdin.com documentation',
+              paths: ['**', '!enterprise/**', '!developer/**'],
+
+            },
+            {
+              label: 'Crowdin Enterprise',
+              description: 'Crowdin Enterprise documentation',
+              paths: ['enterprise/**'],
+            },
+            {
+              label: 'Developer Portal',
+              description: 'Developer Portal documentation',
+              paths: ['developer/**'],
+            },
+          ],
+          exclude: ['ai-fine-tuning', 'enterprise/ai-fine-tuning'],
+        }),
       ],
       social: [
         { icon: 'x.com', label: 'X (Twitter)', href: 'https://x.com/crowdin' },
