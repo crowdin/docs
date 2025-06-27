@@ -13390,7 +13390,7 @@ paths:
     patch:
       tags:
         - Users
-      summary: 'Edit User'
+      summary: 'Edit Authenticated User'
       operationId: api.user.patch
       requestBody:
         description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
@@ -23148,16 +23148,9 @@ components:
                 type: object
             type: object
         skipped:
-          properties:
-            ai_error:
-              type: integer
-              example: 6
-          type: object
+          $ref: '#/components/schemas/SkippedInfo'
         skippedQaCheckCategories:
-          type: array
-          items:
-            type: string
-            example: spellcheck
+          $ref: '#/components/schemas/SkippedQaCheckCategories'
       type: object
     FileProgressCollectionResource:
       description: 'Language Translation File Progress Collection Resource'
@@ -34743,6 +34736,19 @@ components:
             fileId:
               type: integer
               example: 56
+            info:
+              properties:
+                imported:
+                  properties: { strings: { type: integer, example: 10 }, words: { type: integer, example: 150 } }
+                  type: object
+                approved:
+                  properties: { strings: { type: integer, example: 5 }, words: { type: integer, example: 75 } }
+                  type: object
+                skipped:
+                  $ref: '#/components/schemas/SkippedInfo'
+                skippedQaCheckCategories:
+                  $ref: '#/components/schemas/SkippedQaCheckCategories'
+              type: object
     StringBasedTranslationFileImport:
       title: String
       type: object
@@ -36734,6 +36740,30 @@ components:
             type: boolean
           -
             type: object
+    SkippedInfo:
+      properties:
+        translation_eq_source:
+          description: 'Translation is the same as the source string'
+          type: integer
+          example: 2
+        qa_check:
+          description: 'Did not pass QA checks'
+          type: integer
+          example: 1
+        hidden_strings:
+          description: 'Hidden strings'
+          type: integer
+          example: 0
+        ai_error:
+          description: 'AI responded with an error'
+          type: integer
+          example: 6
+      type: object
+    SkippedQaCheckCategories:
+      type: object
+      example:
+        duplicate: 1
+        spellcheck: 1
   parameters:
     AiFineTuningJobCollectionStatuses:
       name: statuses
