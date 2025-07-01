@@ -25,7 +25,7 @@ npm run dev
 Open your browser and navigate to http://localhost:4321.
 
 > **Note!**
-> - Make sure you have Node.js v20 or higher installed on your machine.
+> - Make sure you have Node.js v22 or higher installed on your machine.
 > - This project uses the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for commit messages and PR titles.
 
 ### Project Structure
