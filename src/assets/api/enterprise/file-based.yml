@@ -9231,6 +9231,12 @@ paths:
                   $ref: '#/components/schemas/GroupTranslationCostsPostEditing'
                 -
                   $ref: '#/components/schemas/GroupTopMembers'
+                -
+                  $ref: '#/components/schemas/GroupTaskUsage'
+                -
+                  $ref: '#/components/schemas/GroupQaCheckIssues'
+                -
+                  $ref: '#/components/schemas/GroupTranslationConsumption'
       responses:
         '201':
           description: 'Report generation was successfully started'
@@ -9598,6 +9604,8 @@ paths:
                   $ref: '#/components/schemas/GroupTranslationCostsPostEditing'
                 -
                   $ref: '#/components/schemas/GroupTopMembers'
+                -
+                  $ref: '#/components/schemas/GroupTaskUsage'
       responses:
         '201':
           description: 'Report generation was successfully started'
@@ -9747,6 +9755,18 @@ paths:
                   $ref: '#/components/schemas/TopMembers'
                 -
                   $ref: '#/components/schemas/ContributionRawData'
+                -
+                  $ref: '#/components/schemas/TaskUsage'
+                -
+                  $ref: '#/components/schemas/SourceContentUpdates'
+                -
+                  $ref: '#/components/schemas/ProjectMembersStatistics'
+                -
+                  $ref: '#/components/schemas/EditorIssues'
+                -
+                  $ref: '#/components/schemas/ProjectQaCheckIssues'
+                -
+                  $ref: '#/components/schemas/ProjectTranslationConsumption'
       responses:
         '201':
           description: 'Report generation was successfully started'
@@ -33210,6 +33230,532 @@ components:
         - languageId
       x-doc-sections:
         - file-based
+    TaskUsage:
+      title: 'Task Usage'
+      description: 'Explore detailed statistics on task creation, workload, progress, and performance.'
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: task-usage
+          type: string
+          example: task-usage
+        schema:
+          $ref: '#/components/schemas/task-usage.report'
+      type: object
+    task-usage.report:
+      title: 'Task Usage Report'
+      type: object
+      oneOf:
+        -
+          $ref: '#/components/schemas/task-usage.workload.report'
+        -
+          $ref: '#/components/schemas/task-usage.create-vs-resolve.report'
+        -
+          $ref: '#/components/schemas/task-usage.performance.report'
+        -
+          $ref: '#/components/schemas/task-usage.time.report'
+        -
+          $ref: '#/components/schemas/task-usage.cost.report'
+    task-usage.workload.report:
+      title: Workload
+      required:
+        - format
+        - type
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        type:
+          description: workload
+          type: string
+          example: workload
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-25T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-27T07:00:14+00:00'
+        groupBy:
+          description: 'Defines grouping parameter'
+          type: string
+          default: user
+          enum:
+            - user
+            - language
+            - type
+          example: user
+        typeTasks:
+          description: "Task type:\n *     0 - translate\n *     1 - proofread\n *     2 - translate by vendor\n *     3 - proofread by vendor"
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        creatorId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+        assigneeId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+      type: object
+    task-usage.create-vs-resolve.report:
+      title: 'Create vs Resolve'
+      required:
+        - format
+        - type
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        type:
+          description: created-vs-resolved
+          type: string
+          example: created-vs-resolved
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-25T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-27T07:00:14+00:00'
+        groupBy:
+          description: 'Defines grouping parameter'
+          type: string
+          default: user
+          enum:
+            - language
+            - type
+          example: user
+        typeTasks:
+          description: "Task type:\n *      0 - translate\n *      1 - proofread\n *      2 - translate by vendor\n *      3 - proofread by vendor"
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        creatorId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+      type: object
+    task-usage.performance.report:
+      title: Performance
+      required:
+        - format
+        - type
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        type:
+          description: performance
+          type: string
+          example: performance
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-25T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-27T07:00:14+00:00'
+        groupBy:
+          description: 'Defines grouping parameter'
+          type: string
+          default: user
+          enum:
+            - language
+            - type
+          example: user
+        typeTasks:
+          description: "Task type:\n *     0 - translate\n *     1 - proofread\n *     2 - translate by vendor\n *     3 - proofread by vendor"
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        creatorId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+        assigneeId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+      type: object
+    task-usage.time.report:
+      title: Time
+      required:
+        - format
+        - type
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        type:
+          description: time
+          type: string
+          example: time
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-25T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-27T07:00:14+00:00'
+        groupBy:
+          description: 'Defines grouping parameter'
+          type: string
+          default: user
+          enum:
+            - language
+            - type
+          example: user
+        typeTasks:
+          description: "Task type:\n *     0 - translate\n *     1 - proofread\n *     2 - translate by vendor\n *     3 - proofread by vendor"
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        creatorId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+        wordsCountFrom:
+          type: integer
+          example: 1
+        wordsCountTo:
+          type: integer
+          example: 1
+      type: object
+    task-usage.cost.report:
+      title: Cost
+      required:
+        - format
+        - type
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        type:
+          description: cost
+          type: string
+          example: cost
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-25T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-27T07:00:14+00:00'
+        groupBy:
+          description: 'Defines grouping parameter'
+          type: string
+          default: user
+          enum:
+            - language
+            - type
+          example: user
+        typeTasks:
+          description: "Task type:\n *     0 - translate\n *     1 - proofread\n *     2 - translate by vendor\n *     3 - proofread by vendor"
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        creatorId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+        assigneeId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+      type: object
+    SourceContentUpdates:
+      title: 'Source Content Updates'
+      description: 'Generate a report showing changes in source content over time, including added, deleted and modified strings/words/characters'
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: source-content-updates
+          type: string
+          example: source-content-updates
+        schema:
+          $ref: '#/components/schemas/source-content-updates.report'
+      type: object
+    source-content-updates.report:
+      title: 'Source Content Updates'
+      properties:
+        unit:
+          description: 'Defines report unit'
+          type: string
+          default: words
+          enum:
+            - strings
+            - words
+            - chars
+            - chars_with_spaces
+          example: words
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2019-09-23T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2019-09-27T07:00:14+00:00'
+      type: object
+    ProjectMembersStatistics:
+      title: 'Project Members'
+      description: 'Generate a report showing changes in project members overtime'
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: project-members
+          type: string
+          example: project-members
+        schema:
+          $ref: '#/components/schemas/project-members.report'
+      type: object
+    project-members.report:
+      title: 'Project Members Report'
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-05-23T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-05-27T07:00:14+00:00'
+      type: object
+    EditorIssues:
+      title: 'Issues in Editor'
+      description: 'Generate a report showing issue statistics, categories, users, and average resolution time.'
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: editor-issues
+          type: string
+          example: editor-issues
+        schema:
+          $ref: '#/components/schemas/issue-detail.report'
+      type: object
+    issue-detail.report:
+      title: 'Issue Detail Report'
+      properties:
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2019-09-23T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2019-09-27T07:00:14+00:00'
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        issueType:
+          description: 'Defines issue type'
+          type: string
+          enum:
+            - general_question
+            - translation_mistake
+            - context_request
+            - source_mistake
+          example: general_question
+          nullable: true
+      type: object
+    ProjectQaCheckIssues:
+      title: 'Project Qa Check Isses Report'
+      description: 'Generate a report showing changes in project qa check issues overtime'
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: qa-check-issues
+          type: string
+          example: qa-check-issues
+        schema:
+          $ref: '#/components/schemas/project-qa-check-issues.report'
+      type: object
+    project-qa-check-issues.report:
+      title: 'Project Qa Check Issues Report'
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-05-23T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-05-27T07:00:14+00:00'
+      type: object
+    ProjectTranslationConsumption:
+      title: 'Project consumption'
+      description: 'Generate a report showing project consumption metrics including translation activity, proofreading activity, and savings activity over time'
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: translation-activity
+          type: string
+          example: translation-activity
+        schema:
+          $ref: '#/components/schemas/project-consumption.report'
+      type: object
+    project-consumption.report:
+      title: 'Project Consumption'
+      properties:
+        unit:
+          description: 'Defines report unit'
+          type: string
+          default: words
+          enum:
+            - strings
+            - words
+            - chars
+            - chars_with_spaces
+          example: words
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2019-09-23T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2019-09-27T07:00:14+00:00'
+      type: object
     PEReportSettingsTemplateCreateForm:
       title: 'Report settings template for post-editing'
       required:
@@ -33452,7 +33998,7 @@ components:
               type: array
               items:
                 type: integer
-              example: '[1,2,3]'
+                example: 13
             unit:
               description: 'Defines report unit'
               type: string
@@ -33512,7 +34058,7 @@ components:
         - netRateSchemes
       properties:
         projectIds:
-          description: 'Array of project ids. Get via [List Projects](#operation/api.projects.getMany'
+          description: 'Array of project ids. Get via [List Projects](#operation/api.projects.getMany)'
           type: array
           items:
             type: integer
@@ -33757,6 +34303,442 @@ components:
           type: number
           format: float
           example: 0.1
+      type: object
+    GroupTaskUsage:
+      title: 'Group Task Usage'
+      description: 'Explore detailed statistics on task creation, workload, progress, and performance.'
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: group-task-usage
+          type: string
+          example: group-task-usage
+        schema:
+          $ref: '#/components/schemas/group-task-usage.report'
+      type: object
+    group-task-usage.report:
+      title: 'Task Usage Report'
+      type: object
+      oneOf:
+        -
+          $ref: '#/components/schemas/group-task-usage.workload.report'
+        -
+          $ref: '#/components/schemas/group-task-usage.create-vs-resolve.report'
+        -
+          $ref: '#/components/schemas/group-task-usage.performance.report'
+        -
+          $ref: '#/components/schemas/group-task-usage.time.report'
+        -
+          $ref: '#/components/schemas/group-task-usage.cost.report'
+    group-task-usage.workload.report:
+      title: Workload
+      required:
+        - format
+        - type
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        type:
+          description: workload
+          type: string
+          example: workload
+        projectIds:
+          description: 'Array of project ids. Get via [List Projects](#operation/api.projects.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 13
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-25T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-27T07:00:14+00:00'
+        groupBy:
+          description: 'Defines grouping parameter'
+          type: string
+          default: user
+          enum:
+            - user
+            - language
+            - type
+          example: user
+        typeTasks:
+          description: "Task type:\n *      0 - translate\n *      1 - proofread\n *      2 - translate by vendor\n *      3 - proofread by vendor"
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        creatorId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+        assigneeId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+      type: object
+    group-task-usage.create-vs-resolve.report:
+      title: 'Create vs Resolve'
+      required:
+        - format
+        - type
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        type:
+          description: created-vs-resolved
+          type: string
+          example: created-vs-resolved
+        projectIds:
+          description: 'Array of project ids. Get via [List Projects](#operation/api.projects.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 13
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-25T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-27T07:00:14+00:00'
+        groupBy:
+          description: 'Defines grouping parameter'
+          type: string
+          default: user
+          enum:
+            - language
+            - type
+          example: user
+        typeTasks:
+          description: "Task type:\n *       0 - translate\n *       1 - proofread\n *       2 - translate by vendor\n *       3 - proofread by vendor"
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        creatorId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+      type: object
+    group-task-usage.performance.report:
+      title: Performance
+      required:
+        - format
+        - type
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        type:
+          description: performance
+          type: string
+          example: performance
+        projectIds:
+          description: 'Array of project ids. Get via [List Projects](#operation/api.projects.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 13
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-25T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-27T07:00:14+00:00'
+        groupBy:
+          description: 'Defines grouping parameter'
+          type: string
+          default: user
+          enum:
+            - language
+            - type
+          example: user
+        typeTasks:
+          description: "Task type:\n *      0 - translate\n *      1 - proofread\n *      2 - translate by vendor\n *      3 - proofread by vendor"
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        creatorId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+        assigneeId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+      type: object
+    group-task-usage.time.report:
+      title: Time
+      required:
+        - format
+        - type
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        type:
+          description: time
+          type: string
+          example: time
+        projectIds:
+          description: 'Array of project ids. Get via [List Projects](#operation/api.projects.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 13
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-25T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-27T07:00:14+00:00'
+        groupBy:
+          description: 'Defines grouping parameter'
+          type: string
+          default: user
+          enum:
+            - language
+            - type
+          example: user
+        typeTasks:
+          description: "Task type:\n *      0 - translate\n *      1 - proofread\n *      2 - translate by vendor\n *      3 - proofread by vendor"
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        creatorId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+        wordsCountFrom:
+          type: integer
+          example: 1
+        wordsCountTo:
+          type: integer
+          example: 1
+      type: object
+    group-task-usage.cost.report:
+      title: Cost
+      required:
+        - format
+        - type
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        type:
+          description: cost
+          type: string
+          example: cost
+        projectIds:
+          description: 'Array of project ids. Get via [List Projects](#operation/api.projects.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 13
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-25T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-27T07:00:14+00:00'
+        groupBy:
+          description: 'Defines grouping parameter'
+          type: string
+          default: user
+          enum:
+            - language
+            - type
+          example: user
+        typeTasks:
+          description: "Task type:\n *      0 - translate\n *      1 - proofread\n *      2 - translate by vendor\n *      3 - proofread by vendor"
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        creatorId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+        assigneeId:
+          description: 'User Identifier for which the report should be generated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: integer
+          example: 1
+      type: object
+    GroupQaCheckIssues:
+      title: 'Group Qa Check Isses Report'
+      description: 'Generate a report showing changes in project qa check issues overtime'
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: group-qa-check-issues
+          type: string
+          example: group-qa-check-issues
+        schema:
+          $ref: '#/components/schemas/group-qa-check-issues.report'
+      type: object
+    group-qa-check-issues.report:
+      title: 'Group Qa Check Issues Report'
+      properties:
+        projectIds:
+          description: 'Array of project ids. Get via [List Projects](#operation/api.projects.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 13
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-05-23T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-05-27T07:00:14+00:00'
+      type: object
+    GroupTranslationConsumption:
+      title: 'Group translation consumption'
+      description: 'Generate a report showing project consumption metrics including translation activity and proofreading activity over time'
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: group-translation-activity
+          type: string
+          example: group-translation-activity
+        schema:
+          $ref: '#/components/schemas/group-consumption.report'
+      type: object
+    group-consumption.report:
+      title: 'Group translation consumption'
+      properties:
+        unit:
+          description: 'Defines report unit'
+          type: string
+          default: words
+          enum:
+            - strings
+            - words
+            - chars
+            - chars_with_spaces
+          example: words
+        projectIds:
+          description: 'Array of project ids. Get via [List Projects](#operation/api.projects.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 13
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2019-09-23T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2019-09-27T07:00:14+00:00'
       type: object
     ReportArchiveExportForm:
       properties:
