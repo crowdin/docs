@@ -215,7 +215,8 @@ const config = defineConfig({
           'file-copy',
           'cleaning-services',
           'create-new-folder-sharp',
-          'folder-data-sharp'
+          'folder-data-sharp',
+          'drag-indicator'
         ],
       }
     })
