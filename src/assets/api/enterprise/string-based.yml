@@ -24963,7 +24963,12 @@ components:
           type: integer
           example: 27
         user:
-          $ref: '#/components/schemas/User'
+          type: object
+          oneOf:
+            -
+              $ref: '#/components/schemas/EnterpriseUserManagerContextResponseModel'
+            -
+              $ref: '#/components/schemas/EnterpriseUserAdminContextResponseModel'
         teams:
           type: array
           items:
@@ -25796,11 +25801,6 @@ components:
         apiKey:
           description: 'Api key'
           type: string
-        isSystemCredentials:
-          description: 'This option will enable the paid service DeepL via Crowdin.'
-          type: boolean
-          default: 'false'
-          example: 'true'
       type: object
     mt.credentials.amazon:
       title: 'Amazon Translate'
@@ -40258,7 +40258,7 @@ components:
         -
           properties:
             data:
-              $ref: '#/components/schemas/User'
+              $ref: '#/components/schemas/EnterpriseUserAdminContextResponseModel'
     ProjectContributionsResource:
       description: 'Project Contributions'
       type: object
@@ -40357,8 +40357,32 @@ components:
           items:
             $ref: '#/components/schemas/Team'
       type: object
-    User:
-      title: User
+    EnterpriseUserAdminContextResponseModel:
+      title: 'User details for admins'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/EnterpriseUserManagerContextResponseModel'
+        -
+          properties:
+            email:
+              type: string
+              example: jsmith@example.com
+            emailVerified:
+              type: boolean
+              example: 'false'
+            twoFactor:
+              type: string
+              enum:
+                - enabled
+                - disabled
+              example: enabled
+            timezone:
+              type: string
+              example: Europe/Kyiv
+              nullable: true
+    EnterpriseUserManagerContextResponseModel:
+      title: 'User details for managers'
       properties:
         id:
           description: 'User Identifier'
@@ -40367,12 +40391,6 @@ components:
         username:
           type: string
           example: john_smith
-        email:
-          type: string
-          example: jsmith@example.com
-        emailVerified:
-          type: boolean
-          example: 'false'
         firstName:
           description: 'First Name'
           type: string
@@ -40383,6 +40401,18 @@ components:
           type: string
           example: Smith
           nullable: true
+        avatarUrl:
+          description: 'User Avatar'
+          type: string
+          example: ''
+        fields:
+          oneOf:
+            -
+              $ref: '#/components/schemas/EnterpriseAdditionalFields'
+          nullable: true
+        isAdmin:
+          type: boolean
+          example: true
         status:
           description: 'User Status'
           type: string
@@ -40391,10 +40421,6 @@ components:
             - pending
             - blocked
           example: active
-        avatarUrl:
-          description: 'User Avatar'
-          type: string
-          example: ''
         createdAt:
           type: string
           format: date-time
@@ -40403,24 +40429,6 @@ components:
           type: string
           format: date-time
           example: '2019-10-23T11:44:02+00:00'
-          nullable: true
-        twoFactor:
-          type: string
-          enum:
-            - enabled
-            - disabled
-          example: enabled
-        isAdmin:
-          type: boolean
-          example: true
-        timezone:
-          type: string
-          example: Europe/Kyiv
-          nullable: true
-        fields:
-          oneOf:
-            -
-              $ref: '#/components/schemas/EnterpriseAdditionalFields'
           nullable: true
       type: object
     ProjectContributionsResponseModel:
