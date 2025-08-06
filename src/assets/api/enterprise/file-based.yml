@@ -12667,7 +12667,7 @@ paths:
       tags:
         - 'String Translations'
       summary: 'List Translation Approvals'
-      description: '__Note:__ Either `translationId` OR `fileId` OR `labelIds` OR `excludeLabelIds` with `languageId` OR `stringId` with `languageId` are required'
+      description: '__Note:__ Either `translationId` OR `correctionId` OR `fileId` OR `labelIds` OR `excludeLabelIds` with `languageId` OR `stringId` with `languageId` are required'
       operationId: api.projects.approvals.getMany
       parameters:
         -
@@ -12722,7 +12722,14 @@ paths:
         -
           name: translationId
           in: query
-          description: 'Translation Identifier. Get via [List String Translations](#operation/api.projects.translations.getMany) <br> **Note:** If specified, `fileId`, `stringId` and `languageId` are ignored'
+          description: 'Translation Identifier. Get via [List String Translations](#operation/api.projects.translations.getMany) <br> **Note:** If specified, `fileId`, `stringId` and `languageId` are ignored. Cannot be used with `correctionId`'
+          required: false
+          schema:
+            type: integer
+        -
+          name: correctionId
+          in: query
+          description: 'Correction Identifier. Get via [List Corrections](#operation/api.projects.corrections.getMany) <br> **Note:** Cannot be used with `translationId`, `languageId`, `stringId` or `fileId`. Available only for projects with advanced workflow'
           required: false
           schema:
             type: integer
@@ -12736,7 +12743,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TranslationApprovalCollectionResource'
+                oneOf:
+                  - { $ref: '#/components/schemas/TranslationApprovalCollectionResource' }
+                  - { $ref: '#/components/schemas/CorrectionApprovalCollectionResource' }
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -12787,14 +12796,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TranslationApprovalCreateForm'
+              $ref: '#/components/schemas/EnterpriseTranslationApprovalCreateForm'
       responses:
         '201':
           description: 'Approval was successfully added'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TranslationApprovalResource'
+                oneOf:
+                  - { $ref: '#/components/schemas/TranslationApprovalResource' }
+                  - { $ref: '#/components/schemas/CorrectionApprovalResource' }
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -13052,6 +13063,297 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+  '/projects/{projectId}/corrections':
+    get:
+      tags:
+        - 'String Corrections'
+      summary: 'List Corrections'
+      operationId: api.projects.corrections.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/RequiredStringIdInQuery'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+        -
+          name: orderBy
+          in: query
+          description: 'Sort corrections by'
+          schema:
+            type: string
+            enum:
+              - id
+              - text
+              - createdAt
+            example: 'createdAt desc,id'
+        -
+          name: denormalizePlaceholders
+          in: query
+          description: 'Enable denormalize placeholders'
+          schema:
+            type: integer
+            default: 0
+            enum:
+              - 0
+              - 1
+      responses:
+        '200':
+          description: 'Corrections data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrectionCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+    post:
+      tags:
+        - 'String Corrections'
+      summary: 'Add Correction'
+      operationId: api.projects.corrections.post
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorrectionCreateForm'
+      responses:
+        '201':
+          description: 'Correction created successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrectionResource'
+        '400':
+          description: 'Bad Request'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+    delete:
+      tags:
+        - 'String Corrections'
+      summary: 'Delete Corrections'
+      operationId: api.projects.corrections.deleteMany
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          name: stringId
+          in: query
+          description: 'String Identifier. Get via [List Strings](#operation/api.projects.strings.getMany)'
+          required: true
+          schema:
+            type: integer
+            example: 35434
+      responses:
+        '204':
+          description: 'All corrections deleted successfully'
+        '400':
+          description: 'Bad Request'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/projects/{projectId}/corrections/{correctionId}':
+    get:
+      tags:
+        - 'String Corrections'
+      summary: 'Get Correction'
+      operationId: api.projects.corrections.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          name: correctionId
+          in: path
+          description: 'Correction Identifier'
+          required: true
+          schema:
+            type: integer
+          example: 35
+        -
+          name: denormalizePlaceholders
+          in: query
+          description: 'Enable denormalize placeholders'
+          schema:
+            type: integer
+            default: 0
+            enum:
+              - 0
+              - 1
+      responses:
+        '200':
+          description: 'Correction data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+    put:
+      tags:
+        - 'String Corrections'
+      summary: 'Restore Correction'
+      operationId: api.projects.corrections.put
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          name: correctionId
+          in: path
+          description: 'Correction Identifier'
+          required: true
+          schema:
+            type: integer
+          example: 35
+      responses:
+        '200':
+          description: 'Restored correction data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+    delete:
+      tags:
+        - 'String Corrections'
+      summary: 'Delete Correction'
+      operationId: api.projects.corrections.delete
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          name: correctionId
+          in: path
+          description: 'Correction Identifier'
+          required: true
+          schema:
+            type: integer
+          example: 35
+      responses:
+        '204':
+          description: 'Correction deleted successfully'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
   '/projects/{projectId}/languages/{languageId}/translations':
     get:
       tags:
@@ -37929,6 +38231,74 @@ components:
                 - /-
             value:
               type: object
+    CorrectionCollectionForm:
+      required:
+        - stringId
+      properties:
+        stringId:
+          description: 'String Identifier. Get via [List Strings](#operation/api.projects.strings.getMany)'
+          type: integer
+          example: 35434
+        denormalizePlaceholders:
+          description: 'Enable denormalize placeholders'
+          type: integer
+          default: 0
+          enum:
+            - 0
+            - 1
+      type: object
+    CorrectionCreateForm:
+      required:
+        - stringId
+        - text
+      properties:
+        stringId:
+          description: 'String Identifier. Get via [List Strings](#operation/api.projects.strings.getMany)'
+          type: integer
+          example: 35434
+        text:
+          description: 'Correction text'
+          type: string
+          example: 'This string has been corrected'
+        pluralCategoryName:
+          description: "Plural form. Acceptable keys are `zero`, `one`, `two`, `few`, `many`, and `other`\n\n_Note:_ This field becomes required for strings with plural forms"
+          type: string
+          example: few
+      type: object
+    CorrectionDeleteForm:
+      required:
+        - stringId
+      properties:
+        stringId:
+          description: 'String Identifier. Get via [List Strings](#operation/api.projects.strings.getMany)'
+          type: integer
+          example: 35434
+      type: object
+    EnterpriseTranslationApprovalCreateForm:
+      type: object
+      oneOf:
+        -
+          title: Translation
+          required:
+            - translationId
+          properties:
+            translationId:
+              description: 'Translation Identifier. Get via [List String Translations](#operation/api.projects.translations.getMany)'
+              type: integer
+              example: 200
+          type: object
+          additionalProperties: false
+        -
+          title: Correction
+          required:
+            - correctionId
+          properties:
+            correctionId:
+              description: 'Correction Identifier. Get via [List Corrections](#operation/api.projects.corrections.getMany)'
+              type: integer
+              example: 35
+          type: object
+          additionalProperties: false
     TranslationAlignmentForm:
       required:
         - sourceLanguageId
@@ -37947,15 +38317,6 @@ components:
           description: 'Text for alignment'
           type: string
           example: 'Your password has been reset successfully!'
-      type: object
-    TranslationApprovalCreateForm:
-      required:
-        - translationId
-      properties:
-        translationId:
-          description: 'Translation Identifier. Get via [List String Translations](#operation/api.projects.translations.getMany)'
-          type: integer
-          example: 200
       type: object
     TranslationCreateForm:
       required:
@@ -38056,6 +38417,40 @@ components:
           type: integer
           example: 653412
       type: object
+    CorrectionApprovalResource:
+      description: 'Correction Approval Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/CorrectionApproval'
+    CorrectionCollectionResource:
+      description: 'Correction Collection Resource'
+      allOf:
+        -
+          $ref: '#/components/schemas/Pagination'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CorrectionResource'
+          type: object
+        -
+          $ref: '#/components/schemas/CollectionResource'
+    CorrectionResource:
+      description: 'Correction Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/StringCorrection'
     PlainLanguageTranslationCollectionResource:
       title: 'Plain language translations'
       description: 'Plain Language Translation Collection Resource'
@@ -38161,6 +38556,22 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/TranslationApprovalResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    CorrectionApprovalCollectionResource:
+      description: 'List Correction Approvals'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CorrectionApprovalResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
     TranslationApprovalResource:
@@ -38279,6 +38690,83 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/Vote'
+    CorrectionApproval:
+      title: 'Correction Approval'
+      properties:
+        id:
+          description: 'Approval Identifier. Get via [List Translation Approvals](#operation/api.projects.approvals.getMany)'
+          type: integer
+          example: 190695
+        user:
+          description: User
+          properties:
+            id:
+              type: integer
+              example: 19
+            username:
+              type: string
+              example: john_doe
+            fullName:
+              type: string
+              example: 'John Smith'
+            avatarUrl:
+              type: string
+              example: ''
+          type: object
+        correctionId:
+          description: 'Correction Identifier'
+          type: integer
+          example: 190695
+        stringId:
+          description: 'String Identifier. Get via [List Strings](#operation/api.projects.strings.getMany)'
+          type: integer
+          example: 2345
+        languageId:
+          description: 'Language Identifier. Get via [Project Target Languages](#operation/api.projects.get)'
+          type: string
+          example: uk
+        createdAt:
+          description: 'Approval create date'
+          type: string
+          format: date-time
+          example: '2019-09-19T12:42:12+00:00'
+      type: object
+    StringCorrection:
+      title: 'String Correction'
+      properties:
+        id:
+          description: 'Correction Identifier'
+          type: integer
+          example: 190695
+        text:
+          description: 'Correction text'
+          type: string
+          example: 'This string has been corrected'
+        pluralCategoryName:
+          description: 'Plural category name'
+          type: string
+          example: few
+        user:
+          description: User
+          properties:
+            id:
+              type: integer
+              example: 19
+            username:
+              type: string
+              example: john_doe
+            fullName:
+              type: string
+              example: 'John Smith'
+            avatarUrl:
+              type: string
+              example: ''
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+          example: '2019-09-23T11:26:54+00:00'
+      type: object
     IcuLanguageTranslation:
       properties:
         stringId:
@@ -45164,6 +45652,9 @@ tags:
   -
     name: 'String Translations'
     description: 'Use API to add or remove strings translations, approvals, and votes.'
+  -
+    name: 'String Corrections'
+    description: 'Use API to add or remove strings correction'
   -
     name: 'String Comments'
     description: 'Use API to list, add, edit or remove string comments.'
