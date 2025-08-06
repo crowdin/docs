@@ -11202,7 +11202,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ApprovalMassPatch'
+              type: array
+              items:
+                type: object
+                oneOf:
+                  - { required: [op, path, value], properties: { op: { type: string, enum: [add] }, path: { type: string, enum: [/-] }, value: { type: object } }, type: object }
+                  - { required: [op, path], properties: { op: { type: string, enum: [remove] }, path: { type: string } }, type: object }
       responses:
         '200':
           description: 'Approvals were successfully updated'
@@ -32265,70 +32270,6 @@ components:
           format: date-time
           example: '2019-09-20T11:05:24+00:00'
       type: object
-    ApprovalMassPatch:
-      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
-      type: array
-      items:
-        $ref: '#/components/schemas/ApprovalMassOperation'
-      example:
-        -
-          op: add
-          path: /-
-          value:
-            translationId: 200
-        -
-          op: remove
-          path: /2815
-    ApprovalMassOperation:
-      description: 'A JSON Patch (222) operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
-      required:
-        - op
-        - path
-      properties:
-        op:
-          description: 'Patch operation to perform'
-          type: string
-          enum:
-            - remove
-            - add
-      type: object
-      discriminator:
-        propertyName: op
-        mapping:
-          remove: '#/components/schemas/ApprovalMassOperationRemove'
-          add: '#/components/schemas/ApprovalMassOperationAdd'
-    ApprovalMassOperationRemove:
-      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/ApprovalMassOperation'
-        -
-          properties:
-            path:
-              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
-              type: string
-              format: json-pointer
-              enum:
-                - '/{approvalId}'
-    ApprovalMassOperationAdd:
-      description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
-      required:
-        - value
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/ApprovalMassOperation'
-        -
-          properties:
-            path:
-              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
-              type: string
-              format: json-pointer
-              enum:
-                - /-
-            value:
-              type: object
     TranslationMassPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -32397,6 +32338,58 @@ components:
                 - /-
             value:
               type: object
+    CorrectionCollectionForm:
+      required:
+        - stringId
+      properties:
+        stringId:
+          description: 'String Identifier. Get via [List Strings](#operation/api.projects.strings.getMany)'
+          type: integer
+          example: 35434
+        denormalizePlaceholders:
+          description: 'Enable denormalize placeholders'
+          type: integer
+          default: 0
+          enum:
+            - 0
+            - 1
+      type: object
+    CorrectionCreateForm:
+      required:
+        - stringId
+        - text
+      properties:
+        stringId:
+          description: 'String Identifier. Get via [List Strings](#operation/api.projects.strings.getMany)'
+          type: integer
+          example: 35434
+        text:
+          description: 'Correction text'
+          type: string
+          example: 'This string has been corrected'
+        pluralCategoryName:
+          description: "Plural form. Acceptable keys are `zero`, `one`, `two`, `few`, `many`, and `other`\n\n_Note:_ This field becomes required for strings with plural forms"
+          type: string
+          example: few
+      type: object
+    CorrectionDeleteForm:
+      required:
+        - stringId
+      properties:
+        stringId:
+          description: 'String Identifier. Get via [List Strings](#operation/api.projects.strings.getMany)'
+          type: integer
+          example: 35434
+      type: object
+    TranslationApprovalCreateForm:
+      required:
+        - translationId
+      properties:
+        translationId:
+          description: 'Translation Identifier. Get via [List String Translations](#operation/api.projects.translations.getMany)'
+          type: integer
+          example: 200
+      type: object
     TranslationAlignmentForm:
       required:
         - sourceLanguageId
@@ -32415,15 +32408,6 @@ components:
           description: 'Text for alignment'
           type: string
           example: 'Your password has been reset successfully!'
-      type: object
-    TranslationApprovalCreateForm:
-      required:
-        - translationId
-      properties:
-        translationId:
-          description: 'Translation Identifier. Get via [List String Translations](#operation/api.projects.translations.getMany)'
-          type: integer
-          example: 200
       type: object
     TranslationCreateForm:
       required:
@@ -32524,6 +32508,40 @@ components:
           type: integer
           example: 653412
       type: object
+    CorrectionApprovalResource:
+      description: 'Correction Approval Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/CorrectionApproval'
+    CorrectionCollectionResource:
+      description: 'Correction Collection Resource'
+      allOf:
+        -
+          $ref: '#/components/schemas/Pagination'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CorrectionResource'
+          type: object
+        -
+          $ref: '#/components/schemas/CollectionResource'
+    CorrectionResource:
+      description: 'Correction Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/StringCorrection'
     PlainLanguageTranslationCollectionResource:
       title: 'Plain language translations'
       description: 'Plain Language Translation Collection Resource'
@@ -32629,6 +32647,22 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/TranslationApprovalResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    CorrectionApprovalCollectionResource:
+      description: 'List Correction Approvals'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CorrectionApprovalResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
     TranslationApprovalResource:
@@ -32747,6 +32781,83 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/Vote'
+    CorrectionApproval:
+      title: 'Correction Approval'
+      properties:
+        id:
+          description: 'Approval Identifier. Get via [List Translation Approvals](#operation/api.projects.approvals.getMany)'
+          type: integer
+          example: 190695
+        user:
+          description: User
+          properties:
+            id:
+              type: integer
+              example: 19
+            username:
+              type: string
+              example: john_doe
+            fullName:
+              type: string
+              example: 'John Smith'
+            avatarUrl:
+              type: string
+              example: ''
+          type: object
+        correctionId:
+          description: 'Correction Identifier'
+          type: integer
+          example: 190695
+        stringId:
+          description: 'String Identifier. Get via [List Strings](#operation/api.projects.strings.getMany)'
+          type: integer
+          example: 2345
+        languageId:
+          description: 'Language Identifier. Get via [Project Target Languages](#operation/api.projects.get)'
+          type: string
+          example: uk
+        createdAt:
+          description: 'Approval create date'
+          type: string
+          format: date-time
+          example: '2019-09-19T12:42:12+00:00'
+      type: object
+    StringCorrection:
+      title: 'String Correction'
+      properties:
+        id:
+          description: 'Correction Identifier'
+          type: integer
+          example: 190695
+        text:
+          description: 'Correction text'
+          type: string
+          example: 'This string has been corrected'
+        pluralCategoryName:
+          description: 'Plural category name'
+          type: string
+          example: few
+        user:
+          description: User
+          properties:
+            id:
+              type: integer
+              example: 19
+            username:
+              type: string
+              example: john_doe
+            fullName:
+              type: string
+              example: 'John Smith'
+            avatarUrl:
+              type: string
+              example: ''
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+          example: '2019-09-23T11:26:54+00:00'
+      type: object
     IcuLanguageTranslation:
       properties:
         stringId:
