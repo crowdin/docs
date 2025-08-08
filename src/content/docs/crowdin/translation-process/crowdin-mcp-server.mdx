@@ -1,0 +1,210 @@
+---
+title: Crowdin MCP Server
+description: Manage your Crowdin projects using natural-language AI commands.
+slug: crowdin-mcp-server
+sidebar:
+  order: 1
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+The Crowdin MCP (Model Context Protocol) Server enables AI agents to interact with your Crowdin account through natural-language commands, allowing you to automate translations, manage terminology, coordinate teams, and generate insights—all without ever leaving your chat interface.
+
+Think of the MCP Server as a universal adapter and interpreter. Your AI assistant (e.g., Claude or Cursor) speaks "human language", and the Crowdin API speaks a precise "technical language". The MCP server sits in the middle, translating your natural-language requests into the exact commands that Crowdin understands and then translating the responses back into a clear, readable answer.
+
+## Why Use the MCP Server?
+
+* **Speed & Efficiency:** Automate repetitive tasks like file uploads, status checks, and report generation.
+* **Contextual Intelligence:** AI agents gain an instant understanding of your projects, deadlines, team members, and workflows—no manual explanation is required.
+* **Seamless Workflow:** Manage translation tasks conversationally from within your favorite AI tool or IDE.
+
+## Prerequisites
+
+* A Crowdin account.
+* A Personal Access Token from your account.
+* An MCP-compatible client (e.g., Claude, Cursor).
+
+## Setup and Configuration
+
+This section provides the details needed to connect your AI client to Crowdin.
+
+### Authentication: Tokens and Scopes
+
+To connect to your Crowdin account, the MCP Server uses a **Personal Access Token (PAT)**. This token is your secure key. When you create a token, you must grant it specific **scopes** (permissions) that define what actions it can perform. For the MCP Server to function correctly, the token you use must have the necessary scopes for the commands you want to give. For example, to create a project task, your token will need the **Tasks (Read and Write)** scope.
+
+<ReadMore>
+  Read more about [Creating a Personal Access Token](/account-settings/#creating-a-personal-access-token).
+</ReadMore>
+
+### Endpoint Structure
+
+Construct the URL based on your role in the project and the tool set you wish to use.
+
+```
+https://mcp.crowdin.com/mcp/{tool-set}
+```
+
+Replace `{tool-set}` with a role from the table below.
+
+### Available Tool Sets
+
+* **`project-manager`** - Project oversight and team coordination.
+* **`developer`** - Source files, builds, and integrations.
+* **`translator`** - Translation and linguistic tools.
+* **`asset-manager`** - Glossaries and translation memory.
+
+<Aside>
+  For best performance, it is highly recommended to specify a tool set. If omitted, all tools will be available, but the AI's performance may be less focused.
+</Aside>
+
+### Basic Configuration Example
+
+Here is a basic JSON configuration snippet for your client.
+
+```json
+{
+  "crowdin": {
+    "url": "https://mcp.crowdin.com/mcp/project-manager",
+    "headers": {
+      "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+    }
+  }
+}
+```
+
+## Configuring Your AI Client
+
+This section guides you through connecting your preferred AI client to the Crowdin MCP Server. While the specific steps may vary slightly between clients, the core process involves providing your client with the server's URL and your Personal Access Token for authentication.
+
+### General Configuration Steps
+
+1.  **Get Your Personal Access Token (PAT):** Before you begin, ensure you have a PAT with the necessary scopes for your intended tasks, as detailed in the [Authentication](#authentication-tokens-and-scopes) section.
+2.  **Locate Your Client's Settings:** Open your AI client and find the settings area for connecting to external tools or contexts.
+3.  **Enter the Configuration Details:** You will need to provide two key pieces of information:
+    * The **Endpoint URL** for your desired tool set.
+    * An **Authorization Header** containing your PAT.
+
+### Configuring MCP Client for Claude Desktop
+
+To set up the MCP client in Claude Desktop, follow these steps:
+
+<Steps>
+  1. Navigate to **Settings > Developer** in the Claude desktop application.
+  2. Click **Edit Config** to locate the `claude_desktop_config.json` file.
+  3. Open `claude_desktop_config.json` and enter the following configuration:
+
+     ```json
+     {
+       "mcpServers": {
+         "crowdin": {
+           "command": "npx",
+             "args": [
+               "mcp-remote@latest",
+               "https://mcp.crowdin.com/mcp/project-manager",
+               "--header",
+               "Authorization:${AUTH_TOKEN}"
+             ],
+             "env": {
+               "AUTH_TOKEN": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+             }
+         }
+       }
+     }
+     ```
+
+  4. Save the changes, and restart the Claude Desktop app.
+</Steps>
+
+### Configuring MCP Client for Agentic AI
+
+To set up the MCP client in Agentic AI, follow these steps:
+
+<Steps>
+  1. Open your project and select a language.
+  2. Open the necessary file in the Editor.
+  3. Click on the Agentic AI section in the right panel.
+  4. Click <Icon name="mdi:cog" class="inline-icon" /> in the upper-right corner to open the Agentic AI settings.
+  5. Switch to the **MCP** section and click **Add custom MCP**.
+  6. Enter the following configuration:
+
+     ```json
+     {
+       "crowdin": {
+         "url": "https://mcp.crowdin.com/mcp/project-manager",
+         "headers": {
+           "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+         }
+       }
+     }
+     ```
+
+  7. Click **Save**.
+</Steps>
+
+## Making Your First Request
+
+Once your client is configured, you can test the connection by making a simple request.
+
+Start a new chat with your AI assistant and give it a command directly. To test the connection, type the following: `List my projects.`
+
+Before executing the request, the AI client will likely first identify the required tool from the Crowdin MCP Server and then ask for your permission to proceed. You will need to approve this confirmation step for the command to run. Many clients also offer ways to configure this behavior for trusted sources to streamline future requests.
+
+After you grant permission, the AI will execute the command and respond by listing the projects it can see in your Crowdin account. This confirms that your connection is working and you're ready to start managing your localization projects through natural-language commands.
+
+## Practical Workflows for Your Role
+
+The real power of the MCP server comes from chaining commands to complete tasks. Here are some examples of how different roles can use the server to streamline their work.
+
+### Project Manager
+
+1.  **Check Progress:**
+  ```
+  What's the proofreading progress for the 'Q4 Mobile Release' project in German?
+  ```
+2.  **Identify Bottleneck:** The AI responds that German proofreading is only 30% complete.
+3.  **Take Action:**
+  ```
+  Create a task to proofread all unapproved strings in German for that project and assign it to 'John Doe'.
+  ```
+
+### Developer
+
+1.  **Add New Source Files:** When a new feature is ready, the developer adds the source text files to the localization project.
+  ```
+  Add the file 'new_onboarding_feature.json' to the 'Mobile App Q4' project.
+  ```
+2.  **Monitor Translation Progress:** As the deadline approaches, they check the translators' progress to ensure the project is on track.
+  ```
+  What is the translation progress for the 'Mobile App Q4' project?
+  ```
+3.  **Publish Final Translations:** Once translations are complete and approved, the developer publishes them to their production environment using a pre-configured distribution.
+  ```
+  Create a new release for our 'Production CDN' distribution.
+  ```
+
+### Translator
+
+1.  **Find Work:** A translator's first step is to find strings that are ready for them to work on.
+  ```
+  Show me all high-priority untranslated strings for French in the 'iOS App' project.
+  ```
+2.  **Ensure Consistency:** To maintain quality, they check the glossary for correct terminology.
+  ```
+  What is the approved translation for the term 'workspace' in the French glossary?
+  ```
+3.  **Request Context:** If a string is ambiguous, they request visual context for an accurate translation.
+  ```
+  For string ID 'xyz-789', show me its screenshot.
+  ```
+
+## Best Practices
+
+* **Start with a Specific Role:** To reduce AI reasoning overhead and improve accuracy, always configure the MCP Server with the single tool set that matches your role.
+* **Be Specific in Your Prompts:** Reference project names and IDs rather than generic terms. For example, `List tasks for project ID 12345 in French` is better than `Show me my tasks.`
+* **Start with Read-Only Commands:** When you first set up the connection, test it with safe, read-only commands like `List my projects`. Once you confirm it works, you can proceed to "write" commands like `Create a task.`
+* **Manage Tokens Securely:** Treat your Personal Access Tokens like passwords and handle them with care.
+    * **Use Minimal Scopes:** When creating a token, grant only the permissions necessary for the tasks you intend to perform.
+    * **Store Securely:** Keep tokens in encrypted vaults or secure environment variables, not in shared configuration files.
+    * **Rotate Regularly:** For enhanced security, periodically revoke old tokens and create new ones.
