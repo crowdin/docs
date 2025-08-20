@@ -36859,7 +36859,11 @@ components:
         -
           properties:
             data:
-              $ref: '#/components/schemas/EnterpriseStringTranslation'
+              oneOf:
+                -
+                  $ref: '#/components/schemas/EnterpriseStringTranslation'
+                -
+                  $ref: '#/components/schemas/EnterpriseAssetTranslation'
     PlainLanguageTranslationCollectionResource:
       title: 'Plain language translations'
       description: 'Plain Language Translation Collection Resource'
@@ -37176,6 +37180,23 @@ components:
           format: date-time
           example: '2019-09-23T11:26:54+00:00'
       type: object
+    EnterpriseAssetTranslation:
+      title: 'Enterprise Asset Translation'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/BaseTranslation'
+        -
+          $ref: '#/components/schemas/BaseTranslation'
+        -
+          properties:
+            url:
+              description: 'Asset URL'
+              type: string
+            workflowStepId:
+              description: 'Workflow Step Identifier'
+              type: integer
+              example: 0
     EnterpriseCorrectionApproval:
       title: 'Enterprise Correction Approval with workflow step'
       type: object
@@ -37204,20 +37225,6 @@ components:
               description: 'Workflow Step Identifier'
               type: integer
               example: 77
-    EnterpriseApproval:
-      title: 'Enterprise Approval with workflow step'
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/Approval'
-        -
-          $ref: '#/components/schemas/Approval'
-        -
-          properties:
-            workflowStepId:
-              description: 'Workflow Step Identifier'
-              type: integer
-              example: 77
     EnterpriseStringTranslation:
       title: 'Enterprise String Translation'
       type: object
@@ -37226,6 +37233,20 @@ components:
           $ref: '#/components/schemas/StringTranslation'
         -
           $ref: '#/components/schemas/StringTranslation'
+        -
+          properties:
+            workflowStepId:
+              description: 'Workflow Step Identifier'
+              type: integer
+              example: 77
+    EnterpriseApproval:
+      title: 'Enterprise Approval with workflow step'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Approval'
+        -
+          $ref: '#/components/schemas/Approval'
         -
           properties:
             workflowStepId:
@@ -37354,6 +37375,42 @@ components:
           items:
             $ref: '#/components/schemas/PluralSuggestionOfLanguageTranslation'
       type: object
+    StringTranslation:
+      title: 'String Translation'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/BaseTranslation'
+        -
+          $ref: '#/components/schemas/BaseTranslation'
+        -
+          properties:
+            text:
+              description: 'Translation text'
+              type: string
+              example: 'Цю стрічку перекладено'
+            pluralCategoryName:
+              description: 'plural category name'
+              type: string
+              example: few
+            provider:
+              description: 'Translation Provider'
+              type: string
+              enum:
+                - tm
+                - global_tm
+                - google
+                - google_automl
+                - microsoft
+                - deepl
+                - amazon
+                - modernmt
+                - crowdin
+                - custom_mt
+              nullable: true
+            isPreTranslated:
+              type: boolean
+              example: true
     Alignment:
       title: Alignment
       properties:
@@ -37471,22 +37528,14 @@ components:
           type: string
           example: 'Перша локалзація.'
       type: object
-    StringTranslation:
-      title: 'String Translation'
+    BaseTranslation:
+      title: 'Base Translation'
       description: 'Class TranslationResponseModel'
       properties:
         id:
           description: 'Translation Identifier'
           type: integer
           example: 190695
-        text:
-          description: 'translation text'
-          type: string
-          example: 'Цю стрічку перекладено'
-        pluralCategoryName:
-          description: 'plural category name'
-          type: string
-          example: few
         user:
           description: User
           properties:
@@ -37507,24 +37556,6 @@ components:
           description: 'Translation Rating (Votes)'
           type: integer
           example: 10
-        provider:
-          description: 'Translation Provider'
-          type: string
-          enum:
-            - tm
-            - global_tm
-            - google
-            - google_automl
-            - microsoft
-            - deepl
-            - amazon
-            - modernmt
-            - crowdin
-            - custom_mt
-          nullable: true
-        isPreTranslated:
-          type: boolean
-          example: true
         createdAt:
           type: string
           format: date-time
