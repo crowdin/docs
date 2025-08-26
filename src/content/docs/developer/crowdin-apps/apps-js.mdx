@@ -723,10 +723,10 @@ Properties:
 * QA Issues (Android syntax) &ndash; 37
 
 <Aside type="caution">
-  The following list may not include some custom filter options added using the Crowdin Apps. To get the full list of available filter options, use the [`AP.editor.getFiltersList(filters)`](#get-filters-list) method.
+  The following list may not include some custom filter options added using the Crowdin Apps. To get the full list of available filter options, use the [`AP.editor.getFiltersList(callback)`](#get-filters-list) method.
 </Aside>
 
-### AP.editor.getFiltersList(filters) {#get-filters-list}
+### AP.editor.getFiltersList(callback) {#get-filters-list}
 
 The method retrieves the list of available filter options in the Editor.
 
@@ -1056,6 +1056,141 @@ Properties:
   </tr>
   </tbody>
 </table>
+
+### AP.editor.registerContextMenuAction(action, callback) {#register-context-menu-action}
+
+The method registers a custom action in the Editor's context menu. This allows you to add custom menu items to extend the Editor's functionality.
+
+When an action is registered, the callback function receives the action object back, augmented with a unique `eventSubscriptionId`. You must use this ID with the `AP.events.on()` method to define the logic that executes when a user clicks your custom menu item.
+
+Example:
+
+```js
+AP.editor.registerContextMenuAction({
+  type: 'textarea-context-menu',
+  name: 'My Action'
+}, function(action) {
+  AP.events.on(action.eventSubscriptionId, () => {
+    // Add the logic that should happen on click
+    console.log(`'${action.name}' was clicked.`);
+  });
+});
+```
+
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>action</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object</code></p>
+      <p><strong>Description:</strong> The configuration object for the context menu action.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Description:</strong> The callback that handles the registration result. It receives the action object back with an added <code>eventSubscriptionId</code> for event handling.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+#### Action Object Properties
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>type</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The type of context menu where the action will be displayed. Possible values:</p>
+        <ul>
+        <li><code>textarea-context-menu</code>: The context menu for the translation input area.</li>
+        <li><code>source-string-context-menu</code>: The context menu for a source string.</li>
+        <li><code>source-string-selected-text-context-menu</code>: The context menu for selected text within a source string.</li>
+        </ul>
+    </td>
+  </tr>
+  <tr>
+    <td><code>name</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The name of the action to be displayed in the context menu.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">children</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>array</code> (Optional)</p>
+      <p><strong>Description:</strong> An array of child action objects to create a nested submenu.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+<Aside>
+  To register multiple, separate context menu items, call `AP.editor.registerContextMenuAction` for each item individually.
+</Aside>
+
+#### Additional Examples
+
+**Simple action for the source string context menu**
+
+```js
+AP.editor.registerContextMenuAction({
+  type: 'source-string-context-menu',
+  name: 'Start new AI conversation'
+}, function(action) {
+  AP.events.on(action.eventSubscriptionId, () => {
+    // AP.editor.ai.startNewConversation(); // Example of an action
+    console.log('Starting new AI conversation...');
+  });
+});
+```
+
+**Action with a submenu**
+
+```js
+AP.editor.registerContextMenuAction({
+  type: 'source-string-context-menu',
+  name: 'My AI Actions',
+  children: [
+    {
+      name: 'Explain selection'
+    },
+    {
+      name: 'Check grammar'
+    }
+  ]
+}, function(action) {
+  // Handle the child menu items
+  action.children.forEach((childAction) => {
+    AP.events.on(childAction.eventSubscriptionId, () => {
+      // Add the logic that should happen on click
+      console.log(`'${childAction.name}' was clicked.`);
+    });
+  });
+});
+```
+
+**Action for selected text in the translation area**
+
+```js
+AP.editor.registerContextMenuAction({
+  type: 'textarea-context-menu',
+  name: 'Send selected suggestion text to AI'
+}, function(action) {
+  AP.events.on(action.eventSubscriptionId, () => {
+    AP.editor.textarea.getSelectedText(function(text) {
+      // AP.editor.ai.addMessage(text); // Example of an action
+      console.log(`Sending to AI: ${text}`);
+    });
+  });
+});
+```
 
 ## Event Module Actions
 
