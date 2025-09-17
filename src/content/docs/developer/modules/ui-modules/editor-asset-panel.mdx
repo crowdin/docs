@@ -1,0 +1,119 @@
+---
+title: Editor Asset Panel Module
+description: Replace the default asset preview in the Editor with a custom app for specific file types
+slug: developer/crowdin-apps-module-editor-asset-panel
+sidebar:
+  order: 7
+  label: Editor Asset Panel
+  badge: New
+---
+
+import { Image } from 'astro:assets';
+import editorAP from '!/developer/module_editor_asset_panel.png';
+
+The Editor Asset Panel module allows your app to replace the default asset preview panel in the Editor. When a user opens an asset, your app can take over the entire preview area if the asset's file name matches a pattern you define.
+
+This functionality is particularly useful for handling file types that are not natively previewable in the Editor, such as video, audio, or other proprietary formats. If an asset's file name matches the `fileNamePattern` specified in your app's manifest, your app will be loaded in place of the default preview. If there is no match, the standard Crowdin preview panel will be displayed.
+
+<Image src={editorAP} alt="Editor Asset Panel Module" />
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+For Crowdin:
+
+* Only me (i.e., project owner)
+* Me, project managers and developers
+* All project members
+* Selected users
+
+For Crowdin Enterprise:
+
+* Only organization admins
+* Organization admins, project managers and developers
+* All users in the organization projects
+* Selected users
+
+## Structure
+
+```json title="manifest.json"
+{
+  "modules": {
+    "editor-asset-panel": [
+      {
+        "key": "your-module-key",
+        "name": "Module name",
+        "url": "/editor-page",
+        "fileNamePattern": "^.+\\.xyz$",
+        "environments": [
+          "crowdin", "crowdin-enterprise"
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The human-readable name of the module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL to the module content page that will be embedded in the Editor’s asset panel.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">fileNamePattern</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> A regular expression that Crowdin uses to match the file names of assets your app can handle. If the asset's name matches this pattern, your app will be loaded in the preview panel. For example, to match all MOV files, use <code>"^.+\\.mov$"</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>crowdin</code>, <code>crowdin-enterprise</code></p>
+        <p><strong>Description:</strong> Set of environments where a module could be installed.<br/>
+        This parameter is needed for cross-product applications.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## How It Works
+
+The Editor Asset Panel module operates on an event-driven mechanism. When a user navigates to an asset within the Editor, the system checks for any installed apps that use this module.
+
+1. **Pattern Matching**: Crowdin takes the `fileNamePattern` from your app's `manifest.json` and tests it against the name of the currently opened asset (e.g., `clip.mov`).
+2. **App Initialization**: If the asset's file name matches the pattern, Crowdin replaces the default preview panel with an iframe pointing to your app's `url`.
+3. **Event Handling**: Once your app is loaded, Crowdin dispatches events to it, which your app must subscribe to and handle. These events contain the necessary data (payload) for your app to display the correct asset content.
+
+The primary events are:
+
+* `asset.source.preview`: Dispatched when the user clicks on the source asset preview.
+* `asset.suggestion.preview`: Dispatched when the user clicks on a translated asset preview.
+
+Your app should listen for these events to implement its custom preview logic, such as rendering a video player or an audio console. If an asset's file name does not match the `fileNamePattern`, the default Crowdin asset previewer will be loaded as usual.
