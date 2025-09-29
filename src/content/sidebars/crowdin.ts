@@ -11,7 +11,6 @@ export default [
       { slug: 'supported-formats' },
       { slug: 'migrating-to-crowdin' },
       { slug: 'additional-support-services' },
-      { slug: 'comparing-crowdin-and-crowdin-enterprise' },
       {
         label: 'Account',
         autogenerate: { directory: path('getting-started', 'account') },
