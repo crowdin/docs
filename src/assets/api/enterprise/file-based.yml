@@ -9538,6 +9538,8 @@ paths:
                   $ref: '#/components/schemas/GroupTranslationConsumption'
                 -
                   $ref: '#/components/schemas/GroupSourceContentUpdates'
+                -
+                  $ref: '#/components/schemas/GroupTimeSpent'
       responses:
         '201':
           description: 'Report generation was successfully started'
@@ -9726,7 +9728,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PEReportSettingsTemplateCreateForm'
+              oneOf:
+                -
+                  $ref: '#/components/schemas/PEReportSettingsTemplateCreateForm'
+                -
+                  $ref: '#/components/schemas/ReportHourlySettingsTemplateCreateForm'
       responses:
         '201':
           description: 'Report Settings Template was successfully created'
@@ -9913,6 +9919,8 @@ paths:
                   $ref: '#/components/schemas/GroupTranslationConsumption'
                 -
                   $ref: '#/components/schemas/GroupSourceContentUpdates'
+                -
+                  $ref: '#/components/schemas/GroupTimeSpent'
       responses:
         '201':
           description: 'Report generation was successfully started'
@@ -10074,6 +10082,8 @@ paths:
                   $ref: '#/components/schemas/ProjectQaCheckIssues'
                 -
                   $ref: '#/components/schemas/ProjectTranslationConsumption'
+                -
+                  $ref: '#/components/schemas/TimeSpent'
       responses:
         '201':
           description: 'Report generation was successfully started'
@@ -10263,7 +10273,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserPEReportSettingsTemplateCreateForm'
+              oneOf:
+                -
+                  $ref: '#/components/schemas/UserPEReportSettingsTemplateCreateForm'
+                -
+                  $ref: '#/components/schemas/UserReportHourlySettingsTemplateCreateForm'
       responses:
         '201':
           description: 'Report Settings Template was successfully created'
@@ -33893,6 +33907,87 @@ components:
           format: date-time
           example: '2025-09-27T07:00:14+00:00'
       type: object
+    GroupTimeSpent:
+      title: 'Group Time Spent'
+      description: 'Explore detailed statistics on task creation, workload, progress, and performance.'
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: group-time-spent
+          type: string
+          example: group-time-spent
+        schema:
+          $ref: '#/components/schemas/group-time-spent.report'
+      type: object
+    group-time-spent.report:
+      title: 'Group Time Spent'
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        groupBy:
+          description: 'Defines grouping parameter'
+          type: string
+          default: user
+          enum:
+            - user
+            - language
+            - task
+            - project
+          example: user
+        baseRates:
+          description: 'Base rates'
+          type: object
+          allOf:
+            -
+              $ref: '#/components/schemas/time-spent.report.base-rates'
+        individualRates:
+          description: 'Individual rates (Custom rates for certain languages or users)'
+          type: array
+          items:
+            $ref: '#/components/schemas/time-spent.report.individual-rate'
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        userIds:
+          description: 'Array of user ids'
+          type: array
+          items:
+            type: integer
+            example: 13
+        typeTasks:
+          description: "Task type:\n *     0 - translate\n *     1 - proofread\n *     2 - translate by vendor\n *     3 - proofread by vendor"
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-23T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-27T07:00:14+00:00'
+        projectIds:
+          description: 'Project Identifier for which the report should be generated. Get via [List Projects](#operation/api.projects.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 13
+      type: object
     PreTranslateAccuracy:
       title: 'Pre-translation Accuracy'
       description: "Calculate the accuracy of the pre-translation process\n\n__Note:__ The strings included in this report must be approved and have at least one \"pre-translate\" type translation. All other human translations will not be considered in this report, except in cases where such a translation is approved and used as a reference."
@@ -35622,6 +35717,121 @@ components:
           format: date-time
           example: '2019-09-27T07:00:14+00:00'
       type: object
+    TimeSpent:
+      title: 'Time Spent'
+      description: 'Explore detailed statistics on task creation, workload, progress, and performance.'
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: time-spent
+          type: string
+          example: time-spent
+        schema:
+          $ref: '#/components/schemas/project-time-spent.report'
+      type: object
+    project-time-spent.report:
+      title: 'Project Time Spent'
+      properties:
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        groupBy:
+          description: 'Defines grouping parameter'
+          type: string
+          default: user
+          enum:
+            - user
+            - language
+            - task
+          example: user
+        baseRates:
+          description: 'Base rates'
+          type: object
+          allOf:
+            -
+              $ref: '#/components/schemas/time-spent.report.base-rates'
+        individualRates:
+          description: 'Individual rates (Custom rates for certain languages or users)'
+          type: array
+          items:
+            $ref: '#/components/schemas/time-spent.report.individual-rate'
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        userIds:
+          description: 'Array of user ids'
+          type: array
+          items:
+            type: integer
+            example: 13
+        typeTasks:
+          description: "Task type:\n *         0 - translate\n *         1 - proofread\n *         2 - translate by vendor\n *         3 - proofread by vendor"
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-23T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-27T07:00:14+00:00'
+        taskIds:
+          description: 'Task Identifier for which the report should be generated. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 645
+        workflowStepId:
+          description: 'Workflow Step Identifier. Get via [List Workflow Steps](#operation/api.projects.workflow-steps.getMany)'
+          type: integer
+          example: 313
+      type: object
+    time-spent.report.base-rates:
+      required:
+        - hourly
+      properties:
+        hourly:
+          type: number
+          format: float
+          example: 0.1
+      type: object
+    time-spent.report.individual-rate:
+      required:
+        - languageIds
+        - userIds
+        - hourly
+      properties:
+        languageIds:
+          type: array
+          items:
+            type: string
+            example: uk
+        userIds:
+          description: 'Array of user ids'
+          type: array
+          items:
+            type: integer
+            example: 1
+        hourly:
+          type: number
+          format: float
+          example: 0.1
+      type: object
     PEReportSettingsTemplateCreateForm:
       title: 'Report settings template for post-editing'
       required:
@@ -35845,6 +36055,116 @@ components:
           type: number
           example: 0.1
       type: object
+    ReportHourlySettingsTemplateCreateForm:
+      title: 'Report settings template for hourly'
+      required:
+        - name
+        - currency
+        - unit
+        - config
+      properties:
+        projectId:
+          description: 'Project Identifier. Get via [List Projects](#operation/api.projects.getMany)'
+          type: integer
+        groupId:
+          description: 'Group Identifier. Get via [List Groups](#operation/api.groups.getMany)'
+          type: integer
+        name:
+          description: 'Template name'
+          type: string
+          example: 'Default template'
+        currency:
+          description: 'Defines report currency'
+          type: string
+          enum:
+            - USD
+            - EUR
+            - JPY
+            - GBP
+            - AUD
+            - CAD
+            - CHF
+            - CNY
+            - SEK
+            - NZD
+            - MXN
+            - SGD
+            - HKD
+            - NOK
+            - KRW
+            - TRY
+            - RUB
+            - INR
+            - BRL
+            - ZAR
+            - GEL
+            - UAH
+          example: USD
+        unit:
+          description: 'Defines report unit'
+          type: string
+          enum:
+            - hours
+          example: hours
+        config:
+          description: 'Defines report config'
+          type: object
+          allOf:
+            -
+              $ref: '#/components/schemas/hourly-report-settings-template-form.config'
+        isPublic:
+          description: 'Defines report public'
+          type: boolean
+          default: false
+          example: true
+      type: object
+    hourly-report-settings-template-form.config:
+      required:
+        - baseRates
+        - individualRates
+      properties:
+        baseRates:
+          description: 'Base rates'
+          type: object
+          allOf:
+            -
+              $ref: '#/components/schemas/hourly-report-settings-template-form.base-rates'
+        individualRates:
+          description: 'Individual rates (Custom rates for certain languages or users)'
+          type: array
+          items:
+            $ref: '#/components/schemas/hourly-report-settings-template-form.individual-rate'
+      type: object
+    hourly-report-settings-template-form.base-rates:
+      required:
+        - hourly
+      properties:
+        hourly:
+          type: number
+          example: 0.1
+      type: object
+    hourly-report-settings-template-form.individual-rate:
+      required:
+        - languageIds
+        - userIds
+        - hourly
+      properties:
+        languageIds:
+          description: 'Array of language ids'
+          type: array
+          items:
+            type: string
+            example: uk
+        userIds:
+          description: 'Array of user ids'
+          type: array
+          items:
+            type: integer
+            example: 1
+        hourly:
+          type: number
+          example: 0.1
+      type: object
     ReportArchiveExportForm:
       properties:
         format:
@@ -35855,6 +36175,58 @@ components:
             - xlsx
             - csv
             - json
+      type: object
+    UserReportHourlySettingsTemplateCreateForm:
+      title: 'User Report hourly settings template'
+      required:
+        - name
+        - currency
+        - unit
+        - config
+      properties:
+        name:
+          description: 'Template name'
+          type: string
+          example: 'Default hourly template'
+        currency:
+          description: 'Defines report currency'
+          type: string
+          enum:
+            - USD
+            - EUR
+            - JPY
+            - GBP
+            - AUD
+            - CAD
+            - CHF
+            - CNY
+            - SEK
+            - NZD
+            - MXN
+            - SGD
+            - HKD
+            - NOK
+            - KRW
+            - TRY
+            - RUB
+            - INR
+            - BRL
+            - ZAR
+            - GEL
+            - UAH
+          example: USD
+        unit:
+          description: 'Defines report unit'
+          type: string
+          enum:
+            - hours
+          example: hours
+        config:
+          description: 'Defines report config'
+          type: object
+          allOf:
+            -
+              $ref: '#/components/schemas/hourly-report-settings-template-form.config'
       type: object
     UserPEReportSettingsTemplateCreateForm:
       title: 'User Report settings template for post-editing'
@@ -43611,6 +43983,33 @@ components:
               type: string
               example: Europe/Kyiv
               nullable: true
+            deviceVerificationEnabled:
+              type: string
+              enum:
+                - enabled
+                - disabled
+              example: enabled
+            trustedDevicesCount:
+              type: integer
+              example: '0'
+            apiTokensCount:
+              type: integer
+              example: '0'
+            loginMethods:
+              type: array
+              items:
+                type: string
+                example: crowdin
+            mfaMethods:
+              type: array
+              items:
+                type: string
+                example: authenticatorApp
+            ssoProviders:
+              type: array
+              items:
+                type: string
+                example: GitHub
     EnterpriseUserManagerContextResponseModel:
       title: 'User details for managers'
       properties:
