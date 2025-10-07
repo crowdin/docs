@@ -233,25 +233,55 @@ To configure an AI provider, follow these steps:
   1. Open your organization's **Workspace** and select **AI** on the left sidebar.
   2. In the **Providers** tab, click <Icon name="mdi:dots-vertical" class="inline-icon" /> toward the needed provider and select **Edit**. Alternatively, just click on the needed provider.
   3. Select **Enabled**.
-  4. *(Optional)* Select the **\{Provider} managed by Crowdin** option if you'd like to use the providers managed by Crowdin. In this case, you'll need to [add funds to your account balance](#adding-funds-to-account-balance).
-  5. Specify your own AI provider API key. Follow AI provider instructions on how to generate an API key.
-  6. AI providers like Google Gemini and Microsoft Azure Open AI have slightly different configuration options compared to others:
-      * Project ID (Specific to Google Gemini and IBM Watsonx)
-      * Region (Specific to Google Gemini and IBM Watsonx)
-      * Service Account Key (Specific to Google Gemini)
-      * Resource name (Specific to Microsoft Azure Open AI)
-      * Deployment name (Specific to Microsoft Azure Open AI)
-      * API Version (Specific to Microsoft Azure Open AI)
-  7. Click the **Advanced settings** to access additional options:
+  4. Choose your credential type:
+      * To use the [Managed by Crowdin service](/enterprise/crowdin-managed-services/), select **\{Provider} managed by Crowdin**. In this case, you'll need to [add funds to your account balance](#adding-funds-to-account-balance).
+      * To use your own account, select **Use my own API key** and enter the required credentials. For instructions on generating an API key, please refer to your AI provider's official documentation. Some AI providers may also require additional specific credentials. See the [Provider-Specific Credentials](#provider-specific-credentials) section below for details.
+  5. *(Optional)* Click **Advanced settings** to access additional options:
       * **Override Base URL** &ndash; Allows you to direct AI provider requests to a custom or region-specific endpoint instead of the default URL. This is useful if you are using a proxy or consuming the AI from a third-party service that provides a custom endpoint. Otherwise, you can leave this field blank.
         <Aside>
           - This option is not available when using the **Managed by Crowdin** service.
           - For Microsoft Azure OpenAI, Crowdin Enterprise expects the default Azure URL structure. For example: `https://{baseUrl}/deployments/{deploymentName}/chat/completions`
         </Aside>
-  8. Click **Update**.
+  6. Click **Update**.
 </Steps>
 
 <Image src={configuringProvider} alt="Configuring AI Provider" />
+
+#### Provider-Specific Credentials
+
+Some AI providers require additional information beyond a standard API key for authentication when you use your own credentials.
+
+##### Google Gemini
+
+When configuring Google Gemini, you will need to provide the following credentials:
+
+* **Project ID**: Your unique Google Cloud Project ID. You can find this on the dashboard of your Google Cloud Console.
+* **Region**: The region where your model is hosted. Ensure the model you plan to use is available in the selected region. You can find this on your Vertex AI dashboard. See the official Google Cloud documentation for a list of [available Gemini models and regions](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations).
+
+* **Service Account Key**: A JSON file used for authentication. To get this file:
+
+<Steps>
+  1. In your Google Cloud project, go to **IAM & Admin > Service Accounts**.
+  2. Create a new service account or select an existing one.
+  3. Grant it the **Vertex AI User** role (`roles/aiplatform.user`).
+  4. Go to the **Keys** tab for that service account, click **Add Key > Create new key**, select **JSON**, and click **Create**. The key will be downloaded automatically.
+  5. In Crowdin, click **Choose file** to upload this JSON key.
+</Steps>
+
+##### Microsoft Azure OpenAI
+
+When configuring Microsoft Azure OpenAI, you will need to provide the following credentials:
+
+* **Resource name**: The name of your Azure OpenAI service resource, which you can find in your main Azure portal.
+* **Deployment name**: The name you assigned to your deployment.
+* **API Version**: The API version required for your model. You can typically find the recommended version in the deployment's properties or in the code samples provided by Azure. For example: `2024-02-01`.
+
+##### IBM Watsonx
+
+When configuring IBM Watsonx, you will need to provide the following credentials:
+
+* **Project ID**: Your Watsonx.ai project ID. To find it, navigate to your project, go to the **Manage** tab, and copy the **Project ID** from the *General* section.
+* **Region**: The region where your Watsonx project is located. You can find this on your project dashboard. See the official IBM Cloud documentation for a list of [available regions for watsonx.ai](https://dataplatform.cloud.ibm.com/docs/content/wsj/getting-started/regional-datactr.html).
 
 ### Disabling AI Providers
 
