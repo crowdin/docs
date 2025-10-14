@@ -216,7 +216,10 @@ const config = defineConfig({
           'cleaning-services',
           'create-new-folder-sharp',
           'folder-data-sharp',
-          'drag-indicator'
+          'drag-indicator',
+          'encrypted',
+          'warning',
+          'groups'
         ],
       }
     })
