@@ -21,7 +21,11 @@ You should redirect the user to the `/oauth/authorize` endpoint with the followi
 https://accounts.crowdin.com/oauth/authorize
 ```
 
-This will ask the user to approve the app access to their account based on the scopes specified in REQUESTED_SCOPES and then redirect back to the REDIRECT_URI you provided when creating an app.
+This will ask the user to approve the app access to their account based on the scopes specified in `REQUESTED_SCOPES` and then redirect back to the `REDIRECT_URI` you provided when creating an app.
+
+<Aside type="tip">
+  For enhanced security, we strongly recommend using the Proof Key for Code Exchange (PKCE) extension for a more secure token exchange.
+</Aside>
 
 ### Parameters {#request-authorization-code-parameters}
 
@@ -37,27 +41,37 @@ This will ask the user to approve the app access to their account based on the s
   <tr>
     <td><code>client_id</code></td>
     <td>string</td>
-    <td>Required.  You receive Client ID for the app when you register it.</td>
+    <td><strong>Required.</strong> You receive Client ID for the app when you register it.</td>
   </tr>
   <tr>
-    <td><code class="whitespace-nowrap">redirect_uri</code></td>
+    <td><code>redirect_uri</code></td>
     <td>string</td>
-    <td>Required. The URL in your application where users will be sent after authorization.</td>
+    <td><strong>Required.</strong> The URL in your application where users will be sent after authorization.</td>
   </tr>
   <tr>
     <td><code>response_type:</code><code>code</code></td>
     <td>string</td>
-    <td>Required. The parameter is used for the flow specification of an OAuth app.</td>
+    <td><strong>Required.</strong> The parameter is used for the flow specification of an OAuth app.</td>
   </tr>
   <tr>
     <td><code>scope</code></td>
     <td>string</td>
-    <td>Required. Select the access your app requires from the list of scopes available. You can add multiple [scopes](/developer/understanding-scopes/) separated by spaces (no need to use quotation marks).</td>
+    <td><strong>Required.</strong> Select the access your app requires from the list of scopes available. You can add multiple [scopes](/developer/understanding-scopes/) separated by spaces (no need to use quotation marks).</td>
   </tr>
   <tr>
     <td><code>state</code></td>
     <td>string</td>
-    <td>An unguessable random string. Use it for extra protection against cross-site request forgery attacks.</td>
+    <td><strong>Strongly recommended.</strong> An unguessable random string. Use it for extra protection against cross-site request forgery attacks.</td>
+  </tr>
+  <tr>
+    <td><code>code_challenge</code></td>
+    <td>string</td>
+    <td><strong>Strongly recommended.</strong> A Base64-URL-encoded SHA-256 hash of the <code>code_verifier</code>. Used to secure the authorization flow with PKCE. Required if <code>code_challenge_method</code> is provided. Read more about [PKCE RFC](https://datatracker.ietf.org/doc/html/rfc7636).</td>
+  </tr>
+    <tr>
+    <td><code class="whitespace-nowrap">code_challenge_method</code></td>
+    <td>string</td>
+    <td><strong>Strongly recommended.</strong> The method used to derive the <code>code_challenge</code>. Crowdin only supports <code>S256</code>. Required if <code>code_challenge</code> is provided.</td>
   </tr>
   </tbody>
 </table>
@@ -102,32 +116,37 @@ POST https://accounts.crowdin.com/oauth/token
   <tr>
     <td><code>grant_type:</code> <code>authorization_code</code></td>
     <td>string</td>
-    <td>Required. The parameter is used for the flow specification of an OAuth app.</td>
+    <td><strong>Required.</strong> The parameter is used for the flow specification of an OAuth app.</td>
   </tr>
   <tr>
     <td><code>client_id</code></td>
     <td>string</td>
-    <td>Required. You receive Client ID for the app when you register it.</td>
+    <td><strong>Required.</strong> You receive Client ID for the app when you register it.</td>
   </tr>
   <tr>
     <td><code>client_secret</code></td>
     <td>string</td>
-    <td>Required.  You receive Client Secret for the app when you register it.</td>
+    <td><strong>Required.</strong> You receive Client Secret for the app when you register it. This parameter is not required if you're using PKCE (i.e., providing a <code>code_verifier</code>).</td>
   </tr>
   <tr>
     <td><code>redirect_uri</code></td>
     <td>string</td>
-    <td>Required. The URL in your application where users will be sent after authorization. </td>
+    <td><strong>Required.</strong> The URL in your application where users will be sent after authorization. </td>
   </tr>
   <tr>
     <td><code>code</code></td>
     <td>string</td>
-    <td>Required. Code received from the callback query string. </td>
+    <td><strong>Required.</strong> Code received from the callback query string. </td>
+  </tr>
+  <tr>
+    <td><code>code_verifier</code></td>
+    <td>string</td>
+    <td><strong>Strongly recommended.</strong> The original random string used to generate the <code>code_challenge</code>. Required if a <code>code_challenge</code> was sent in the initial authorization request.</td>
   </tr>
   </tbody>
 </table>
 
-For example, request in curl takes the following form:
+For example, a request in curl takes the following form:
 
 ```bash
 curl -X POST \
@@ -181,7 +200,7 @@ curl -H "Authorization: Bearer ACCESS_TOKEN" https://<organization_domain>.api.c
 
 ## Refresh Token
 
-The access token received after a user authorizes the app has an expiration time. Access token expires in the number of seconds defined in the response.
+The access token received after a user authorizes the app has an expiration time. The access token expires in the number of seconds defined in the response.
 
 To refresh a token without requiring the user to be redirected, send a POST request with the following body parameters to the authorization server:
 
@@ -203,27 +222,27 @@ POST https://accounts.crowdin.com/oauth/token
   <tr>
     <td><code>grant_type:</code> <code>refresh_token</code></td>
     <td>string</td>
-    <td>Required. The parameter is used for the flow specification of an OAuth app.</td>
+    <td><strong>Required.</strong> The parameter is used for the flow specification of an OAuth app.</td>
   </tr>
   <tr>
     <td><code>client_id</code></td>
     <td>string</td>
-    <td>Required. You receive Client ID for the app when you register it.</td>
+    <td><strong>Required.</strong> You receive Client ID for the app when you register it.</td>
   </tr>
   <tr>
     <td><code>client_secret</code></td>
     <td>string</td>
-    <td>Required.  You receive Client Secret for the app when you register it.</td>
+    <td><strong>Required.</strong> You receive Client Secret for the app when you register it.</td>
   </tr>
   <tr>
     <td><code>refresh_token</code></td>
     <td>string</td>
-    <td>Required. Refresh token received from the last authorization response.</td>
+    <td><strong>Required.</strong> Refresh token received from the last authorization response.</td>
   </tr>
   </tbody>
 </table>
 
-For example, request in curl takes the following form:
+For example, a request in curl takes the following form:
 
 ```bash
 curl -X POST \
@@ -254,4 +273,4 @@ By default, the response takes the following form:
 
 You can register one or more redirect URLs when you create an OAuth Application on Crowdin.
 
-For security reasons, if the URL is not included in the Application info you won’t be able to redirect users to this URL after authorization.
+For security reasons, if the URL is not included in the Application info, you won’t be able to redirect users to this URL after authorization.
