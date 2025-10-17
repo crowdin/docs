@@ -219,7 +219,8 @@ const config = defineConfig({
           'drag-indicator',
           'encrypted',
           'warning',
-          'groups'
+          'groups',
+          'reply'
         ],
       }
     })
