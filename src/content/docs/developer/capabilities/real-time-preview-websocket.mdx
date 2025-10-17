@@ -1,0 +1,171 @@
+---
+title: Real-Time Preview with WebSocket API
+description: Implement live translation previews in your application with WebSocket API
+slug: developer/real-time-preview-websocket
+---
+
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+The Crowdin WebSocket API enables you to create a Real-Time Preview feature in your custom applications. This allows translators working in the Crowdin Editor to see their translations appear instantly within your app. It also provides a powerful way for managers and QA teams to review translations in context before releasing them through the standard Over-the-Air Content Delivery.
+
+This guide will walk you through the entire process, from authentication to handling live translation updates.
+
+<Aside>
+  The Real-Time Preview feature is designed for development, testing, and quality assurance purposes. It should not be used in production builds of your application.
+</Aside>
+
+## Core Workflow
+
+The Real-Time Preview feature works by establishing a direct connection between your application and the Crowdin Editor. The process involves three main stages:
+
+* **Authentication & Setup**: Your application authenticates the user via OAuth and uses the distribution hash to fetch the necessary WebSocket connection details from the Crowdin API.
+* **Listening for Events**: Your application connects to the WebSocket server and listens for live `update-draft` events, which are sent every time a translator types in the Crowdin Editor.
+* **Mapping and UI Update**: When an event is received, your application uses mapping files from the distribution to identify the correct UI element and instantly updates its text with the new translation.
+
+## Authentication and Fetching Metadata
+
+Before you can listen for live updates, your application must be authorized to access the distribution. This is done through a standard OAuth flow and a subsequent API call.
+
+<Steps>
+  1. **Configure and Perform OAuth Authentication**: Your application must authenticate the user via the Crowdin OAuth 2.0 flow. This is a critical step because the WebSocket events are user-specific; the user logged into your application must be the same user working in the Crowdin Editor.
+      When creating your [OAuth App in Crowdin](/developer/authorizing-oauth-apps/), ensure it has the **`project.translation`** scope. Your application will need the following credentials:
+      * `clientId`
+      * `clientSecret`
+      * `redirectUri`
+      * `organizationName` (for Crowdin Enterprise)
+  2. **Call the Distributions Metadata API**: Once you have a valid OAuth access token for the user, make a `GET` request to the following Crowdin API endpoint:
+      ```http
+      GET /api/v2/distributions/metadata?hash={distribution-hash}
+      ```
+      Replace `{distribution-hash}` with the hash of your project's [Content Delivery distribution](/content-delivery/).
+  3. **Extract the WebSocket URL**: The API will return a JSON response containing the WebSocket URL and other necessary metadata.
+      **Example Response:**
+      ```json
+      {
+        "data": {
+          "wsUrl": "wss://[ws-lb.crowdin.com/client/1/1/websocket](https://ws-lb.crowdin.com/client/1/1/websocket)",
+          "wsHash": "your-ws-hash",
+          "user": {
+            "id": 123
+          },
+          "project": {
+            "id": 456
+          }
+        }
+      }
+      ```
+      You will use the `wsUrl` from this response to establish the WebSocket connection in the next step.
+</Steps>
+
+### Handling Redirects in Mobile Applications
+
+For mobile applications, the `redirectUri` for the OAuth flow is typically handled using a custom URL scheme. This allows Crowdin to redirect the user back to your app after authentication is complete.
+
+**Example for Android (`AndroidManifest.xml`):**
+```xml
+<intent-filter android:autoVerify="true">
+  <action android:name="android.intent.action.VIEW" />
+  <category android:name="android.intent.category.DEFAULT" />
+  <category android:name="android.intent.category.BROWSABLE" />
+  <data android:scheme="your-app-scheme"/>
+</intent-filter>
+````
+
+**Example for iOS (`Info.plist`):**
+
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleURLSchemes</key>
+    <array>
+      <string>your-app-scheme</string>
+    </array>
+  </dict>
+</array>
+```
+
+In your Crowdin OAuth App settings, the `redirectUri` should then be set to `your-app-scheme://`.
+
+## Listening for Live Translation Events
+
+With the WebSocket URL, your application can now connect to the server and start listening for real-time translation updates.
+
+<Steps>
+  1. **Establish the WebSocket Connection**: Connect to the `wsUrl` obtained in the previous step.
+  2. **Listen for the `update-draft` Event**: The server will push events to your client whenever a translator types in the Crowdin Editor for the same project and user. The event is a string with a specific format:
+      **Event Format:**
+      ```
+      update-draft:<ws-hash>:<project-id>:<user-id>:<language-code>:<translation-id>
+      ```
+      **Event Payload:**
+      The event is followed by a JSON payload containing the draft translation text:
+      ```json
+      {
+        "text": "translation text",
+        "pluralForm": "one" // Optional, only for plural strings
+      }
+      ```
+</Steps>
+
+<Aside>
+  The Real-Time Preview is user-specific. Events will only be sent if the `user-id` from the WebSocket metadata matches the user who is typing in the Crowdin Editor.
+</Aside>
+
+## Mapping Translations and Updating the UI
+
+When your application receives an `update-draft` event, it needs to know which string in the UI to update. This is where the distribution's **mapping files** become crucial.
+
+<Steps>
+  1. **Locate Mapping Files in the Manifest**: Your distribution's manifest file contains paths to mapping files. These files correlate Crowdin's internal `translation-id` with your source file's string keys.
+  2. **Map `translation-id` to String Key**: When you receive an event, extract the `<translation-id>` from the event string. Use this ID to look up the corresponding string key in your downloaded mapping files.
+      **Example Mapping File (`strings.xml`):**
+      ```xml
+      <resources>
+        <string name="welcome_message">112233</string>
+        <string name="error_message">445566</string>
+      </resources>
+      ```
+      If the event contains `translation-id: 112233`, you know it corresponds to the key `welcome_message`.
+  3. **Update the UI**: With the string key identified, find the corresponding UI element in your application and update its text with the `text` value from the event payload. This should trigger an immediate re-render of the specific UI component.
+</Steps>
+
+## Example Implementation with an SDK
+
+While the WebSocket API is platform-agnostic, official Crowdin SDKs (like for Android, iOS, or Flutter) typically abstract away the complexity of this process.
+
+**Conceptual Workflow in an SDK:**
+
+<Steps>
+  1. **Enable Real-Time Preview Mode:** The developer enables the feature with a simple configuration flag (e.g., `withRealTimeUpdates: true`) and provides the necessary OAuth credentials.
+  2. **Wrap the Application:** The SDK may require you to wrap your root widget or view with a specific component (e.g., `CrowdinRealTimePreviewWidget`) to intercept and manage UI updates.
+  3. **Automatic Connection:** The SDK handles the OAuth flow, the API call to fetch the WebSocket URL, and establishes the connection automatically upon user login.
+  4. **Live Updates:** When the SDK receives an `update-draft` event, it performs the mapping internally and updates the UI in real-time without requiring additional code from the developer.
+</Steps>
+
+This automated approach allows translators and developers to see live changes seamlessly after the initial setup.
+
+## See Also
+
+<CardGrid>
+  <LinkCard
+    title="Creating an OAuth App"
+    href="/developer/authorizing-oauth-apps/"
+  />
+  <LinkCard
+    title="Crowdin API Reference"
+    href="/developer/api/v2/"
+  />
+  <LinkCard
+    title="Flutter SDK"
+    href="https://github.com/crowdin/flutter-sdk"
+  />
+  <LinkCard
+    title="iOS SDK"
+    href="https://github.com/crowdin/mobile-sdk-ios"
+  />
+  <LinkCard
+    title="Android SDK"
+    href="https://github.com/crowdin/mobile-sdk-android"
+  />
+</CardGrid>
