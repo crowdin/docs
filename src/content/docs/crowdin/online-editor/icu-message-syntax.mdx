@@ -5,7 +5,7 @@ slug: icu-message-syntax
 ---
 
 import { Image } from 'astro:assets';
-import { LinkCard } from '@astrojs/starlight/components';
+import { Aside, LinkCard } from '@astrojs/starlight/components';
 import ReadMore from '~/components/ReadMore.astro';
 import icuEditor from '!/crowdin/online-editor/icu_editor.png';
 import icuSyntaxError from '!/crowdin/online-editor/icu_syntax_error.png';
@@ -13,8 +13,7 @@ import icuSyntaxError from '!/crowdin/online-editor/icu_syntax_error.png';
 Crowdin supports ICU Message syntax, which is used to help express the subtleties of language-specific spelling, grammar, and formatting in translations.
 
 Strings formatted in the ICU Message syntax can have different types of replacements called **arguments**.
-Each argument is enclosed in curly brackets and refers to a value in the input data.
-Arguments of the following types are supported in Crowdin: number, date, time, select, and plural.
+Each argument is enclosed in single curly braces (e.g., `{variable}`) and refers to a value in the input data. Please note that using double curly braces (e.g., `{{variable}}`) is not supported and will cause syntax errors. Arguments of the following types are supported in Crowdin: number, date, time, select, and plural.
 
 ### ICU Message Syntax in the Editor
 
@@ -33,7 +32,7 @@ There’s also a preview mode, that allows you to see how the translation will b
 
 ## Plural
 
-Plural type is used to handle plural category variations, as each language has its own set of plural categories (for example, English has  "one" and "other", while Ukrainian has  "one", "few", "many", and "other").
+Plural type is used to handle plural category variations, as each language has its own set of plural categories (for example, English has "one" and "other", while Ukrainian has "one", "few", "many", and "other").
 
 ```json
 You {itemCount, plural,
@@ -59,6 +58,25 @@ Just click **Copy Source**, and the source string will be copied to the translat
   Read more about [Language Plural Rules](https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html).
 </ReadMore>
 
+### Nested Plurals
+
+In some cases, you may have a single string that contains multiple nouns that each need to be pluralized independently, for example, "You have X book(s) and Y pen(s)."
+
+ICU handles this by allowing you to nest plural arguments inside each other.
+
+```json
+{bookCount, plural,
+    one {You have # book and {penCount, plural,
+        one {# pen}
+        other {# pens}
+    }}
+    other {You have # books and {penCount, plural,
+        one {# pen}
+        other {# pens}
+    }}
+}
+```
+
 ## Select Ordinal
 
 The purpose of the select ordinal type is to choose output based on the ordinal pluralization rules (1st, 2nd, 3rd, etc.) of the current target language. It is very similar to the plural type, except the value is mapped to an ordinal plural category.
@@ -74,7 +92,7 @@ Congrats! It's your {year, selectordinal,
 
 ## Select
 
-Select type is mostly used to represent the right gender-based inflections in the message.
+Select type is used to choose an output based on a string variable. It is most commonly used to represent the right gender-based inflections in the message.
 
 ```json
 {gender, select,
@@ -83,6 +101,8 @@ Select type is mostly used to represent the right gender-based inflections in th
     other {They use}
 } Crowdin.
 ```
+
+This type is useful for any situation where the translation changes based on a specific keyword. Regardless of the use case, the ICU standard requires that you always include an `other` clause. This clause provides a necessary fallback in case the variable doesn't match any of the specified options.
 
 ## Number
 
@@ -109,5 +129,7 @@ Your meeting is scheduled for {dateValue, date, long} at {timeValue, time, short
 Syntax error detection significantly reduces confusion when translating strings with ICU Message syntax,
 as the platform automatically detects potential translation errors.
 If a syntax error is found, you'll see a notice with a suggestion of what needs to be fixed.
+
+You can also use external tools to verify your ICU syntax, for example, the [Online ICU Message Editor](https://format-message.github.io/icu-message-format-for-translators/editor.html).
 
 <Image src={icuSyntaxError} alt="Syntax error detected" />
