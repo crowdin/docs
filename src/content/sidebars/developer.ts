@@ -28,6 +28,11 @@ export default [
         collapsed: true,
       },
       {
+        label: 'AI Modules',
+        autogenerate: { directory: path('modules', 'ai-modules') },
+        collapsed: true,
+      },
+      {
         label: 'File Processing Modules',
         autogenerate: { directory: path('modules', 'file-processing-modules') },
         collapsed: true,
