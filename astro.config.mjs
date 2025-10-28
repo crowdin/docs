@@ -40,7 +40,7 @@ const config = defineConfig({
     starlight({
       title: 'Crowdin Docs',
       markdown: {
-        headingLinks: false  // Add this line
+        headingLinks: false
       },
       logo: {
         replacesTitle: true,
@@ -233,7 +233,6 @@ const config = defineConfig({
     remarkPlugins: [
       remarkHeadingId, // Support custom heading IDs.
     ],
-
     rehypePlugins: [
       rehypeHeadingIds,
       rehypeButtonHeadings,
