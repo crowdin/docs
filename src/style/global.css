@@ -101,6 +101,110 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Heading button with tooltip */
+
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6) {
+    button.tooltip-container {
+        position: relative;
+        background-color: transparent !important;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+
+        /* Tooltip text */
+        &::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 0.5rem);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.375rem 0.75rem;
+            background-color: rgba(38, 50, 56, 0.95);
+            color: white;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            border-radius: 0.375rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out;
+            z-index: 1000;
+        }
+
+        /* Tooltip arrow */
+        &::after {
+            content: '';
+            position: absolute;
+            bottom: calc(100% + 0.125rem);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 0.375rem solid transparent;
+            border-right: 0.375rem solid transparent;
+            border-top: 0.375rem solid rgba(38, 50, 56, 0.95);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out;
+            z-index: 1000;
+        }
+
+        /* Only show tooltip when link is copied */
+        &[data-copied="true"]::before {
+            content: "Link copied!";
+            background-color: rgba(67, 160, 71, 0.95);
+            opacity: 1;
+        }
+
+        &[data-copied="true"]::after {
+            border-top-color: rgba(67, 160, 71, 0.95);
+            opacity: 1;
+        }
+    }
+
+    .heading-icon {
+        margin-left: 0.25rem;
+        background-image: url("/src/assets/images/link.svg");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        width: 1.25rem;
+        height: 1.25rem;
+        display: inline-block;
+        visibility: hidden;
+    }
+
+    &:hover {
+        .heading-icon {
+            visibility: visible;
+        }
+    }
+}
+
+/* Light mode adjustments */
+:root[data-theme='light'] .sl-markdown-content :is(h1, h2, h3, h4, h5, h6) {
+    button.tooltip-container::before {
+        background-color: rgba(38, 50, 56, 0.95);
+        color: white;
+    }
+
+    button.tooltip-container::after {
+        border-top-color: rgba(38, 50, 56, 0.95);
+    }
+
+    button.tooltip-container[data-copied="true"]::before {
+        background-color: rgba(67, 160, 71, 0.95);
+    }
+
+    button.tooltip-container[data-copied="true"]::after {
+        border-top-color: rgba(67, 160, 71, 0.95);
+    }
+}
+
+/* Dark mode: invert the link icon */
+:root:not([data-theme='light']) .sl-markdown-content :is(h1, h2, h3, h4, h5, h6) .heading-icon {
+    filter: brightness(0) saturate(100%) invert(100%);
+}
+
 /* Markdown content */
 
 .sl-markdown-content {

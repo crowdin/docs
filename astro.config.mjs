@@ -20,6 +20,7 @@ import developerSidebar from './src/content/sidebars/developer.ts';
 import customConsentScript from './src/scripts/custom-consent-mode.js?raw';
 import postHogScript from './src/scripts/posthog.js?raw';
 import gtmScript from './src/scripts/gtm.js?raw';
+import { rehypeButtonHeadings } from "./src/scripts/rehypeButtonHeadings.mjs";
 
 let site;
 
@@ -38,6 +39,9 @@ const config = defineConfig({
   integrations: [
     starlight({
       title: 'Crowdin Docs',
+      markdown: {
+        headingLinks: false  // Add this line
+      },
       logo: {
         replacesTitle: true,
         light: './src/assets/logo/dark.svg',
@@ -229,20 +233,10 @@ const config = defineConfig({
     remarkPlugins: [
       remarkHeadingId, // Support custom heading IDs.
     ],
+
     rehypePlugins: [
       rehypeHeadingIds,
-      [
-        rehypeAutolinkHeadings,
-        {
-          behavior: 'wrap', // Wrap the heading text in a link.
-        },
-      ],
-      [
-        rehypeExternalLinks,
-        {
-          target: '_blank', // Open external links in a new tab.
-        }
-      ]
+      rehypeButtonHeadings,
     ],
   },
   vite: {
