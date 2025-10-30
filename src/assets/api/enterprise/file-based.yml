@@ -10260,6 +10260,8 @@ paths:
                 -
                   $ref: '#/components/schemas/ProjectQaCheckIssues'
                 -
+                  $ref: '#/components/schemas/ProjectSavingActivity'
+                -
                   $ref: '#/components/schemas/ProjectTranslationConsumption'
                 -
                   $ref: '#/components/schemas/TimeSpent'
@@ -34391,75 +34393,35 @@ components:
       type: object
     pre-translate-accuracy.report.general:
       title: General
-      properties:
-        unit:
-          description: 'Defines report unit'
-          type: string
-          default: words
-          enum:
-            - strings
-            - words
-            - chars
-            - chars_with_spaces
-        format:
-          description: 'Defines export file format'
-          type: string
-          default: xlsx
-          enum:
-            - xlsx
-            - csv
-            - json
-        postEditingCategories:
-          description: 'Split into categories by edit distance'
-          type: array
-          items:
-            type: string
-            example: 0-10
-        languageId:
-          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
-          type: string
-          example: ach
-        dateFrom:
-          description: 'Report date from in UTC, ISO 8601'
-          type: string
-          format: date-time
-          example: '2019-09-23T07:00:14+00:00'
-        dateTo:
-          description: 'Report date to in UTC, ISO 8601'
-          type: string
-          format: date-time
-          example: '2019-09-27T07:00:14+00:00'
       type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DefaultReportShemaWithDate'
+        -
+          properties:
+            postEditingCategories:
+              description: 'Split into categories by edit distance'
+              type: array
+              items:
+                type: string
+                example: 0-10
     pre-translate-accuracy.report.byTask:
       title: 'By Task'
-      properties:
-        unit:
-          description: 'Defines report unit'
-          type: string
-          default: words
-          enum:
-            - strings
-            - words
-            - chars
-            - chars_with_spaces
-        format:
-          description: 'Defines export file format'
-          type: string
-          default: xlsx
-          enum:
-            - xlsx
-            - csv
-            - json
-        postEditingCategories:
-          description: 'Split into categories by edit distance'
-          type: array
-          items:
-            type: string
-            example: 0-10
-        taskId:
-          description: 'Task Identifier for which the report should be generated. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
-          type: integer
       type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DefaultReportShemaWithoutDate'
+        -
+          properties:
+            postEditingCategories:
+              description: 'Split into categories by edit distance'
+              type: array
+              items:
+                type: string
+                example: 0-10
+            taskId:
+              description: 'Task Identifier for which the report should be generated. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
+              type: integer
     TranslatorAccuracy:
       title: 'Translator Accuracy'
       description: "Calculate the accuracy of the user process\n\n__Note:__ The strings included in this report must be approved and translated by a human. Any other translations, including those that are only self-approved, will not be included unless they are also approved by another party and used as a reference."
@@ -34476,51 +34438,28 @@ components:
       type: object
     translator-accuracy.report.general:
       title: General
-      properties:
-        unit:
-          description: 'Defines report unit'
-          type: string
-          default: words
-          enum:
-            - strings
-            - words
-            - chars
-            - chars_with_spaces
-        format:
-          description: 'Defines export file format'
-          type: string
-          default: xlsx
-          enum:
-            - xlsx
-            - csv
-            - json
-        postEditingCategories:
-          description: 'Split into categories by edit distance'
-          type: array
-          items:
-            type: string
-            example: 0-10
-        languageId:
-          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
-          type: string
-          example: ach
-        userIds:
-          description: 'Array of user ids. Get via [List Project Members](#operation/api.projects.members.getMany)'
-          type: array
-          items:
-            type: integer
-            example: 13
-        dateFrom:
-          description: 'Report date from in UTC, ISO 8601'
-          type: string
-          format: date-time
-          example: '2019-09-23T07:00:14+00:00'
-        dateTo:
-          description: 'Report date to in UTC, ISO 8601'
-          type: string
-          format: date-time
-          example: '2019-09-27T07:00:14+00:00'
       type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DefaultReportShemaWithDate'
+        -
+          properties:
+            postEditingCategories:
+              description: 'Split into categories by edit distance'
+              type: array
+              items:
+                type: string
+                example: 0-10
+            languageId:
+              description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+              type: string
+              example: ach
+            userIds:
+              description: 'Array of user ids. Get via [List Project Members](#operation/api.projects.members.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 13
     CostsEstimationPostEditing:
       title: 'Costs Estimation Post-Editing'
       description: 'Calculate the approximate translation costs to help plan your budget'
@@ -34547,213 +34486,173 @@ components:
         - baseRates
         - individualRates
         - netRateSchemes
-      properties:
-        unit:
-          description: 'Defines report unit'
-          type: string
-          default: words
-          enum:
-            - strings
-            - words
-            - chars
-            - chars_with_spaces
-        currency:
-          description: 'Defines report currency'
-          type: string
-          default: USD
-          enum:
-            - USD
-            - EUR
-            - JPY
-            - GBP
-            - AUD
-            - CAD
-            - CHF
-            - CNY
-            - SEK
-            - NZD
-            - MXN
-            - SGD
-            - HKD
-            - NOK
-            - KRW
-            - TRY
-            - RUB
-            - INR
-            - BRL
-            - ZAR
-            - GEL
-            - UAH
-            - DDK
-            - PLN
-        format:
-          description: 'Defines export file format'
-          type: string
-          default: xlsx
-          enum:
-            - xlsx
-            - csv
-            - json
-        baseRates:
-          description: 'Base rates'
-          type: object
-          allOf:
-            -
-              $ref: '#/components/schemas/costs-estimation-pe.report.base-rates'
-        individualRates:
-          description: 'Individual rates (Custom rates for certain languages or users)'
-          type: array
-          items:
-            $ref: '#/components/schemas/costs-estimation-pe.report.individual-rate'
-        netRateSchemes:
-          description: "Net Rate Schemes (Percentage paid of full translation rate)\n\n__Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
-          type: object
-          allOf:
-            -
-              $ref: '#/components/schemas/costs-estimation-pe.report.net-rate-schemes'
-        calculateInternalMatches:
-          type: boolean
-          default: false
-        includePreTranslatedStrings:
-          type: boolean
-          default: false
-        languageId:
-          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
-          type: string
-          example: ach
-        fileIds:
-          description: 'Array of file ids. Get via [List Files](#operation/api.projects.files.getMany)'
-          type: array
-          items:
-            type: integer
-            example: 138
-          x-doc-sections:
-            - file-based
-        directoryIds:
-          description: 'Array of directory ids. Get via [List Directories](#operation/api.projects.directories.getMany)'
-          type: array
-          items:
-            type: integer
-            example: 11
-          x-doc-sections:
-            - file-based
-        branchIds:
-          description: 'Array of branch ids. Get via [List Branches](#operation/api.projects.branches.getMany)'
-          type: array
-          items:
-            type: integer
-            example: 18
-        dateFrom:
-          description: 'Report date from in UTC, ISO 8601'
-          type: string
-          format: date-time
-          example: '2019-09-23T07:00:14+00:00'
-        dateTo:
-          description: 'Report date to in UTC, ISO 8601'
-          type: string
-          format: date-time
-          example: '2019-09-27T07:00:14+00:00'
-        labelIds:
-          description: 'Array of label ids. Get via [List Labels](#operation/api.projects.labels.getMany)'
-          type: array
-          items:
-            type: integer
-            example: 13
-        labelIncludeType:
-          description: 'Defines which strings include in report'
-          type: string
-          default: strings_with_label
-          enum:
-            - strings_with_label
-            - strings_without_label
-        workflowStepId:
-          description: 'Workflow Step Identifier. Get via [List Workflow Steps](#operation/api.projects.workflow-steps.getMany)'
-          type: integer
-          example: 313
       type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DefaultReportShemaWithDate'
+        -
+          properties:
+            currency:
+              description: 'Defines report currency'
+              type: string
+              default: USD
+              enum:
+                - USD
+                - EUR
+                - JPY
+                - GBP
+                - AUD
+                - CAD
+                - CHF
+                - CNY
+                - SEK
+                - NZD
+                - MXN
+                - SGD
+                - HKD
+                - NOK
+                - KRW
+                - TRY
+                - RUB
+                - INR
+                - BRL
+                - ZAR
+                - GEL
+                - UAH
+                - DDK
+                - PLN
+            baseRates:
+              description: 'Base rates'
+              type: object
+              allOf:
+                -
+                  $ref: '#/components/schemas/costs-estimation-pe.report.base-rates'
+            individualRates:
+              description: 'Individual rates (Custom rates for certain languages or users)'
+              type: array
+              items:
+                $ref: '#/components/schemas/costs-estimation-pe.report.individual-rate'
+            netRateSchemes:
+              description: "Net Rate Schemes (Percentage paid of full translation rate)\n\n__Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
+              type: object
+              allOf:
+                -
+                  $ref: '#/components/schemas/costs-estimation-pe.report.net-rate-schemes'
+            calculateInternalMatches:
+              type: boolean
+              default: false
+            includePreTranslatedStrings:
+              type: boolean
+              default: false
+            fileIds:
+              description: 'Array of file ids. Get via [List Files](#operation/api.projects.files.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 138
+              x-doc-sections:
+                - file-based
+            directoryIds:
+              description: 'Array of directory ids. Get via [List Directories](#operation/api.projects.directories.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 11
+              x-doc-sections:
+                - file-based
+            branchIds:
+              description: 'Array of branch ids. Get via [List Branches](#operation/api.projects.branches.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 18
+            labelIds:
+              description: 'Array of label ids. Get via [List Labels](#operation/api.projects.labels.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 13
+            labelIncludeType:
+              description: 'Defines which strings include in report'
+              type: string
+              default: strings_with_label
+              enum:
+                - strings_with_label
+                - strings_without_label
+            workflowStepId:
+              description: 'Workflow Step Identifier. Get via [List Workflow Steps](#operation/api.projects.workflow-steps.getMany)'
+              type: integer
+              example: 313
     costs-estimation-pe.report.byTask:
       title: 'By Task'
-      properties:
-        unit:
-          description: 'Defines report unit'
-          type: string
-          default: words
-          enum:
-            - strings
-            - words
-            - chars
-            - chars_with_spaces
-        currency:
-          description: 'Defines report currency'
-          type: string
-          default: USD
-          enum:
-            - USD
-            - EUR
-            - JPY
-            - GBP
-            - AUD
-            - CAD
-            - CHF
-            - CNY
-            - SEK
-            - NZD
-            - MXN
-            - SGD
-            - HKD
-            - NOK
-            - KRW
-            - TRY
-            - RUB
-            - INR
-            - BRL
-            - ZAR
-            - GEL
-            - UAH
-            - DDK
-            - PLN
-        format:
-          description: 'Defines export file format'
-          type: string
-          default: xlsx
-          enum:
-            - xlsx
-            - csv
-            - json
-        baseRates:
-          description: 'Base rates'
-          type: object
-          allOf:
-            -
-              $ref: '#/components/schemas/costs-estimation-pe.report.base-rates'
-        individualRates:
-          description: 'Individual rates (Custom rates for certain languages or users)'
-          type: array
-          items:
-            $ref: '#/components/schemas/costs-estimation-pe.report.individual-rate'
-        netRateSchemes:
-          description: "Net Rate Schemes (Percentage paid of full translation rate)\n\n__Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
-          type: object
-          allOf:
-            -
-              $ref: '#/components/schemas/costs-estimation-pe.report.net-rate-schemes'
-        calculateInternalMatches:
-          type: boolean
-          default: false
-        includePreTranslatedStrings:
-          type: boolean
-          default: false
-        taskId:
-          description: 'Task Identifier. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
-          type: integer
-          deprecated: true
-        taskIds:
-          description: 'Array of task ids. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
-          type: array
-          items:
-            type: integer
-            example: 138
       type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DefaultReportShemaWithoutDate'
+        -
+          properties:
+            currency:
+              description: 'Defines report currency'
+              type: string
+              default: USD
+              enum:
+                - USD
+                - EUR
+                - JPY
+                - GBP
+                - AUD
+                - CAD
+                - CHF
+                - CNY
+                - SEK
+                - NZD
+                - MXN
+                - SGD
+                - HKD
+                - NOK
+                - KRW
+                - TRY
+                - RUB
+                - INR
+                - BRL
+                - ZAR
+                - GEL
+                - UAH
+                - DDK
+                - PLN
+            baseRates:
+              description: 'Base rates'
+              type: object
+              allOf:
+                -
+                  $ref: '#/components/schemas/costs-estimation-pe.report.base-rates'
+            individualRates:
+              description: 'Individual rates (Custom rates for certain languages or users)'
+              type: array
+              items:
+                $ref: '#/components/schemas/costs-estimation-pe.report.individual-rate'
+            netRateSchemes:
+              description: "Net Rate Schemes (Percentage paid of full translation rate)\n\n__Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
+              type: object
+              allOf:
+                -
+                  $ref: '#/components/schemas/costs-estimation-pe.report.net-rate-schemes'
+            calculateInternalMatches:
+              type: boolean
+              default: false
+            includePreTranslatedStrings:
+              type: boolean
+              default: false
+            taskId:
+              description: 'Task Identifier. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
+              type: integer
+              deprecated: true
+            taskIds:
+              description: 'Array of task ids. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 138
     costs-estimation-pe.report.base-rates:
       required:
         - fullTranslation
@@ -34834,40 +34733,10 @@ components:
           example: top-members
         schema:
           description: 'Top Members Report schema'
-          properties:
-            unit:
-              description: 'Defines report unit'
-              type: string
-              default: words
-              enum:
-                - strings
-                - words
-                - chars
-                - chars_with_spaces
-              example: words
-            languageId:
-              description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
-              type: string
-              example: uk
-            format:
-              description: 'Defines export file format'
-              type: string
-              default: xlsx
-              enum:
-                - xlsx
-                - csv
-                - json
-            dateFrom:
-              description: 'Report date from in UTC, ISO 8601'
-              type: string
-              format: date-time
-              example: '2019-09-23T07:00:14+00:00'
-            dateTo:
-              description: 'Report date to in UTC, ISO 8601'
-              type: string
-              format: date-time
-              example: '2019-09-27T07:00:14+00:00'
           type: object
+          allOf:
+            -
+              $ref: '#/components/schemas/DefaultReportShemaWithDate'
       type: object
     TranslationCostsPostEditing:
       title: 'Translation Costs Post-Editing'
@@ -34895,240 +34764,198 @@ components:
         - baseRates
         - individualRates
         - netRateSchemes
-      properties:
-        unit:
-          description: 'Defines report unit'
-          type: string
-          default: words
-          enum:
-            - strings
-            - words
-            - chars
-            - chars_with_spaces
-          example: words
-        currency:
-          description: 'Defines report currency'
-          type: string
-          default: USD
-          enum:
-            - USD
-            - EUR
-            - JPY
-            - GBP
-            - AUD
-            - CAD
-            - CHF
-            - CNY
-            - SEK
-            - NZD
-            - MXN
-            - SGD
-            - HKD
-            - NOK
-            - KRW
-            - TRY
-            - RUB
-            - INR
-            - BRL
-            - ZAR
-            - GEL
-            - UAH
-            - DDK
-            - PLN
-          example: USD
-        format:
-          description: "Defines export file format. Acceptable values are 'csv', 'json' and 'xlsx' (by default)"
-          type: string
-          default: xlsx
-          enum:
-            - xlsx
-            - csv
-            - json
-        baseRates:
-          description: 'Base rates'
-          type: object
-          allOf:
-            -
-              $ref: '#/components/schemas/translation-costs-pe.report.base-rates'
-        individualRates:
-          description: 'Individual rates (Custom rates for certain languages or users)'
-          type: array
-          items:
-            $ref: '#/components/schemas/translation-costs-pe.report.individual-rate'
-        netRateSchemes:
-          description: "Net Rate Schemes (Percentage paid of full translation rate)\n\n__Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
-          type: object
-          allOf:
-            -
-              $ref: '#/components/schemas/translation-costs-pe.report.net-rate-schemes'
-        excludeApprovalsForEditedTranslations:
-          description: 'Exclude approvals when the same user has made translations for the string.'
-          type: boolean
-          default: false
-        preTranslatedStringsCategorizationAdjustment:
-          description: 'Repetitive translations of pre-translated strings are reported under TM or MT match rates instead of Other suggestion match rates, depending on the initial pre-translation type.'
-          type: boolean
-          default: false
-        groupBy:
-          description: 'Defines grouping parameter'
-          type: string
-          default: user
-          enum:
-            - user
-            - language
-          example: user
-        dateFrom:
-          description: 'Report date from in UTC, ISO 8601'
-          type: string
-          format: date-time
-          example: '2019-09-23T07:00:14+00:00'
-        dateTo:
-          description: 'Report date to in UTC, ISO 8601'
-          type: string
-          format: date-time
-          example: '2019-09-27T07:00:14+00:00'
-        languageId:
-          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
-          type: string
-          example: ach
-        userIds:
-          description: 'Array of user ids'
-          type: array
-          items:
-            type: integer
-            example: 13
-        fileIds:
-          description: 'Array of file ids. Get via [List Files](#operation/api.projects.files.getMany)'
-          type: array
-          items:
-            type: integer
-            example: 138
-          x-doc-sections:
-            - file-based
-        directoryIds:
-          description: 'Array of directory ids. Get via [List Directories](#operation/api.projects.directories.getMany)'
-          type: array
-          items:
-            type: integer
-            example: 11
-          x-doc-sections:
-            - file-based
-        branchIds:
-          description: 'Array of branch ids. Get via [List Branches](#operation/api.projects.branches.getMany)'
-          type: array
-          items:
-            type: integer
-            example: 18
-        labelIds:
-          description: 'Array of label ids. Get via [List Labels](#operation/api.projects.labels.getMany)'
-          type: array
-          items:
-            type: integer
-            example: 13
-        labelIncludeType:
-          description: 'Defines which strings include in report'
-          type: string
-          default: strings_with_label
-          enum:
-            - strings_with_label
-            - strings_without_label
-          example: strings_without_label
-        workflowStepId:
-          description: 'Workflow Step Identifier. Get via [List Workflow Steps](#operation/api.projects.workflow-steps.getMany)'
-          type: integer
-          example: 313
       type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DefaultReportShemaWithDate'
+        -
+          properties:
+            currency:
+              description: 'Defines report currency'
+              type: string
+              default: USD
+              enum:
+                - USD
+                - EUR
+                - JPY
+                - GBP
+                - AUD
+                - CAD
+                - CHF
+                - CNY
+                - SEK
+                - NZD
+                - MXN
+                - SGD
+                - HKD
+                - NOK
+                - KRW
+                - TRY
+                - RUB
+                - INR
+                - BRL
+                - ZAR
+                - GEL
+                - UAH
+                - DDK
+                - PLN
+              example: USD
+            baseRates:
+              description: 'Base rates'
+              type: object
+              allOf:
+                -
+                  $ref: '#/components/schemas/translation-costs-pe.report.base-rates'
+            individualRates:
+              description: 'Individual rates (Custom rates for certain languages or users)'
+              type: array
+              items:
+                $ref: '#/components/schemas/translation-costs-pe.report.individual-rate'
+            netRateSchemes:
+              description: "Net Rate Schemes (Percentage paid of full translation rate)\n\n__Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
+              type: object
+              allOf:
+                -
+                  $ref: '#/components/schemas/translation-costs-pe.report.net-rate-schemes'
+            excludeApprovalsForEditedTranslations:
+              description: 'Exclude approvals when the same user has made translations for the string.'
+              type: boolean
+              default: false
+            preTranslatedStringsCategorizationAdjustment:
+              description: 'Repetitive translations of pre-translated strings are reported under TM or MT match rates instead of Other suggestion match rates, depending on the initial pre-translation type.'
+              type: boolean
+              default: false
+            groupBy:
+              description: 'Defines grouping parameter'
+              type: string
+              default: user
+              enum:
+                - user
+                - language
+              example: user
+            userIds:
+              description: 'Array of user ids'
+              type: array
+              items:
+                type: integer
+                example: 13
+            fileIds:
+              description: 'Array of file ids. Get via [List Files](#operation/api.projects.files.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 138
+              x-doc-sections:
+                - file-based
+            directoryIds:
+              description: 'Array of directory ids. Get via [List Directories](#operation/api.projects.directories.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 11
+              x-doc-sections:
+                - file-based
+            branchIds:
+              description: 'Array of branch ids. Get via [List Branches](#operation/api.projects.branches.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 18
+            labelIds:
+              description: 'Array of label ids. Get via [List Labels](#operation/api.projects.labels.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 13
+            labelIncludeType:
+              description: 'Defines which strings include in report'
+              type: string
+              default: strings_with_label
+              enum:
+                - strings_with_label
+                - strings_without_label
+              example: strings_without_label
+            workflowStepId:
+              description: 'Workflow Step Identifier. Get via [List Workflow Steps](#operation/api.projects.workflow-steps.getMany)'
+              type: integer
+              example: 313
     translation-costs-pe.report.byTask:
       title: 'By Task'
       required:
         - baseRates
         - individualRates
         - netRateSchemes
-      properties:
-        unit:
-          description: 'Defines report unit'
-          type: string
-          default: words
-          enum:
-            - strings
-            - words
-            - chars
-            - chars_with_spaces
-          example: words
-        currency:
-          description: 'Defines report currency'
-          type: string
-          default: USD
-          enum:
-            - USD
-            - EUR
-            - JPY
-            - GBP
-            - AUD
-            - CAD
-            - CHF
-            - CNY
-            - SEK
-            - NZD
-            - MXN
-            - SGD
-            - HKD
-            - NOK
-            - KRW
-            - TRY
-            - RUB
-            - INR
-            - BRL
-            - ZAR
-            - GEL
-            - UAH
-            - DDK
-            - PLN
-          example: USD
-        format:
-          description: 'Defines export file format'
-          type: string
-          default: xlsx
-          enum:
-            - xlsx
-            - csv
-            - json
-        baseRates:
-          description: 'Base rates'
-          type: object
-          allOf:
-            -
-              $ref: '#/components/schemas/translation-costs-pe.report.base-rates'
-        individualRates:
-          description: 'Individual rates (Custom rates for certain languages or users)'
-          type: array
-          items:
-            $ref: '#/components/schemas/translation-costs-pe.report.individual-rate'
-        netRateSchemes:
-          description: "Net Rate Schemes (Percentage paid of full translation rate)\n\n__Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
-          type: object
-          allOf:
-            -
-              $ref: '#/components/schemas/translation-costs-pe.report.net-rate-schemes'
-        taskId:
-          description: 'Task Identifier. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
-          type: integer
-          deprecated: true
-        taskIds:
-          description: 'Array of task ids. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
-          type: array
-          items:
-            type: integer
-            example: 138
-        excludeApprovalsForEditedTranslations:
-          description: 'Exclude approvals when the same user has made translations for the string.'
-          type: boolean
-          default: false
-        preTranslatedStringsCategorizationAdjustment:
-          description: 'Repetitive translations of pre-translated strings are reported under TM or MT match rates instead of Other suggestion match rates, depending on the initial pre-translation type.'
-          type: boolean
-          default: false
       type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DefaultReportShemaWithoutDate'
+        -
+          properties:
+            currency:
+              description: 'Defines report currency'
+              type: string
+              default: USD
+              enum:
+                - USD
+                - EUR
+                - JPY
+                - GBP
+                - AUD
+                - CAD
+                - CHF
+                - CNY
+                - SEK
+                - NZD
+                - MXN
+                - SGD
+                - HKD
+                - NOK
+                - KRW
+                - TRY
+                - RUB
+                - INR
+                - BRL
+                - ZAR
+                - GEL
+                - UAH
+                - DDK
+                - PLN
+              example: USD
+            baseRates:
+              description: 'Base rates'
+              type: object
+              allOf:
+                -
+                  $ref: '#/components/schemas/translation-costs-pe.report.base-rates'
+            individualRates:
+              description: 'Individual rates (Custom rates for certain languages or users)'
+              type: array
+              items:
+                $ref: '#/components/schemas/translation-costs-pe.report.individual-rate'
+            netRateSchemes:
+              description: "Net Rate Schemes (Percentage paid of full translation rate)\n\n__Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
+              type: object
+              allOf:
+                -
+                  $ref: '#/components/schemas/translation-costs-pe.report.net-rate-schemes'
+            taskId:
+              description: 'Task Identifier. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
+              type: integer
+              deprecated: true
+            taskIds:
+              description: 'Array of task ids. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 138
+            excludeApprovalsForEditedTranslations:
+              description: 'Exclude approvals when the same user has made translations for the string.'
+              type: boolean
+              default: false
+            preTranslatedStringsCategorizationAdjustment:
+              description: 'Repetitive translations of pre-translated strings are reported under TM or MT match rates instead of Other suggestion match rates, depending on the initial pre-translation type.'
+              type: boolean
+              default: false
     translation-costs-pe.report.base-rates:
       required:
         - fullTranslation
@@ -36065,40 +35892,10 @@ components:
       type: object
     project-consumption.report:
       title: 'Project Consumption'
-      properties:
-        unit:
-          description: 'Defines report unit'
-          type: string
-          default: words
-          enum:
-            - strings
-            - words
-            - chars
-            - chars_with_spaces
-          example: words
-        languageId:
-          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
-          type: string
-          example: ach
-        format:
-          description: 'Defines export file format'
-          type: string
-          default: xlsx
-          enum:
-            - xlsx
-            - csv
-            - json
-        dateFrom:
-          description: 'Report date from in UTC, ISO 8601'
-          type: string
-          format: date-time
-          example: '2019-09-23T07:00:14+00:00'
-        dateTo:
-          description: 'Report date to in UTC, ISO 8601'
-          type: string
-          format: date-time
-          example: '2019-09-27T07:00:14+00:00'
       type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DefaultReportShemaWithDate'
     TimeSpent:
       title: 'Time Spent'
       description: 'Explore detailed statistics on task creation, workload, progress, and performance.'
@@ -36213,6 +36010,94 @@ components:
           type: number
           format: float
           example: 0.1
+      type: object
+    ProjectSavingActivity:
+      title: 'Project Saving Activity'
+      description: 'Generate a report showing translation savings activity over time, including MT/AI cost savings and efficiency metrics'
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: saving-activity
+          type: string
+          example: saving-activity
+        schema:
+          $ref: '#/components/schemas/saving-activity.report'
+      type: object
+    saving-activity.report:
+      title: 'Saving Activity Report'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DefaultReportShemaWithDate'
+        -
+          properties:
+            mode:
+              type: string
+              default: relative
+              enum:
+                - currency
+                - relative
+    DefaultReportShemaWithDate:
+      title: 'Costs Estimation Post-Editing'
+      description: 'Calculate the approximate translation costs to help plan your budget'
+      properties:
+        unit:
+          description: 'Defines report unit'
+          type: string
+          default: words
+          enum:
+            - strings
+            - words
+            - chars
+            - chars_with_spaces
+          example: words
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: ach
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-23T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2025-09-27T07:00:14+00:00'
+      type: object
+    DefaultReportShemaWithoutDate:
+      title: 'Costs Estimation Post-Editing'
+      description: 'Calculate the approximate translation costs to help plan your budget'
+      properties:
+        unit:
+          description: 'Defines report unit'
+          type: string
+          default: words
+          enum:
+            - strings
+            - words
+            - chars
+            - chars_with_spaces
+          example: words
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
       type: object
     PEReportSettingsTemplateCreateForm:
       title: 'Report settings template for post-editing'
