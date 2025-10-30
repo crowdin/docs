@@ -101,28 +101,61 @@ To clone a branch, follow these steps:
 
 ### Merging Branches
 
-You can merge one branch into another directly from the **Branches** tab using the context menu. During the merge process, Crowdin displays a summary of changes and allows you to resolve any conflicts before completing the merge.
+You can merge one branch into another directly from the **Branches** tab using the context menu. During the merge process, Crowdin displays a summary of changes and allows you to select exactly which changes to accept before completing the merge.
 
 <Steps>
   1. In the **Branches** tab, hover over the source branch you want to merge.
   2. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> (or right-click), and select **Merge**.
   3. In the appeared dialog, choose the target branch to merge into.
-  4. Click **Continue** to proceed to the Merge Summary page.
+  4. Click **Continue** to proceed to the **Merge summary** page.
 </Steps>
 
-On the **Merge Summary** page, you’ll see:
+#### Understanding the Merge Summary
 
-* A summary of string changes — how many were added, removed, or changed.
-* An optional checkbox to **Delete the source branch after merge**.
+The **Merge summary** page displays a two-column comparison of all differences between the target branch (e.g., `main`) and the source branch (e.g., `dev`).
 
-If any strings were changed, a conflict resolution step will follow. For each conflicting string, choose whether to keep the version from the source or the target branch. You can also:
+At the top, you'll see a summary: **You requested to merge `{source_branch}` into `{target_branch}`. Select the changes you accept before merging:**. The branch titles in this message are clickable links that open all strings for that specific branch in the Editor.
 
-* Click **Accept all from `{source_branch}`** to apply all changes from the source.
-* Click **Accept all from `{target_branch}`** to keep all existing strings in the target.
+In the upper-right corner, next to the filter, you'll also see a high-level summary of the changes, with counters for:
 
-The **Merge** button becomes active only after all conflicts are resolved.
+* <Icon name="mdi:minus-box-outline" class="inline-icon text-red-700" /> **Deleted strings**
+* <Icon name="mdi:plus-box-outline" class="inline-icon text-emerald-700" /> **Added strings**
+* <Icon name="mdi:square-edit-outline" class="inline-icon text-blue-600" /> **Changed strings**
+* <Icon name="mdi:alert-outline" class="inline-icon text-yellow-700" /> **Conflicted strings**
 
-Once the merge is complete, translations, approvals, and votes from both branches will be preserved.
+Key features of this page:
+
+* **Selective Merging**: You must manually select each change (added, changed, or removed string) that you want to apply to the target branch. A counter (e.g., **1 of 4 selected**) in the upper-left corner tracks your selections.
+* **Default Behavior**: If you do not select a change, the target branch's version will be preserved. For example, if you don't select a "String Added" row, that new string from the source branch will not be added to the target branch.
+* **String Details**: Each string in the list displays its context, maximum length (if set), and a timestamp shows when that string was last modified.
+* **Open in Editor**: Hover over a string to see the **Open in Editor** link, which opens that string in a new tab.
+
+#### Filtering Changes
+
+To filter the list to review specific types of changes, click <Icon name="mdi:filter-variant" class="inline-icon" /> In the upper-right corner and select the preferred filter option.
+
+Available filter options:
+
+* **All changes**: Shows all strings that are different between the branches.
+* **Added strings**: Shows only strings that exist in the source branch but not the target.
+* **Deleted strings**: Shows only strings that exist in the target branch but were removed in the source.
+* **Changed strings**: Shows strings that were modified in the source branch.
+* **Conflicted strings**: Shows strings that were modified in both the source and target branches, or strings that were deleted in the source but modified in the target (if the target's modification is newer). Conflicted strings are highlighted in yellow to call attention to them.
+
+<Aside>
+  If a string was changed in the target branch but remained unchanged in the source branch (since it was cloned), it will not appear in the merge summary. Crowdin considers the target branch's version to be the most up-to-date in this case, and it will be kept automatically.
+</Aside>
+
+#### Completing the Merge
+
+Once you have selected all the changes you want to apply, you can finalize the merge.
+
+At the bottom of the page, you'll find:
+
+* **Delete \{source_branch} after merge** (Optional): Select this to automatically delete the source branch (e.g., `dev`) after its changes are successfully merged. This is useful for cleaning up temporary feature branches. Leave it unselected if you plan to continue working on the source branch.
+* **Merge**: Click this to apply all selected changes to the target branch. This button remains disabled until you select at least one change (an added, changed, or deleted string) from the list.
+
+Once the merge is complete, translations, approvals, and votes from both branches will be combined for the strings you selected.
 
 <Aside type="caution" title="Limitations">
   Branch merging is only available for [string-based](/creating-project/#string-based-project) projects.
