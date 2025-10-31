@@ -10,13 +10,59 @@ Placeholders (also known as variables, interpolations, or format specifiers) are
 
 Crowdin Enterprise automatically recognizes and highlights common placeholder formats in the [Editor](/enterprise/online-editor/). This helps translators easily identify non-translatable text and prevents accidental modification. The [Variables QA check](/enterprise/project-settings/qa-checks/#qa-check-parameters) uses these recognized formats to ensure consistency between source and translation.
 
-## Placeholder Examples
+## Real-World Example
 
-Crowdin Enterprise recognizes a wide variety of placeholder formats commonly used in different programming languages, frameworks, and localization standards. Below are examples grouped by common styles. Note that some placeholder syntaxes might overlap or be used across multiple languages or frameworks.
+Here's how placeholders work in practice:
+
+**Source string:**
+```
+Welcome, %{name}! You have {count} new messages.
+```
+
+**In the Editor:**
+- `%{name}` and `{count}` are highlighted as placeholders
+- Translators know not to modify these tokens
+
+**Translated string (Spanish):**
+```
+¡Bienvenido, %{name}! Tienes {count} mensajes nuevos.
+```
+
+The placeholders remain unchanged, ensuring your application can properly insert the user's name and message count.
+
+## Quick Reference
+
+Use this table to quickly identify which format category your placeholders belong to:
+
+| Format | Example | Common Use Cases |
+|--------|---------|------------------|
+| **Printf-style** | `%s`, `%d`, `%1$s` | C, PHP, Python, Java, Android XML |
+| **ICU / Brace style** | `{0}`, `{name}`, `{0:C2}` | .NET, Java, JavaScript (i18n) |
+| **PHP variables** | `$variable`, `$array['key']` | PHP templates |
+| **Ruby/Rails** | `%{name}`, `#{variable}` | Ruby on Rails i18n |
+| **Twig** | `{{ variable }}`, `{% trans %}` | Symfony, Drupal |
+| **Freemarker** | `${variable}`, `<#if>` | Java templates |
+| **Custom** | `__placeholder__`, `%variable%` | Various frameworks |
+
+## Detailed Placeholder Formats
+
+Crowdin Enterprise recognizes a wide variety of placeholder formats commonly used in different programming languages, frameworks, and localization standards. Below are examples grouped by common styles.
+
+<Aside type="tip">
+Looking for a specific format? Use your browser's search (Ctrl+F or Cmd+F) to quickly find examples.
+</Aside>
 
 ### Printf-style (C, PHP, Python, Java, Objective-C, etc.)
 
+**When to use:** C-based languages, Android XML strings, iOS `.strings` files, Python with `%` formatting, PHP `sprintf`.
+
 These formats typically start with `%` and can include flags, width, precision, and type specifiers.
+
+**Example in context:**
+```
+String in code: "User %s rated your post %d/5 stars"
+In the Editor: "El usuario %s calificó tu publicación %d/5 estrellas"
+```
 
 **Common Type Specifiers:**
 
@@ -109,7 +155,15 @@ These formats typically start with `%` and can include flags, width, precision, 
 
 ### ICU MessageFormat / .NET / Java Style
 
+**When to use:** .NET applications, Java MessageFormat, JavaScript i18n libraries, React Intl.
+
 These formats typically use curly braces (`{ }`).
+
+**Example in context:**
+```
+String in code: "Hello {name}, your balance is {amount, number, currency}"
+In the Editor: "Hola {name}, tu saldo es {amount, number, currency}"
+```
 
 **Indexed Arguments:**
 
@@ -172,7 +226,15 @@ These formats typically use curly braces (`{ }`).
 
 ### PHP Style
 
+**When to use:** PHP templates, Laravel Blade (for variables).
+
 Includes standard variables and object/array access.
+
+**Example in context:**
+```
+String in template: "Welcome back, $user->name!"
+In the Editor: "Bienvenido de nuevo, $user->name!"
+```
 
 ```
 $variable
@@ -189,7 +251,15 @@ $TAG_START$, $TAG_END$ // Often used for markup/tags
 
 ### Python Style
 
+**When to use:** Python with `.format()` method or f-strings (represented after parsing).
+
 Besides Printf-style and ICU-style, includes `.format()` style.
+
+**Example in context:**
+```python
+# In Python code: "Hello {name}, you have {count} items".format(name=user, count=5)
+# In the Editor: "Hola {name}, tienes {count} elementos"
+```
 
 ```
 {0}, {1}   // Indexed
@@ -197,6 +267,14 @@ Besides Printf-style and ICU-style, includes `.format()` style.
 ```
 
 ### Ruby / Rails Style
+
+**When to use:** Ruby on Rails i18n, Ruby ERB templates.
+
+**Example in context:**
+```ruby
+# In Rails i18n: t('greeting', name: @user.name) => "Hello %{name}"
+# In the Editor: "Hola %{name}"
+```
 
 ```
 %{name}
@@ -207,7 +285,15 @@ $_ // Special variable (also used in PHP)
 
 ### Twig Style
 
+**When to use:** Symfony framework, Drupal CMS, Craft CMS.
+
 Includes variables, filters, functions, and control structure tags.
+
+**Example in context:**
+```twig
+{# In Twig template: "Welcome {{ user.name }}" #}
+{# In the Editor: "Bienvenido {{ user.name }}" #}
+```
 
 **Variable Output:**
 
@@ -241,7 +327,15 @@ Includes variables, filters, functions, and control structure tags.
 
 ### Freemarker Style
 
+**When to use:** Apache Freemarker templates (Java-based).
+
 Uses `${...}` for variable output and `<#...>` or `</#...>` for directives.
+
+**Example in context:**
+```ftl
+<!-- In template: "Hello ${user.firstName}" -->
+<!-- In the Editor: "Hola ${user.firstName}" -->
+```
 
 **Variable Output:**
 
@@ -266,7 +360,15 @@ ${value}$ // Value within syntax
 
 ### Miscellaneous / Other Formats
 
+**When to use:** Various proprietary or legacy systems, custom frameworks.
+
 Various other formats recognized by Crowdin Enterprise.
+
+**Example in context:**
+```
+String: "Click __button_name__ to continue"
+In the Editor: "Haz clic en __button_name__ para continuar"
+```
 
 ```
 &_var_& // Ampersand underscore
@@ -281,6 +383,14 @@ $(variable) // Dollar parentheses
 %variable% // Single percent signs (may overlap with Printf, used in Twig/other)
 ```
 
+## Need Custom Placeholders?
+
 <Aside>
   If your project uses placeholder formats not included in this list, you can define [Custom Placeholders](/enterprise/custom-placeholders/) in your Organization Settings to ensure they are correctly recognized and handled.
 </Aside>
+
+## Related Resources
+
+- [QA Checks](/enterprise/project-settings/qa-checks/) - Learn how to configure validation rules for placeholders
+- [Custom Placeholders](/enterprise/custom-placeholders/) - Define organization-wide custom placeholder patterns
+- [Online Editor](/enterprise/online-editor/) - See how placeholders are highlighted during translation
