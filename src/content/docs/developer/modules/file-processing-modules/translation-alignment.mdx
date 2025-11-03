@@ -1,0 +1,300 @@
+---
+title: Translation Alignment Processing Module
+description: Use a custom service to align translations for non-key-value files
+slug: developer/crowdin-apps-module-translation-alignment-processing
+sidebar:
+  order: 7
+  label: Translation Alignment Processing
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The Translation Alignment Processing module allows you to override Crowdin's default alignment mechanism when uploading translations for non-key-value files (e.g., HTML, MD).
+
+By default, Crowdin automatically aligns uploaded translations with existing source strings. When you use this module in your Crowdin app, you can intercept this process and apply your own custom alignment logic, for example, by using a third-party alignment service. This gives you full control over how translations are mapped to their corresponding source strings for complex document formats.
+
+<Aside>
+  This module is designed to work *only* with [non-key-value file formats](/uploading-translations/#text-and-html-based-formats), such as HTML, Markdown (MD), and others.
+</Aside>
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+For Crowdin:
+
+* Only me (i.e., project owner)
+* Me, project managers and developers
+* Selected users
+
+For Crowdin Enterprise:
+
+* Only organization admins
+* Organization admins, project managers and developers
+* Selected users
+
+## Structure
+
+```json title="manifest.json"
+{
+  "modules": {
+    "file-translations-alignment": [
+      {
+        "key": "your-translations-alignment-module-key",
+        "url": "/translations-alignment",
+        "signaturePatterns": {
+          "fileName": "^.+\\.html$",
+          "fileContent": "<html.*>"
+        }
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL triggered on translation upload.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> Contains <code>fileName</code> and/or <code>fileContent</code> regular expressions used to detect file type when uploading translations via UI (or via API without specified <code>type</code> parameter).</p>
+        <p><Aside><code>fileContent</code> regular expression checks only the first 64 KB of the file content.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Communication between Translation Alignment App and Crowdin
+
+When uploading a translation file for a non-key-value format, the system detects an appropriate translation alignment module using the `signaturePatterns` parameter. Crowdin then makes an HTTP request to the app's URL (`$baseUrl . $url`).
+
+This request contains two main arrays: `sourceStrings` (from the project) and `translationStrings` (parsed from the uploaded translation file). The app's job is to process these two sets of strings, perform the alignment, and return a structured response that maps the translations to their correct source string identifiers.
+
+### Request to the Translation Alignment App
+
+Request payload example:
+
+```json
+// max request payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "jobType": "translation-alignment-file",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name",
+    "userId": 1,
+    "sourceLanguageId": "en",
+    "targetLanguageIds": [
+      "ja",
+      "uk",
+      "et"
+    ],
+    "createdAt": "2030-01-15T07:00:00+00:00",
+    "updatedAt": "2030-01-15T07:00:15+00:00",
+    "lastActivity": "2030-01-15T10:12:13+00:00",
+    "description": null,
+    "url": "/project/your-project-identifier",
+    "cname": null
+  },
+  "sourceLanguage": {
+    "id": "en",
+    "name": "English",
+    "editorCode": "en",
+    "twoLettersCode": "en",
+    "threeLettersCode": "eng",
+    "locale": "en-US",
+    "androidCode": "en-rUS",
+    "osxCode": "en.lproj",
+    "osxLocale": "en",
+    "pluralCategoryNames": [
+      "one",
+      "other"
+    ],
+    "pluralRules": "(n != 1)",
+    "pluralExamples": [
+      "1",
+      "0, 2-999; 1.2, 2.07..."
+    ],
+    "textDirection": "ltr",
+    "dialectOf": null
+  },
+  "targetLanguages": [
+    {
+      // Language object for the translation being aligned. Has the same structure as sourceLanguage.
+    }
+  ],
+  "file": {
+    "id": 4219,
+    "name": "en.html",
+    "title": null,
+    "path": "/en.html",
+    "type": "html32",
+    "isMultilingual": false,
+    "status": "active",
+    "revision": 1,
+    "branchId": null,
+    "directoryId": 0
+  },
+  "sourceStrings": [
+    {
+      "id": 1234567,
+      "text": "Welcome!",
+      "context": "Document Title\\r\\nXPath: \\/html\\/head\\/title"
+    }
+    // other source strings ...
+  ],
+  "translationStrings": [
+    {
+      "id": null,
+      "text": "Ласкаво просимо!",
+      "context": "Document Title\\r\\nXPath: \\/html\\/head\\/title"
+    }
+    // other translation strings ...
+  ]
+}
+```
+
+Properties:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>jobType</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Value:</strong> <code>translation-alignment-file</code></p>
+        <p><strong>Description:</strong> Specifies the action of the translation alignment module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> Contains information about the source file in Crowdin to which the translations
+          are being uploaded.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>targetLanguages</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Description:</strong> An array containing the language object of the translation file being uploaded
+          and aligned.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>sourceStrings</code>, <code>sourceStringsUrl</code></td>
+      <td>
+        <p><strong>Type(sourceStrings):</strong> <code>array</code></p>
+        <p><strong>Type(sourceStringsUrl):</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Parameters used for source strings from the original file. <code>sourceStrings</code> - array of source string objects. <code>sourceStringsUrl</code> - public URL to a <a href="https://github.com/ndjson/ndjson-spec" target="_blank">new-line delimited json</a> with source strings.<br/>
+        Either of these two parameters can be used.<Aside title="Limitations">Maximum request payload limit is 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">translationStrings</code>, <code>translationStringsUrl</code></td>
+      <td>
+        <p><strong>Type(translationStrings):</strong> <code>array</code></p>
+        <p><strong>Type(translationStringsUrl):</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Parameters used for strings parsed from the uploaded translation file.
+          <code>translationStrings</code> - array of simple string objects. <code>translationStringsUrl</code> - public
+          URL to a <a href="https://github.com/ndjson/ndjson-spec" target="_blank">new-line delimited json</a> with translation strings.<br/>
+          Either of these two parameters can be used.<Aside title="Limitations">Maximum request payload limit is 5 MB.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Expected Response from the App
+
+The app must perform its custom alignment and return a response containing a `translations` array. This array maps each translation text to its corresponding `sourceStringId`.
+
+Response payload example:
+
+```json
+// max response payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "data": {
+    "translations": [
+      {
+        "sourceStringId": 1234567,
+        "text": "Ласкаво просимо!"
+      },
+      // other translation mappings...
+    ],
+    // or use translationsUrl for large payloads
+    "translationsUrl": "https://app.example.com/jKe8ujs7a-aligned.ndjson" // new-line delimited json file with aligned translations
+  },
+  "error": {
+    "message": "Optional error message"
+  }
+}
+```
+
+Properties:
+
+<table>
+  <tbody>
+    <tr>
+     <td><code class="whitespace-nowrap">data.translations</code>, <code>data.translationsUrl</code></td>
+      <td>
+        <p><strong>Type(data.translations):</strong> <code>array</code></p>
+        <p><strong>Type(data.translationsUrl):</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Parameters used to pass the aligned translations.
+          <code>data.translations</code> - array of alignment objects. <code>data.translationsUrl</code> - public URL to a <a href="https://github.com/ndjson/ndjson-spec" target="_blank">new-line delimited json</a> with alignment objects.<br/>
+          Either of these two parameters can be used.<Aside title="Limitations">Maximum response payload limit is 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">data.translations.sourceStringId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>number</code></p>
+        <p><strong>Description:</strong> The numeric identifier of the source string to which the translation should be
+          applied.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>data.translations.text</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code> or <code>object</code></p>
+        <p><strong>Description:</strong> The translation text to be applied. For plural strings, this must be an object
+          keyed by the target language's plural category names (e.g., <code>one</code>, <code>other</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> An error message that can be passed from the app to Crowdin and will be visible
+          to a user in the UI.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
