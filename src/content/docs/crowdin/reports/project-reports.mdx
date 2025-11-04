@@ -75,13 +75,59 @@ The **Proofreading** graph visualizes the approval and voting activity over time
 
 ### Translation Savings Summary
 
-Use this report to review the savings achieved by using Translation Memory (TM), Machine Translation (MT), and AI-assisted translation. You can filter the data by **Date Range** and **Language**. The report displays the total savings as well as a breakdown by each method.
+Use this report to review the savings achieved by using Translation Memory (TM), Machine Translation (MT), and Artificial Intelligence (AI).
 
-By clicking the settings <Icon name="mdi:cog" class="inline-icon" /> icon, you can switch between viewing the data as **Relative savings (%)** or **Savings in currency**.
+You can filter the data by **Date Range** and **Language**. The report uses a **Rates template** to calculate savings. By default, it uses the **Default Net Rate Scheme**, but you can select a custom template to reflect specific agreements.
 
-This graph shows the savings achieved through Translation Memory (TM), Machine Translation (MT), and AI-assisted translation. Savings are calculated for each string if it represents either an initial translation via the Editor or an approved pre-translation, possibly with edits. Savings are only counted once per string. The graph may be updated for previous days as strings become approved.
+Using the **Mode** dropdown, you can switch between viewing the data as **%** (percentage) or **currency**.
 
-The bar chart breaks down the savings by each translation method. Hovering over the bars provides detailed information on savings per method on a daily or monthly basis. For a more granular view, you can also expand the **Breakdown by Language** section to see a table of savings for each specific language.
+<Aside>
+  The **currency** mode is only available when a custom, user-created rates template is selected. The **Default Net Rate Scheme** only supports the **%** mode.
+</Aside>
+
+The **Translation Savings** section displays the **Total** savings as a percentage or in currency for the selected period, along with a breakdown of savings from **Translations Memory**, **Machine Translation**, and **AI**.
+
+The bar chart below visualizes these savings over time. Savings are calculated for each string only once, upon the first manual contribution (a new translation or an approval). This also includes approving a translation that originated from a Pre-translation (in this case, the saving is attributed to the date and method of the pre-translation).
+
+If a string has a combination of TM and MT/AI suggestions available, the new contribution is counted towards the category with the highest potential saving value.
+
+Hovering over the bars provides detailed information on savings per method on a daily or monthly basis. For a more granular view, you can also expand the **Breakdown by languages** section to see a table of savings for each specific language.
+
+#### Default Net Rate Scheme
+
+The **Default Net Rate Scheme** is the standard, built-in template used for calculation if no custom template is selected. This scheme defines savings based on a tiered "Net Rate" model, which reflects industry standards where not all matches provide equal value.
+
+For example, a low-percentage fuzzy match (e.g., below 75%) is often reworked entirely by a translator. Therefore, this scheme considers such matches to provide **0%** savings, even though a match was suggested.
+
+The default scheme is divided into two categories, each with its own rates:
+
+**Saving Rates: TM**
+
+| Match Type                               | Net Rate | Saving |
+|------------------------------------------|----------|--------|
+| Perfect Match / Approval Without Changes | 5%       | 95%    |
+| 100% / Approval Without Changes          | 15%      | 85%    |
+| 95-99% Fuzzy Match                       | 35%      | 65%    |
+| 85-94% Fuzzy Match                       | 55%      | 45%    |
+| 75-84% Fuzzy Match                       | 75%      | 25%    |
+| < 75% Fuzzy Match                        | 100%     | 0%     |
+
+**Saving Rates: MT / AI**
+
+| Match Type               | Net Rate | Saving |
+|--------------------------|----------|--------|
+| Approval Without Changes | 10%      | 90%    |
+| 99-90%                   | 30%      | 70%    |
+| 89-70%                   | 50%      | 50%    |
+| 69-50%                   | 75%      | 25%    |
+| < 50%                    | 100%     | 0%     |
+
+Here are a few examples of how savings are calculated based on these default rates:
+
+* **TM Example:** A 10-word string is translated using a **95-99% Fuzzy Match** from your TM. According to the table, this match type has a saving of **65%**. Therefore, the report will count **6.5 words** (10 words * 65%) as saved.
+* **MT/AI Example (Approval):** A 10-word string is pre-translated by an MT engine. A proofreader reviews and approves it without making any changes. This action falls into the **Approval Without Changes** category, which has a saving of **90%**. The report will count **9 words** (10 words * 90%) as saved.
+* **MT/AI Example (Manual Edit):** A 10-word string has an MT suggestion. A translator edits the suggestion (or writes their own translation). The system compares the translator's *final saved translation* to the *original MT suggestion* and finds they are **80% similar**. This action falls into the **89-70%** match category, which has a saving of **50%**. The report will count 5 words (10 words * 50%) as saved.
+* **No Savings Example:** A 10-word string has a **< 75% Fuzzy Match**. According to the TM table, this provides **0%** saving. Even though there was a match, it's not counted as a saving in the report, as it likely required a full re-translation.
 
 ### Source Content Updates
 
