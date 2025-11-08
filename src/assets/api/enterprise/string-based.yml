@@ -5321,6 +5321,10 @@ paths:
         -
           $ref: '#/components/parameters/QueryTeamIds'
         -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+        -
           name: orderBy
           in: query
           description: 'Read more about [sorting rules](#section/Introduction/Sorting)'
@@ -5462,6 +5466,10 @@ paths:
       parameters:
         -
           $ref: '#/components/parameters/GroupId'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
         -
           name: orderBy
           in: query
@@ -20302,6 +20310,40 @@ components:
           type: boolean
           example: true
       type: object
+    AutomationActionModule:
+      title: 'Automation Action Module'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Module'
+        -
+          properties:
+            scopes:
+              type: object
+              nullable: true
+            identifier:
+              type: string
+              example: example-application
+            inputSchemaUrl:
+              type: string
+              nullable: true
+            outputSchemaUrl:
+              type: string
+              nullable: true
+            iframe:
+              type: object
+              nullable: true
+            executeUrl:
+              type: string
+            validateSettingsUrl:
+              type: string
+              nullable: true
+            invocationWaitMode:
+              type: string
+              enum:
+                - sync
+                - taskToken
+              nullable: true
     ContextMenuModule:
       title: 'Context Menu Module'
       type: object
@@ -20684,6 +20726,975 @@ components:
             iframe:
               type: object
               nullable: true
+    AutomationRulePatch:
+      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      type: array
+      items:
+        $ref: '#/components/schemas/AutomationRuleOperation'
+    AutomationRuleOperation:
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+            - test
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - /name
+            - /description
+            - /isEnabled
+            - /projectIds
+            - /executionFallback
+            - /trigger
+            - /definition
+      type: object
+      discriminator:
+        propertyName: op
+        mapping:
+          replace: '#/components/schemas/AutomationRuleOperationReplace'
+          test: '#/components/schemas/AutomationRuleOperationTest'
+    AutomationRuleOperationReplace:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AutomationRuleOperation'
+        -
+          properties:
+            value:
+              oneOf:
+                -
+                  type: string
+                -
+                  type: integer
+                -
+                  type: boolean
+                -
+                  type: object
+                -
+                  type: array
+                  items: { type: integer }
+    AutomationRuleOperationTest:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AutomationRuleOperation'
+        -
+          properties:
+            value:
+              oneOf:
+                -
+                  type: string
+                -
+                  type: integer
+                -
+                  type: boolean
+                -
+                  type: object
+                -
+                  type: array
+                  items: { type: integer }
+    TaskStateArguments:
+      required:
+        - FunctionName
+        - Payload
+      properties:
+        FunctionName:
+          description: 'Name of the function to execute'
+          type: string
+          maxLength: 255
+          minLength: 1
+          example: 'Sendai-automation-action::ai-automation-action-ai-action'
+        Payload:
+          description: 'Payload data to pass to the function (can be any type)'
+          type: object
+          example:
+            prompt: 'Create a translate and pending proofreading task for all project target languages. Use strings from the context. Set deadline one week from now.'
+            aiModel: o4-mini
+            contextScope: '{% $states %}'
+            crowdinMcp:
+              - tasks
+            structuredOutputType: json-schema
+      type: object
+    TaskState:
+      required:
+        - Type
+        - Arguments
+      properties:
+        Type:
+          type: string
+          enum:
+            - Task
+          example: Task
+        Comment:
+          description: 'Optional comment describing the state'
+          type: string
+          maxLength: 1024
+        Arguments:
+          $ref: '#/components/schemas/TaskStateArguments'
+        Next:
+          description: 'Name of the next state (mutually exclusive with End)'
+          type: string
+          example: NextState
+        End:
+          description: 'Marks this as a terminal state (mutually exclusive with Next)'
+          type: boolean
+          example: false
+      type: object
+    ChoiceRule:
+      required:
+        - Condition
+        - Next
+      properties:
+        Condition:
+          description: 'Condition expression to evaluate'
+          example: '{% $states.input.events.length > 0 %}'
+        Next:
+          description: 'Name of the state to transition to if condition is true'
+          type: string
+          example: StateA
+      type: object
+    ChoiceState:
+      required:
+        - Type
+        - Choices
+        - Default
+      properties:
+        Type:
+          type: string
+          enum:
+            - Choice
+          example: Choice
+        Comment:
+          description: 'Optional comment describing the state'
+          type: string
+          maxLength: 1024
+        Choices:
+          description: 'Array of choice rules to evaluate'
+          type: array
+          items:
+            $ref: '#/components/schemas/ChoiceRule'
+        Default:
+          description: 'Default state to transition to if no conditions match'
+          type: string
+          example: DefaultState
+      type: object
+    StateGraphDefinition:
+      description: 'Sub-workflow definition used in Parallel branches and Map iterators'
+      required:
+        - StartAt
+        - States
+      properties:
+        StartAt:
+          description: 'Name of the state to start execution'
+          type: string
+          example: InitialState
+        States:
+          description: 'Map of state names to their definitions'
+          type: object
+          additionalProperties:
+            oneOf:
+              -
+                $ref: '#/components/schemas/TaskState'
+              -
+                $ref: '#/components/schemas/ChoiceState'
+              -
+                $ref: '#/components/schemas/ParallelState'
+              -
+                $ref: '#/components/schemas/MapState'
+              -
+                $ref: '#/components/schemas/PassState'
+      type: object
+    ParallelState:
+      required:
+        - Type
+        - Branches
+      properties:
+        Type:
+          type: string
+          enum:
+            - Parallel
+          example: Parallel
+        Comment:
+          description: 'Optional comment describing the state'
+          type: string
+          maxLength: 1024
+        Branches:
+          description: 'Array of parallel execution branches'
+          type: array
+          items:
+            $ref: '#/components/schemas/StateGraphDefinition'
+        Next:
+          description: 'Name of the next state (mutually exclusive with End)'
+          type: string
+          example: NextState
+        End:
+          description: 'Marks this as a terminal state (mutually exclusive with Next)'
+          type: boolean
+          example: false
+      type: object
+    MapState:
+      required:
+        - Type
+        - Items
+        - ItemProcessor
+      properties:
+        Type:
+          type: string
+          enum:
+            - Map
+          example: Map
+        Comment:
+          description: 'Optional comment describing the state'
+          type: string
+          maxLength: 1024
+        Items:
+          description: 'JSONata expression to reference array items or literal array'
+          oneOf:
+            -
+              type: string
+              example: '{% $states.input.events %}'
+            -
+              type: array
+              items: {  }
+              example:
+                - 1
+                - 2
+        ItemProcessor:
+          $ref: '#/components/schemas/StateGraphDefinition'
+        Next:
+          description: 'Name of the next state (mutually exclusive with End)'
+          type: string
+          example: NextState
+        End:
+          description: 'Marks this as a terminal state (mutually exclusive with Next)'
+          type: boolean
+          example: false
+      type: object
+    PassState:
+      required:
+        - Type
+        - Output
+      properties:
+        Type:
+          type: string
+          enum:
+            - Pass
+          example: Pass
+        Comment:
+          description: 'Optional comment describing the state'
+          type: string
+          maxLength: 1024
+        Output:
+          description: 'Output value (can be any type)'
+          example: '{% $states.input.events.project.id %}'
+        Next:
+          description: 'Name of the next state (mutually exclusive with End)'
+          type: string
+          example: NextState
+        End:
+          description: 'Marks this as a terminal state (mutually exclusive with Next)'
+          type: boolean
+          example: false
+      type: object
+    AutomationRuleDefinition:
+      description: 'Amazon State Language-like definition with some restrictions. See [Amazon State Language](https://states-language.net) for more information.'
+      required:
+        - StartAt
+        - States
+      properties:
+        Comment:
+          description: 'Optional comment describing the workflow'
+          type: string
+          maxLength: 1024
+        StartAt:
+          description: 'Name of the state where execution begins'
+          type: string
+          example: InitialState
+        States:
+          description: 'Map of state names to their definitions. Each state value must be one of: TaskState, ChoiceState, ParallelState, MapState, or PassState'
+          type: object
+          example:
+            InitialState:
+              Type: Task
+              Arguments:
+                FunctionName: 'ai-automation-action::ai-automation-action-ai-action'
+                Payload:
+                  prompt: 'Create a translate and pending proofreading task for all project target languages. Use strings from the context. Set deadline one week from now.'
+                  aiModel: o4-mini
+                  crowdinMcp: [tasks]
+                  contextScope: '{% $states %}'
+                  structuredOutputType: json-schema
+              Next: FinalState
+            FinalState:
+              Type: Pass
+              Output:
+                status: completed
+              End: true
+          additionalProperties:
+            oneOf:
+              -
+                $ref: '#/components/schemas/TaskState'
+              -
+                $ref: '#/components/schemas/ChoiceState'
+              -
+                $ref: '#/components/schemas/ParallelState'
+              -
+                $ref: '#/components/schemas/MapState'
+              -
+                $ref: '#/components/schemas/PassState'
+      type: object
+    UserContextStructureJsonSchemaObject:
+      required:
+        - type
+        - properties
+      properties:
+        type:
+          type: string
+          enum:
+            - object
+          example: object
+        properties:
+          description: 'User context properties'
+          type: object
+          example:
+            userId:
+              type: integer
+      type: object
+    UserContextStructureJsonSchemaArray:
+      required:
+        - type
+        - items
+      properties:
+        type:
+          type: string
+          enum:
+            - array
+          example: array
+        items:
+          example:
+            type: string
+          oneOf:
+            -
+              type: array
+              items:
+                type: object
+            -
+              type: object
+      type: object
+    ManualTriggerConfig:
+      description: 'Manual Trigger Configuration'
+      properties:
+        userContextFormat:
+          description: 'User context format'
+          type: string
+          enum:
+            - json
+            - json-schema
+          example: json-schema
+        userContextStructure:
+          description: 'User context structure - arbitrary JSON structure or valid JSON schema'
+          type: object
+          example:
+            type: object
+            properties:
+              userId:
+                type: integer
+          oneOf:
+            -
+              $ref: '#/components/schemas/UserContextStructureJsonSchemaObject'
+            -
+              $ref: '#/components/schemas/UserContextStructureJsonSchemaArray'
+            -
+              type: object
+              example:
+                userId:
+                  type: integer
+      type: object
+    EventTriggerConfig:
+      description: 'Event Trigger Configuration'
+      required:
+        - event
+      properties:
+        event:
+          description: 'Event name'
+          type: string
+          enum:
+            - file.added
+            - file.updated
+            - file.reverted
+            - file.deleted
+            - file.translated
+            - file.approved
+            - translation.updated
+            - suggestion.added
+            - suggestion.updated
+            - suggestion.deleted
+            - suggestion.approved
+            - suggestion.disapproved
+            - string.added
+            - string.updated
+            - string.deleted
+            - stringComment.created
+            - stringComment.restored
+            - stringComment.deleted
+            - stringComment.updated
+            - task.statusChanged
+            - task.added
+            - task.updated
+            - task.deleted
+            - project.created
+            - project.deleted
+            - project.translated
+            - project.approved
+            - project.built
+            - group.created
+            - group.deleted
+          example: string.added
+        batching:
+          description: 'Batching configuration'
+          properties:
+            enabled:
+              description: 'Process events in batches'
+              type: boolean
+              default: false
+              example: true
+            timeout:
+              description: 'Batching timeout in seconds'
+              type: integer
+              example: 300
+          type: object
+      type: object
+    ScheduleTriggerConfig:
+      description: 'Schedule Trigger Configuration'
+      required:
+        - cronExpression
+      properties:
+        cronExpression:
+          description: "Cron expression for scheduling.\n\n Examples:\n - `0 0 * * *` - every day at midnight\n - `0 9 * * MON` - every Monday at 9:00 AM\n - `0 18 * * FRI` - every Friday at 6:00 PM\n - `0 0 15 * *` - at midnight on the 15th day of every month\n - `0 0 8 1 *` - at midnight on day-of-month 8 in January"
+          type: string
+          example: '0 0 * * *'
+      type: object
+    AutomationRuleCreateForm:
+      required:
+        - name
+        - trigger
+        - definition
+      properties:
+        name:
+          description: 'Automation Rule name'
+          type: string
+          example: 'New translation notification'
+        description:
+          description: 'Automation Rule description'
+          type: string
+          example: 'Send notification when new translation is added'
+        isEnabled:
+          description: 'Whether the rule is enabled'
+          type: boolean
+          default: false
+        scope:
+          description: 'Rule scope - organization-wide or project-specific'
+          type: string
+          default: project
+          enum:
+            - organization
+            - project
+        projectIds:
+          description: "Array of project ids. Get via [List Projects](#operation/api.projects.getMany)\n\n __Note:__ Can be used only when `scope` is `project`."
+          type: array
+          items:
+            type: integer
+            example: 1
+        executionFallback:
+          description: "Automation Rule execution fallback\n\nValues available:\n- send_email_always - Send email on every failure\n- send_email_once - Send email once if there are consecutive failures\n- send_email_never - Don't send email"
+          type: string
+          default: send_email_once
+          enum:
+            - send_email_always
+            - send_email_once
+            - send_email_never
+        trigger:
+          description: 'Automation Rule trigger'
+          required:
+            - name
+            - type
+            - config
+          properties:
+            name:
+              description: 'Trigger name'
+              type: string
+              example: 'New translation'
+            comment:
+              description: 'Trigger comment'
+              type: string
+              example: 'Trigger for new translation'
+            type:
+              description: 'Trigger type'
+              type: string
+              enum:
+                - Manual
+                - Event
+                - Schedule
+              example: Event
+            config:
+              description: 'Trigger configuration'
+              oneOf:
+                -
+                  $ref: '#/components/schemas/ManualTriggerConfig'
+                -
+                  $ref: '#/components/schemas/EventTriggerConfig'
+                -
+                  $ref: '#/components/schemas/ScheduleTriggerConfig'
+          type: object
+        definition:
+          $ref: '#/components/schemas/AutomationRuleDefinition'
+      type: object
+    AutomationRuleCollectionResource:
+      description: 'Automation Rule Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/AutomationRule'
+            pagination:
+              $ref: '#/components/schemas/AdvancedPagination'
+    AutomationRuleResource:
+      description: 'Automation Rule Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AutomationRule'
+    AutomationRule:
+      description: 'Automation Rule'
+      properties:
+        id:
+          description: 'Automation Rule identifier'
+          type: integer
+        userId:
+          description: 'User identifier who created the rule'
+          type: integer
+        name:
+          description: 'Automation Rule name'
+          type: string
+        description:
+          description: 'Automation Rule description'
+          type: string
+        isEnabled:
+          description: 'Whether the rule is enabled'
+          type: boolean
+        scope:
+          description: 'Automation Rule scope - organization-wide or project-specific'
+          type: string
+          enum:
+            - organization
+            - project
+        projectIds:
+          description: 'List of project identifiers'
+          type: array
+          items:
+            type: integer
+        disableReason:
+          description: "Reason for disabling the rule\n\n Values available:\n- plan_limit - The rule is disabled due to a plan limit\n- error_limit - The rule is disabled due to a consecutive execution failures limit\n- manual - The rule is disabled manually"
+          type: string
+          enum:
+            - plan_limit
+            - error_limit
+            - manual
+          nullable: true
+        executionFallback:
+          description: "Automation Rule execution fallback\n\nValues available:\n- send_email_always - Send email on every failure\n- send_email_once - Send email once if there are consecutive failures\n- send_email_never - Don't send email"
+          type: object
+          enum:
+            - send_email_always
+            - send_email_once
+            - send_email_never
+        trigger:
+          description: 'Automation Rule trigger'
+          properties:
+            name:
+              description: 'Trigger name'
+              type: string
+            type:
+              description: 'Trigger type'
+              type: string
+            config:
+              description: 'Trigger configuration'
+              type: object
+              oneOf:
+                -
+                  $ref: '#/components/schemas/ManualTriggerConfig'
+                -
+                  $ref: '#/components/schemas/EventTriggerConfig'
+                -
+                  $ref: '#/components/schemas/ScheduleTriggerConfig'
+          type: object
+        definition:
+          $ref: '#/components/schemas/AutomationRuleDefinition'
+        runningExecutionsCount:
+          description: 'Number of currently running rule executions'
+          type: integer
+        pendingExecutionsCount:
+          description: 'Number of pending rule executions'
+          type: integer
+        createdAt:
+          description: 'Automation Rule creation date'
+          type: string
+          format: date-time
+        updatedAt:
+          description: 'Automation Rule last update date'
+          type: string
+          format: date-time
+          nullable: true
+        webUrl:
+          description: 'Absolute URL to the automation rule'
+          type: string
+      type: object
+    AutomationRuleExecutionCreateForm:
+      required: []
+      properties:
+        projectId:
+          description: 'Project id. Get via [List Projects](#operation/api.projects.getMany)'
+          type: integer
+        context:
+          description: 'Additional context data to include in the event payload'
+          type: object
+      type: object
+    FailureEvent:
+      required:
+        - taskToken
+        - error
+      properties:
+        taskToken:
+          description: 'AWS Step Functions task token. Get it from request body for the endpoint defined in manifest `executeUrl` in your app.'
+          type: string
+        error:
+          description: 'Error message describing the failure details (max 32768 characters)'
+          type: string
+      type: object
+    HeartbeatEvent:
+      required:
+        - taskToken
+      properties:
+        taskToken:
+          description: 'AWS Step Functions task token. Get it from request body for the endpoint defined in manifest `executeUrl` in your app.'
+          type: string
+      type: object
+    SuccessEvent:
+      required:
+        - taskToken
+        - output
+      properties:
+        taskToken:
+          description: 'AWS Step Functions task token. Get it from request body for the endpoint defined in manifest `executeUrl` in your app.'
+          type: string
+        output:
+          description: 'Task success output'
+      type: object
+    AutomationRuleExecutionHeartbeatEventForm:
+      required:
+        - type
+        - payload
+      properties:
+        type:
+          description: 'Event type'
+          type: string
+          enum:
+            - heartbeat
+        payload:
+          $ref: '#/components/schemas/HeartbeatEvent'
+      type: object
+    AutomationRuleExecutionFailureEventForm:
+      required:
+        - type
+        - payload
+      properties:
+        type:
+          description: 'Event type'
+          type: string
+          enum:
+            - failure
+        payload:
+          $ref: '#/components/schemas/FailureEvent'
+      type: object
+    AutomationRuleExecutionSuccessEventForm:
+      required:
+        - type
+        - payload
+      properties:
+        type:
+          description: 'Event type'
+          type: string
+          enum:
+            - success
+        payload:
+          $ref: '#/components/schemas/SuccessEvent'
+      type: object
+    AutomationRuleExecutionCollectionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/AutomationRuleExecution'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    AutomationRuleExecutionHeartbeatEventResource:
+      description: 'Automation Rule Execution Heartbeat Event Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AutomationRuleExecutionHeartbeatEvent'
+    AutomationRuleExecutionFailureEventResource:
+      description: 'Automation Rule Execution Failure Event Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AutomationRuleExecutionFailureEvent'
+    AutomationRuleExecutionSuccessEventResource:
+      description: 'Automation Rule Execution Success Event Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AutomationRuleExecutionSuccessEvent'
+    AutomationRuleExecutionResource:
+      description: 'Automation Rule Execution Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AutomationRuleExecution'
+    AutomationRuleExecutionHeartbeatEvent:
+      description: 'Automation Rule Execution Heartbeat Event'
+      properties:
+        type:
+          description: 'Event type'
+          type: string
+          enum:
+            - heartbeat
+        payload:
+          $ref: '#/components/schemas/HeartbeatEvent'
+      type: object
+    AutomationRuleExecutionFailureEvent:
+      description: 'Automation Rule Execution Failure Event'
+      properties:
+        type:
+          description: 'Event type'
+          type: string
+          enum:
+            - failure
+        payload:
+          $ref: '#/components/schemas/FailureEvent'
+      type: object
+    AutomationRuleExecutionSuccessEvent:
+      description: 'Automation Rule Execution Success Event'
+      properties:
+        type:
+          description: 'Event type'
+          type: string
+          enum:
+            - success
+        payload:
+          $ref: '#/components/schemas/SuccessEvent'
+      type: object
+    BaseExecution:
+      description: 'Base execution properties (without status field)'
+      properties:
+        id:
+          description: 'Automation Rule Execution identifier'
+          type: integer
+        ruleId:
+          description: 'Automation Rule identifier'
+          type: integer
+        projectId:
+          description: 'Project identifier'
+          type: integer
+          nullable: true
+        ruleVersion:
+          description: 'Automation Rule version'
+          type: integer
+        triggerType:
+          description: 'Trigger type'
+          type: string
+      type: object
+    InitiatedExecution:
+      allOf:
+        -
+          $ref: '#/components/schemas/BaseExecution'
+        -
+          properties:
+            status:
+              description: 'Execution status'
+              type: string
+              enum:
+                - initiated
+            errorMessage:
+              description: 'Error message'
+              type: 'null'
+            duration:
+              description: 'Execution duration in milliseconds'
+              type: 'null'
+            executedActionsCount:
+              description: 'Number of executed actions'
+              type: 'null'
+            details:
+              description: 'Additional execution details'
+              type: 'null'
+            startedAt:
+              description: 'Execution start time'
+              type: 'null'
+          type: object
+    RunningExecution:
+      allOf:
+        -
+          $ref: '#/components/schemas/BaseExecution'
+        -
+          properties:
+            status:
+              description: 'Execution status'
+              type: string
+              enum:
+                - running
+            errorMessage:
+              description: 'Error message'
+              type: 'null'
+            duration:
+              description: 'Execution duration in milliseconds'
+              type: 'null'
+            executedActionsCount:
+              description: 'Number of executed actions'
+              type: 'null'
+            details:
+              description: 'Additional execution details'
+              type: 'null'
+            startedAt:
+              description: 'Execution start time'
+              type: string
+              format: date-time
+          type: object
+    CompletedExecution:
+      allOf:
+        -
+          $ref: '#/components/schemas/BaseExecution'
+        -
+          properties:
+            status:
+              description: 'Execution status'
+              type: string
+              enum:
+                - completed
+            errorMessage:
+              description: 'Error message'
+              type: 'null'
+            duration:
+              description: 'Execution duration in milliseconds'
+              type: integer
+            executedActionsCount:
+              description: 'Number of executed actions'
+              type: integer
+            details:
+              description: 'Additional execution details'
+              type: object
+            startedAt:
+              description: 'Execution start time'
+              type: string
+              format: date-time
+          type: object
+    FailedExecution:
+      allOf:
+        -
+          $ref: '#/components/schemas/BaseExecution'
+        -
+          properties:
+            status:
+              description: 'Execution status'
+              type: string
+              enum:
+                - failed
+            errorMessage:
+              description: 'Error message'
+              type: string
+            duration:
+              description: 'Execution duration in milliseconds'
+              type: integer
+            executedActionsCount:
+              description: 'Number of executed actions'
+              type: integer
+            details:
+              description: 'Additional execution details'
+              type: object
+            startedAt:
+              description: 'Execution start time'
+              type: string
+              format: date-time
+              nullable: true
+          type: object
+    AutomationRuleExecution:
+      description: 'Automation Rule Execution'
+      oneOf:
+        -
+          $ref: '#/components/schemas/InitiatedExecution'
+        -
+          $ref: '#/components/schemas/RunningExecution'
+        -
+          $ref: '#/components/schemas/CompletedExecution'
+        -
+          $ref: '#/components/schemas/FailedExecution'
     BranchPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -45212,6 +46223,20 @@ components:
       required: true
       schema:
         type: string
+    AutomationRuleId:
+      name: automationRuleId
+      in: path
+      description: 'Automation Rule identifier. Get via [List Automation Rules](#operation/api.automation.rules.getMany)'
+      required: true
+      schema:
+        type: integer
+    AutomationRuleExecutionId:
+      name: executionId
+      in: path
+      description: 'Automation Rule Execution identifier. Get via [List Automation Rule Executions](#operation/api.automation.rules.executions.getMany)'
+      required: true
+      schema:
+        type: integer
     SubscriptionId:
       name: subscriptionId
       in: path
