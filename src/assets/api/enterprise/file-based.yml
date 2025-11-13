@@ -17751,6 +17751,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalServerErrorExceptionResource'
+      deprecated: true
   '/projects/{projectId}/translations/builds/{buildId}/download':
     get:
       tags:
@@ -17992,6 +17993,183 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+  '/projects/{projectId}/translations/imports':
+    post:
+      tags:
+        - Translations
+      summary: 'Import Translations'
+      operationId: api.projects.translations.enterprise.imports
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnterpriseTranslationImportForm'
+      responses:
+        '202':
+          description: 'Import Translations was successfully started'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileBasedTranslationImportResource'
+          x-doc-sections:
+            - file-based
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '402':
+          description: 'Payment required'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRequiredExceptionResource'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project, language, storage, or file with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '422':
+          description: 'Unprocessable Entity'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
+        '500':
+          description: 'Internal Server Error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerErrorExceptionResource'
+  '/projects/{projectId}/translations/imports/{importTranslationId}':
+    get:
+      tags:
+        - Translations
+      summary: 'Import Translations Status'
+      operationId: api.projects.translations.enterprise.imports.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          name: importTranslationId
+          in: path
+          description: 'Import Translation Identifier'
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 'Import translation status'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileBasedTranslationImportResource'
+          x-doc-sections:
+            - file-based
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or import translation with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '503':
+          description: 'Service Unavailable'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+  '/projects/{projectId}/translations/imports/{importTranslationId}/report':
+    get:
+      tags:
+        - Translations
+      summary: 'Import Translations Report'
+      operationId: api.projects.translations.imports.report.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          name: importTranslationId
+          in: path
+          description: 'Import Translation Identifier'
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 'Import translation report for file-based project'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationImportReportResource'
+          x-doc-sections:
+            - file-based
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or import with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '500':
+          description: 'Internal Server Error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerErrorExceptionResource'
   '/projects/{projectId}/members':
     get:
       tags:
@@ -39200,34 +39378,47 @@ components:
         - nestjs_i18n
         - stringsdict
       example: xliff
-    StringBasedSpreadsheetFileImportOptions:
-      title: 'Spreadsheet File Import Options'
+    StringBasedSpreadsheetFileUploadSchema:
+      title: 'Spreadsheet File Upload Schema for String-Based Projects'
+      description: 'Defines data columns mapping. The column numbering starts at 0'
       properties:
-        firstLineContainsHeader:
-          description: 'Defines whether the file includes a first-row header that should not be imported'
-          type: boolean
-          default: false
-          example: false
-        contentSegmentation:
-          description: "Defines whether to split long texts into smaller text segments.\n\n__Important!__ This option disables the possibility to upload existing translations for Spreadsheet files when enabled."
-          type: boolean
-          default: false
-        srxStorageId:
-          description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany).\n\nStorage identifier of the SRX segmentation rules file. Read more about [Custom Segmentation](https://support.crowdin.com/custom-segmentation/#segmentation-examples)."
+        none:
+          description: 'Defines empty column'
           type: integer
-          format: int64
-          default: null
-          example: 61
-        importTranslations:
-          description: 'Defines whether to import translations from the file'
-          type: boolean
-          default: false
-          example: true
-        scheme:
-          $ref: '#/components/schemas/SpreadsheetFileImportSchema'
+        identifier:
+          description: 'Defines identifier column number'
+          type: integer
+        sourcePhrase:
+          description: 'Defines source phrase column number'
+          type: integer
+        sourceOrTranslation:
+          description: 'Defines source or translation column number'
+          type: integer
+        translation:
+          description: 'Defines translation column number'
+          type: integer
+        context:
+          description: 'Defines context column number'
+          type: integer
+        translatable:
+          description: 'Defines visible status `yes` as show and `no` as hidden'
+          type: integer
       type: object
-    StringBasedFileImportOptions:
-      title: 'File Import Options'
+      example:
+        identifier: 0
+        sourcePhrase: 1
+        en: 2
+        de: 3
+      additionalProperties:
+        $ref: '#/components/schemas/SpreadsheetLanguageCodeColumnNumber'
+    StringBasedSpreadsheetFileUploadOptions:
+      title: 'Spreadsheet File Upload Options'
+      properties:
+        scheme:
+          $ref: '#/components/schemas/StringBasedSpreadsheetFileUploadSchema'
+      type: object
+    StringBasedFileUploadOptions:
+      title: 'File Upload Options'
       type: object
       example:
         firstLineContainsHeader: true
@@ -39240,7 +39431,7 @@ components:
           de: 3
       oneOf:
         -
-          $ref: '#/components/schemas/StringBasedSpreadsheetFileImportOptions'
+          $ref: '#/components/schemas/StringBasedSpreadsheetFileUploadOptions'
         -
           $ref: '#/components/schemas/StringBasedStringCatalogImportOptions'
         -
@@ -39306,7 +39497,7 @@ components:
           default: 'false'
           example: true
         importOptions:
-          $ref: '#/components/schemas/StringBasedFileImportOptions'
+          $ref: '#/components/schemas/StringBasedFileUploadOptions'
         updateOption:
           description: "Defines whether to keep existing translations and approvals for updated strings.\n\n__Note:__  Must be used together with `updateStrings = true`"
           type: string
@@ -39603,7 +39794,7 @@ components:
               type: boolean
               example: false
             importOptions:
-              $ref: '#/components/schemas/StringBasedSpreadsheetFileImportOptions'
+              $ref: '#/components/schemas/StringBasedFileUploadOptions'
             updateOption:
               type: string
               example: clear_translations_and_approvals
@@ -44776,9 +44967,54 @@ components:
           type: boolean
           example: true
       type: object
+    EnterpriseTranslationImportForm:
+      required:
+        - storageId
+        - branchId
+      properties:
+        storageId:
+          description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
+          type: integer
+          format: int64
+          example: 13
+        fileId:
+          description: 'File Identifier for import. Get via [List Files](#operation/api.projects.files.getMany) <br> **Note:** Required for content in all formats except XLIFF'
+          type: integer
+          example: 2
+          x-doc-sections:
+            - file-based
+        languageIds:
+          description: 'Language Identifiers. Get via [Project Target Languages](#operation/api.projects.get)'
+          type: array
+          items:
+            type: string
+          example:
+            - en
+        importEqSuggestions:
+          description: "Defines whether to add translation if it's the same as the source string"
+          type: boolean
+          default: false
+          example: true
+        autoApproveImported:
+          description: 'Mark uploaded translations as approved'
+          type: boolean
+          default: false
+          example: false
+        translateHidden:
+          description: 'Allow translations upload to hidden source strings'
+          type: boolean
+          default: false
+          example: false
+        addToTm:
+          description: 'Defines whether to add translation to TM'
+          type: boolean
+          default: true
+          example: false
+      type: object
     EnterpriseTranslationUploadForm:
       required:
         - storageId
+        - branchId
       properties:
         storageId:
           description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
@@ -44872,6 +45108,85 @@ components:
             - european
             - arabic
       type: object
+    StringBasedSpreadsheetFileImportSchema:
+      title: 'Spreadsheet File Import Schema for String-Based Projects'
+      description: 'Defines data columns mapping. The column numbering starts at 0'
+      properties:
+        none:
+          description: 'Defines empty column'
+          type: integer
+        identifier:
+          description: 'Defines identifier column number'
+          type: integer
+        sourceOrTranslation:
+          description: 'Defines source or translation column number'
+          type: integer
+        translation:
+          description: 'Defines translation column number'
+          type: integer
+      type: object
+      example:
+        identifier: 0
+        en: 2
+        de: 3
+      additionalProperties:
+        $ref: '#/components/schemas/SpreadsheetLanguageCodeColumnNumber'
+    StringBasedSpreadsheetFileImportOptions:
+      title: 'Spreadsheet File Import Options'
+      properties:
+        scheme:
+          $ref: '#/components/schemas/StringBasedSpreadsheetFileImportSchema'
+      type: object
+    StringBasedFileImportOptions:
+      title: 'Spreadsheet File Import Options'
+      properties:
+        scheme:
+          $ref: '#/components/schemas/StringBasedSpreadsheetFileImportSchema'
+      type: object
+    TranslationImportForm:
+      required:
+        - storageId
+        - branchId
+      properties:
+        storageId:
+          description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
+          type: integer
+          format: int64
+          example: 13
+        languageIds:
+          description: 'Language Identifiers. Get via [Project Target Languages](#operation/api.projects.get)'
+          type: array
+          items:
+            type: string
+          example:
+            - en
+        fileId:
+          description: 'File Identifier for import. Get via [List Files](#operation/api.projects.files.getMany) <br> **Note:** Required for content in all formats except XLIFF'
+          type: integer
+          example: 2
+          x-doc-sections:
+            - file-based
+        importEqSuggestions:
+          description: "Defines whether to add translation if it's the same as the source string"
+          type: boolean
+          default: false
+          example: true
+        autoApproveImported:
+          description: 'Mark uploaded translations as approved'
+          type: boolean
+          default: false
+          example: false
+        translateHidden:
+          description: 'Allow translations upload to hidden source strings'
+          type: boolean
+          default: false
+          example: false
+        addToTm:
+          description: 'Defines whether to add translation to TM'
+          type: boolean
+          default: true
+          example: false
+      type: object
     TranslationUploadForm:
       required:
         - storageId
@@ -44946,7 +45261,7 @@ components:
             data:
               $ref: '#/components/schemas/EnterpriseProjectBuildResponse'
     FileBasedTranslationFileImportResource:
-      description: 'File Import Resource'
+      description: 'Translation Import Resource'
       type: object
       allOf:
         -
@@ -44955,8 +45270,18 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/FileBasedTranslationFileImport'
+    FileBasedTranslationImportResource:
+      description: 'Translation Import Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/FileBasedTranslationImport'
     StringBasedTranslationFileImportResource:
-      description: 'File Import Resource'
+      description: 'Translation Import Resource'
       type: object
       allOf:
         -
@@ -44965,6 +45290,26 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/StringBasedTranslationFileImport'
+    StringBasedTranslationImportResource:
+      description: 'Translation Import Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/StringBasedTranslationImport'
+    TranslationImportReportResource:
+      description: 'Translation Import Report Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/TranslationImportReport'
     AbstractDirectoryBuildResponseModel:
       title: 'Directory Build'
       description: 'Class AbstractDirectoryBuildResponseModel'
@@ -45158,6 +45503,73 @@ components:
                 skippedQaCheckCategories:
                   $ref: '#/components/schemas/SkippedQaCheckCategories'
               type: object
+    FileBasedTranslationImport:
+      title: String
+      properties:
+        identifier:
+          type: string
+          example: b5215a34-1305-4b21-8054-fc2eb252842f
+        status:
+          type: string
+          example: created
+        progress:
+          description: 'in percentages'
+          type: integer
+          example: 0
+        attributes:
+          properties:
+            storageId:
+              description: 'Storage identifier'
+              type: integer
+              format: int64
+              example: 13
+            fileId:
+              description: 'File identifier'
+              type: integer
+              format: int64
+              example: 2
+            importEqSuggestions:
+              description: 'Import suggestions that equal target translation'
+              type: boolean
+              example: true
+            autoApproveImported:
+              description: 'Automatically approve imported translations'
+              type: boolean
+              example: false
+            translateHidden:
+              description: 'Translate hidden strings'
+              type: boolean
+              example: false
+            addToTm:
+              description: 'Add translations to Translation Memory'
+              type: boolean
+              example: false
+            languageIds:
+              description: 'Target language identifiers'
+              type: array
+              items:
+                type: string
+              example:
+                - en
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-09-23T11:51:08+00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-09-23T11:51:08+00:00'
+        startedAt:
+          type: string
+          format: date-time
+          example: '2025-09-23T11:51:08+00:00'
+        finishedAt:
+          type: string
+          format: date-time
+          example: null
+          nullable: true
+      type: object
     StringBasedTranslationFileImport:
       title: String
       type: object
@@ -45169,6 +45581,73 @@ components:
             branchId:
               type: integer
               example: 2
+    StringBasedTranslationImport:
+      title: String
+      properties:
+        identifier:
+          type: string
+          example: b5215a34-1305-4b21-8054-fc2eb252842f
+        status:
+          type: string
+          example: created
+        progress:
+          description: 'in percentages'
+          type: integer
+          example: 0
+        attributes:
+          properties:
+            storageId:
+              description: 'Storage identifier'
+              type: integer
+              format: int64
+              example: 13
+            branchId:
+              description: 'File identifier'
+              type: integer
+              format: int64
+              example: 2
+            importEqSuggestions:
+              description: 'Import suggestions that equal target translation'
+              type: boolean
+              example: true
+            autoApproveImported:
+              description: 'Automatically approve imported translations'
+              type: boolean
+              example: false
+            translateHidden:
+              description: 'Translate hidden strings'
+              type: boolean
+              example: false
+            addToTm:
+              description: 'Add translations to Translation Memory'
+              type: boolean
+              example: false
+            languageIds:
+              description: 'Target language identifiers'
+              type: array
+              items:
+                type: string
+              example:
+                - en
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-09-23T11:51:08+00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-09-23T11:51:08+00:00'
+        startedAt:
+          type: string
+          format: date-time
+          example: '2025-09-23T11:51:08+00:00'
+        finishedAt:
+          type: string
+          format: date-time
+          example: null
+          nullable: true
+      type: object
     TranslationFileImport:
       title: String
       properties:
@@ -45182,6 +45661,39 @@ components:
         languageId:
           type: string
           example: uk
+      type: object
+    TranslationImportReport:
+      description: 'Translation Import Report'
+      properties:
+        languages:
+          type: array
+          items:
+            properties:
+              id:
+                type: string
+                example: fr
+              files:
+                type: array
+                items:
+                  properties: { id: { type: string, example: '10191' }, statistics: { properties: { phrases: { type: integer, example: 6 }, words: { type: integer, example: 45 } }, type: object } }
+                  type: object
+                nullable: true
+              skipped:
+                properties:
+                  translationEqSource: { type: integer, example: 0 }
+                  hiddenStrings: { type: integer, example: 0 }
+                  qaCheck: { type: integer, example: 647 }
+                type: object
+              skippedQaCheckCategories:
+                type: object
+                example:
+                  size: 1
+                  duplicate: 648
+                nullable: true
+            type: object
+          nullable: true
+          x-doc-sections:
+            - file-based
       type: object
     userPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
@@ -45704,11 +46216,6 @@ components:
               items:
                 type: string
                 example: authenticatorApp
-            ssoProviders:
-              type: array
-              items:
-                type: string
-                example: GitHub
     EnterpriseUserManagerContextResponseModel:
       title: 'User details for managers'
       properties:
