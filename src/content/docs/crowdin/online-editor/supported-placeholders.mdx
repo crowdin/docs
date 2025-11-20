@@ -1,0 +1,280 @@
+---
+title: Supported Placeholders
+description: Learn about the placeholder formats Crowdin recognizes and highlights in the Editor.
+slug: supported-placeholders
+---
+
+Placeholders (also known as variables, interpolations, or format specifiers) are special tokens in source strings that are replaced with dynamic content (like names, numbers, or dates) when the application runs. It's crucial that these placeholders are not translated and that their syntax remains correct in the translated strings.
+
+Crowdin automatically recognizes and highlights common placeholder formats in the [Editor](/online-editor/). This helps translators easily identify non-translatable text and prevents accidental modification. The [Variables mismatch QA check](/project-settings/qa-checks/#qa-check-parameters) uses these recognized formats to ensure consistency between source and translation.
+
+## Placeholder Examples
+
+Crowdin recognizes a wide variety of placeholder formats commonly used in different programming languages, frameworks, and localization standards. Below are examples grouped by common styles. Note that some placeholder syntaxes might overlap or be used across multiple languages or frameworks.
+
+### Printf-style (C, PHP, Python, Java, Objective-C, etc.)
+
+These formats typically start with `%` and can include flags, width, precision, and type specifiers.
+
+**Common Type Specifiers:**
+
+```
+%d, %i          // Integer
+%u, %x, %X, %o // Unsigned Integer, Hexadecimal, Octal
+%f, %F, %e, %E, %g, %G // Float / Double
+%s              // String
+%c              // Character
+%b              // Binary
+%p, %zx         // Pointer address / Hexadecimal
+%@              // Objective-C object
+%a, %A          // Hexadecimal float
+%ld, %li        // Long integer
+%lf             // Long float (double)
+%lu, %lx, %lX   // Long unsigned integer
+%n              // Newline (in some contexts)
+%h              // Short integer (in some contexts)
+%l              // Long integer (alternative)
+%M              // Minutes (date/time context)
+%P              // AM/PM (date/time context)
+%S              // Uppercase 's' type (e.g., used in Android XML)
+%H              // Hour (date/time context)
+```
+
+**Positional Arguments (e.g., Java, PHP):**
+
+```
+%1$s, %2$d   // Argument 1 is string, Argument 2 is integer
+%3$s, %2$s   // Re-using arguments
+%1$d, %2$d, %3$d // Multiple integer arguments
+%4$s         // String argument
+%1$S, %2$S, %3$S // Uppercase 'S' type with position
+%5$tD, %5$tR // Java date/time formatting
+%6$tD, %6$tR
+%1$#@var@    // Custom/complex format (example 'var' kept for illustration)
+```
+
+**Width, Precision, Flags, and Padding:**
+
+```
+%10s       // Minimum width 10
+%.5f       // Precision 5 for float
+%10.5f     // Width 10, Precision 5
+%04d       // Pad with zeros to width 4
+%-10s      // Left-align within width 10
+%+d        // Always show sign (+ or -)
+%.*s       // Dynamic precision from argument
+%.*f       // Dynamic precision for float
+%*.*f      // Dynamic width and precision from arguments
+%#o        // Alternate form (e.g., leading 0 for octal)
+%1$-4d     // Positional, left-aligned, width 4
+%+4d       // Show sign, width 4
+%+-4d      // Show sign, left-aligned, width 4
+%-4d       // Left-aligned, width 4
+%-014d     // Left-aligned, zero-padded, width 14
+%05.2f     // Zero-padded width 5, precision 2
+%05d       // Zero-padded width 5
+%08x       // Zero-padded width 8, hex
+%010.2f    // Zero-padded width 10, precision 2
+%4.1s      // Width 4, precision 1 for string
+%-d        // Left-aligned integer
+%10.10s    // Width 10, precision 10 for string
+```
+
+**Named Arguments (e.g., Python):**
+
+```
+%(name)s
+%(count)d
+%(placeholder) // Name without type specifier
+```
+
+**Date/Time (e.g., `strftime`):**
+
+```
+%Y-%m-%d
+%H:%M:%S // Note: Might be interpreted as separate %H, %M, %S
+%G-%m-%d %I:%M %p // Note: Complex combinations
+%B %-e, %Y
+```
+
+**Specific/Uncommon Printf Variations:**
+
+```
+%1F, %2 // May depend on specific parsers
+%1d     // May depend on specific parsers
+%NEWLINE% // Common in some specific file formats
+```
+
+### ICU MessageFormat / .NET / Java Style
+
+These formats typically use curly braces (`{ }`).
+
+**Indexed Arguments:**
+
+```
+{0}, {1}, {2}
+```
+
+**Named Arguments:**
+
+```
+{name}, {count}, {variable}
+{index}
+{item}
+{placeholder}
+{term}
+{number} // Used as name
+{6}, {4} // Numbers as names/indices
+```
+
+**Formatted Arguments (ICU / .NET):**
+
+```
+{0,number,integer}
+{index,alignment:format}
+{index,alignment}
+{index:format}
+{value, -10} // Alignment
+{value, 6:N2} // Alignment and .NET numeric format
+{0:C2} // .NET Currency format
+{0:d}  // .NET Short date format
+{0:t}  // .NET Short time format
+{0,-10} // Alignment
+{0,-12} // Alignment
+{1,8:yyyy} // .NET Custom date format with alignment
+{2,12:N0}  // .NET Number format with alignment
+{3,8:yyyy}
+{4,12:N0}
+{5,14:P1} // .NET Percentage format with alignment
+{0,12:C2}
+{0,12:E3} // .NET Scientific format
+{0,12:F4} // .NET Fixed-point format
+{0,12:N3} // .NET Number format
+{1,12:P2} // .NET Percentage format
+```
+
+**Simple Expressions (.NET):**
+
+```
+{index+1}
+```
+
+**Multi-Level Braces (e.g., Handlebars, other templating):**
+
+```
+{string}
+{{string}}
+{{{string}}}
+{{-6}} // Numbers within double braces
+```
+
+### PHP Style
+
+Includes standard variables and object/array access.
+
+```
+$variable
+$object->property
+$array['key']
+$array["key"]
+{$variable} // Complex syntax
+$_ // Special variable (also used in Ruby)
+$y$, $x$ // Single letters within dollars (could be specific context)
+$t$
+$var$ // Variable name enclosed in dollars
+$TAG_START$, $TAG_END$ // Often used for markup/tags
+```
+
+### Python Style
+
+Besides Printf-style and ICU-style, includes `.format()` style.
+
+```
+{0}, {1}   // Indexed
+{name}     // Named
+```
+
+### Ruby / Rails Style
+
+```
+%{name}
+#{variable}
+#{$$} // Special variable
+$_ // Special variable (also used in PHP)
+```
+
+### Twig Style
+
+Includes variables, filters, functions, and control structure tags.
+
+**Variable Output:**
+
+```
+{{ variable }} // Simple variable
+{{ object.property }} // Object property access
+{{ array["key"] }} // Array access (double quotes)
+{{ array['key'] }} // Array access (single quotes)
+{{ function() }} // Function call
+{{ variable|filter }} // Single filter
+{{ variable | filter1 | filter2 }} // Chained filters
+{{ attach_library('path/name') }} // Function call with string argument
+{{ content|without('attribute') }} // Filter with string argument
+{{ $php_variable["key"] }} // Accessing PHP-like variable inside Twig
+{{ url('<route_name>') }} // URL function call
+{{ value|true|false }} // Value with boolean filters
+```
+
+**Tags / Blocks:**
+
+```
+{% if condition %}
+{% endif %}
+{% trans %}
+{% endtrans %}
+{% block name %}
+{% endblock name %}
+{% if constant('CONSTANT_NAME') or variable != value %} // Complex condition
+{% if variable is empty %}
+```
+
+### Freemarker Style
+
+Uses `${...}` for variable output and `<#...>` or `</#...>` for directives.
+
+**Variable Output:**
+
+```
+${variable}
+${object.property}
+${value}$ // Value within syntax
+```
+
+**Directives:**
+
+```
+<#if condition>
+</#if>
+<#elseif condition>
+<#else>
+<#recover>
+<#include "/path/to/template.ftl">
+<#list items as item>
+</#list>
+```
+
+### Miscellaneous / Other Formats
+
+Various other formats recognized by Crowdin.
+
+```
+&_var_& // Ampersand underscore
+*|Object.Property|* // Pipe symbols
+\(variable) // Backslash parentheses (Note: Backslash is part of the placeholder)
+:placeholder: // Colons
+$placeholder$ // Dollar signs
+__placeholder__ // Double underscores (example: __count__)
+&var& // Double underscores with ampersand content
+$(variable) // Dollar parentheses
+%%variable%% // Double percent signs
+%variable% // Single percent signs (may overlap with Printf, used in Twig/other)
+```
