@@ -11530,6 +11530,63 @@ paths:
                 $ref: '#/components/schemas/InternalServerErrorExceptionResource'
       x-doc-sections:
         - string-based
+  '/projects/{projectId}/comments/{commentId}/attachments/{attachmentId}':
+    delete:
+      tags:
+        - 'String Comments'
+      summary: 'Delete Attachment from String Comment'
+      operationId: api.projects.comments.attachments.delete
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/CommentId'
+        -
+          name: attachmentId
+          in: path
+          description: 'Attachment Identifier'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Attachment was successfully removed from the comment'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseStringCommentResource'
+        '404':
+          description: 'Project, comment or attachment with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '503':
+          description: 'Service Unavailable'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+      x-doc-sections:
+        - string-based
   '/projects/{projectId}/comments':
     get:
       tags:
@@ -38176,6 +38233,16 @@ components:
             - context_request
             - source_mistake
           example: translation_mistake
+        attachments:
+          description: 'List of attachments to be added to the comment. Each object must contain id (Storage Identifier). Get via [List Storages](#operation/api.storages.getMany)'
+          type: array
+          items:
+            properties:
+              id:
+                description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
+                type: integer
+                example: 123
+            type: object
       type: object
     EnterpriseAssetCommentCreateForm:
       required:
@@ -38215,6 +38282,16 @@ components:
             - context_request
             - source_mistake
           example: translation_mistake
+        attachments:
+          description: 'List of attachments to be added to the comment. Each object must contain id (Storage Identifier). Get via [List Storages](#operation/api.storages.getMany)'
+          type: array
+          items:
+            properties:
+              id:
+                description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
+                type: integer
+                example: 123
+            type: object
       type: object
     StringCommentCreateForm:
       required:
@@ -38250,6 +38327,16 @@ components:
             - context_request
             - source_mistake
           example: translation_mistake
+        attachments:
+          description: 'List of attachments to be added to the comment. Each object must contain id (Storage Identifier). Get via [List Storages](#operation/api.storages.getMany)'
+          type: array
+          items:
+            properties:
+              id:
+                description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
+                type: integer
+                example: 123
+            type: object
       type: object
     AssetCommentCreateForm:
       required:
@@ -38285,6 +38372,16 @@ components:
             - context_request
             - source_mistake
           example: translation_mistake
+        attachments:
+          description: 'List of attachments created via Storage API. Each item must contain storage ID.'
+          type: array
+          items:
+            properties:
+              id:
+                description: 'Storage ID returned by the Storage API'
+                type: integer
+                example: 123
+            type: object
       type: object
     EnterpriseStringCommentCollectionResource:
       description: 'String Comment Collection Resource'
@@ -38527,6 +38624,45 @@ components:
           type: string
           format: date-time
           example: '2019-09-20T11:05:24+00:00'
+        attachments:
+          description: 'List of attachments added to the comment'
+          type: array
+          items:
+            properties:
+              id:
+                description: 'Attachment ID'
+                type: integer
+                example: 10
+              name:
+                description: 'Original file name'
+                type: string
+                example: screenshot.png
+              mime:
+                description: 'MIME type'
+                type: string
+                example: image/png
+              size:
+                description: 'File size in bytes'
+                type: integer
+                example: 12345
+              category:
+                description: 'Attachment category (image, video, audio, document, other)'
+                type: string
+                example: image
+              thumbnailUrl:
+                description: 'Thumbnail URL'
+                type: string
+                example: 'https://example.com/thumbnail.png'
+                nullable: true
+              url:
+                description: 'Preview URL'
+                type: string
+                example: 'https://example.com/original.png'
+              downloadUrl:
+                description: 'Download URL'
+                type: string
+                example: 'https://example.com/raw.png'
+            type: object
       type: object
     EnterpriseStringComment:
       title: 'String/Asset Comment'
@@ -38677,6 +38813,45 @@ components:
           description: 'Created at'
           type: string
           example: '2019-09-20T11:05:24+00:00'
+        attachments:
+          description: 'List of attachments added to the comment'
+          type: array
+          items:
+            properties:
+              id:
+                description: 'Attachment ID'
+                type: integer
+                example: 10
+              name:
+                description: 'Original file name'
+                type: string
+                example: screenshot.png
+              mime:
+                description: 'MIME type'
+                type: string
+                example: image/png
+              size:
+                description: 'File size in bytes'
+                type: integer
+                example: 12345
+              category:
+                description: 'Attachment category (image, video, audio, document, other)'
+                type: string
+                example: image
+              thumbnailUrl:
+                description: 'Thumbnail URL'
+                type: string
+                example: 'https://example.com/thumbnail.png'
+                nullable: true
+              url:
+                description: 'Preview URL'
+                type: string
+                example: 'https://example.com/original.png'
+              downloadUrl:
+                description: 'Download URL'
+                type: string
+                example: 'https://example.com/raw.png'
+            type: object
       type: object
     StringComment:
       title: 'String/Asset Comment'
