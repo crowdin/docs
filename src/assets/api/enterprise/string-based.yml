@@ -8924,6 +8924,10 @@ paths:
                   $ref: '#/components/schemas/GroupSourceContentUpdates'
                 -
                   $ref: '#/components/schemas/GroupTimeSpent'
+                -
+                  $ref: '#/components/schemas/GroupPreTranslateAccuracy'
+                -
+                  $ref: '#/components/schemas/GroupTranslatorAccuracy'
       responses:
         '201':
           description: 'Report generation was successfully started'
@@ -9305,6 +9309,10 @@ paths:
                   $ref: '#/components/schemas/GroupSourceContentUpdates'
                 -
                   $ref: '#/components/schemas/GroupTimeSpent'
+                -
+                  $ref: '#/components/schemas/GroupPreTranslateAccuracy'
+                -
+                  $ref: '#/components/schemas/GroupTranslatorAccuracy'
       responses:
         '201':
           description: 'Report generation was successfully started'
@@ -33877,6 +33885,98 @@ components:
             type: integer
             example: 13
       type: object
+    GroupPreTranslateAccuracy:
+      title: 'Group Pre-translation Accuracy'
+      description: "Calculate the accuracy of the pre-translation process\n\n__Note:__ The strings included in this report must be approved and have at least one \"pre-translate\" type translation. All other human translations will not be considered in this report, except in cases where such a translation is approved and used as a reference."
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: group-pre-translate-accuracy
+          type: string
+          example: group-pre-translate-accuracy
+        schema:
+          $ref: '#/components/schemas/group-pre-translate-accuracy.report.general'
+      type: object
+    group-pre-translate-accuracy.report.general:
+      title: General
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DefaultReportShemaWithDate'
+        -
+          properties:
+            postEditingCategories:
+              description: 'Split into categories by edit distance. **Deprecated**. Use `matchScoreCategories` instead'
+              type: array
+              items:
+                type: string
+                example: 0-10
+              deprecated: true
+            matchScoreCategories:
+              description: 'Split into categories by match score. Ranges should be in descending order (e.g., 100-90, 89-80)'
+              type: array
+              items:
+                type: string
+                example: 100-90
+            projectIds:
+              description: 'Project Identifier for which the report should be generated. Get via [List Projects](#operation/api.projects.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 13
+    GroupTranslatorAccuracy:
+      title: 'Group Translator Accuracy'
+      description: "Calculate the accuracy of the user process\n\n__Note:__ The strings included in this report must be approved and translated by a human. Any other translations, including those that are only self-approved, will not be included unless they are also approved by another party and used as a reference."
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: group-translator-accuracy
+          type: string
+          example: group-translator-accuracy
+        schema:
+          $ref: '#/components/schemas/group-translator-accuracy.report.general'
+      type: object
+    group-translator-accuracy.report.general:
+      title: General
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DefaultReportShemaWithDate'
+        -
+          properties:
+            postEditingCategories:
+              description: 'Split into categories by edit distance. **Deprecated**. Use `matchScoreCategories` instead'
+              type: array
+              items:
+                type: string
+                example: 0-10
+              deprecated: true
+            matchScoreCategories:
+              description: 'Split into categories by match score. Ranges should be in descending order (e.g., 100-90, 89-80)'
+              type: array
+              items:
+                type: string
+                example: 90-100
+            languageId:
+              description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+              type: string
+              example: ach
+            userIds:
+              description: 'Array of user ids. Get via [List Project Members](#operation/api.projects.members.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 13
+            projectIds:
+              description: 'Project Identifier for which the report should be generated. Get via [List Projects](#operation/api.projects.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 13
     PreTranslateAccuracy:
       title: 'Pre-translation Accuracy'
       description: "Calculate the accuracy of the pre-translation process\n\n__Note:__ The strings included in this report must be approved and have at least one \"pre-translate\" type translation. All other human translations will not be considered in this report, except in cases where such a translation is approved and used as a reference."
@@ -33909,11 +34009,38 @@ components:
         -
           properties:
             postEditingCategories:
-              description: 'Split into categories by edit distance'
+              description: 'Split into categories by edit distance. **Deprecated**. Use `matchScoreCategories` instead'
               type: array
               items:
                 type: string
                 example: 0-10
+              deprecated: true
+            matchScoreCategories:
+              description: 'Split into categories by match score. Ranges should be in descending order (e.g., 100-90, 89-80)'
+              type: array
+              items:
+                type: string
+                example: 100-90
+            branchIds:
+              description: 'Array of branch ids. Get via [List Branches](#operation/api.projects.branches.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 18
+            labelIds:
+              description: 'Array of label ids. Get via [List Labels](#operation/api.projects.labels.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 13
+            labelIncludeType:
+              description: 'Defines which strings include in report'
+              type: string
+              default: strings_with_label
+              enum:
+                - strings_with_label
+                - strings_without_label
+              example: strings_without_label
     pre-translate-accuracy.report.byTask:
       title: 'By Task'
       type: object
@@ -33923,11 +34050,18 @@ components:
         -
           properties:
             postEditingCategories:
-              description: 'Split into categories by edit distance'
+              description: 'Split into categories by edit distance. **Deprecated**. Use `matchScoreCategories` instead'
               type: array
               items:
                 type: string
                 example: 0-10
+              deprecated: true
+            matchScoreCategories:
+              description: 'Split into categories by match score. Ranges should be in descending order (e.g., 100-90, 89-80)'
+              type: array
+              items:
+                type: string
+                example: 90-100
             taskId:
               description: 'Task Identifier for which the report should be generated. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
               type: integer
@@ -33954,11 +34088,18 @@ components:
         -
           properties:
             postEditingCategories:
-              description: 'Split into categories by edit distance'
+              description: 'Split into categories by edit distance. **Deprecated**. Use `matchScoreCategories` instead'
               type: array
               items:
                 type: string
                 example: 0-10
+              deprecated: true
+            matchScoreCategories:
+              description: 'Split into categories by match score. Ranges should be in descending order (e.g., 100-90, 89-80)'
+              type: array
+              items:
+                type: string
+                example: 90-100
             languageId:
               description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
               type: string
@@ -33969,6 +34110,26 @@ components:
               items:
                 type: integer
                 example: 13
+            branchIds:
+              description: 'Array of branch ids. Get via [List Branches](#operation/api.projects.branches.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 18
+            labelIds:
+              description: 'Array of label ids. Get via [List Labels](#operation/api.projects.labels.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 13
+            labelIncludeType:
+              description: 'Defines which strings include in report'
+              type: string
+              default: strings_with_label
+              enum:
+                - strings_with_label
+                - strings_without_label
+              example: strings_without_label
     CostsEstimationPostEditing:
       title: 'Costs Estimation Post-Editing'
       description: 'Calculate the approximate translation costs to help plan your budget'
