@@ -1554,6 +1554,66 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  /ai/providers/supported-models:
+    get:
+      tags:
+        - AI
+      summary: 'List Supported AI Provider Models'
+      operationId: api.ai.providers.supported-models.enterprise.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+        -
+          name: providerType
+          in: query
+          required: false
+          example: open_ai
+        -
+          name: enabled
+          in: query
+          description: 'Filter by enabled providers'
+          required: false
+          schema:
+            type: boolean
+        -
+          name: orderBy
+          in: query
+          description: 'Read more about [sorting rules](#section/Introduction/Sorting)'
+          required: false
+          schema:
+            type: string
+            default: knowledgeCutoff
+            enum:
+              - knowledgeCutoff
+              - releaseDate
+          example: 'knowledgeCutoff desc'
+      responses:
+        '200':
+          description: 'Available AI models list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiSupportedModelCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
   '/ai/providers/{aiProviderId}/chat/completions':
     post:
       tags:
@@ -2307,6 +2367,7 @@ paths:
           name: orderBy
           in: query
           description: 'Read more about [sorting rules](#section/Introduction/Sorting)'
+          required: false
           schema:
             type: string
             default: id
@@ -2323,6 +2384,7 @@ paths:
           name: name
           in: query
           description: 'Filter branch by name'
+          required: false
           schema:
             type: string
         -
@@ -21507,6 +21569,28 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/CrowdinAiProvider'
+    AiSupportedModelCollectionResource:
+      description: 'AI Supported Model Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/AiSupportedModelResource'
+    AiSupportedModelResource:
+      description: 'AI Supported Model Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AiSupportedModel'
     AiProviderModel:
       title: 'AiProvider Model'
       properties:
@@ -21599,6 +21683,94 @@ components:
           properties:
             config:
               $ref: '#/components/schemas/ai.provider.crowdin_configuration'
+    AiSupportedModel:
+      description: 'AI Supported Model'
+      properties:
+        providerId:
+          description: 'ID of the configured AI provider'
+          type: integer
+          nullable: true
+        providerType:
+          description: "Type of the AI provider (e.g., 'open_ai')"
+          type: string
+        providerName:
+          description: 'Human-readable name of the AI provider'
+          type: string
+        id:
+          description: "Model identifier (e.g., 'gpt-5')"
+          type: string
+        displayName:
+          description: 'Human-readable model name'
+          type: string
+        supportReasoning:
+          description: 'Indicates if the model supports reasoning (thinking)'
+          type: boolean
+        intelligence:
+          description: 'Intelligence level (approximately, from public data)'
+          type: integer
+        speed:
+          description: 'Speed level (approximately, from public data)'
+          type: integer
+        price:
+          description: 'Pricing per 1M tokens'
+          properties:
+            input:
+              description: 'Price per 1M of input token'
+              type: number
+              format: float
+            output:
+              description: 'Price per 1M of output token'
+              type: number
+              format: float
+          type: object
+        modalities:
+          description: 'Supported input/output modalities'
+          properties:
+            input:
+              properties:
+                text:
+                  type: boolean
+                image:
+                  type: boolean
+                audio:
+                  type: boolean
+              type: object
+            output:
+              properties:
+                text:
+                  type: boolean
+                image:
+                  type: boolean
+                audio:
+                  type: boolean
+              type: object
+          type: object
+        contextWindow:
+          description: 'Context window size'
+          type: integer
+        maxOutputTokens:
+          description: 'Maximum output tokens'
+          type: integer
+        knowledgeCutoff:
+          description: 'Knowledge cutoff date'
+          type: string
+          format: date-time
+          nullable: true
+        releaseDate:
+          description: 'Release date'
+          type: string
+          format: date-time
+          nullable: true
+        features:
+          properties:
+            streaming:
+              type: boolean
+            structuredOutput:
+              type: boolean
+            functionCalling:
+              type: boolean
+          type: object
+      type: object
     AiProxyChatCompletionCreateForm:
       oneOf:
         -
