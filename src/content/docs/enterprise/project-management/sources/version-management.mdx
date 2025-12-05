@@ -28,7 +28,7 @@ Example of branch structure in Crowdin Enterprise:
 
 ## Managing Branches
 
-You can create, clone, merge, rename, prioritize, or delete branches in Crowdin to streamline localization alongside development. Use the available UI options, API, or CLI depending on your workflow and project type.
+You can create, clone, merge, rename, prioritize, protect, or delete branches in Crowdin Enterprise to streamline localization alongside development. Use the available UI options, API, or CLI depending on your workflow and project type.
 
 ### Creating Branches
 
@@ -83,6 +83,38 @@ With the Crowdin CLI, you can manage branches directly from your local environme
   Read more about [Branch Management with CLI](https://crowdin.github.io/crowdin-cli/commands/crowdin-branch).
 </ReadMore>
 
+### Protected Branches
+
+For string-based projects, you can make specific branches protected (e.g., your `main` or `production` branch) to ensure content stability. When the **Enable Protection** option is active for a branch, direct modifications to its content are restricted.
+
+The following actions are not allowed in a protected branch:
+
+* Uploading new source content.
+* Deleting existing source content.
+* Adding translations or approvals directly to strings in that branch.
+
+#### Working with Protected Branches
+
+The primary workflow for protected branches involves performing all content updates and translations in a separate branch (e.g., a cloned `dev` branch) and then merging those changes into the protected branch.
+
+Crowdin Enterprise provides visual indicators when you are viewing a protected branch:
+
+* **Upload Tab**: If you select a protected branch as the target, a blue note appears: "The uploading of files to protected branches is not allowed."
+* **Strings Tab**: A yellow note appears: "You have currently selected a protected branch. No operations with strings are allowed."
+* **Editor**: If you attempt to edit a string, the input fields will be disabled. Hovering over the translation field displays the tooltip: "Not allowed for strings from protected branch."
+
+To update a protected branch, follow these steps:
+
+<Steps>
+  1. [Clone](#cloning-branches) the protected branch (e.g., create `dev` from `main`).
+  2. Perform necessary actions in the cloned branch (upload source files, add translations, approve strings).
+  3. [Merge](#merging-branches) the cloned branch back into the protected branch.
+</Steps>
+
+<Aside type="caution" title="Limitations">
+  Protected branches are only available for [string-based](/creating-project/#string-based-project) projects.
+</Aside>
+
 ### Cloning Branches
 
 You can create a copy of an existing branch using the **New Version Branch** dialog or the **Clone** option in the context menu.
@@ -105,7 +137,7 @@ To clone a branch, follow these steps:
 
 ### Merging Branches
 
-You can merge one branch into another directly from the **Branches** tab using the context menu. During the merge process, Crowdin Enterprise displays a summary of changes and allows you to select exactly which changes to accept before completing the merge.
+You can merge one branch into another directly from the **Branches** tab using the context menu. During the merge process, Crowdin Enterprise displays a summary of changes (i.e., source text updates and new translations), allowing you to select exactly which changes to accept before completing the merge.
 
 <Steps>
   1. In the **Branches** tab, hover over the source branch you want to merge.
@@ -127,10 +159,19 @@ In the upper-right corner, next to the filter, you'll also see a high-level summ
 * <Icon name="mdi:square-edit-outline" class="inline-icon text-blue-600" /> **Changed strings**
 * <Icon name="mdi:alert-outline" class="inline-icon text-yellow-700" /> **Conflicted strings**
 
-Key features of this page:
+**Reviewing Translation Changes**
+
+If a string has no changes to the source text but includes new translations, it will appear in the list. You can expand the string details using the arrow icon <Icon name="mdi:chevron-down" class="inline-icon" /> to view the specific translation changes:
+
+* **New Translations**: Highlighted in green with a <Icon name="mdi:plus" class="inline-icon" /> sign.
+* **Deleted Translations**: If a translation was removed in the source branch, it will appear highlighted in red.
+* **Approvals**: If a translation is approved in the source branch, it will display a <Icon name="mdi:check-circle-outline" class="inline-icon" /> **Approved** label.
+* **Metadata**: You can see the vote rating and the **Date added** for the translation.
+
+**Key features of this page:**
 
 * **Selective Merging**: You must manually select each change (added, changed, or removed string) that you want to apply to the target branch. A counter (e.g., **1 of 4 selected**) in the upper-left corner tracks your selections.
-* **Default Behavior**: If you do not select a change, the target branch's version will be preserved. For example, if you don't select a "String Added" row, that new string from the source branch will not be added to the target branch.
+* **No Implicit Merges**: Only the strings you manually select on the Merge summary page will be merged. If you do not select a string, no changes (neither source nor translation) will be applied to the target branch.
 * **String Details**: Each string in the list displays its context, maximum length (if set), and a timestamp shows when that string was last modified.
 * **Open in Editor**: Hover over a string to see the **Open in Editor** link, which opens that string in a new tab.
 
@@ -140,14 +181,14 @@ To filter the list to review specific types of changes, click <Icon name="mdi:fi
 
 Available filter options:
 
-* **All changes**: Shows all strings that are different between the branches.
+* **All changes**: Shows all differences (source and translation) between the branches.
 * **Added strings**: Shows only strings that exist in the source branch but not the target.
 * **Deleted strings**: Shows only strings that exist in the target branch but were removed in the source.
-* **Changed strings**: Shows strings that were modified in the source branch.
-* **Conflicted strings**: Shows strings that were modified in both the source and target branches, or strings that were deleted in the source but modified in the target (if the target's modification is newer). Conflicted strings are highlighted in yellow to call attention to them.
+* **Changed strings**: Shows strings that were modified in the source branch (including translation updates).
+* **Conflicted strings**: Shows strings where the content differs between branches in a way that requires attention. This includes strings modified in both branches, or strings that are newer in the target branch than in the source branch.
 
-<Aside>
-  If a string was changed in the target branch but remained unchanged in the source branch (since it was cloned), it will not appear in the merge summary. Crowdin Enterprise considers the target branch's version to be the most up-to-date in this case, and it will be kept automatically.
+<Aside type="caution">
+  Pay close attention to **Conflicted strings**. If a string was updated in the target branch (e.g., `main`) after the source branch was created, selecting it for merge will **overwrite** the newer version in the target branch with the older version from the source branch.
 </Aside>
 
 #### Completing the Merge
@@ -157,7 +198,7 @@ Once you have selected all the changes you want to apply, you can finalize the m
 At the bottom of the page, you'll find:
 
 * **Delete \{source_branch} after merge** (Optional): Select this to automatically delete the source branch (e.g., `dev`) after its changes are successfully merged. This is useful for cleaning up temporary feature branches. Leave it unselected if you plan to continue working on the source branch.
-* **Merge**: Click this to apply all selected changes to the target branch. This button remains disabled until you select at least one change (an added, changed, or deleted string) from the list.
+* **Merge**: Click this to apply all selected changes to the target branch. This button remains disabled until you select at least one change (an added, changed, or deleted string, or changes to translations) from the list.
 
 Once the merge is complete, translations, approvals, and votes from both branches will be combined for the strings you selected.
 
