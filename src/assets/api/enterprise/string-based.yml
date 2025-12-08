@@ -13578,11 +13578,162 @@ paths:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
       x-doc-sections:
         - string-based
+  /tasks:
+    get:
+      tags:
+        - Tasks
+      summary: 'List Tasks'
+      description: 'List all organization tasks.'
+      operationId: api.tasks.getMany
+      parameters:
+        -
+          name: orderBy
+          in: query
+          description: 'Read more about [sorting rules](#section/Introduction/Sorting)'
+          schema:
+            type: string
+            default: id
+            enum:
+              - id
+              - type
+              - title
+              - status
+              - description
+              - createdAt
+              - updatedAt
+              - deadline
+              - startedAt
+              - resolvedAt
+          example: 'createdAt desc,title'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+        -
+          $ref: '#/components/parameters/EnterpriseTaskStatus'
+        -
+          name: type
+          in: query
+          description: "Filter by task type. It can be one type or a list of comma-separated type values\n\n- 0 - translate by own translators\n- 1 - proofread by own proofreaders\n- 2 - translate by vendor\n- 3 - proofread by vendor"
+          schema:
+            type: string
+          example: '1,2'
+        -
+          name: projectIds
+          in: query
+          description: 'Filter by project IDs. It can be one ID or a list of comma-separated ID values. Cannot be used together with groupIds'
+          schema:
+            type: string
+          example: '1,2,3'
+        -
+          name: groupIds
+          in: query
+          description: 'Filter by group IDs. It can be one ID or a list of comma-separated ID values. Cannot be used together with projectIds. Enterprise only'
+          schema:
+            type: string
+          example: '10,20'
+        -
+          name: assigneeIds
+          in: query
+          description: 'Filter by assignee user IDs. It can be one ID or a list of comma-separated ID values'
+          schema:
+            type: string
+          example: '10,20'
+        -
+          name: creatorIds
+          in: query
+          description: 'Filter by creator user IDs. It can be one ID or a list of comma-separated ID values'
+          schema:
+            type: string
+          example: '5,15'
+        -
+          name: targetLanguageIds
+          in: query
+          description: 'Filter by target language IDs. It can be one ID or a list of comma-separated ID values'
+          schema:
+            type: string
+          example: 'uk,fr,de'
+        -
+          name: sourceLanguageIds
+          in: query
+          description: 'Filter by source language IDs. It can be one ID or a list of comma-separated ID values. Cannot be used together with projectIds'
+          schema:
+            type: string
+          example: en
+        -
+          name: createdAtFrom
+          in: query
+          description: 'Filter tasks created from this date (ISO 8601)'
+          schema:
+            type: string
+            format: date-time
+          example: '2025-01-01T00:00:00Z'
+        -
+          name: createdAtTo
+          in: query
+          description: 'Filter tasks created until this date (ISO 8601)'
+          schema:
+            type: string
+            format: date-time
+          example: '2025-12-31T23:59:59Z'
+        -
+          name: deadlineFrom
+          in: query
+          description: 'Filter tasks with deadline from this date (ISO 8601)'
+          schema:
+            type: string
+            format: date-time
+          example: '2025-01-01T00:00:00Z'
+        -
+          name: deadlineTo
+          in: query
+          description: 'Filter tasks with deadline until this date (ISO 8601)'
+          schema:
+            type: string
+            format: date-time
+          example: '2025-12-31T23:59:59Z'
+      responses:
+        '200':
+          description: 'Tasks list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseTaskCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '503':
+          description: 'Service Unavailable'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
   '/projects/{projectId}/tasks/{taskId}/exports':
     post:
       tags:
         - Tasks
-      summary: 'Export Task Strings'
+      summary: 'Export Project Task Strings'
       operationId: api.projects.tasks.exports.post
       parameters:
         -
@@ -13626,7 +13777,7 @@ paths:
     get:
       tags:
         - Tasks
-      summary: 'List Task Settings Templates'
+      summary: 'List Project Task Settings Templates'
       operationId: api.projects.tasks.settings-templates.getMany
       parameters:
         -
@@ -13675,7 +13826,7 @@ paths:
     post:
       tags:
         - Tasks
-      summary: 'Add Task Settings Template'
+      summary: 'Add Project Task Settings Template'
       operationId: api.projects.tasks.settings-templates.post
       parameters:
         -
@@ -13726,7 +13877,7 @@ paths:
     get:
       tags:
         - Tasks
-      summary: 'Get Task Settings Template'
+      summary: 'Get Project Task Settings Template'
       operationId: api.projects.tasks.settings-templates.get
       parameters:
         -
@@ -13767,7 +13918,7 @@ paths:
     delete:
       tags:
         - Tasks
-      summary: 'Delete Task Settings Template'
+      summary: 'Delete Project Task Settings Template'
       operationId: api.projects.tasks.settings-templates.delete
       parameters:
         -
@@ -13804,7 +13955,7 @@ paths:
     patch:
       tags:
         - Tasks
-      summary: 'Edit Task Settings Template'
+      summary: 'Edit Project Task Settings Template'
       operationId: api.projects.tasks.settings-templates.patch
       parameters:
         -
@@ -13858,7 +14009,7 @@ paths:
     get:
       tags:
         - Tasks
-      summary: 'List Tasks'
+      summary: 'List Project Tasks'
       operationId: api.projects.tasks.getMany
       parameters:
         -
@@ -13924,7 +14075,7 @@ paths:
     post:
       tags:
         - Tasks
-      summary: 'Add Task'
+      summary: 'Add Project Task'
       operationId: api.projects.tasks.post
       parameters:
         -
@@ -13995,7 +14146,7 @@ paths:
     get:
       tags:
         - Tasks
-      summary: 'Get Task'
+      summary: 'Get Project Task'
       operationId: api.projects.tasks.get
       parameters:
         -
@@ -14044,7 +14195,7 @@ paths:
     delete:
       tags:
         - Tasks
-      summary: 'Delete Task'
+      summary: 'Delete Project Task'
       operationId: api.projects.tasks.delete
       parameters:
         -
@@ -14087,7 +14238,7 @@ paths:
     patch:
       tags:
         - Tasks
-      summary: 'Edit Task'
+      summary: 'Edit Project Task'
       operationId: api.projects.tasks.patch
       parameters:
         -
@@ -14161,7 +14312,7 @@ paths:
     get:
       tags:
         - Tasks
-      summary: 'List Tasks Comments'
+      summary: 'List Project Task Comments'
       operationId: api.projects.tasks.comments.getMany
       parameters:
         -
@@ -14206,7 +14357,7 @@ paths:
     post:
       tags:
         - Tasks
-      summary: 'Add Task Comment'
+      summary: 'Add Project Task Comment'
       operationId: api.projects.tasks.comments.post
       parameters:
         -
@@ -14265,7 +14416,7 @@ paths:
     get:
       tags:
         - Tasks
-      summary: 'Get Task Comment'
+      summary: 'Get Project Task Comment'
       operationId: api.projects.tasks.comments.get
       parameters:
         -
@@ -14308,7 +14459,7 @@ paths:
     delete:
       tags:
         - Tasks
-      summary: 'Delete Task Comment'
+      summary: 'Delete Project Task Comment'
       operationId: api.projects.tasks.comments.delete
       parameters:
         -
@@ -14341,7 +14492,7 @@ paths:
     patch:
       tags:
         - Tasks
-      summary: 'Edit Task Comment'
+      summary: 'Edit Project Task Comment'
       operationId: api.projects.tasks.comments.patch
       parameters:
         -
@@ -41601,6 +41752,117 @@ components:
           format: date-time
           example: '2019-09-27T07:00:14+00:00'
       type: object
+    CrowdinOrganizationTaskCollectionForm:
+      description: 'Query parameters for listing organization tasks (Crowdin)'
+      properties:
+        orderBy:
+          description: 'Read more about [sorting rules](#section/Introduction/Sorting)'
+          type: string
+          example: 'createdAt desc,title'
+        offset:
+          description: 'Starting offset in the collection'
+          type: integer
+          minimum: 0
+          example: 0
+        limit:
+          description: 'Maximum number of items to return'
+          type: integer
+          minimum: 1
+          example: 25
+        status:
+          description: 'Filter by task status'
+          type: array
+          items:
+            type: string
+          example:
+            - todo
+            - in_progress
+        type:
+          description: 'Filter by task type'
+          type: array
+          items:
+            type: integer
+          example:
+            - 1
+            - 2
+        projectIds:
+          description: 'Filter by project IDs. Cannot be used together with groupIds'
+          type: array
+          items:
+            type: integer
+          example:
+            - 1
+            - 2
+            - 3
+        assigneeIds:
+          description: 'Filter by assignee user IDs'
+          type: array
+          items:
+            type: integer
+          example:
+            - 10
+            - 20
+        creatorIds:
+          description: 'Filter by creator user IDs'
+          type: array
+          items:
+            type: integer
+          example:
+            - 5
+            - 15
+        targetLanguageIds:
+          description: 'Filter by target language IDs'
+          type: array
+          items:
+            type: string
+          example:
+            - uk
+            - fr
+            - de
+        sourceLanguageIds:
+          description: 'Filter by source language IDs'
+          type: array
+          items:
+            type: string
+          example:
+            - en
+        createdAtFrom:
+          description: 'Filter tasks created from this date (ISO 8601)'
+          type: string
+          format: date-time
+          example: '2024-01-01T00:00:00Z'
+        createdAtTo:
+          description: 'Filter tasks created until this date (ISO 8601)'
+          type: string
+          format: date-time
+          example: '2024-12-31T23:59:59Z'
+        deadlineFrom:
+          description: 'Filter tasks with deadline from this date (ISO 8601)'
+          type: string
+          format: date-time
+          example: '2024-01-01T00:00:00Z'
+        deadlineTo:
+          description: 'Filter tasks with deadline until this date (ISO 8601)'
+          type: string
+          format: date-time
+          example: '2024-12-31T23:59:59Z'
+      type: object
+    EnterpriseOrganizationTaskCollectionForm:
+      description: 'Query parameters for listing organization tasks (Enterprise)'
+      allOf:
+        -
+          $ref: '#/components/schemas/CrowdinOrganizationTaskCollectionForm'
+        -
+          properties:
+            groupIds:
+              description: 'Filter by group IDs. Cannot be used together with projectIds. Enterprise only'
+              type: array
+              items:
+                type: integer
+              example:
+                - 10
+                - 20
+          type: object
     TaskSettingsTemplateCreateForm:
       title: 'Task settings template'
       required:
@@ -41701,6 +41963,24 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/EnterpriseStringBasedTask'
+    EnterpriseTaskCollectionResource:
+      description: 'Task Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/EnterpriseStringBasedTaskResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+      x-doc-sections:
+        - string-based
     EnterpriseUserFileBasedTaskResource:
       description: 'User Task Resource'
       type: object
