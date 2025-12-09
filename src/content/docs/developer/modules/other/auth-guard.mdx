@@ -362,7 +362,8 @@ Location: https://accounts.crowdin.com/{domain}/guard/callback?state=<STATE>&err
 ```
 
 <Aside>
-  The `state` parameter is used to prevent CSRF attacks. It must be returned exactly as received in the callback URL.
+  * The `{domain}` placeholder represents the Crowdin Enterprise organization's unique domain name. You can retrieve this value from the `domain` claim in the JWT token.
+  * The `state` parameter is used to prevent CSRF attacks. It must be returned exactly as received in the callback URL.
 </Aside>
 
 #### Code Verification Request
@@ -502,16 +503,15 @@ https://{your-app-url}?jwtToken=<JWT>
 
 Create an HTML page that initializes the Crowdin Apps SDK and handles the user interaction.
 
-```html
+```html {"Connect Crowdin Apps JS (SDK)":5-6}
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Verification</title>
 
-    // Connect Crowdin Apps JS (SDK)
     <script src="https://cdn.crowdin.com/apps/dist/host.js"></script>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Security Verification</h1>
     <p>Please confirm your identity</p>
 
@@ -519,43 +519,43 @@ Create an HTML page that initializes the Crowdin Apps SDK and handles the user i
     <button id="deny">Deny</button>
 
     <script>
-        // Get parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const jwtToken = urlParams.get('jwtToken');
-        const state = urlParams.get('state');
+      // Get parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const jwtToken = urlParams.get('jwtToken');
+      const state = urlParams.get('state');
 
-        document.getElementById('approve').addEventListener('click', async () => {
-            // Generate verification code from your backend
-            const code = await generateVerificationCode();
+      document.getElementById('approve').addEventListener('click', async () => {
+          // Generate verification code from your backend
+          const code = await generateVerificationCode();
 
-            // Send success to Crowdin via SDK
-            AP.verifyAuth({
-                code: code
-            });
-        });
+          // Send success to Crowdin via SDK
+          AP.verifyAuth({
+              code: code
+          });
+      });
 
-        document.getElementById('deny').addEventListener('click', () => {
-            // Send rejection to Crowdin
-            AP.verifyAuth({
-                error: 'User denied access'
-            });
-        });
+      document.getElementById('deny').addEventListener('click', () => {
+          // Send rejection to Crowdin
+          AP.verifyAuth({
+              error: 'User denied access'
+          });
+      });
 
-        async function generateVerificationCode() {
-            // Call your backend to generate a code
-            const response = await fetch('/api/generate-code', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${jwtToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ state })
-            });
-            const data = await response.json();
-            return data.code;
-        }
+      async function generateVerificationCode() {
+          // Call your backend to generate a code
+          const response = await fetch('/api/generate-code', {
+              method: 'POST',
+              headers: {
+                  'Authorization': `Bearer ${jwtToken}`,
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ state })
+          });
+          const data = await response.json();
+          return data.code;
+      }
     </script>
-</body>
+  </body>
 </html>
 ```
 
