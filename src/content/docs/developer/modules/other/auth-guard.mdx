@@ -1,0 +1,610 @@
+---
+title: Auth Guard Module
+description: Implement additional authentication and authorization checks during the user login flow
+slug: developer/crowdin-apps-module-auth-guard
+sidebar:
+  label: Auth Guard
+  badge: New
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The Auth Guard module allows you to implement additional authentication and authorization checks during the user login flow. Executed after standard authentication (password, MFA, device verification) but before granting access, this module is ideal for enforcing compliance policies (e.g., legal agreements, security check), adding custom multi-factor authorization, or validating mTLS certificates.
+
+<Aside title="Limitations">
+  * This module is available only for Crowdin Enterprise.
+  * Auth Guard modules are never applied to the Organization Owner.
+</Aside>
+
+## Structure
+
+```json title="manifest.json"
+{
+  "modules": {
+    "auth-guard": [
+      {
+        "key": "your-module-key",
+        "name": "IP Whitelist Check",
+        "description": "Verifies user IP address",
+        "url": "/api/auth/verify",
+        "options": {
+          "type": "direct",
+          "applyToAdmins": false
+        }
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Human-readable name displayed to users during verification.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> Additional description shown to users. Available only for the <code>frame</code> verification type.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Endpoint URL for verification. Relative to <code>baseUrl</code>.</p>
+        <p><Aside type="caution">The request timeout is 10 seconds.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> Module configuration options.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.type</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>direct</code>, <code>redirect</code>, <code>frame</code></p>
+        <p><strong>Default:</strong> <code>direct</code></p>
+        <p><strong>Description:</strong> The verification interaction type.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">options.applyToAdmins</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Default:</strong> <code>false</code></p>
+        <p><strong>Description:</strong> Whether to apply this check to organization administrators.</p>
+        <p><Aside>Organization Owners are always excluded from Auth Guard checks to prevent lockouts.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes (if type is <code>redirect</code> or <code>frame</code>)</p>
+        <p><strong>Description:</strong> User-facing URL for interaction.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Communication between Auth Guard App and Crowdin
+
+The Auth Guard module acts as a security checkpoint within the authentication process. It is invoked after standard verification steps (Password, MFA, Device Trust) but before the user is granted access to the organization.
+
+Depending on the configuration, the module can interact with the user in one of three ways:
+
+- [**Direct Type**](#direct-type-backend-only): Automatically approves or denies access via a backend API call.
+- [**Redirect Type**](#redirect-type-external-page): Redirects the user to an external page for verification.
+- [**Frame Type**](#frame-type-embedded-ui): Displays an embedded iframe for in-app verification.
+
+The following diagram illustrates where the Auth Guard module fits into the user login flow:
+
+```text
+User Login
+    ↓
+Password Authentication
+    ↓
+MFA Verification (if enabled)
+    ↓
+Device Trust Verification (if enabled)
+    ↓
+┌─────────────────────────┐
+│  Auth Guard Module(s)   │ ← Your App
+└─────────────────────────┘
+    ↓
+Remember Me Confirmation (if enabled)
+    ↓
+Access Granted
+```
+
+Multiple Auth Guard modules can be configured per organization. They are executed sequentially, and all must pass for the user to gain access.
+
+### Direct Type (Backend-only)
+
+The Direct type is the simplest interaction method, ideal for automated checks that do not require user input (e.g., certificate validation). Crowdin makes a synchronous server-to-server API call to your app, which must respond immediately (< 10 seconds).
+
+#### Communication Flow
+
+```text
+┌─────────────┐                                    ┌──────────────┐
+│   Crowdin   │                                    │   Your App   │
+└──────┬──────┘                                    └──────┬───────┘
+       │                                                  │
+       │  POST /api/auth/verify                           │
+       │  Authorization: Bearer <JWT>                     │
+       │  {                                               │
+       │    "userId": 12345,                              │
+       │    "organizationId": 67890,                      │
+       │    "ipAddress": "192.168.1.1",                   │
+       │    "moduleKey": "your-module-key"                │
+       │  }                                               │
+       ├─────────────────────────────────────────────────>│
+       │                                                  │
+       │                    Process verification          │
+       │                    (IP check, etc.)              │
+       │                                                  │
+       │  { "success": true }                             │
+       │  or                                              │
+       │  {                                               │
+       │    "success": false,                             │
+       │    "message": "Access denied: IP not allowed"    │
+       │  }                                               │
+       │<─────────────────────────────────────────────────┤
+       │                                                  │
+```
+
+#### Request to the App
+
+**HTTP request:**
+
+```shell
+POST {AppBaseUrl}/api/auth/verify
+````
+
+**Request Headers**
+
+The request to your app will contain the following headers:
+
+* `Authorization: Bearer <JWT_TOKEN>`
+* `Content-Type: application/json`
+
+**Request Payload Example:**
+
+```json
+{
+  "userId": 12345,
+  "organizationId": 67890,
+  "ipAddress": "192.168.1.1",
+  "moduleKey": "your-module-key"
+}
+```
+
+#### Expected Response from the App
+
+The app must return a JSON object indicating success or failure.
+
+<Aside>
+  You must return an **HTTP 200 OK** status code even if the verification fails (e.g., "Access denied"). Use the `success: false` field in the JSON body to indicate failure.
+</Aside>
+
+**Response Payload Example (Success):**
+
+```json
+{
+  "success": true
+}
+```
+
+**Response Payload Example (Failure):**
+
+```json
+{
+  "success": false,
+  "message": "Access denied: Your IP address is not in the allowlist"
+}
+```
+
+### Redirect Type (External Page)
+
+The Redirect type routes the user to an external page for verification, then redirects them back to Crowdin. This type is suitable when user interaction is required (e.g., accepting terms, solving a CAPTCHA, or integrating with external OAuth/SAML providers).
+
+#### Communication Flow
+
+```text
+┌─────────┐                        ┌──────────────┐                     ┌──────────┐
+│  User   │                        │   Crowdin    │                     │ Your App │
+└────┬────┘                        └──────┬───────┘                     └────┬─────┘
+     │                                    │                                  │
+     │  1. Login attempt                  │                                  │
+     ├───────────────────────────────────>│                                  │
+     │                                    │                                  │
+     │                                    │  Try POST /api/auth/verify       │
+     │                                    │  (with empty body initially)     │
+     │                                    ├─────────────────────────────────>│
+     │                                    │                                  │
+     │                                    │  { "success": false }            │
+     │                                    │  (needs user interaction)        │
+     │                                    │<─────────────────────────────────┤
+     │                                    │                                  │
+     │  2. HTTP 302 Redirect              │                                  │
+     │  Location: https://your-app/page   │                                  │
+     │     ?jwtToken=<JWT>&state=<STATE>  │                                  │
+     │<───────────────────────────────────┤                                  │
+     │                                    │                                  │
+     │  3. GET /page?jwtToken=...&state=...                                  │
+     ├──────────────────────────────────────────────────────────────────────>│
+     │                                    │                                  │
+     │                                    │          Verify JWT token        │
+     │                                    │          Show verification UI    │
+     │                                    │                                  │
+     │  4. Display verification page                                         │
+     │<──────────────────────────────────────────────────────────────────────┤
+     │                                    │                                  │
+     │  5. User completes verification                                       │
+     │     (clicks approve/deny)          │                                  │
+     ├──────────────────────────────────────────────────────────────────────>│
+     │                                    │                                  │
+     │                                    │          Generate code           │
+     │                                    │                                  │
+     │  6. HTTP 302 Redirect back                                            │
+     │  Location: https://accounts.../callback                               │
+     │     ?state=<STATE>&code=<CODE>     │                                  │
+     │     or ...?state=<STATE>&error=... │                                  │
+     │<──────────────────────────────────────────────────────────────────────┤
+     │                                    │                                  │
+     │  7. GET /callback?state=...&code=...                                  │
+     ├───────────────────────────────────>│                                  │
+     │                                    │                                  │
+     │                                    │  POST /api/auth/verify           │
+     │                                    │  {                               │
+     │                                    │    "code": "<CODE>",             │
+     │                                    │    "userId": ...,                │
+     │                                    │    "organizationId": ...,        │
+     │                                    │    "ipAddress": ...,             │
+     │                                    │    "moduleKey": "..."            │
+     │                                    │  }                               │
+     │                                    ├─────────────────────────────────>│
+     │                                    │                                  │
+     │                                    │  { "success": true }             │
+     │                                    │<─────────────────────────────────┤
+     │                                    │                                  │
+     │  8. Access granted                 │                                  │
+     │<───────────────────────────────────┤                                  │
+     │                                    │                                  │
+```
+
+#### Initial Request to the App
+
+Crowdin first attempts a direct check to see if access can be granted automatically.
+
+**HTTP request:**
+
+```shell
+POST {AppBaseUrl}/api/auth/verify
+```
+
+**Request Headers**
+
+The request to your app will contain the following headers:
+
+* `Authorization: Bearer <JWT_TOKEN>`
+* `Content-Type: application/json`
+
+**Request Payload Example:**
+
+```json
+{
+  "userId": 12345,
+  "organizationId": 67890,
+  "ipAddress": "192.168.1.1",
+  "moduleKey": "your-module-key"
+}
+```
+
+**Expected Response (Trigger Redirect):**
+
+To trigger the redirect flow, your app must return `success: false`.
+
+```json
+{
+  "success": false
+}
+```
+
+#### Redirect and Callback
+
+If the initial check returns `false`, Crowdin redirects the user to the `url` defined in your manifest options.
+
+**Redirect URL Structure:**
+
+```shell
+https://{your-app-url}?jwtToken=<JWT>&state=<STATE>
+```
+
+Your app must validate the `jwtToken`, display the verification UI, and upon success, redirect the user back to Crowdin using an HTTP 302 redirect.
+
+**On Success:**
+
+```http
+HTTP 302 Redirect
+Location: https://accounts.crowdin.com/{domain}/guard/callback?state=<STATE>&code=<CODE>
+```
+
+**On Failure:**
+
+```http
+HTTP 302 Redirect
+Location: https://accounts.crowdin.com/{domain}/guard/callback?state=<STATE>&error=User+denied+access
+```
+
+<Aside>
+  The `state` parameter is used to prevent CSRF attacks. It must be returned exactly as received in the callback URL.
+</Aside>
+
+#### Code Verification Request
+
+Once Crowdin receives the `code` from the callback, it sends a final request to your app to verify it.
+
+**HTTP request:**
+
+```shell
+POST {AppBaseUrl}/api/auth/verify
+```
+
+**Request Headers**
+
+* `Authorization: Bearer <JWT_TOKEN>`
+* `Content-Type: application/json`
+
+**Request Payload Example:**
+
+```json
+{
+  "code": "abc123xyz",
+  "userId": 12345,
+  "organizationId": 67890,
+  "ipAddress": "192.168.1.1",
+  "moduleKey": "your-module-key"
+}
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true
+}
+```
+
+### Frame Type (Embedded UI)
+
+The Frame type displays your verification page within an iframe inside the Crowdin login interface. This provides a seamless user experience for custom forms or mTLS checks while keeping the user within the Crowdin environment.
+
+#### Communication Flow
+
+```text
+┌─────────┐                    ┌──────────────┐                     ┌──────────┐
+│  User   │                    │   Crowdin    │                     │ Your App │
+└────┬────┘                    └──────┬───────┘                     └────┬─────┘
+     │                                │                                  │
+     │  1. Login attempt              │                                  │
+     ├───────────────────────────────>│                                  │
+     │                                │                                  │
+     │                                │  Try POST /api/auth/verify       │
+     │                                ├─────────────────────────────────>│
+     │                                │                                  │
+     │                                │  { "success": false }            │
+     │                                │<─────────────────────────────────┤
+     │                                │                                  │
+     │  2. Show verification page     │                                  │
+     │     with embedded iframe       │                                  │
+     │<───────────────────────────────┤                                  │
+     │                                │                                  │
+     │  3. Iframe loads your URL      │                                  │
+     │     GET /frame?jwtToken=...    │                                  │
+     ├──────────────────────────────────────────────────────────────────>│
+     │                                │                                  │
+     │  4. Your verification UI       │                                  │
+     │<──────────────────────────────────────────────────────────────────┤
+     │                                │                                  │
+     │  5. User interacts with iframe │                                  │
+     │     (clicks approve/deny)      │                                  │
+     │────────────────────────────────────────────────────────────────┐  │
+     │                                │                               │  │
+     │  6. JavaScript API call via    │                               │  │
+     │     Crowdin Apps SDK           │                               │  │
+     │     AP.verifyAuth({ code: "..."})                              │  │
+     ├────────────────────────────────────────────────────────────────┼─>│
+     │                                │                               │  │
+     │  7. Crowdin receives code      │<──────────────────────────────┘  │
+     │     from iframe via postMessage│                                  │
+     │                                │                                  │
+     │                                │  POST /api/auth/verify           │
+     │                                │  {                               │
+     │                                │    "code": "...",                │
+     │                                │    "userId": ...,                │
+     │                                │    "moduleKey": "..."            │
+     │                                │  }                               │
+     │                                ├─────────────────────────────────>│
+     │                                │                                  │
+     │                                │  { "success": true }             │
+     │                                │<─────────────────────────────────┤
+     │                                │                                  │
+     │  8. Access granted             │                                  │
+     │<───────────────────────────────┤                                  │
+     │                                │                                  │
+```
+
+#### Initial Request to the App
+
+Crowdin first attempts a direct check to see if access can be granted automatically.
+
+**HTTP request:**
+
+```shell
+POST {AppBaseUrl}/api/auth/verify
+```
+
+**Request Payload Example:**
+
+```json
+{
+  "userId": 12345,
+  "organizationId": 67890,
+  "ipAddress": "192.168.1.1",
+  "moduleKey": "your-module-key"
+}
+```
+
+**Expected Response (Trigger Iframe):**
+
+To trigger the iframe flow, your app must return `success: false`.
+
+```json
+{
+  "success": false
+}
+```
+
+#### Iframe Display and UI
+
+If the initial check returns `false`, Crowdin loads your app's `url` in an iframe with the following parameters:
+
+```shell
+https://{your-app-url}?jwtToken=<JWT>
+```
+
+**Verification UI Implementation:**
+
+Create an HTML page that initializes the Crowdin Apps SDK and handles the user interaction.
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verification</title>
+
+    // Connect Crowdin Apps JS (SDK)
+    <script src="https://cdn.crowdin.com/apps/dist/host.js"></script>
+</head>
+<body>
+    <h1>Security Verification</h1>
+    <p>Please confirm your identity</p>
+
+    <button id="approve">Approve</button>
+    <button id="deny">Deny</button>
+
+    <script>
+        // Get parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const jwtToken = urlParams.get('jwtToken');
+        const state = urlParams.get('state');
+
+        document.getElementById('approve').addEventListener('click', async () => {
+            // Generate verification code from your backend
+            const code = await generateVerificationCode();
+
+            // Send success to Crowdin via SDK
+            AP.verifyAuth({
+                code: code
+            });
+        });
+
+        document.getElementById('deny').addEventListener('click', () => {
+            // Send rejection to Crowdin
+            AP.verifyAuth({
+                error: 'User denied access'
+            });
+        });
+
+        async function generateVerificationCode() {
+            // Call your backend to generate a code
+            const response = await fetch('/api/generate-code', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${jwtToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ state })
+            });
+            const data = await response.json();
+            return data.code;
+        }
+    </script>
+</body>
+</html>
+```
+
+#### Communication via SDK
+
+Use the `AP.verifyAuth()` method to communicate the result back to Crowdin.
+
+**Success:**
+
+```javascript
+AP.verifyAuth({
+    code: "your-verification-code"
+});
+```
+
+**Failure:**
+
+```javascript
+AP.verifyAuth({
+    error: "Verification failed: device not trusted"
+});
+```
+
+#### Code Verification Request
+
+Once Crowdin receives the `code` from the SDK, it sends a final request to your app to verify it.
+
+**HTTP request:**
+
+```shell
+POST {AppBaseUrl}/api/auth/verify
+```
+
+**Request Payload Example:**
+
+```json
+{
+  "code": "abc123xyz",
+  "userId": 12345,
+  "organizationId": 67890,
+  "ipAddress": "192.168.1.1",
+  "moduleKey": "your-module-key"
+}
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true
+}
+```
