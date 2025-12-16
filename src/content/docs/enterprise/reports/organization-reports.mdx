@@ -116,6 +116,7 @@ To generate the Translation Cost report, follow these steps:
   1. Select the preferred currency and the report unit (word, string, character, or characters (including spaces)).
   1. Use the available filter parameters to specify the report data you're interested in.
   1. Set your [rates](#rates-translation-cost) for translations and approvals.
+  1. *(Optional)* Clear **Save to archive** if you don't want to save the report to the [Archive](#archive).
   1. Click **Generate**.
 </Steps>
 
@@ -198,6 +199,138 @@ When the report is generated, you will see the following amounts:
 * **Subtotals** &ndash; separate translation cost for every language or each member. Results are grouped by the parameter you choose.
 
 To download the Translation Cost report, click **Export report** and select the preferred export format (CSV, XLSX, or JSON).
+
+## Pre-translation Accuracy
+
+Use this report to evaluate the translation quality of pre-translation methods (AI, MT, and TM) used in your organization and identify the most efficient ones.
+
+This report analyzes the post-editing effort required for pre-translated strings. It compares the initial pre-translation against the final approved translation to calculate a Match Score. This helps you identify which AI prompts or MT engines require the least amount of human editing, allowing you to adjust your workflow and increase the usage of the best-performing methods.
+
+The Match Score metric is calculated at the character level. The report unit you select (Strings, Words, Characters, or Characters with spaces) determines how the results are displayed (e.g., if you select Strings, the entire source string is placed in a category based on its total match score).
+
+### Report Scope
+
+* Includes only source strings that have a translation added via pre-translation which was subsequently approved.
+* The report considers pre-translations added within the selected **Time period**, regardless of when they were approved.
+* If multiple pre-translations exist for a string, each is included with its match score.
+
+### Recommended Workflow
+
+To get the most actionable insights from this report, we recommend the following flow:
+
+<Steps>
+  1. **Pre-translate** &ndash; Apply pre-translation to your source content using AI, MT, or TM.
+  2. **Post-edit & Approve** &ndash; Have your proofreaders review the pre-translated strings. They should fix any errors or stylistic issues (post-editing) and approve the final versions.
+  3. **Measure Accuracy** &ndash; Generate the Pre-translation Accuracy report.
+  4. **Optimize** &ndash; Identify which AI prompt, MT engine, or TM required the least amount of human editing. Update your workflow to use that high-performing method for future translations.
+</Steps>
+
+### Generating a Report {#generating-pre-translation-accuracy}
+
+You can generate a Pre-translation Accuracy report based on the following filters:
+
+* **Language**: All, or specific language.
+* **Time period**: All time, Today, Yesterday, Last 7 days, Last 30 days, Last month, or Custom range. This filter selects the range of when the strings were pre-translated.
+* **Projects**: *All projects* or specific projects. You can select *Workspace (all groups)*, specific project groups, or individual projects. If no projects are selected, this filter defaults to *All projects*.
+
+Additionally, using the report's **Settings**, you can configure **Match Score Categories**. These settings determine how the graph groups translations that were edited. For example, if you set a category for 99-90%, source strings where the approved translation matches the pre-translation within that range will be grouped together. Anything below your lowest defined match category will be treated as **No Match** (New Translation).
+
+To generate the Pre-translation Accuracy report, follow these steps:
+
+<Steps>
+  1. Select the preferred report unit (words, strings, characters, or characters with spaces).
+  2. Select the preferred way to group the histogram data (Day or Month).
+     * When grouped by Day, the stacked histogram will have more bars, giving a more granular, day-by-day view.
+     * When grouped by Month, the data is displayed in fewer, broader monthly segments.
+  3. Use the available filter parameters to specify the report data you're interested in.
+  4. *(Optional)* Clear **Save to archive** if you don't want to save the report to the [Archive](#archive).
+  5. Click **Settings** to configure your Match Score Categories.
+  6. Click **Generate**.
+</Steps>
+
+### Result Analysis {#result-analysis-pre-translation-accuracy}
+
+When the report is generated, you will see the information grouped into pre-translation methods (via AI, MT, and TM):
+
+* **Pre-translation via AI**:
+  * Total approved words, pre-translated by AI
+  * Separate graphs for each prompt (maximum 10 prompts displayed)
+* **Pre-translation via MT**:
+  * Total approved words, pre-translated by MT
+  * Separate graphs for each MT engine (maximum 10 engines displayed)
+* **Pre-translation via TM**:
+  * Total approved words, pre-translated by TM
+
+Each section displays the volume of source content, broken down by the following key metrics. (For this explanation, we assume **Strings** was selected as the report unit):
+
+* **Total** – The total number of source strings to which translations were added via pre-translation and subsequently approved. This includes strings approved without changes and strings where a proofreader added a corrected translation that was then approved.
+* **100% Match** – The number of source strings where the approved translation matches the translation added via pre-translation exactly (100%).
+* **Match Score Ranges** (e.g., 70-99% Match) – The number of source strings where the approved translation matches the pre-translation within the configured percentage range. This indicates that a proofreader edited the pre-translation, but the final approved version remains similar to the original suggestion.
+* **Avg. Match Score** – The average percentage of similarity between the initial pre-translations and the final approved texts. A higher percentage means the pre-translations were accurate and required fewer edits.
+* **No Match** – The number of source strings where the approved translation differs from the pre-translation by more than the lowest percent in your configured match score categories. In these cases, the translation was changed so significantly during proofreading that it is treated as a complete rewrite (a new translation).
+* **Quality Score** – Measures overall quality based on the average match score achieved for the translated content. It is calculated as follows: `100 - ((Unedited + (Edited * (100 - Avg. Match Score))) / Total)`
+
+The **Stacked Histogram** below the metrics visualizes the distribution of these categories over time. Each bar represents the volume of source units processed, stacked by their quality category (e.g., *100% Match*, *Match Score: 99-90%*, *No Match*).
+
+To download the Pre-translation Accuracy report, click **Export** and select the preferred export format (CSV, XLSX, or JSON).
+
+## Translator Accuracy
+
+Use this report to evaluate the translation quality of individual translators in your organization and identify top performers.
+
+This report analyzes the post-editing effort required for translations submitted by human translators. It compares each translator’s initial translation against the final approved version to calculate a **Match Score**. This helps you identify translators who consistently produce high-quality work requiring minimal corrections, as well as those who may benefit from additional guidance or training.
+
+The Match Score metric is calculated at the character level. The report unit you select (Strings, Words, or Characters) determines how the results are displayed (e.g., if you select Strings, the entire source string is placed in a category based on its total match score).
+
+### Report Scope
+
+* Includes only source strings that have a translation submitted by a human translator which was subsequently approved.
+* The report considers translations added within the selected **Time period**, regardless of when they were approved.
+* If multiple translations exist for a string, each is included with its match score.
+
+### Recommended Workflow
+
+To get the most actionable insights from this report, we recommend the following flow:
+
+<Steps>
+  1. **Translate** &ndash; Have your translators translate the source content.
+  2. **Proofread & Approve** &ndash; Have your proofreaders review the translations. They should fix any errors or stylistic issues (post-editing) and approve the final versions.
+  3. **Measure Accuracy** &ndash; Generate the Translator Accuracy report to see how much the proofreaders had to edit each translator's work.
+  4. **Feedback** &ndash; Use the findings to provide targeted feedback. Translators with high **100% Match** rates are your top performers, while high **No Match** rates might indicate a need for better glossary adherence or style guide training.
+</Steps>
+
+### Generating a Report {#generating-translator-accuracy}
+
+You can generate a Translator Accuracy report based on the following filters:
+
+* **Projects**: *All projects* or specific projects. You can select *Workspace (all groups)*, specific project groups, or individual projects. If no projects are selected, this filter defaults to *All projects*.
+* **Users**: All or selected users.
+* **Language**: All or specific language.
+* **Time period**: All time, Today, Yesterday, Last 7 days, Last 30 days, Last month, or Custom range. This filter selects the range of when the translations were added.
+
+Additionally, using the report's **Settings**, you can configure **Match Score Categories**. These settings determine how the graph groups translations that were edited. For example, if you set a category for 99-90%, source strings where the approved translation matches the initial translation within that range will be grouped together. Anything below your lowest defined match category will be treated as **No Match** (New Translation).
+
+To generate the Translator Accuracy report, follow these steps:
+
+<Steps>
+  1. Select the preferred report unit (words, strings, characters, or characters with spaces).
+  2. Use the available filter parameters to specify the report data you're interested in.
+  3. *(Optional)* Clear **Save to archive** if you don't want to save the report to the [Archive](#archive).
+  4. Click **Settings** to configure your Match Score Categories.
+  5. Click **Generate**.
+</Steps>
+
+### Result Analysis {#result-analysis-translator-accuracy}
+
+When the report is generated, you will see the information grouped by language, and each translator is listed with their individual statistics.
+
+In each section, the data is displayed as a **Pie Chart**. The chart visualizes the proportion of source content based on how closely the translator's initial work matched the final approved version:
+
+* **100% Match** &ndash; The number of source units where the approved translation matches the translator's initial translation exactly (approved without edits).
+* **Match Score Ranges** (e.g., 99-90% Match) &ndash; The number of source units where the approved translation is an edited version of the translator's work but remains similar within the configured percentage range.
+* **No Match** &ndash; The number of source units where the approved translation differs significantly from the translator's initial work (below the lowest configured match category). In these cases, the translation was changed so significantly during proofreading that it is treated as a complete rewrite (a new translation).
+
+To download the Translator Accuracy report, click **Export** and select the preferred export format (CSV, XLSX, or JSON).
 
 ## Task Usage
 
@@ -359,7 +492,8 @@ To generate the **Time Spent** report, follow these steps:
   1. Select the preferred currency.
   2. Set your [rates](#rates-time-spent).
   3. Use the available filter parameters to specify the report data you're interested in.
-  4. Click **Generate**.
+  4. *(Optional)* Clear **Save to archive** if you don't want to save the report to the [Archive](#archive).
+  5. Click **Generate**.
 </Steps>
 
 <Aside>
