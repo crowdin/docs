@@ -1881,6 +1881,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  /ai/translate:
+    post:
+      tags:
+        - AI
+      summary: 'AI Translate Strings'
+      operationId: api.ai.translate.strings.post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiTranslateForm'
+      responses:
+        '200':
+          description: 'Strings translated successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiTranslateResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
   /applications/installations:
     get:
       tags:
@@ -22185,6 +22227,95 @@ components:
         enabled:
           type: boolean
           deprecated: true
+      type: object
+    AiTranslateForm:
+      required:
+        - strings
+        - targetLanguageId
+      properties:
+        strings:
+          description: 'Array of strings to translate (max 500 strings, each max 10000 characters)'
+          type: array
+          items:
+            type: string
+            maxLength: 10000
+            example: 'Some text to translate!'
+          maxItems: 500
+          minItems: 1
+        sourceLanguageId:
+          description: 'Source Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: en
+        targetLanguageId:
+          description: 'Target Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: uk
+        tmIds:
+          description: 'Array of Translation Memory Identifiers. Get via [List TMs](#operation/api.tms.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 123
+        glossaryIds:
+          description: 'Array of Glossary Identifiers. Get via [List Glossaries](#operation/api.glossaries.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 456
+        aiPromptId:
+          description: "Pre-Translation Prompt Identifier. Get via [List Prompts](#operation/api.ai.prompts.getMany)\n\n__Note:__ Can't be used with `aiProviderId` or `aiModelId` in same request"
+          type: integer
+          example: 789
+        aiProviderId:
+          description: "AI Provider Identifier. Get via [List AI Providers](#operation/api.ai.providers.getMany)\n\n__Note:__ Must be used together with `aiModelId`. Can't be used with `aiPromptId` in same request"
+          type: integer
+          example: 12
+        aiModelId:
+          description: "AI Model ID. Get via [List AI Provider Models](#operation/api.ai.providers.models.getMany)\n\n__Note:__ Must be used together with `aiProviderId`. Can't be used with `aiPromptId` in same request"
+          type: string
+          example: gpt-4.1
+        instructions:
+          description: 'Custom instructions for translation'
+          type: array
+          items:
+            type: string
+            example: 'Keep a formal tone'
+        attachmentIds:
+          description: "Storage IDs of images to pass to AI as attachments (max 10). Get via [List Storages](#operation/api.storages.getMany)\n\nOnly image files are allowed:\n * jpeg\n * jpg\n * png\n * gif\n * webp"
+          type: array
+          format: int64
+          items:
+            type: integer
+            example: 123
+          maxItems: 10
+      type: object
+    AiTranslateResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AiTranslateResponseModel'
+    AiTranslateResponseModel:
+      properties:
+        sourceLanguageId:
+          description: 'Source language identifier'
+          type: string
+          example: en
+        targetLanguageId:
+          description: 'Target language identifier'
+          type: string
+          example: uk
+        translations:
+          description: 'Translated strings for the target language'
+          type: array
+          items:
+            type: string
+          example:
+            - 'Перекладений текст 1'
+            - 'Перекладений текст 2'
       type: object
     ApplicationInstallationPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
