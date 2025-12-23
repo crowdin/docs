@@ -43,7 +43,8 @@ For Crowdin Enterprise:
         "logo": "/logo.png",
         "url": "/translate",
         "withContext": true,
-        "batchSize": 10
+        "batchSize": 10,
+        "splitStringsIntoChunks": true
       }
     ]
   }
@@ -104,7 +105,16 @@ For Crowdin Enterprise:
       </td>
     </tr>
     <tr>
-      <td><code class="whitespace-nowrap">environments</code></td>
+      <td><code class="whitespace-nowrap">splitStringsIntoChunks</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Default:</strong> <code>true</code></p>
+        <p><strong>Description:</strong> Controls [batch processing](#batch-processing-and-file-context). If set to <code>false</code>, all strings from a file are sent to the MT engine in a single request. If set to <code>true</code> (default), Crowdin splits the strings into chunks.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Allowed values:</strong> <code>crowdin</code>, <code>crowdin-enterprise</code></p>
@@ -170,6 +180,21 @@ https://{AppBaseUrl}/translate/?source=en&target=uk&project_id=727186&jwtToken={
     </tr>
   </tbody>
 </table>
+
+## Batch Processing and File Context
+
+By default, Crowdin splits source strings into smaller chunks (`splitStringsIntoChunks: true`) to optimize processing time and manage request sizes.
+
+However, some modern MT engines and AI providers (such as XL8 or LLMs) require the full context of a file to produce high-quality translations. This is particularly important for formats like subtitles (SRT) or literary content where the translation of one sentence depends heavily on the previous one.
+
+If you are connecting an engine that supports file-based or document-level translation:
+
+1. Set `splitStringsIntoChunks` to `false` in your manifest.
+2. Crowdin will send all strings belonging to a single file in one request.
+
+<Aside type="caution">
+  When <code>splitStringsIntoChunks</code> is set to <code>false</code>, ensure your endpoint and the connected MT engine can handle large payloads, as the request body size will correspond to the size of the full source file.
+</Aside>
 
 ## Handling Non-Translatable Elements by Your MT Engine
 
