@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: 'Crowdin Enterprise API v2'
-  description: "\n# Introduction\nWelcome to Crowdin Enterprise API v2 documentation.\n\nOur API is a full-featured RESTful API that helps you to integrate localization into your development process. The endpoints that we use allow you to easily make calls to retrieve information and to execute actions needed.\n\nMost of the functionality of Crowdin Enterprise is available through the API. It allows you to create projects for translations, add and update files, download translations, and much more. In this way, you can script the complex actions that your situation requires.\n\nDocumentation starts with a general overview of the design and technology that was implemented and is followed by detailed information on specific methods and endpoints.\n\n## Asynchronous Operations\nMethods such as report generation, project build, and file download need some time to be completed and are finalized in several steps. It is what we call asynchronous operations. This  approach allows the application to work without interruptions while the method is running at the background.\n\nTo run asynchronous operations, 3 subsequent API methods are used:\n* Method to start operation – returns the status __Found__ if the resource you’re requesting is already generated. Typically, __202 Accepted__ status is returned along with the operation identifier. The operation status is then checked with the help of this identifier.\n* Method to check the status of operation – returns  the completion percentage.\n* Method to get the temporary link for resource download – mostly used for export operations. When the operation is completed, you can run this method to get a temporary link for resource download.\n\n__Note:__ Download link is active for a few minutes.\n\nFor example, to download a Translation Memory (TM), you need to run following sequence of API methods:\n* [_Export TM_](#operation/api.tms.exports.post)\n* [_Check TM Export Status_](#operation/api.tms.exports.get)\n* [_Download TM_](#operation/api.tms.exports.getMany)\n\n## File Upload\nWith Crowdin Enterprise API v2 all files such as files for localization, screenshots, Glossaries, and Translation Memories should be first uploaded to the [Storage](#tag/Storage). After you upload file to the Storage it will have a unique storage id using which you can then add the file to the project.\n\nFor example, to upload a localization file to your project, you need to run the following sequence of API methods:\n* [_Add Storage_](#operation/api.storages.post) – upload localization file body to storage at Crowdin server\n* [_Add File_](#operation/api.projects.files.post) – define where to add the localization file with specific _storage id_\n\n## Authorization\nTo work with Crowdin Enterprise API v2 use one of the following access tokens:\n\n* <a href=\"https://support.crowdin.com/enterprise/personal-access-tokens/#creating-a-personal-access-token\" target=\"_blank\">Personal Access Token</a>\n* <a href=\"https://developer.crowdin.com/authorizing-oauth-apps/#make-requests-to-the-api-with-the-access-token-returned\" target=\"_blank\">OAuth Access Token</a>\n\nMake sure to use the following __header__ in your requests:\n\n`Authorization: Bearer <ACCESS_TOKEN>`\n\nResponses in case authorization fail:\n\n__401 Unauthorized__\n```\n{\n  \"error\": {\n    \"message\": \"Unauthorized\",\n    \"code\": 401\n  }\n}\n```\n\n__403 Forbidden__\n```\n{\n  \"error\": {\n    \"message\": \"Not allowed endpoint for token scopes\",\n    \"code\": 403\n  }\n}\n```\n```\n{\n  \"error\": {\n    \"message\": \"Not allowed space for your token\",\n    \"code\": 403\n  }\n}\n```\n\n## Requests\nAll requests should be made using the HTTPS protocol so that traffic is encrypted. The interface responds to different methods depending on the action required.\n\nWhen a request is successful, a response will typically be sent back in the form of a JSON object. If you specify `Accept` header response will be `application/json`. It’s not required to specify `Accept` header so you can leave it empty.\n\nThe API expects all writing requests (_POST_, _PUT_, _PATCH_) in JSON format with the `Content-Type: application/json` header. This ensures that your request is interpreted correctly.\n\n__Note:__ `Content-Type` header can be different (e.g. `image/jpeg`, `text/csv`) if you upload the file using _POST_ methods with a specified content type.\n\nRESTful APIs enable you to call individual API endpoints to perform the following requests:\n* <span class='http-method method-list get'>GET</span> - for simple retrieval of information about source files, translations, or projects. The information you request will be returned to you as a JSON object. The attributes defined by the JSON object can be used to form additional requests.\n* <span class='http-method method-list post'>POST</span> - to create or add a new element. This request includes all of the attributes necessary to create a new object.\n* <span class='http-method method-list put'>PUT</span> - to update or replace the specific element. This request sets the state of the target using the provided values, regardless of their current values.\n* <span class='http-method method-list patch'>PATCH</span> - to edit some specific fields of an entity. With these requests, you only need to provide the data you want to change.\n* <span class='http-method method-list delete'>DELETE</span> - to remove element from your account. Request works if specified object is found. If it is not found, the operation will return a response indicating that the object was not found.\n\nFor example, to edit the name and description of a project, where the requested resource is the project with `id` = 1, the request is the following:\n\n__Example Endpoint__\n<div class='well well-sm'>\n<span class='http-method patch'>PATCH</span> https://{organization_domain}.api.crowdin.com/api/v2/<span class='api-section-block-highlighted'>projects/1</span>\n</div>\n\nwhere <span class='api-section-block-highlighted'>projects/1</span> is the requested resource.\n\n__Content-Type header:__ `application/json`\n\n__Request body__\n```\n[\n  {\"op\":\"replace\", \"path\":\"/name\", \"value\":\"Project new name\"},\n  {\"op\":\"replace\", \"path\":\"/description\", \"value\":\"New description for the project\"}\n]\n```\n\n## Sorting\nThe Crowdin API allows you to sort the endpoint results using the `orderBy` field (if available for the current endpoint).\nTo sort by multiple fields, add them separated by commas. To specify the sorting order, use `asc` or `desc` followed by a space after the sort field. If no sorting order is specified, ascending order (`asc`) is used by default.\n\nExample: `orderBy=createdAt desc,name,priority asc,title desc`\n\n## Rate Limits\nThe number of simultaneous API requests per account is 20 requests. Response code __429 Too Many Requests__ is returned when the limit is exceeded.\n\n## Crowdin API Clients\nThe Crowdin API clients are the lightweight interfaces developed for the Crowdin API v2. They provide common services for making API requests.\n\nYou may find detailed information on each client in its respective GitHub repository:\n\n[_Crowdin JavaScript client_](https://github.com/crowdin/crowdin-api-client-js)\\\n[_Crowdin PHP client_](https://github.com/crowdin/crowdin-api-client-php)\\\n[_Crowdin Java client_](https://github.com/crowdin/crowdin-api-client-java)\\\n[_Crowdin Python client_](https://github.com/crowdin/crowdin-api-client-python)\\\n[_Crowdin Ruby client_](https://github.com/crowdin/crowdin-api-client-ruby)\\\n[_Crowdin .NET client_](https://github.com/crowdin/crowdin-api-client-dotnet)\\\n[_Crowdin Go client_](https://github.com/crowdin/crowdin-api-client-go)\n\n"
+  description: "\n# Introduction\nWelcome to Crowdin Enterprise API v2 documentation.\n\nOur API is a full-featured RESTful API that helps you to integrate localization into your development process. The endpoints that we use allow you to easily make calls to retrieve information and to execute actions needed.\n\nMost of the functionality of Crowdin Enterprise is available through the API. It allows you to create projects for translations, add and update files, download translations, and much more. In this way, you can script the complex actions that your situation requires.\n\n## Authorization\nTo work with Crowdin Enterprise API v2 use one of the following access tokens:\n * [_Personal Access Token_](https://support.crowdin.com/enterprise/personal-access-tokens/#creating-a-personal-access-token)\n * [_OAuth Access Token_](https://developer.crowdin.com/authorizing-oauth-apps/#make-requests-to-the-api-with-the-access-token-returned)\n\nMake sure to use the following __header__ in your requests:\n\n`Authorization: Bearer <ACCESS_TOKEN>`\n\nResponses in case authorization fail:\n\n__401 Unauthorized__\n```\n{\n  \"error\": {\n    \"message\": \"Unauthorized\",\n    \"code\": 401\n  }\n}\n```\n\n__403 Forbidden__\n```\n{\n  \"error\": {\n    \"message\": \"Not allowed space for your token\",\n    \"code\": 403\n  }\n}\n```\n\n## Scopes\nSome endpoints may require specific scopes to be granted to your access token. Each endpoint's documentation indicates the required scope (e.g., `project` or `project.settings`). Learn more: [_Understanding Scopes_](https://support.crowdin.com/developer/understanding-scopes/)\n\nIf you attempt to access an endpoint without the required scope, you will receive the following response:\n\n__403 Forbidden__\n```\n{\n  \"error\": {\n    \"message\": \"Not allowed endpoint for token scopes\",\n    \"code\": 403\n  }\n}\n```\n\n## Making Requests\nAll requests should be made using the HTTPS protocol so that traffic is encrypted. The interface responds to different methods depending on the action required.\n\nWhen a request is successful, a response will typically be sent back in the form of a JSON object. If you specify `Accept` header response will be `application/json`. It's not required to specify `Accept` header so you can leave it empty.\n\nThe API expects all writing requests (_POST_, _PUT_, _PATCH_) in JSON format with the `Content-Type: application/json` header. This ensures that your request is interpreted correctly.\n\n__Note:__ `Content-Type` header can be different (e.g. `image/jpeg`, `text/csv`) if you upload the file using _POST_ methods with a specified content type.\n\nRESTful APIs enable you to call individual API endpoints to perform the following requests:\n\n<span class='http-method method-list get'>GET</span> - for simple retrieval of information about source files, translations, or projects. The information you request will be returned to you as a JSON object. The attributes defined by the JSON object can be used to form additional requests.\\\n<span class='http-method method-list post'>POST</span> - to create or add a new element. This request includes all of the attributes necessary to create a new object.\\\n<span class='http-method method-list put'>PUT</span> - to update or replace the specific element. This request sets the state of the target using the provided values, regardless of their current values.\\\n<span class='http-method method-list patch'>PATCH</span> - to edit some specific fields of an entity. With these requests, you only need to provide the data you want to change.\\\n<span class='http-method method-list delete'>DELETE</span> - to remove element from your account. Request works if specified object is found. If it is not found, the operation will return a response indicating that the object was not found.\n\nFor example, to edit the name and description of a project, where the requested resource is the project with `id` = 1, the request is the following:\n\n__Example Endpoint__\n<div class='well well-sm'>\n  <span class='http-method patch'>PATCH</span> https://{organization_domain}.api.crowdin.com/api/v2/<span class='api-section-block-highlighted'>projects/1</span>\n</div>\n\nwhere <span class='api-section-block-highlighted'>projects/1</span> is the requested resource.\n\n__Content-Type header:__ `application/json`\n\n__Request body__\n```\n[\n  {\"op\":\"replace\", \"path\":\"/name\", \"value\":\"Project new name\"},\n  {\"op\":\"replace\", \"path\":\"/description\", \"value\":\"New description for the project\"}\n]\n```\n\n## File Upload\nWith Crowdin Enterprise API v2 all files such as files for localization, screenshots, Glossaries, and Translation Memories should be first uploaded to the [_Storage_](#tag/Storage). After you upload file to the Storage it will have a unique storage id using which you can then add the file to the project.\n\nFor example, to upload a localization file to your project, you need to run the following sequence of API methods:\n * [_Add Storage_](#operation/api.storages.post) – upload localization file body to storage at Crowdin server\n * [_Add File_](#operation/api.projects.files.post) – define where to add the localization file with specific `storageId`\n\n## Asynchronous Operations\nMethods such as report generation, project build, and file download need some time to be completed and are finalized in several steps. It is what we call asynchronous operations. This  approach allows the application to work without interruptions while the method is running at the background.\n\nTo run asynchronous operations, 3 subsequent API methods are used:\nMethod to start operation – returns the status __Found__ if the resource you're requesting is already generated. Typically, __202 Accepted__ status is returned along with the operation identifier. The operation status is then checked with the help of this identifier.\nMethod to check the status of operation – returns  the completion percentage.\nMethod to get the temporary link for resource download – mostly used for export operations. When the operation is completed, you can run this method to get a temporary link for resource download.\n\n__Note:__ Download link is active for a few minutes.\n\nFor example, to download a Translation Memory (TM), you need to run following sequence of API methods:\n * [_Export TM_](#operation/api.tms.exports.post)\n * [_Check TM Export Status_](#operation/api.tms.exports.get)\n * [_Download TM_](#operation/api.tms.exports.getMany)\n\n## Sorting\nThe Crowdin API allows you to sort the endpoint results using the `orderBy` field (if available for the current endpoint).\nTo sort by multiple fields, add them separated by commas. To specify the sorting order, use `asc` or `desc` followed by a space after the sort field. If no sorting order is specified, ascending order (`asc`) is used by default.\n\nExample: `orderBy=createdAt desc,name,priority asc,title desc`\n\n## Rate Limits\nThe number of simultaneous API requests per account is 20 requests. Response code __429 Too Many Requests__ is returned when the limit is exceeded.\n\n## Crowdin API Clients\nThe Crowdin API clients are the lightweight interfaces developed for the Crowdin API v2. They provide common services for making API requests.\n\nYou may find detailed information on each client in its respective GitHub repository:\n\n[_Crowdin JavaScript client_](https://github.com/crowdin/crowdin-api-client-js)\\\n[_Crowdin PHP client_](https://github.com/crowdin/crowdin-api-client-php)\\\n[_Crowdin Java client_](https://github.com/crowdin/crowdin-api-client-java)\\\n[_Crowdin Python client_](https://github.com/crowdin/crowdin-api-client-python)\\\n[_Crowdin Ruby client_](https://github.com/crowdin/crowdin-api-client-ruby)\\\n[_Crowdin .NET client_](https://github.com/crowdin/crowdin-api-client-dotnet)\\\n[_Crowdin Go client_](https://github.com/crowdin/crowdin-api-client-go)\n"
   termsOfService: 'https://support.crowdin.com/terms/'
   contact:
     email: support@crowdin.com
@@ -25,7 +25,7 @@ paths:
       tags:
         - AI
       summary: 'List AI Custom Placeholders'
-      description: 'Use [List AI Snippets](#operation/api.ai.prompts.snippets.getMany) instead.'
+      description: "**Required scopes:** `ai.prompt` (Read only).\n\nUse [List AI Snippets](#operation/api.ai.prompts.snippets.getMany) instead."
       operationId: api.ai.prompts.custom.placeholders.getMany
       parameters:
         -
@@ -68,7 +68,7 @@ paths:
       tags:
         - AI
       summary: 'Add AI Custom Placeholder'
-      description: 'Use [Add AI Snippet](#operation/api.ai.prompts.snippets.post) instead.'
+      description: "**Required scopes:** `ai.prompt` (Read and Write).\n\nUse [Add AI Snippet](#operation/api.ai.prompts.snippets.post) instead."
       operationId: api.ai.settings.custom-placeholders.post
       requestBody:
         content:
@@ -112,6 +112,7 @@ paths:
       tags:
         - AI
       summary: 'List AI Snippets'
+      description: '**Required scopes:** `ai.prompt` (Read only).'
       operationId: api.ai.prompts.snippets.getMany
       parameters:
         -
@@ -153,6 +154,7 @@ paths:
       tags:
         - AI
       summary: 'Add AI Snippet'
+      description: '**Required scopes:** `ai.prompt` (Read and Write).'
       operationId: api.ai.prompts.snippets.post
       requestBody:
         content:
@@ -195,7 +197,7 @@ paths:
       tags:
         - AI
       summary: 'Get AI Custom Placeholder'
-      description: 'Use [Get AI Snippet](#operation/api.ai.prompts.snippets.get) instead.'
+      description: "**Required scopes:** `ai.prompt` (Read only).\n\nUse [Get AI Snippet](#operation/api.ai.prompts.snippets.get) instead."
       operationId: api.ai.settings.custom-placeholders.get
       parameters:
         -
@@ -236,7 +238,7 @@ paths:
       tags:
         - AI
       summary: 'Delete AI Custom Placeholder'
-      description: 'Use [Delete AI Snippet](#operation/api.ai.prompts.snippets.delete) instead.'
+      description: "**Required scopes:** `ai.prompt` (Read and Write).\n\nUse [Delete AI Snippet](#operation/api.ai.prompts.snippets.delete) instead."
       operationId: api.ai.settings.custom-placeholders.delete
       parameters:
         -
@@ -279,7 +281,7 @@ paths:
       tags:
         - AI
       summary: 'Edit AI Custom Placeholder'
-      description: 'Use [Edit AI Snippet](#operation/api.ai.prompts.snippets.patch) instead.'
+      description: "**Required scopes:** `ai.prompt` (Read and Write).\n\nUse [Edit AI Snippet](#operation/api.ai.prompts.snippets.patch) instead."
       operationId: api.ai.settings.custom-placeholders.patch
       parameters:
         -
@@ -333,6 +335,7 @@ paths:
       tags:
         - AI
       summary: 'Get AI Snippet'
+      description: '**Required scopes:** `ai.prompt` (Read only).'
       operationId: api.ai.prompts.snippets.get
       parameters:
         -
@@ -372,6 +375,7 @@ paths:
       tags:
         - AI
       summary: 'Delete AI Snippet'
+      description: '**Required scopes:** `ai.prompt` (Read and Write).'
       operationId: api.ai.prompts.snippets.delete
       parameters:
         -
@@ -413,6 +417,7 @@ paths:
       tags:
         - AI
       summary: 'Edit AI Snippet'
+      description: '**Required scopes:** `ai.prompt` (Read and Write).'
       operationId: api.ai.prompts.snippets.patch
       parameters:
         -
@@ -465,6 +470,7 @@ paths:
       tags:
         - AI
       summary: 'Generate AI Prompt Fine-Tuning Dataset'
+      description: '**Required scopes:** `ai.fine-tuning` (Read only).'
       operationId: api.ai.prompts.fine-tuning.datasets.post
       parameters:
         -
@@ -516,6 +522,7 @@ paths:
       tags:
         - AI
       summary: 'Get AI Prompt Fine-Tuning Dataset Generation Status'
+      description: '**Required scopes:** `ai.fine-tuning` (Read only).'
       operationId: api.ai.prompts.fine-tuning.datasets.get
       parameters:
         -
@@ -566,6 +573,7 @@ paths:
       tags:
         - AI
       summary: 'List AI Prompt Fine-Tuning Events'
+      description: '**Required scopes:** `ai.fine-tuning` (Read only).'
       operationId: api.ai.prompts.fine-tuning.jobs.events.getMany
       parameters:
         -
@@ -614,6 +622,7 @@ paths:
       tags:
         - AI
       summary: 'List AI Prompt Fine-Tuning Jobs'
+      description: '**Required scopes:** `ai.fine-tuning` (Read only).'
       operationId: api.ai.prompts.fine-tuning.jobs.getMany
       parameters:
         -
@@ -666,6 +675,7 @@ paths:
       tags:
         - AI
       summary: 'Create AI Prompt Fine-Tuning Job'
+      description: '**Required scopes:** `ai.fine-tuning` (Read only).'
       operationId: api.ai.prompts.fine-tuning.jobs.post
       parameters:
         -
@@ -717,6 +727,7 @@ paths:
       tags:
         - AI
       summary: 'Get AI Prompt Fine-Tuning Job Status'
+      description: '**Required scopes:** `ai.fine-tuning` (Read only).'
       operationId: api.ai.prompts.fine-tuning.jobs.get
       parameters:
         -
@@ -765,6 +776,7 @@ paths:
       tags:
         - AI
       summary: 'Download AI Prompt Fine-Tuning Dataset'
+      description: '**Required scopes:** `ai.fine-tuning` (Read only).'
       operationId: api.ai.prompts.fine-tuning.datasets.download.get
       parameters:
         -
@@ -815,6 +827,7 @@ paths:
       tags:
         - AI
       summary: 'Clone AI Prompt'
+      description: '**Required scopes:** `ai.prompt` (Read and Write).'
       operationId: api.ai.prompts.clones.post
       parameters:
         -
@@ -866,6 +879,7 @@ paths:
       tags:
         - AI
       summary: 'List AI Prompts'
+      description: '**Required scopes:** `ai.prompt` (Read only).'
       operationId: api.ai.prompts.getMany
       parameters:
         -
@@ -924,6 +938,7 @@ paths:
       tags:
         - AI
       summary: 'Add AI Prompt'
+      description: '**Required scopes:** `ai.prompt` (Read and Write).'
       operationId: api.ai.prompts.post
       requestBody:
         content:
@@ -966,6 +981,7 @@ paths:
       tags:
         - AI
       summary: 'Generate AI Prompt Completion'
+      description: '**Required scopes:** `ai.prompt` (Read only).'
       operationId: api.ai.prompts.completions.post
       requestBody:
         content:
@@ -1014,6 +1030,7 @@ paths:
       tags:
         - AI
       summary: 'Get AI Prompt Completion Status'
+      description: '**Required scopes:** `ai.prompt` (Read only).'
       operationId: api.ai.prompts.completions.get
       parameters:
         -
@@ -1055,6 +1072,7 @@ paths:
       tags:
         - AI
       summary: 'Cancel AI Prompt Completion'
+      description: '**Required scopes:** `ai.prompt` (Read only).'
       operationId: api.ai.prompts.completions.delete
       parameters:
         -
@@ -1093,6 +1111,7 @@ paths:
       tags:
         - AI
       summary: 'Download AI Prompt Completion'
+      description: '**Required scopes:** `ai.prompt` (Read only).'
       operationId: api.ai.prompts.completions.download.download
       parameters:
         -
@@ -1135,6 +1154,7 @@ paths:
       tags:
         - AI
       summary: 'Get AI Prompt'
+      description: '**Required scopes:** `ai.prompt` (Read only).'
       operationId: api.ai.prompts.get
       parameters:
         -
@@ -1174,6 +1194,7 @@ paths:
       tags:
         - AI
       summary: 'Delete AI Prompt'
+      description: '**Required scopes:** `ai.prompt` (Read and Write).'
       operationId: api.ai.prompts.delete
       parameters:
         -
@@ -1215,6 +1236,7 @@ paths:
       tags:
         - AI
       summary: 'Edit AI Prompt'
+      description: '**Required scopes:** `ai.prompt` (Read and Write).'
       operationId: api.ai.prompts.patch
       parameters:
         -
@@ -1267,6 +1289,7 @@ paths:
       tags:
         - AI
       summary: 'List AI Provider Models'
+      description: '**Required scopes:** `ai.provider` (Read only).'
       operationId: api.ai.providers.models.enterprise.getMany
       responses:
         '200':
@@ -1304,6 +1327,7 @@ paths:
       tags:
         - AI
       summary: 'List AI Providers'
+      description: '**Required scopes:** `ai.provider` (Read only).'
       operationId: api.ai.providers.getMany
       parameters:
         -
@@ -1345,6 +1369,7 @@ paths:
       tags:
         - AI
       summary: 'Add AI Provider'
+      description: '**Required scopes:** `ai.provider` (Read and Write).'
       operationId: api.ai.providers.post
       requestBody:
         content:
@@ -1387,6 +1412,7 @@ paths:
       tags:
         - AI
       summary: 'Get AI Provider'
+      description: '**Required scopes:** `ai.provider` (Read only).'
       operationId: api.ai.providers.get
       parameters:
         -
@@ -1426,6 +1452,7 @@ paths:
       tags:
         - AI
       summary: 'Delete AI Provider'
+      description: '**Required scopes:** `ai.provider` (Read and Write).'
       operationId: api.ai.providers.delete
       parameters:
         -
@@ -1467,6 +1494,7 @@ paths:
       tags:
         - AI
       summary: 'Edit AI Provider'
+      description: '**Required scopes:** `ai.provider` (Read and Write).'
       operationId: api.ai.providers.patch
       parameters:
         -
@@ -1519,6 +1547,7 @@ paths:
       tags:
         - AI
       summary: 'List AI Provider Models'
+      description: '**Required scopes:** `ai.provider` (Read only).'
       operationId: api.ai.providers.models.getMany
       parameters:
         -
@@ -1559,6 +1588,7 @@ paths:
       tags:
         - AI
       summary: 'List Supported AI Provider Models'
+      description: '**Required scopes:** `ai.provider` (Read only).'
       operationId: api.ai.providers.supported-models.enterprise.getMany
       parameters:
         -
@@ -1619,7 +1649,7 @@ paths:
       tags:
         - AI
       summary: 'Create AI Proxy Chat Completion'
-      description: "This API method serves as an intermediary, forwarding your requests directly to the selected provider.\n\nPlease refer to the documentation for the specific provider you use to determine the required payload format."
+      description: "**Required scopes:** `ai.proxy` (Read only).\n\nThis API method serves as an intermediary, forwarding your requests directly to the selected provider.\n\nPlease refer to the documentation for the specific provider you use to determine the required payload format."
       operationId: api.ai.providers.chat.completions.post
       parameters:
         -
@@ -1671,6 +1701,7 @@ paths:
       tags:
         - AI
       summary: 'Generate AI Report'
+      description: '**Required scopes:** `ai.provider` (Read only).'
       operationId: api.ai.reports.post
       requestBody:
         content:
@@ -1721,6 +1752,7 @@ paths:
       tags:
         - AI
       summary: 'Check AI Report Generation Status'
+      description: '**Required scopes:** `ai.provider` (Read only).'
       operationId: api.ai.reports.get
       parameters:
         -
@@ -1761,6 +1793,7 @@ paths:
       tags:
         - AI
       summary: 'Download AI Report'
+      description: '**Required scopes:** `ai.provider` (Read only).'
       operationId: api.ai.reports.download.download
       parameters:
         -
@@ -1807,6 +1840,7 @@ paths:
       tags:
         - AI
       summary: 'Get AI Settings'
+      description: '**Required scopes:** `ai` (Read only).'
       operationId: api.ai.settings.get
       responses:
         '200':
@@ -1843,6 +1877,7 @@ paths:
       tags:
         - AI
       summary: 'Edit AI Settings'
+      description: '**Required scopes:** `ai` (Read and Write).'
       operationId: api.ai.settings.patch
       requestBody:
         description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
@@ -1886,6 +1921,7 @@ paths:
       tags:
         - AI
       summary: 'AI Translate Strings'
+      description: '**Required scopes:** `ai.translate` (Read and Write).'
       operationId: api.ai.translate.strings.post
       requestBody:
         content:
@@ -1928,6 +1964,7 @@ paths:
       tags:
         - Applications
       summary: 'List Application Installations'
+      description: '**Required scopes:** `application` (Read only).'
       operationId: api.applications.installations.getMany
       parameters:
         -
@@ -1985,6 +2022,7 @@ paths:
       tags:
         - Applications
       summary: 'Install Application'
+      description: '**Required scopes:** `application` (Read and Write).'
       operationId: api.applications.installations.post
       requestBody:
         content:
@@ -2027,6 +2065,7 @@ paths:
       tags:
         - Applications
       summary: 'Get Application Installation'
+      description: '**Required scopes:** `application` (Read only).'
       operationId: api.applications.installations.get
       parameters:
         -
@@ -2066,6 +2105,7 @@ paths:
       tags:
         - Applications
       summary: 'Delete Application Installation'
+      description: '**Required scopes:** `application` (Read and Write).'
       operationId: api.applications.installations.delete
       parameters:
         -
@@ -2109,6 +2149,7 @@ paths:
       tags:
         - Applications
       summary: 'Edit Application Installation'
+      description: '**Required scopes:** `application` (Read and Write).'
       operationId: api.applications.installations.patch
       parameters:
         -
@@ -2155,7 +2196,7 @@ paths:
       tags:
         - Applications
       summary: 'Get Application Data'
-      description: "Retrieves data from the specified application.\n\n__Note__: Query parameters are application-specific and vary depending on the application being accessed."
+      description: "**Required scopes:** `application` (Read only).\n\nRetrieves data from the specified application.\n\n__Note__: Query parameters are application-specific and vary depending on the application being accessed."
       operationId: api.applications.api.get
       parameters:
         -
@@ -2203,7 +2244,7 @@ paths:
       tags:
         - Applications
       summary: 'Update or Restore Application Data'
-      description: "Updates or restores data in the specified application.\n\n__Note__: Both the query parameters and request body are application-specific and vary depending on the application being accessed."
+      description: "**Required scopes:** `application` (Read and Write).\n\nUpdates or restores data in the specified application.\n\n__Note__: Both the query parameters and request body are application-specific and vary depending on the application being accessed."
       operationId: api.applications.api.put
       parameters:
         -
@@ -2256,7 +2297,7 @@ paths:
       tags:
         - Applications
       summary: 'Add Application Data'
-      description: "Adds new data to the specified application.\n\n__Note__: Both the query parameters and request body are application-specific and vary depending on the application being accessed."
+      description: "**Required scopes:** `application` (Read and Write).\n\nAdds new data to the specified application.\n\n__Note__: Both the query parameters and request body are application-specific and vary depending on the application being accessed."
       operationId: api.applications.api.post
       parameters:
         -
@@ -2309,7 +2350,7 @@ paths:
       tags:
         - Applications
       summary: 'Delete Application Data'
-      description: "Deletes data from the specified application.\n\n__Note__: Query parameters are application-specific and vary depending on the application being accessed."
+      description: "**Required scopes:** `application` (Read and Write).\n\nDeletes data from the specified application.\n\n__Note__: Query parameters are application-specific and vary depending on the application being accessed."
       operationId: api.applications.api.delete
       parameters:
         -
@@ -2347,7 +2388,7 @@ paths:
       tags:
         - Applications
       summary: 'Edit Application Data'
-      description: "Edits existing data in the specified application.\n\n__Note__: Both the query parameters and request body are application-specific and vary depending on the application being accessed."
+      description: "**Required scopes:** `application` (Read and Write).\n\nEdits existing data in the specified application.\n\n__Note__: Both the query parameters and request body are application-specific and vary depending on the application being accessed."
       operationId: api.applications.api.patch
       parameters:
         -
@@ -2401,6 +2442,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'List Branches'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.branches.getMany
       parameters:
         -
@@ -2484,6 +2526,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Add Branch'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.branches.post
       parameters:
         -
@@ -2545,6 +2588,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Get Branch'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.branches.get
       parameters:
         -
@@ -2596,6 +2640,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Delete Branch'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.branches.delete
       parameters:
         -
@@ -2647,6 +2692,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Edit Branch'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.branches.patch
       parameters:
         -
@@ -2717,6 +2763,7 @@ paths:
       tags:
         - Bundles
       summary: 'List Bundles'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.bundles.getMany
       parameters:
         -
@@ -2766,6 +2813,7 @@ paths:
       tags:
         - Bundles
       summary: 'Add Bundle'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.bundles.post
       parameters:
         -
@@ -2817,6 +2865,7 @@ paths:
       tags:
         - Bundles
       summary: 'Get Bundle'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.bundles.get
       parameters:
         -
@@ -2858,6 +2907,7 @@ paths:
       tags:
         - Bundles
       summary: 'Delete Bundle'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.bundles.delete
       parameters:
         -
@@ -2895,6 +2945,7 @@ paths:
       tags:
         - Bundles
       summary: 'Edit Bundle'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.bundles.patch
       parameters:
         -
@@ -2949,6 +3000,7 @@ paths:
       tags:
         - Bundles
       summary: 'Download Bundle'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.bundles.exports.download.get
       parameters:
         -
@@ -2993,6 +3045,7 @@ paths:
       tags:
         - Bundles
       summary: 'Export Bundle'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.bundles.exports.post
       parameters:
         -
@@ -3047,6 +3100,7 @@ paths:
       tags:
         - Bundles
       summary: 'Check Bundle Export Status'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.bundles.exports.get
       parameters:
         -
@@ -3091,6 +3145,7 @@ paths:
       tags:
         - Clients
       summary: 'List Clients'
+      description: '**Required scopes:** `client` (Read only).'
       operationId: api.clients.getMany
       parameters:
         -
@@ -3127,6 +3182,7 @@ paths:
       tags:
         - Glossaries
       summary: 'List Concepts'
+      description: '**Required scopes:** `glossary` (Read only).'
       operationId: api.glossaries.concepts.getMany
       parameters:
         -
@@ -3198,6 +3254,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Get concept'
+      description: '**Required scopes:** `glossary` (Read only).'
       operationId: api.glossaries.concepts.get
       parameters:
         -
@@ -3251,7 +3308,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Update concept'
-      description: '__Note:__ There is no separate method for concept creation. Concepts are automatically created when adding a term without specifying a `conceptId`.'
+      description: "**Required scopes:** `glossary` (Read and Write).\n\n__Note:__ There is no separate method for concept creation. Concepts are automatically created when adding a term without specifying a `conceptId`."
       operationId: api.glossaries.concepts.put
       parameters:
         -
@@ -3310,6 +3367,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Delete Concept'
+      description: '**Required scopes:** `glossary` (Read and Write).'
       operationId: api.glossaries.concepts.delete
       parameters:
         -
@@ -3354,6 +3412,7 @@ paths:
       tags:
         - 'Custom Spellcheckers'
       summary: 'List Custom Spellcheckers'
+      description: '**Required scopes:** `custom-spellchecker` (Read only).'
       operationId: api.custom-spellcheckers.getMany
       parameters:
         -
@@ -3396,6 +3455,7 @@ paths:
       tags:
         - 'Custom Spellcheckers'
       summary: 'Get Custom Spellchecker'
+      description: '**Required scopes:** `custom-spellchecker` (Read only).'
       operationId: api.custom-spellcheckers.get
       parameters:
         -
@@ -3436,6 +3496,7 @@ paths:
       tags:
         - Dictionaries
       summary: 'List Dictionaries'
+      description: '**Required scopes:** `project.dictionary` (Read only).'
       operationId: api.projects.dictionaries.getMany
       parameters:
         -
@@ -3472,6 +3533,7 @@ paths:
       tags:
         - Dictionaries
       summary: 'Edit Dictionary'
+      description: '**Required scopes:** `project.dictionary` (Read and Write).'
       operationId: api.projects.dictionaries.patch
       parameters:
         -
@@ -3526,6 +3588,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'List Directories'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.directories.getMany
       parameters:
         -
@@ -3623,6 +3686,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Add Directory'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.directories.post
       parameters:
         -
@@ -3682,6 +3746,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Get Directory'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.directories.get
       parameters:
         -
@@ -3731,6 +3796,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Delete Directory'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.directories.delete
       parameters:
         -
@@ -3788,6 +3854,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Edit Directory'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.directories.patch
       parameters:
         -
@@ -3856,6 +3923,7 @@ paths:
       tags:
         - Distributions
       summary: 'List Distributions'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.distributions.getMany
       parameters:
         -
@@ -3913,6 +3981,7 @@ paths:
       tags:
         - Distributions
       summary: 'Add Distribution'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.distributions.post
       parameters:
         -
@@ -3972,6 +4041,7 @@ paths:
       tags:
         - Distributions
       summary: 'Get Distribution'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.distributions.get
       parameters:
         -
@@ -4015,6 +4085,7 @@ paths:
       tags:
         - Distributions
       summary: 'Delete Distribution'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.distributions.delete
       parameters:
         -
@@ -4058,6 +4129,7 @@ paths:
       tags:
         - Distributions
       summary: 'Edit Distribution'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.distributions.patch
       parameters:
         -
@@ -4120,6 +4192,7 @@ paths:
       tags:
         - Distributions
       summary: 'Get Distribution Release'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.distributions.release.get
       parameters:
         -
@@ -4169,6 +4242,7 @@ paths:
       tags:
         - Distributions
       summary: 'Release Distribution'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.distributions.release.post
       parameters:
         -
@@ -4225,6 +4299,7 @@ paths:
       tags:
         - 'External QA Checks'
       summary: 'List External QA Checks'
+      description: '**Required scopes:** `external-qa-check` (Read only).'
       operationId: api.external-qa-checks.getMany
       parameters:
         -
@@ -4275,6 +4350,7 @@ paths:
       tags:
         - 'External QA Checks'
       summary: 'Get External QA Check'
+      description: '**Required scopes:** `external-qa-check` (Read only).'
       operationId: api.external-qa-checks.get
       parameters:
         -
@@ -4315,6 +4391,7 @@ paths:
       tags:
         - Fields
       summary: 'List Fields'
+      description: '**Required scopes:** `field` (Read only).'
       operationId: api.fields.getMany
       parameters:
         -
@@ -4393,6 +4470,7 @@ paths:
       tags:
         - Fields
       summary: 'Add Field'
+      description: '**Required scopes:** `field` (Read and Write).'
       operationId: api.fields.post
       requestBody:
         content:
@@ -4447,6 +4525,7 @@ paths:
       tags:
         - Fields
       summary: 'Get Field'
+      description: '**Required scopes:** `field` (Read only).'
       operationId: api.fields.get
       parameters:
         -
@@ -4486,6 +4565,7 @@ paths:
       tags:
         - Fields
       summary: 'Delete Field'
+      description: '**Required scopes:** `field` (Read and Write).'
       operationId: api.fields.delete
       parameters:
         -
@@ -4527,6 +4607,7 @@ paths:
       tags:
         - Fields
       summary: 'Edit Field'
+      description: '**Required scopes:** `field` (Read and Write).'
       operationId: api.fields.patch
       parameters:
         -
@@ -4591,6 +4672,7 @@ paths:
       tags:
         - Bundles
       summary: 'Bundle List Files'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.bundles.files.getMany
       parameters:
         -
@@ -4653,6 +4735,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'List Files'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.files.getMany
       parameters:
         -
@@ -4753,6 +4836,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Add File'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.files.post
       parameters:
         -
@@ -4824,6 +4908,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Get File'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.files.get
       parameters:
         -
@@ -4875,7 +4960,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Update or Restore File'
-      description: 'Update your current file with a new one or restore it to one of the previous revisions'
+      description: "**Required scopes:** `project.source.file` (Read and Write).\n\nUpdate your current file with a new one or restore it to one of the previous revisions"
       operationId: api.projects.files.put
       parameters:
         -
@@ -4948,6 +5033,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Delete File'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.files.delete
       parameters:
         -
@@ -5005,6 +5091,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Edit File'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.files.patch
       parameters:
         -
@@ -5079,6 +5166,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Download File Preview'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.files.preview.get
       parameters:
         -
@@ -5135,6 +5223,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Download File'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.files.download.get
       parameters:
         -
@@ -5191,6 +5280,7 @@ paths:
       tags:
         - Glossaries
       summary: 'List Glossaries'
+      description: '**Required scopes:** `glossary` (Read only).'
       operationId: api.glossaries.getMany
       parameters:
         -
@@ -5258,6 +5348,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Add Glossary'
+      description: '**Required scopes:** `glossary` (Read and Write).'
       operationId: api.glossaries.post
       requestBody:
         content:
@@ -5306,6 +5397,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Get Glossary'
+      description: '**Required scopes:** `glossary` (Read only).'
       operationId: api.glossaries.get
       parameters:
         -
@@ -5345,6 +5437,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Delete Glossary'
+      description: '**Required scopes:** `glossary` (Read and Write).'
       operationId: api.glossaries.delete
       parameters:
         -
@@ -5380,6 +5473,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Edit Glossary'
+      description: '**Required scopes:** `glossary` (Read and Write).'
       operationId: api.glossaries.patch
       parameters:
         -
@@ -5438,6 +5532,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Export Glossary'
+      description: '**Required scopes:** `glossary` (Read only).'
       operationId: api.glossaries.exports.post
       parameters:
         -
@@ -5495,6 +5590,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Check Glossary Export Status'
+      description: '**Required scopes:** `glossary` (Read only).'
       operationId: api.glossaries.exports.get
       parameters:
         -
@@ -5537,6 +5633,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Download Glossary'
+      description: '**Required scopes:** `glossary` (Read only).'
       operationId: api.glossaries.exports.download.download
       parameters:
         -
@@ -5579,6 +5676,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Import Glossary'
+      description: '**Required scopes:** `glossary` (Read and Write).'
       operationId: api.glossaries.imports.post
       parameters:
         -
@@ -5636,6 +5734,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Check Glossary Import Status'
+      description: '**Required scopes:** `glossary` (Read and Write).'
       operationId: api.glossaries.imports.get
       parameters:
         -
@@ -5678,6 +5777,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Concordance search in Glossaries'
+      description: '**Required scopes:** `glossary` (Read and Write).'
       operationId: api.projects.glossaries.concordance.post
       parameters:
         -
@@ -5729,6 +5829,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'List Groups'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.groups.getMany
       parameters:
         -
@@ -5792,6 +5893,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Add Group'
+      description: '**Required scopes:** `group` (Read and Write).'
       operationId: api.groups.post
       requestBody:
         content:
@@ -5840,6 +5942,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Get Group'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.groups.get
       parameters:
         -
@@ -5879,6 +5982,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Delete Group'
+      description: '**Required scopes:** `group` (Read and Write).'
       operationId: api.groups.delete
       parameters:
         -
@@ -5914,6 +6018,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Edit Group'
+      description: '**Required scopes:** `group` (Read and Write).'
       operationId: api.groups.patch
       parameters:
         -
@@ -5966,6 +6071,7 @@ paths:
       tags:
         - Users
       summary: 'List Group Managers'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.groups.managers.getMany
       parameters:
         -
@@ -6026,6 +6132,7 @@ paths:
       tags:
         - Users
       summary: 'Update Group Managers'
+      description: '**Required scopes:** `group` (Read and Write).'
       operationId: api.groups.managers.patch
       parameters:
         -
@@ -6072,6 +6179,7 @@ paths:
       tags:
         - Users
       summary: 'Get Group Manager'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.groups.managers.get
       parameters:
         -
@@ -6114,6 +6222,7 @@ paths:
       tags:
         - Teams
       summary: 'List Group Teams'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.groups.teams.getMany
       parameters:
         -
@@ -6170,6 +6279,7 @@ paths:
       tags:
         - Teams
       summary: 'Update Group Teams'
+      description: '**Required scopes:** `group` (Read and Write).'
       operationId: api.groups.teams.patch
       parameters:
         -
@@ -6216,6 +6326,7 @@ paths:
       tags:
         - Teams
       summary: 'Get Group Team'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.groups.teams.get
       parameters:
         -
@@ -6258,7 +6369,7 @@ paths:
       tags:
         - Issues
       summary: 'List Reported Issues.'
-      description: 'Use [List String Comments](#operation/api.projects.comments.getMany) instead.'
+      description: "**Required scopes:** `project.status.issue` (Read only).\n\nUse [List String Comments](#operation/api.projects.comments.getMany) instead."
       operationId: api.projects.issues.getMany
       parameters:
         -
@@ -6308,7 +6419,7 @@ paths:
       tags:
         - Issues
       summary: 'Edit Issue'
-      description: 'Use [Edit String Comment](#operation/api.projects.comments.patch) instead.'
+      description: "**Required scopes:** `project.status.issue` (Read and Write).\n\nUse [Edit String Comment](#operation/api.projects.comments.patch) instead."
       operationId: api.projects.issues.patch
       parameters:
         -
@@ -6376,6 +6487,7 @@ paths:
       tags:
         - Labels
       summary: 'Assign Label to Strings'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.labels.strings.post
       parameters:
         -
@@ -6436,6 +6548,7 @@ paths:
       tags:
         - Labels
       summary: 'Unassign Label from Strings'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.labels.strings.deleteMany
       parameters:
         -
@@ -6500,6 +6613,7 @@ paths:
       tags:
         - Labels
       summary: 'List Labels'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.labels.getMany
       parameters:
         -
@@ -6568,6 +6682,7 @@ paths:
       tags:
         - Labels
       summary: 'Add Label'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.labels.post
       parameters:
         -
@@ -6627,6 +6742,7 @@ paths:
       tags:
         - Labels
       summary: 'Get Label'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.labels.get
       parameters:
         -
@@ -6676,6 +6792,7 @@ paths:
       tags:
         - Labels
       summary: 'Delete Label'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.labels.delete
       parameters:
         -
@@ -6719,6 +6836,7 @@ paths:
       tags:
         - Labels
       summary: 'Edit Label'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.labels.patch
       parameters:
         -
@@ -6787,6 +6905,7 @@ paths:
       tags:
         - Labels
       summary: 'Assign Label to Screenshots'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.labels.screenshots.post
       parameters:
         -
@@ -6845,6 +6964,7 @@ paths:
       tags:
         - Labels
       summary: 'Unassign Label from Screenshots'
+      description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.labels.screenshots.deleteMany
       parameters:
         -
@@ -6948,6 +7068,7 @@ paths:
       tags:
         - Languages
       summary: 'Add Custom Language'
+      description: '**Required scopes:** `language` (Read and Write).'
       operationId: api.languages.post
       requestBody:
         content:
@@ -7029,6 +7150,7 @@ paths:
       tags:
         - Languages
       summary: 'Delete Custom Language'
+      description: '**Required scopes:** `language` (Read and Write).'
       operationId: api.languages.delete
       parameters:
         -
@@ -7070,6 +7192,7 @@ paths:
       tags:
         - Languages
       summary: 'Edit Custom Language'
+      description: '**Required scopes:** `language` (Read and Write).'
       operationId: api.languages.patch
       parameters:
         -
@@ -7122,6 +7245,7 @@ paths:
       tags:
         - 'Machine Translation Engines'
       summary: 'List MTs'
+      description: '**Required scopes:** `mt` (Read only).'
       operationId: api.mts.getMany
       parameters:
         -
@@ -7175,6 +7299,7 @@ paths:
       tags:
         - 'Machine Translation Engines'
       summary: 'Add MT'
+      description: '**Required scopes:** `mt` (Read and Write).'
       operationId: api.mts.post
       requestBody:
         content:
@@ -7223,6 +7348,7 @@ paths:
       tags:
         - 'Machine Translation Engines'
       summary: 'Get MT'
+      description: '**Required scopes:** `mt` (Read only).'
       operationId: api.mts.get
       parameters:
         -
@@ -7262,6 +7388,7 @@ paths:
       tags:
         - 'Machine Translation Engines'
       summary: 'Delete MT'
+      description: '**Required scopes:** `mt` (Read and Write).'
       operationId: api.mts.delete
       parameters:
         -
@@ -7303,6 +7430,7 @@ paths:
       tags:
         - 'Machine Translation Engines'
       summary: 'Edit MT'
+      description: '**Required scopes:** `mt` (Read and Write).'
       operationId: api.mts.patch
       parameters:
         -
@@ -7355,6 +7483,7 @@ paths:
       tags:
         - 'Machine Translation Engines'
       summary: 'Translate via MT'
+      description: '**Required scopes:** `mt` (Read and Write).'
       operationId: api.mts.translations.post
       parameters:
         -
@@ -7406,6 +7535,7 @@ paths:
       tags:
         - Notifications
       summary: 'Send Notification To Organization Members'
+      description: '**Required scopes:** `notification` (Read and Write).'
       operationId: api.notify.post
       requestBody:
         content:
@@ -7462,6 +7592,7 @@ paths:
       tags:
         - Notifications
       summary: 'Send Notification To Project Members'
+      description: '**Required scopes:** `project` (Read and Write).'
       operationId: api.projects.notify.post
       parameters:
         -
@@ -7519,6 +7650,7 @@ paths:
       tags:
         - Organization
       summary: 'Get Organization Authentication Settings'
+      description: '**Required scopes:** `organization` (Read only).'
       operationId: api.organization.auth-settings.get
       responses:
         '200':
@@ -7556,6 +7688,7 @@ paths:
       tags:
         - Organization
       summary: 'Get Organization Info'
+      description: '**Required scopes:** `organization` (Read only).'
       operationId: api.organization.get
       responses:
         '200':
@@ -7593,6 +7726,7 @@ paths:
       tags:
         - 'Organization Webhooks'
       summary: 'List Webhooks'
+      description: '**Required scopes:** `webhook` (Read only).'
       operationId: api.webhooks.getMany
       parameters:
         -
@@ -7634,6 +7768,7 @@ paths:
       tags:
         - 'Organization Webhooks'
       summary: 'Add Webhook'
+      description: '**Required scopes:** `webhook` (Read and Write).'
       operationId: api.webhooks.post
       requestBody:
         content:
@@ -7676,6 +7811,7 @@ paths:
       tags:
         - 'Organization Webhooks'
       summary: 'Get Webhook'
+      description: '**Required scopes:** `webhook` (Read only).'
       operationId: api.webhooks.get
       parameters:
         -
@@ -7715,6 +7851,7 @@ paths:
       tags:
         - 'Organization Webhooks'
       summary: 'Delete Webhook'
+      description: '**Required scopes:** `webhook` (Read and Write).'
       operationId: api.webhooks.delete
       parameters:
         -
@@ -7750,6 +7887,7 @@ paths:
       tags:
         - 'Organization Webhooks'
       summary: 'Edit Webhook'
+      description: '**Required scopes:** `webhook` (Read and Write).'
       operationId: api.webhooks.patch
       parameters:
         -
@@ -7808,6 +7946,7 @@ paths:
       tags:
         - Translations
       summary: 'List Pre-Translations'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.pre-translations.getMany
       parameters:
         -
@@ -7863,6 +8002,7 @@ paths:
       tags:
         - Translations
       summary: 'Apply Pre-Translation'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.pre-translations.post
       parameters:
         -
@@ -7932,6 +8072,7 @@ paths:
       tags:
         - Translations
       summary: 'Pre-Translation Status'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.pre-translations.get
       parameters:
         -
@@ -7979,6 +8120,7 @@ paths:
       tags:
         - Translations
       summary: 'Edit Pre-Translation'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.pre-translations.patch
       parameters:
         -
@@ -8045,6 +8187,7 @@ paths:
       tags:
         - Translations
       summary: 'Pre-Translation Report'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.pre-translations.report.getReport
       parameters:
         -
@@ -8093,6 +8236,7 @@ paths:
       tags:
         - 'Translation Status'
       summary: 'Get Branch Progress'
+      description: '**Required scopes:** `project.status.progress` (Read only).'
       operationId: api.projects.branches.languages.progress.getMany
       parameters:
         -
@@ -8139,6 +8283,7 @@ paths:
       tags:
         - 'Translation Status'
       summary: 'Get Directory Progress'
+      description: '**Required scopes:** `project.status.progress` (Read only).'
       operationId: api.projects.directories.languages.progress.getMany
       parameters:
         -
@@ -8187,6 +8332,7 @@ paths:
       tags:
         - 'Translation Status'
       summary: 'Get File Progress'
+      description: '**Required scopes:** `project.status.progress` (Read only).'
       operationId: api.projects.files.languages.progress.getMany
       parameters:
         -
@@ -8235,6 +8381,7 @@ paths:
       tags:
         - 'Translation Status'
       summary: 'Get Language Progress'
+      description: '**Required scopes:** `project.status.progress` (Read only).'
       operationId: api.projects.languages.files.progress.getMany
       parameters:
         -
@@ -8283,6 +8430,7 @@ paths:
       tags:
         - 'Translation Status'
       summary: 'Get Project Progress'
+      description: '**Required scopes:** `project.status.progress` (Read only).'
       operationId: api.projects.languages.progress.getMany
       parameters:
         -
@@ -8329,6 +8477,7 @@ paths:
       tags:
         - AI
       summary: 'Get Project AI Settings'
+      description: '**Required scopes:** `project` (Read only).'
       operationId: api.projects.ai.settings.get
       responses:
         '200':
@@ -8366,6 +8515,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'List Projects'
+      description: '**Required scopes:** `project.settings` (Read only).'
       operationId: api.projects.getMany
       parameters:
         -
@@ -8435,6 +8585,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Add Project'
+      description: '**Required scopes:** `project.settings` (Read and Write).'
       operationId: api.projects.post
       requestBody:
         content:
@@ -8485,6 +8636,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Get Project'
+      description: '**Required scopes:** `project.settings` (Read only).'
       operationId: api.projects.get
       parameters:
         -
@@ -8528,6 +8680,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Delete Project'
+      description: '**Required scopes:** `project` (Read and Write).'
       operationId: api.projects.delete
       parameters:
         -
@@ -8563,6 +8716,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Edit Project'
+      description: '**Required scopes:** `project.settings` (Read and Write).'
       operationId: api.projects.patch
       parameters:
         -
@@ -8617,6 +8771,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Download Project File Format Settings Custom Segmentation'
+      description: '**Required scopes:** `project.settings` (Read only).'
       operationId: api.projects.file-format-settings.custom-segmentations.get
       parameters:
         -
@@ -8670,6 +8825,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Reset Project File Format Settings Custom Segmentation'
+      description: '**Required scopes:** `project.settings` (Read and Write).'
       operationId: api.projects.file-format-settings.custom-segmentations.delete
       parameters:
         -
@@ -8720,6 +8876,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'List Project File Format Settings'
+      description: '**Required scopes:** `project.settings` (Read only).'
       operationId: api.projects.file-format-settings.getMany
       parameters:
         -
@@ -8767,6 +8924,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Add Project File Format Settings'
+      description: '**Required scopes:** `project.settings` (Read and Write).'
       operationId: api.projects.file-format-settings.post
       parameters:
         -
@@ -8826,6 +8984,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Get Project File Format Settings'
+      description: '**Required scopes:** `project.settings` (Read only).'
       operationId: api.projects.file-format-settings.get
       parameters:
         -
@@ -8881,6 +9040,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Delete Project File Format Settings'
+      description: '**Required scopes:** `project.settings` (Read and Write).'
       operationId: api.projects.file-format-settings.delete
       parameters:
         -
@@ -8930,6 +9090,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Edit Project File Format Settings'
+      description: '**Required scopes:** `project.settings` (Read and Write).'
       operationId: api.projects.file-format-settings.patch
       parameters:
         -
@@ -8992,6 +9153,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'List Project Strings Exporter Settings'
+      description: '**Required scopes:** `project.settings` (Read only).'
       operationId: api.projects.strings-exporter-settings.getMany
       parameters:
         -
@@ -9037,6 +9199,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Add Project Strings Exporter Settings'
+      description: '**Required scopes:** `project.settings` (Read and Write).'
       operationId: api.projects.strings-exporter-settings.post
       parameters:
         -
@@ -9100,6 +9263,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Get Project Strings Exporter Settings'
+      description: '**Required scopes:** `project.settings` (Read only).'
       operationId: api.projects.strings-exporter-settings.get
       parameters:
         -
@@ -9153,6 +9317,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Delete Project Strings Exporter Settings'
+      description: '**Required scopes:** `project.settings` (Read and Write).'
       operationId: api.projects.strings-exporter-settings.delete
       parameters:
         -
@@ -9202,6 +9367,7 @@ paths:
       tags:
         - 'Projects and Groups'
       summary: 'Edit Project Strings Exporter Settings'
+      description: '**Required scopes:** `project.settings` (Read and Write).'
       operationId: api.projects.strings-exporter-settings.patch
       parameters:
         -
@@ -9268,6 +9434,7 @@ paths:
       tags:
         - 'Translation Status'
       summary: 'List QA Check Issues'
+      description: '**Required scopes:** `project.status.qa-check` (Read only).'
       operationId: api.projects.qa-checks.getMany
       parameters:
         -
@@ -9332,7 +9499,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'List Asset References'
-      description: 'List all reference files for an asset'
+      description: "**Required scopes:** `project.source.file` (Read only).\n\nList all reference files for an asset"
       operationId: api.projects.files.references.getMany
       parameters:
         -
@@ -9374,7 +9541,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Add Asset Reference'
-      description: 'Upload a reference file for an asset'
+      description: "**Required scopes:** `project.source.file` (Read and Write).\n\nUpload a reference file for an asset"
       operationId: api.projects.files.references.post
       parameters:
         -
@@ -9424,7 +9591,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Get Asset Reference'
-      description: 'Get information about a specific asset reference'
+      description: "**Required scopes:** `project.source.file` (Read only).\n\nGet information about a specific asset reference"
       operationId: api.projects.files.references.get
       parameters:
         -
@@ -9469,7 +9636,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Delete Asset Reference'
-      description: 'Delete a reference file for an asset'
+      description: "**Required scopes:** `project.source.file` (Read and Write).\n\nDelete a reference file for an asset"
       operationId: api.projects.files.references.delete
       parameters:
         -
@@ -9511,6 +9678,7 @@ paths:
       tags:
         - Reports
       summary: 'List Report Archives'
+      description: '**Required scopes:** `project.report` (Read only).'
       operationId: api.reports.archives.getMany
       parameters:
         -
@@ -9596,6 +9764,7 @@ paths:
       tags:
         - Reports
       summary: 'Get Report Archive'
+      description: '**Required scopes:** `project.report` (Read only).'
       operationId: api.reports.archives.get
       parameters:
         -
@@ -9641,6 +9810,7 @@ paths:
       tags:
         - Reports
       summary: 'Delete Report Archive'
+      description: '**Required scopes:** `project.report` (Read and Write).'
       operationId: api.reports.archives.delete
       parameters:
         -
@@ -9677,6 +9847,7 @@ paths:
       tags:
         - Reports
       summary: 'Export Report Archive'
+      description: '**Required scopes:** `project.report` (Read only).'
       operationId: api.reports.archives.exports.post
       parameters:
         -
@@ -9734,6 +9905,7 @@ paths:
       tags:
         - Reports
       summary: 'Check Report Archive Export Status'
+      description: '**Required scopes:** `project.report` (Read only).'
       operationId: api.reports.archives.exports.get
       parameters:
         -
@@ -9776,6 +9948,7 @@ paths:
       tags:
         - Reports
       summary: 'Download Report Archive'
+      description: '**Required scopes:** `project.report` (Read only).'
       operationId: api.reports.archives.exports.download.get
       parameters:
         -
@@ -9824,6 +9997,7 @@ paths:
       tags:
         - Reports
       summary: 'Generate Group Report'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.groups.reports.post
       parameters:
         -
@@ -9899,6 +10073,7 @@ paths:
       tags:
         - Reports
       summary: 'Check Group Report Generation Status'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.groups.reports.get
       parameters:
         -
@@ -9935,6 +10110,7 @@ paths:
       tags:
         - Reports
       summary: 'Download Group Report'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.groups.reports.download.download
       parameters:
         -
@@ -9983,6 +10159,7 @@ paths:
       tags:
         - Reports
       summary: 'List Report Settings Templates'
+      description: '**Required scopes:** `project.report` (Read only).'
       operationId: api.reports.settings-templates.getMany
       parameters:
         -
@@ -10034,6 +10211,7 @@ paths:
       tags:
         - Reports
       summary: 'Add Report Settings Template'
+      description: '**Required scopes:** `project.report` (Read and Write).'
       operationId: api.reports.settings-templates.post
       requestBody:
         content:
@@ -10086,6 +10264,7 @@ paths:
       tags:
         - Reports
       summary: 'Get Report Settings Template'
+      description: '**Required scopes:** `project.report` (Read only).'
       operationId: api.reports.settings-templates.get
       parameters:
         -
@@ -10125,6 +10304,7 @@ paths:
       tags:
         - Reports
       summary: 'Delete Report Settings Template'
+      description: '**Required scopes:** `project.report` (Read and Write).'
       operationId: api.reports.settings-templates.delete
       parameters:
         -
@@ -10160,6 +10340,7 @@ paths:
       tags:
         - Reports
       summary: 'Edit Report Settings Template'
+      description: '**Required scopes:** `project.report` (Read and Write).'
       operationId: api.reports.settings-templates.patch
       parameters:
         -
@@ -10212,6 +10393,7 @@ paths:
       tags:
         - Reports
       summary: 'Generate Organization Report'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.reports.post
       requestBody:
         content:
@@ -10284,6 +10466,7 @@ paths:
       tags:
         - Reports
       summary: 'Check Organization Report Generation Status'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.reports.get
       parameters:
         -
@@ -10318,6 +10501,7 @@ paths:
       tags:
         - Reports
       summary: 'Download Organization Report'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.reports.download.download
       parameters:
         -
@@ -10364,6 +10548,7 @@ paths:
       tags:
         - Reports
       summary: 'Generate Report'
+      description: '**Required scopes:** `project.report` (Read only).'
       operationId: api.projects.reports.post
       parameters:
         -
@@ -10449,6 +10634,7 @@ paths:
       tags:
         - Reports
       summary: 'Check Report Generation Status'
+      description: '**Required scopes:** `project.report` (Read only).'
       operationId: api.projects.reports.get
       parameters:
         -
@@ -10485,6 +10671,7 @@ paths:
       tags:
         - Reports
       summary: 'Download Report'
+      description: '**Required scopes:** `project.report` (Read only).'
       operationId: api.projects.reports.download.download
       parameters:
         -
@@ -10533,6 +10720,7 @@ paths:
       tags:
         - Reports
       summary: 'List User Report Settings Templates'
+      description: '**Required scopes:** `user` (Read only).'
       operationId: api.users.reports.settings-templates.getMany
       parameters:
         -
@@ -10582,6 +10770,7 @@ paths:
       tags:
         - Reports
       summary: 'Add User Report Settings Template'
+      description: '**Required scopes:** `user` (Read and Write).'
       operationId: api.users.reports.settings-templates.post
       parameters:
         -
@@ -10637,6 +10826,7 @@ paths:
       tags:
         - Reports
       summary: 'Get User Report Settings Template'
+      description: '**Required scopes:** `user` (Read only).'
       operationId: api.users.reports.settings-templates.get
       parameters:
         -
@@ -10678,6 +10868,7 @@ paths:
       tags:
         - Reports
       summary: 'Delete User Report Settings Template'
+      description: '**Required scopes:** `user` (Read and Write).'
       operationId: api.users.reports.settings-templates.delete
       parameters:
         -
@@ -10715,6 +10906,7 @@ paths:
       tags:
         - Reports
       summary: 'Edit User Report Settings Template'
+      description: '**Required scopes:** `user` (Read and Write).'
       operationId: api.users.reports.settings-templates.patch
       parameters:
         -
@@ -10769,6 +10961,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'List File Revisions'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.files.revisions.getMany
       parameters:
         -
@@ -10817,6 +11010,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Get File Revision'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.files.revisions.get
       parameters:
         -
@@ -10863,6 +11057,7 @@ paths:
       tags:
         - Screenshots
       summary: 'List Screenshots'
+      description: '**Required scopes:** `project.screenshot` (Read only).'
       operationId: api.projects.screenshots.getMany
       parameters:
         -
@@ -10969,6 +11164,7 @@ paths:
       tags:
         - Screenshots
       summary: 'Add Screenshot'
+      description: '**Required scopes:** `project.screenshot` (Read and Write).'
       operationId: api.projects.screenshots.post
       parameters:
         -
@@ -11032,6 +11228,7 @@ paths:
       tags:
         - Screenshots
       summary: 'Get Screenshot'
+      description: '**Required scopes:** `project.screenshot` (Read only).'
       operationId: api.projects.screenshots.get
       parameters:
         -
@@ -11079,6 +11276,7 @@ paths:
       tags:
         - Screenshots
       summary: 'Update Screenshot'
+      description: '**Required scopes:** `project.screenshot` (Read and Write).'
       operationId: api.projects.screenshots.put
       parameters:
         -
@@ -11137,6 +11335,7 @@ paths:
       tags:
         - Screenshots
       summary: 'Delete Screenshot'
+      description: '**Required scopes:** `project.screenshot` (Read and Write).'
       operationId: api.projects.screenshots.delete
       parameters:
         -
@@ -11180,6 +11379,7 @@ paths:
       tags:
         - Screenshots
       summary: 'Edit Screenshot'
+      description: '**Required scopes:** `project.screenshot` (Read and Write).'
       operationId: api.projects.screenshots.patch
       parameters:
         -
@@ -11246,6 +11446,7 @@ paths:
       tags:
         - Screenshots
       summary: 'List Tags'
+      description: '**Required scopes:** `project.screenshot` (Read only).'
       operationId: api.projects.screenshots.tags.getMany
       parameters:
         -
@@ -11303,6 +11504,7 @@ paths:
       tags:
         - Screenshots
       summary: 'Replace Tags (Auto Tag)'
+      description: '**Required scopes:** `project.screenshot` (Read and Write).'
       operationId: api.projects.screenshots.tags.putMany
       parameters:
         -
@@ -11367,6 +11569,7 @@ paths:
       tags:
         - Screenshots
       summary: 'Add Tag'
+      description: '**Required scopes:** `project.screenshot` (Read and Write).'
       operationId: api.projects.screenshots.tags.post
       parameters:
         -
@@ -11425,6 +11628,7 @@ paths:
       tags:
         - Screenshots
       summary: 'Clear Tags'
+      description: '**Required scopes:** `project.screenshot` (Read and Write).'
       operationId: api.projects.screenshots.tags.deleteMany
       parameters:
         -
@@ -11469,6 +11673,7 @@ paths:
       tags:
         - Screenshots
       summary: 'Get Tag'
+      description: '**Required scopes:** `project.screenshot` (Read only).'
       operationId: api.projects.screenshots.tags.get
       parameters:
         -
@@ -11518,6 +11723,7 @@ paths:
       tags:
         - Screenshots
       summary: 'Delete Tag'
+      description: '**Required scopes:** `project.screenshot` (Read and Write).'
       operationId: api.projects.screenshots.tags.delete
       parameters:
         -
@@ -11563,6 +11769,7 @@ paths:
       tags:
         - Screenshots
       summary: 'Edit Tag'
+      description: '**Required scopes:** `project.screenshot` (Read and Write).'
       operationId: api.projects.screenshots.tags.patch
       parameters:
         -
@@ -11631,6 +11838,7 @@ paths:
       tags:
         - 'Security Logs'
       summary: 'List Organization Security Logs'
+      description: '**Required scopes:** `security-log` (Read only).'
       operationId: api.security-logs.getMany
       parameters:
         -
@@ -11697,6 +11905,7 @@ paths:
       tags:
         - 'Security Logs'
       summary: 'Get Organization Security Log'
+      description: '**Required scopes:** `security-log` (Read only).'
       operationId: api.security-logs.get
       parameters:
         -
@@ -11747,6 +11956,7 @@ paths:
       tags:
         - 'Security Logs'
       summary: 'List User Security Logs'
+      description: '**Required scopes:** `security-log` (Read only).'
       operationId: api.users.security-logs.getMany
       parameters:
         -
@@ -11815,6 +12025,7 @@ paths:
       tags:
         - 'Security Logs'
       summary: 'Get User Security Log'
+      description: '**Required scopes:** `security-log` (Read only).'
       operationId: api.users.security-logs.get
       parameters:
         -
@@ -12003,6 +12214,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'List Reviewed Source Files Builds'
+      description: '**Required scopes:** `project.source.string` (Read only).'
       operationId: api.projects.strings.reviewed-builds.getMany
       parameters:
         -
@@ -12066,6 +12278,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Build Reviewed Source Files'
+      description: '**Required scopes:** `project.source.string` (Read and Write).'
       operationId: api.projects.strings.reviewed-builds.post
       parameters:
         -
@@ -12125,6 +12338,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Check Reviewed Source Files Build Status'
+      description: '**Required scopes:** `project` (Read only).'
       operationId: api.projects.strings.reviewed-builds.get
       parameters:
         -
@@ -12175,6 +12389,7 @@ paths:
       tags:
         - 'Source Files'
       summary: 'Download Reviewed Source Files'
+      description: '**Required scopes:** `project` (Read only).'
       operationId: api.projects.strings.reviewed-builds.download.download
       parameters:
         -
@@ -12225,6 +12440,7 @@ paths:
       tags:
         - 'Source Strings'
       summary: 'List Strings'
+      description: '**Required scopes:** `project.source.string` (Read only).'
       operationId: api.projects.strings.getMany
       parameters:
         -
@@ -12353,6 +12569,7 @@ paths:
       tags:
         - 'Source Strings'
       summary: 'Add String'
+      description: '**Required scopes:** `project.source.string` (Read and Write).'
       operationId: api.projects.strings.post
       parameters:
         -
@@ -12417,6 +12634,7 @@ paths:
       tags:
         - 'Source Strings'
       summary: 'String Batch Operations'
+      description: '**Required scopes:** `project.source.string` (Read and Write).'
       operationId: api.projects.strings.batchPatch
       parameters:
         -
@@ -12483,6 +12701,7 @@ paths:
       tags:
         - 'Source Strings'
       summary: 'Get String'
+      description: '**Required scopes:** `project.source.string` (Read only).'
       operationId: api.projects.strings.get
       parameters:
         -
@@ -12542,6 +12761,7 @@ paths:
       tags:
         - 'Source Strings'
       summary: 'Delete String'
+      description: '**Required scopes:** `project.source.string` (Read and Write).'
       operationId: api.projects.strings.delete
       parameters:
         -
@@ -12591,6 +12811,7 @@ paths:
       tags:
         - 'Source Strings'
       summary: 'Edit String'
+      description: '**Required scopes:** `project.source.string` (Read and Write).'
       operationId: api.projects.strings.patch
       parameters:
         -
@@ -12665,6 +12886,7 @@ paths:
       tags:
         - 'String/Asset Comments'
       summary: 'Delete Attachment from String/Asset Comment'
+      description: '**Required scopes:** `project.source.string` (Read and Write).'
       operationId: api.projects.comments.attachments.delete
       parameters:
         -
@@ -12722,7 +12944,7 @@ paths:
       tags:
         - 'String/Asset Comments'
       summary: 'List String/Asset Comments'
-      description: "List comments and issues for strings or assets. Use the oneOf pattern:\n- **String type**: Use `stringId`\n- **Asset type**: Use `fileId`\n- **All comments**: Omit both parameters to list all project comments"
+      description: "**Required scopes:** `project.source.string` (Read only).\n\nList comments and issues for strings or assets. Use the oneOf pattern:\n- **String type**: Use `stringId`\n- **Asset type**: Use `fileId`\n- **All comments**: Omit both parameters to list all project comments"
       operationId: api.projects.comments.getMany
       parameters:
         -
@@ -12804,7 +13026,7 @@ paths:
       tags:
         - 'String/Asset Comments'
       summary: 'Add String/Asset Comment'
-      description: "Add a comment or issue to a string or asset. Use the oneOf pattern:\n- **String type**: Use `stringId`\n- **Asset type**: Use `fileId`"
+      description: "**Required scopes:** `project.source.string` (Read and Write).\n\nAdd a comment or issue to a string or asset. Use the oneOf pattern:\n- **String type**: Use `stringId`\n- **Asset type**: Use `fileId`"
       operationId: api.projects.comments.post
       parameters:
         -
@@ -12869,6 +13091,7 @@ paths:
       tags:
         - 'String/Asset Comments'
       summary: 'String/Asset Comment Batch Operations'
+      description: '**Required scopes:** `project.source.string` (Read and Write).'
       operationId: api.projects.comments.batchPatch
       parameters:
         -
@@ -12929,6 +13152,7 @@ paths:
       tags:
         - 'String/Asset Comments'
       summary: 'Get String/Asset Comment'
+      description: '**Required scopes:** `project.source.string` (Read only).'
       operationId: api.projects.comments.get
       parameters:
         -
@@ -12980,6 +13204,7 @@ paths:
       tags:
         - 'String/Asset Comments'
       summary: 'Delete String/Asset Comment'
+      description: '**Required scopes:** `project.source.string` (Read and Write).'
       operationId: api.projects.comments.delete
       parameters:
         -
@@ -13025,6 +13250,7 @@ paths:
       tags:
         - 'String/Asset Comments'
       summary: 'Edit String/Asset Comment'
+      description: '**Required scopes:** `project.source.string` (Read and Write).'
       operationId: api.projects.comments.patch
       parameters:
         -
@@ -13095,7 +13321,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'List Translation Approvals'
-      description: '__Note:__ Either `translationId` OR `correctionId` OR `fileId` OR `labelIds` OR `excludeLabelIds` with `languageId` OR `stringId` with `languageId` are required'
+      description: "**Required scopes:** `project.translation` (Read only).\n\n__Note:__ Either `translationId` OR `correctionId` OR `fileId` OR `labelIds` OR `excludeLabelIds` with `languageId` OR `stringId` with `languageId` are required"
       operationId: api.projects.approvals.getMany
       parameters:
         -
@@ -13216,6 +13442,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Add Approval'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.approvals.post
       parameters:
         -
@@ -13282,7 +13509,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Remove String/Asset Approvals'
-      description: "Remove all approvals for a string or asset. Use the oneOf pattern:\n- **String type**: Use `stringId`\n- **Asset type**: Use `fileId`"
+      description: "**Required scopes:** `project.translation` (Read and Write).\n\nRemove all approvals for a string or asset. Use the oneOf pattern:\n- **String type**: Use `stringId`\n- **Asset type**: Use `fileId`"
       operationId: api.projects.approvals.deleteMany
       parameters:
         -
@@ -13346,6 +13573,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Approval Batch Operations'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.approvals.patch
       parameters:
         -
@@ -13412,6 +13640,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Get Approval'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.approvals.get
       parameters:
         -
@@ -13467,6 +13696,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Remove Approval'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.approvals.delete
       parameters:
         -
@@ -13519,6 +13749,7 @@ paths:
       tags:
         - 'String Corrections'
       summary: 'List Corrections'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.corrections.getMany
       parameters:
         -
@@ -13579,6 +13810,7 @@ paths:
       tags:
         - 'String Corrections'
       summary: 'Add Correction'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.corrections.post
       parameters:
         -
@@ -13630,6 +13862,7 @@ paths:
       tags:
         - 'String Corrections'
       summary: 'Delete Corrections'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.corrections.deleteMany
       parameters:
         -
@@ -13680,6 +13913,7 @@ paths:
       tags:
         - 'String Corrections'
       summary: 'Get Correction'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.corrections.get
       parameters:
         -
@@ -13731,6 +13965,7 @@ paths:
       tags:
         - 'String Corrections'
       summary: 'Restore Correction'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.corrections.put
       parameters:
         -
@@ -13772,6 +14007,7 @@ paths:
       tags:
         - 'String Corrections'
       summary: 'Delete Correction'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.corrections.delete
       parameters:
         -
@@ -13810,7 +14046,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'List Language Translations'
-      description: '__Note:__ For instant translation delivery to your mobile, web, server, or desktop apps, it is recommended to use [OTA](https://support.crowdin.com/enterprise/content-delivery/).'
+      description: "**Required scopes:** `project.translation` (Read only).\n\n__Note:__ For instant translation delivery to your mobile, web, server, or desktop apps, it is recommended to use [OTA](https://support.crowdin.com/enterprise/content-delivery/)."
       operationId: api.projects.languages.translations.getMany
       parameters:
         -
@@ -13939,7 +14175,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'List String/Asset Translations'
-      description: "For instant translation delivery to your mobile, web, server, or desktop apps, it is recommended to use [OTA](https://support.crowdin.com/content-delivery/).\n\n__Note:__ This endpoint supports oneOf pattern:\n- **String type**: Use `stringId`\n- **Asset type**: Use `fileId`"
+      description: "**Required scopes:** `project.translation` (Read only).\n\nFor instant translation delivery to your mobile, web, server, or desktop apps, it is recommended to use [OTA](https://support.crowdin.com/content-delivery/).\n\n__Note:__ This endpoint supports oneOf pattern:\n- **String type**: Use `stringId`\n- **Asset type**: Use `fileId`"
       operationId: api.projects.translations.getMany
       parameters:
         -
@@ -14041,6 +14277,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Add Translation'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.translations.post
       parameters:
         -
@@ -14109,7 +14346,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Delete String/Asset Translations'
-      description: "Delete translations for a string or an asset. Use the oneOf pattern:\n - **String type**: Use `stringId`\n - **Asset type**: Use `fileId`"
+      description: "**Required scopes:** `project.translation` (Read and Write).\n\nDelete translations for a string or an asset. Use the oneOf pattern:\n - **String type**: Use `stringId`\n - **Asset type**: Use `fileId`"
       operationId: api.projects.translations.deleteMany
       parameters:
         -
@@ -14179,7 +14416,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Translation Batch Operations'
-      description: "Perform batch operations on string and asset translations. Use the oneOf pattern:\n- **String type**: Use `stringId` with `text` and optional `pluralCategoryName`\n- **Asset type**: Use `fileId` with `storageId`"
+      description: "**Required scopes:** `project.translation` (Read and Write).\n\nPerform batch operations on string and asset translations. Use the oneOf pattern:\n- **String type**: Use `stringId` with `text` and optional `pluralCategoryName`\n- **Asset type**: Use `fileId` with `storageId`"
       operationId: api.projects.translations.patch
       parameters:
         -
@@ -14246,6 +14483,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Get Translation'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.translations.get
       parameters:
         -
@@ -14305,6 +14543,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Restore Translation'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.translations.put
       parameters:
         -
@@ -14360,6 +14599,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Delete Translation'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.translations.delete
       parameters:
         -
@@ -14406,6 +14646,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Translation Alignment'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.translations.alignment.post
       parameters:
         -
@@ -14454,12 +14695,69 @@ paths:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
       x-doc-sections:
         - file-based
+  '/projects/{projectId}/translations/validate-qa-checks':
+    post:
+      tags:
+        - Translations
+      summary: 'Validate text by QA Checks'
+      operationId: api.projects.translations.validate-qa-checks.post
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslationQaCheckValidateCollectionForm'
+      responses:
+        '200':
+          description: 'Text was successfully validated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationQaCheckValidateCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project, string, or language with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '503':
+          description: 'Service Unavailable'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
   '/projects/{projectId}/votes':
     get:
       tags:
         - 'String/Asset Translations'
       summary: 'List Translation Votes'
-      description: '__Note:__ Either `translationId` OR `fileId` OR `labelIds` OR `excludeLabelIds` with `languageId` OR `stringId` with `languageId` are required'
+      description: "**Required scopes:** `project.translation` (Read only).\n\n__Note:__ Either `translationId` OR `fileId` OR `labelIds` OR `excludeLabelIds` with `languageId` OR `stringId` with `languageId` are required"
       operationId: api.projects.votes.getMany
       parameters:
         -
@@ -14559,6 +14857,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Add Vote'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.votes.post
       parameters:
         -
@@ -14624,6 +14923,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Get Vote'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.votes.get
       parameters:
         -
@@ -14679,6 +14979,7 @@ paths:
       tags:
         - 'String/Asset Translations'
       summary: 'Cancel Vote'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.votes.delete
       parameters:
         -
@@ -14731,7 +15032,7 @@ paths:
       tags:
         - Tasks
       summary: 'List Tasks'
-      description: 'List all organization tasks.'
+      description: "**Required scopes:** `project.task` (Read only).\n\nList all organization tasks."
       operationId: api.tasks.getMany
       parameters:
         -
@@ -14882,6 +15183,7 @@ paths:
       tags:
         - Tasks
       summary: 'Export Project Task Strings'
+      description: '**Required scopes:** `project.task` (Read only).'
       operationId: api.projects.tasks.exports.post
       parameters:
         -
@@ -14926,6 +15228,7 @@ paths:
       tags:
         - Tasks
       summary: 'List Project Task Settings Templates'
+      description: '**Required scopes:** `project.task` (Read only).'
       operationId: api.projects.tasks.settings-templates.getMany
       parameters:
         -
@@ -14975,6 +15278,7 @@ paths:
       tags:
         - Tasks
       summary: 'Add Project Task Settings Template'
+      description: '**Required scopes:** `project.task` (Read and Write).'
       operationId: api.projects.tasks.settings-templates.post
       parameters:
         -
@@ -15026,6 +15330,7 @@ paths:
       tags:
         - Tasks
       summary: 'Get Project Task Settings Template'
+      description: '**Required scopes:** `project.task` (Read only).'
       operationId: api.projects.tasks.settings-templates.get
       parameters:
         -
@@ -15067,6 +15372,7 @@ paths:
       tags:
         - Tasks
       summary: 'Delete Project Task Settings Template'
+      description: '**Required scopes:** `project.task` (Read and Write).'
       operationId: api.projects.tasks.settings-templates.delete
       parameters:
         -
@@ -15104,6 +15410,7 @@ paths:
       tags:
         - Tasks
       summary: 'Edit Project Task Settings Template'
+      description: '**Required scopes:** `project.task` (Read and Write).'
       operationId: api.projects.tasks.settings-templates.patch
       parameters:
         -
@@ -15158,6 +15465,7 @@ paths:
       tags:
         - Tasks
       summary: 'List Project Tasks'
+      description: '**Required scopes:** `project.task` (Read only).'
       operationId: api.projects.tasks.getMany
       parameters:
         -
@@ -15224,6 +15532,7 @@ paths:
       tags:
         - Tasks
       summary: 'Add Project Task'
+      description: '**Required scopes:** `project.task` (Read and Write).'
       operationId: api.projects.tasks.post
       parameters:
         -
@@ -15295,6 +15604,7 @@ paths:
       tags:
         - Tasks
       summary: 'Get Project Task'
+      description: '**Required scopes:** `project.task` (Read only).'
       operationId: api.projects.tasks.get
       parameters:
         -
@@ -15344,6 +15654,7 @@ paths:
       tags:
         - Tasks
       summary: 'Delete Project Task'
+      description: '**Required scopes:** `project.task` (Read and Write).'
       operationId: api.projects.tasks.delete
       parameters:
         -
@@ -15387,6 +15698,7 @@ paths:
       tags:
         - Tasks
       summary: 'Edit Project Task'
+      description: '**Required scopes:** `project.task` (Read and Write).'
       operationId: api.projects.tasks.patch
       parameters:
         -
@@ -15461,6 +15773,7 @@ paths:
       tags:
         - Tasks
       summary: 'List Project Task Comments'
+      description: '**Required scopes:** `project.task` (Read only).'
       operationId: api.projects.tasks.comments.getMany
       parameters:
         -
@@ -15506,6 +15819,7 @@ paths:
       tags:
         - Tasks
       summary: 'Add Project Task Comment'
+      description: '**Required scopes:** `project.task` (Read and Write).'
       operationId: api.projects.tasks.comments.post
       parameters:
         -
@@ -15565,6 +15879,7 @@ paths:
       tags:
         - Tasks
       summary: 'Get Project Task Comment'
+      description: '**Required scopes:** `project.task` (Read only).'
       operationId: api.projects.tasks.comments.get
       parameters:
         -
@@ -15608,6 +15923,7 @@ paths:
       tags:
         - Tasks
       summary: 'Delete Project Task Comment'
+      description: '**Required scopes:** `project.task` (Read and Write).'
       operationId: api.projects.tasks.comments.delete
       parameters:
         -
@@ -15641,6 +15957,7 @@ paths:
       tags:
         - Tasks
       summary: 'Edit Project Task Comment'
+      description: '**Required scopes:** `project.task` (Read and Write).'
       operationId: api.projects.tasks.comments.patch
       parameters:
         -
@@ -15820,6 +16137,7 @@ paths:
       tags:
         - Teams
       summary: 'List Team Projects Permissions'
+      description: '**Required scopes:** `team` (Read only).'
       operationId: api.teams.projects.permissions.getMany
       parameters:
         -
@@ -15863,6 +16181,7 @@ paths:
       tags:
         - Teams
       summary: 'Permissions Batch Operations'
+      description: '**Required scopes:** `team` (Read and Write).'
       operationId: api.teams.projects.permissions.patch
       parameters:
         -
@@ -15919,6 +16238,7 @@ paths:
       tags:
         - Teams
       summary: 'Add Team To Project'
+      description: '**Required scopes:** `project.member` (Read and Write).'
       operationId: api.projects.teams.post
       parameters:
         -
@@ -15973,6 +16293,7 @@ paths:
       tags:
         - Teams
       summary: 'List Teams'
+      description: '**Required scopes:** `team` (Read only).'
       operationId: api.teams.getMany
       parameters:
         -
@@ -16065,6 +16386,7 @@ paths:
       tags:
         - Teams
       summary: 'Add Team'
+      description: '**Required scopes:** `team` (Read and Write).'
       operationId: api.teams.post
       requestBody:
         content:
@@ -16119,6 +16441,7 @@ paths:
       tags:
         - Teams
       summary: 'Get Team'
+      description: '**Required scopes:** `team` (Read only).'
       operationId: api.teams.get
       parameters:
         -
@@ -16158,6 +16481,7 @@ paths:
       tags:
         - Teams
       summary: 'Delete Team'
+      description: '**Required scopes:** `team` (Read and Write).'
       operationId: api.teams.delete
       parameters:
         -
@@ -16199,6 +16523,7 @@ paths:
       tags:
         - Teams
       summary: 'Edit Team'
+      description: '**Required scopes:** `team` (Read and Write).'
       operationId: api.teams.patch
       parameters:
         -
@@ -16263,6 +16588,7 @@ paths:
       tags:
         - Teams
       summary: 'Team Members List'
+      description: '**Required scopes:** `team` (Read only).'
       operationId: api.teams.members.getMany
       parameters:
         -
@@ -16306,6 +16632,7 @@ paths:
       tags:
         - Teams
       summary: 'Add Team Members'
+      description: '**Required scopes:** `team` (Read and Write).'
       operationId: api.teams.members.post
       parameters:
         -
@@ -16362,6 +16689,7 @@ paths:
       tags:
         - Teams
       summary: 'Delete All Team Members'
+      description: '**Required scopes:** `team` (Read and Write).'
       operationId: api.teams.members.deleteMany
       parameters:
         -
@@ -16404,6 +16732,7 @@ paths:
       tags:
         - Teams
       summary: 'Delete Team Member'
+      description: '**Required scopes:** `team` (Read and Write).'
       operationId: api.teams.members.delete
       parameters:
         -
@@ -16448,6 +16777,7 @@ paths:
       tags:
         - Glossaries
       summary: 'List Terms'
+      description: '**Required scopes:** `glossary` (Read only).'
       operationId: api.glossaries.terms.getMany
       parameters:
         -
@@ -16544,7 +16874,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Add Term'
-      description: '__Note:__ If `conceptId` is not specified, a new concept will be automatically created for the term.'
+      description: "**Required scopes:** `glossary` (Read and Write).\n\n__Note:__ If `conceptId` is not specified, a new concept will be automatically created for the term."
       operationId: api.glossaries.terms.post
       parameters:
         -
@@ -16607,6 +16937,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Clear Glossary'
+      description: '**Required scopes:** `glossary` (Read and Write).'
       operationId: api.glossaries.terms.deleteMany
       parameters:
         -
@@ -16674,6 +17005,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Get Term'
+      description: '**Required scopes:** `glossary` (Read only).'
       operationId: api.glossaries.terms.get
       parameters:
         -
@@ -16715,6 +17047,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Delete Term'
+      description: '**Required scopes:** `glossary` (Read and Write).'
       operationId: api.glossaries.terms.delete
       parameters:
         -
@@ -16758,6 +17091,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Edit Term'
+      description: '**Required scopes:** `glossary` (Read and Write).'
       operationId: api.glossaries.terms.patch
       parameters:
         -
@@ -16830,6 +17164,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'List TMs'
+      description: '**Required scopes:** `tm` (Read only).'
       operationId: api.tms.getMany
       parameters:
         -
@@ -16884,6 +17219,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Add TM'
+      description: '**Required scopes:** `tm` (Read and Write).'
       operationId: api.tms.post
       requestBody:
         content:
@@ -16920,6 +17256,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Get TM'
+      description: '**Required scopes:** `tm` (Read only).'
       operationId: api.tms.get
       parameters:
         -
@@ -16947,6 +17284,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Delete TM'
+      description: '**Required scopes:** `tm` (Read and Write).'
       operationId: api.tms.delete
       parameters:
         -
@@ -16976,6 +17314,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Edit TM'
+      description: '**Required scopes:** `tm` (Read and Write).'
       operationId: api.tms.patch
       parameters:
         -
@@ -17016,7 +17355,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'List TM Segments'
-      description: 'Get list of translation unit segments'
+      description: "**Required scopes:** `tm` (Read only).\n\nGet list of translation unit segments"
       operationId: api.tms.segments.getMany
       parameters:
         -
@@ -17082,7 +17421,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Create TM Segment'
-      description: 'Create translation unit with given segments'
+      description: "**Required scopes:** `tm` (Read and Write).\n\nCreate translation unit with given segments"
       operationId: api.tms.segments.post
       parameters:
         -
@@ -17165,6 +17504,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Export TM'
+      description: '**Required scopes:** `tm` (Read only).'
       operationId: api.tms.exports.post
       parameters:
         -
@@ -17204,6 +17544,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Check TM Export Status'
+      description: '**Required scopes:** `tm` (Read only).'
       operationId: api.tms.exports.get
       parameters:
         -
@@ -17234,6 +17575,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Download TM'
+      description: '**Required scopes:** `tm` (Read only).'
       operationId: api.tms.exports.download.download
       parameters:
         -
@@ -17264,6 +17606,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Concordance search in TMs'
+      description: '**Required scopes:** `tm` (Read and Write).'
       operationId: api.projects.tms.concordance.post
       parameters:
         -
@@ -17315,6 +17658,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Import TM'
+      description: '**Required scopes:** `tm` (Read and Write).'
       operationId: api.tms.imports.post
       parameters:
         -
@@ -17360,6 +17704,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Check TM Import Status'
+      description: '**Required scopes:** `tm` (Read and Write).'
       operationId: api.tms.imports.get
       parameters:
         -
@@ -17408,7 +17753,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Get TM Segment'
-      description: 'Get segments of translation unit'
+      description: "**Required scopes:** `tm` (Read only).\n\nGet segments of translation unit"
       operationId: api.tms.segments.get
       parameters:
         -
@@ -17450,7 +17795,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Delete TM Segment'
-      description: 'Delete all segments of translation unit'
+      description: "**Required scopes:** `tm` (Read and Write).\n\nDelete all segments of translation unit"
       operationId: api.tms.segments.delete
       parameters:
         -
@@ -17488,7 +17833,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Edit TM Segment'
-      description: 'Edit segment of translation unit'
+      description: "**Required scopes:** `tm` (Read and Write).\n\nEdit segment of translation unit"
       operationId: api.tms.segments.patch
       parameters:
         -
@@ -17551,7 +17896,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Delete TM Segment Record'
-      description: 'Use [Edit TM Segment](#operation/api.tms.segments.patch) instead.'
+      description: "**Required scopes:** `tm` (Read and Write).\n\nUse [Edit TM Segment](#operation/api.tms.segments.patch) instead."
       operationId: api.tms.segments.records.delete
       parameters:
         -
@@ -17592,7 +17937,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Edit TM Segment Record'
-      description: 'Use [Edit TM Segment](#operation/api.tms.segments.patch) instead.'
+      description: "**Required scopes:** `tm` (Read and Write).\n\nUse [Edit TM Segment](#operation/api.tms.segments.patch) instead."
       operationId: api.tms.segments.records.patch
       parameters:
         -
@@ -17650,7 +17995,7 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Create TM Segment Records'
-      description: 'Use [Edit TM Segment](#operation/api.tms.segments.patch) instead.'
+      description: "**Required scopes:** `tm` (Read and Write).\n\nUse [Edit TM Segment](#operation/api.tms.segments.patch) instead."
       operationId: api.tms.segments.records.post
       parameters:
         -
@@ -17714,6 +18059,7 @@ paths:
       tags:
         - Translations
       summary: 'Build Project Directory Translation'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.translations.builds.directories.post
       parameters:
         -
@@ -17781,6 +18127,7 @@ paths:
       tags:
         - Translations
       summary: 'Build Project File Translation'
+      description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.translations.builds.files.post
       parameters:
         -
@@ -17865,6 +18212,7 @@ paths:
       tags:
         - Translations
       summary: 'List Project Builds'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.translations.builds.getMany
       parameters:
         -
@@ -17928,6 +18276,7 @@ paths:
       tags:
         - Translations
       summary: 'Build Project Translation'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.translations.builds.post
       parameters:
         -
@@ -18003,7 +18352,7 @@ paths:
       tags:
         - Translations
       summary: 'Upload Translations'
-      description: 'Use [Import Translations](#tag/Translations/operation/api.projects.translations.enterprise.imports) instead.'
+      description: "**Required scopes:** `project.translation` (Read and Write).\n\nUse [Import Translations](#tag/Translations/operation/api.projects.translations.enterprise.imports) instead."
       operationId: api.projects.translations.postOnLanguage
       parameters:
         -
@@ -18078,6 +18427,7 @@ paths:
       tags:
         - Translations
       summary: 'Download Project Translations'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.translations.builds.download.download
       parameters:
         -
@@ -18140,6 +18490,7 @@ paths:
       tags:
         - Translations
       summary: 'Check Project Build Status'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.translations.builds.get
       parameters:
         -
@@ -18195,6 +18546,7 @@ paths:
       tags:
         - Translations
       summary: 'Cancel Build'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.translations.builds.delete
       parameters:
         -
@@ -18247,7 +18599,7 @@ paths:
       tags:
         - Translations
       summary: 'Export Project Translation'
-      description: '__Note:__ For instant translation delivery to your mobile, web, server, or desktop apps, it is recommended to use [OTA](https://support.crowdin.com/enterprise/content-delivery/).'
+      description: "**Required scopes:** `project.translation` (Read only).\n\n__Note:__ For instant translation delivery to your mobile, web, server, or desktop apps, it is recommended to use [OTA](https://support.crowdin.com/enterprise/content-delivery/)."
       operationId: api.projects.translations.exports.post
       parameters:
         -
@@ -18319,6 +18671,7 @@ paths:
       tags:
         - Translations
       summary: 'Import Translations'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.translations.enterprise.imports
       parameters:
         -
@@ -18390,6 +18743,7 @@ paths:
       tags:
         - Translations
       summary: 'Import Translations Status'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.translations.enterprise.imports.get
       parameters:
         -
@@ -18446,6 +18800,7 @@ paths:
       tags:
         - Translations
       summary: 'Import Translations Report'
+      description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.translations.imports.report.get
       parameters:
         -
@@ -18496,6 +18851,7 @@ paths:
       tags:
         - Users
       summary: 'List Project Members'
+      description: '**Required scopes:** `project.member` (Read only).'
       operationId: api.projects.members.getMany
       parameters:
         -
@@ -18562,6 +18918,7 @@ paths:
       tags:
         - Users
       summary: 'Add Project Member'
+      description: '**Required scopes:** `project.member` (Read and Write).'
       operationId: api.projects.members.post
       parameters:
         -
@@ -18613,6 +18970,7 @@ paths:
       tags:
         - Users
       summary: 'Get Project Member Permissions'
+      description: '**Required scopes:** `project.member` (Read only).'
       operationId: api.projects.members.get
       parameters:
         -
@@ -18660,6 +19018,7 @@ paths:
       tags:
         - Users
       summary: 'Replace Project Member Permissions'
+      description: '**Required scopes:** `project.member` (Read and Write).'
       operationId: api.projects.members.put
       parameters:
         -
@@ -18718,6 +19077,7 @@ paths:
       tags:
         - Users
       summary: 'Delete Member From Project'
+      description: '**Required scopes:** `project.member` (Read and Write).'
       operationId: api.projects.members.delete
       parameters:
         -
@@ -18762,6 +19122,7 @@ paths:
       tags:
         - Users
       summary: 'List Users'
+      description: '**Required scopes:** `user` (Read only).'
       operationId: api.users.getMany
       parameters:
         -
@@ -18897,6 +19258,7 @@ paths:
       tags:
         - Users
       summary: 'Invite User'
+      description: '**Required scopes:** `user` (Read and Write).'
       operationId: api.users.post
       requestBody:
         content:
@@ -18951,6 +19313,7 @@ paths:
       tags:
         - Users
       summary: 'Get User'
+      description: '**Required scopes:** `user` (Read only).'
       operationId: api.users.getById
       parameters:
         -
@@ -18984,6 +19347,7 @@ paths:
       tags:
         - Users
       summary: 'Delete User'
+      description: '**Required scopes:** `user` (Read and Write).'
       operationId: api.users.delete
       parameters:
         -
@@ -19025,6 +19389,7 @@ paths:
       tags:
         - Users
       summary: 'Edit User'
+      description: '**Required scopes:** `user` (Read and Write).'
       operationId: api.users.patch
       parameters:
         -
@@ -19108,6 +19473,7 @@ paths:
       tags:
         - Users
       summary: 'List User Projects Permissions'
+      description: '**Required scopes:** `user` (Read only).'
       operationId: api.users.projects.permissions.getMany
       parameters:
         -
@@ -19151,6 +19517,7 @@ paths:
       tags:
         - Users
       summary: 'Permissions Batch Operations'
+      description: '**Required scopes:** `user` (Read and Write).'
       operationId: api.users.projects.permissions.patch
       parameters:
         -
@@ -19203,6 +19570,7 @@ paths:
       tags:
         - Users
       summary: 'List User Projects Contributions'
+      description: '**Required scopes:** `user` (Read only).'
       operationId: api.users.projects.contributions.getMany
       parameters:
         -
@@ -19247,6 +19615,7 @@ paths:
       tags:
         - Vendors
       summary: 'List Vendors'
+      description: '**Required scopes:** `vendor` (Read only).'
       operationId: api.vendors.getMany
       parameters:
         -
@@ -19521,6 +19890,7 @@ paths:
       tags:
         - Workflows
       summary: 'List Workflow Steps'
+      description: '**Required scopes:** `project` (Read only).'
       operationId: api.projects.workflow-steps.getMany
       parameters:
         -
@@ -19571,6 +19941,7 @@ paths:
       tags:
         - Workflows
       summary: 'Get Workflow Step'
+      description: '**Required scopes:** `project` (Read only).'
       operationId: api.projects.workflow-steps.get
       parameters:
         -
@@ -19626,6 +19997,7 @@ paths:
       tags:
         - Workflows
       summary: 'List Strings on the Workflow Step'
+      description: '**Required scopes:** `project` (Read only).'
       operationId: api.projects.workflow-steps.strings.getMany
       parameters:
         -
@@ -19709,6 +20081,7 @@ paths:
       tags:
         - Workflows
       summary: 'List Workflow Templates'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.workflow-templates.getMany
       parameters:
         -
@@ -19759,6 +20132,7 @@ paths:
       tags:
         - Workflows
       summary: 'Get Workflow Template'
+      description: '**Required scopes:** `group` (Read only).'
       operationId: api.workflow-templates.get
       parameters:
         -
