@@ -10,7 +10,7 @@ import { OGImageRoute } from 'astro-og-canvas';
 const entries = await getCollection('docs');
 const pages = Object.fromEntries(entries.map(({ data, id }) => [id, { data }]));
 
-export const { getStaticPaths, GET } = OGImageRoute({
+export const { getStaticPaths, GET } = await OGImageRoute({
     pages,
     param: 'slug',
     // See https://github.com/delucis/astro-og-canvas/tree/latest/packages/astro-og-canvas#image-options
