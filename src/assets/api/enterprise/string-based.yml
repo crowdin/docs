@@ -5396,11 +5396,13 @@ paths:
           $ref: '#/components/parameters/GroupId'
       responses:
         '200':
-          description: 'Group data'
+          description: "Group data\n     * Members with basic access – receive the response `Group Info` (basic group information visible to all members)\n     * Group managers and organization admins – receive the response `Group Settings` (all basic group info plus extended details, including settings like savingsReportSettingsTemplateId)"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupResource'
+                oneOf:
+                  - { $ref: '#/components/schemas/GroupInfoResource' }
+                  - { $ref: '#/components/schemas/GroupResource' }
         '401':
           description: Unauthorized
           content:
@@ -9202,6 +9204,8 @@ paths:
                   $ref: '#/components/schemas/GroupPreTranslateAccuracy'
                 -
                   $ref: '#/components/schemas/GroupTranslatorAccuracy'
+                -
+                  $ref: '#/components/schemas/GroupSavingActivity'
       responses:
         '201':
           description: 'Report generation was successfully started'
@@ -9595,6 +9599,8 @@ paths:
                   $ref: '#/components/schemas/GroupPreTranslateAccuracy'
                 -
                   $ref: '#/components/schemas/GroupTranslatorAccuracy'
+                -
+                  $ref: '#/components/schemas/GroupSavingActivity'
       responses:
         '201':
           description: 'Report generation was successfully started'
@@ -27846,6 +27852,7 @@ components:
             - /name
             - /description
             - /parentId
+            - /savingsReportSettingsTemplateId
       type: object
       discriminator:
         propertyName: op
@@ -28033,6 +28040,9 @@ components:
           description: 'Group description'
           type: string
           example: 'KB localization materials'
+        savingsReportSettingsTemplateId:
+          description: 'Report Settings Templates Identifier. Get via [List Report Settings Templates](#operation/api.reports.settings-templates.getMany)'
+          type: integer
       type: object
     GroupCollectionResource:
       description: 'Group Collection Resource'
@@ -28050,6 +28060,17 @@ components:
                 $ref: '#/components/schemas/GroupResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
+    GroupInfoResource:
+      title: 'Group Info'
+      description: 'Group Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/GroupInfo'
     GroupManagerCollectionResource:
       description: 'Group Manager Collection Resource'
       type: object
@@ -28083,7 +28104,8 @@ components:
             data:
               $ref: '#/components/schemas/GroupManagerResponseModel'
     GroupResource:
-      description: 'Group Resource'
+      title: 'Group Settings'
+      description: 'Group Settings'
       type: object
       allOf:
         -
@@ -28130,32 +28152,12 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/GroupTeamResponseModel'
-    GroupManagerResponseModel:
-      title: 'Group Manager Response Model'
-      properties:
-        id:
-          type: integer
-          example: 27
-        user:
-          type: object
-          oneOf:
-            -
-              $ref: '#/components/schemas/EnterpriseUserManagerContextResponseModel'
-            -
-              $ref: '#/components/schemas/EnterpriseUserAdminContextResponseModel'
-        teams:
-          type: array
-          items:
-            $ref: '#/components/schemas/Team'
-      type: object
-    Group:
-      title: Group
-      description: 'Class GroupResponseModel'
+    GroupInfo:
+      title: 'Group Info'
       properties:
         id:
           type: integer
           example: 1
-          nullable: true
         name:
           type: string
           example: 'KB materials'
@@ -28185,13 +28187,74 @@ components:
         createdAt:
           type: string
           format: date-time
-          example: '2019-09-20T11:11:05+00:00'
-          nullable: true
+          example: '2026-01-06T11:11:05+00:00'
         updatedAt:
           type: string
           format: date-time
-          example: '2019-09-20T12:22:20+00:00'
+          example: '2026-01-06T12:22:20+00:00'
+      type: object
+    GroupManagerResponseModel:
+      title: 'Group Manager Response Model'
+      properties:
+        id:
+          type: integer
+          example: 27
+        user:
+          type: object
+          oneOf:
+            -
+              $ref: '#/components/schemas/EnterpriseUserManagerContextResponseModel'
+            -
+              $ref: '#/components/schemas/EnterpriseUserAdminContextResponseModel'
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/Team'
+      type: object
+    Group:
+      title: Group
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 'KB materials'
+        description:
+          type: string
+          example: 'KB localization materials'
+        parentId:
+          type: integer
+          example: 2
+        organizationId:
+          type: integer
+          example: 200000299
+        userId:
+          type: integer
+          example: 6
+        subgroupsCount:
+          type: integer
+          example: 0
           nullable: true
+        projectsCount:
+          type: integer
+          example: 1
+          nullable: true
+        webUrl:
+          type: string
+          example: 'https://example.crowdin.com/u/groups/123'
+        savingsReportSettingsTemplateId:
+          description: 'Report Settings Templates Identifier. Available only for group managers and organization admins. Get via [List Report Settings Templates](#operation/api.reports.settings-templates.getMany)'
+          type: integer
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-01-06T11:11:05+00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-01-06T12:22:20+00:00'
       type: object
     GroupTeamResponseModel:
       title: 'Group Team Response Model'
@@ -34598,6 +34661,70 @@ components:
           type: string
           format: date-time
           example: '2019-09-27T07:00:14+00:00'
+      type: object
+    GroupSavingActivity:
+      title: 'Group Saving Activity'
+      description: 'Generate a report showing translation savings activity over time for a group, including MT/AI cost savings and efficiency metrics'
+      required:
+        - name
+        - schema
+      properties:
+        name:
+          description: group-saving-activity
+          type: string
+          example: group-saving-activity
+        schema:
+          $ref: '#/components/schemas/group-saving-activity.report'
+      type: object
+    group-saving-activity.report:
+      title: 'Group Saving Activity Report'
+      properties:
+        unit:
+          description: 'Defines report unit'
+          type: string
+          default: words
+          enum:
+            - strings
+            - words
+            - chars
+            - chars_with_spaces
+          example: words
+        projectIds:
+          description: 'Array of project ids. Get via [List Projects](#operation/api.projects.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 13
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        dateFrom:
+          description: 'Report date from in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2026-01-06T07:00:14+00:00'
+        dateTo:
+          description: 'Report date to in UTC, ISO 8601'
+          type: string
+          format: date-time
+          example: '2026-01-06T07:00:14+00:00'
+        languageId:
+          description: 'Language Identifier for which the report should be generated. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: uk
+        mode:
+          description: 'Report mode. `currency` mode available only if group has savingsReportSettingsTemplateId set'
+          type: string
+          default: relative
+          enum:
+            - relative
+            - currency
+          example: relative
       type: object
     GroupSourceContentUpdates:
       title: 'Group Source Content Updates'
