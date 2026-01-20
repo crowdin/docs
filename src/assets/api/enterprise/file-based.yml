@@ -3634,6 +3634,10 @@ paths:
           in: query
           description: "Use to list directories recursively\n\n__Note:__ Works only when `directoryId` or `branchId` parameter is specified"
           schema:
+            type: integer
+            enum:
+              - 0
+              - 1
             nullable: true
         -
           $ref: '#/components/parameters/PaginationLimit'
@@ -4782,6 +4786,10 @@ paths:
           in: query
           description: "Use to list files recursively\n\n__Note:__ Works only when `directoryId` or `branchId` parameter is specified"
           schema:
+            type: integer
+            enum:
+              - 0
+              - 1
             nullable: true
         -
           $ref: '#/components/parameters/PaginationLimit'
@@ -9436,6 +9444,167 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+  '/projects/{projectId}/qa-checks/revalidate':
+    post:
+      tags:
+        - 'Translation Status'
+      summary: 'Revalidate QA Checks'
+      description: "**Required scopes:** `project.status.qa-check` (Read and Write).\n\nTriggers revalidation of all QA checks for the project"
+      operationId: api.projects.qa-checks.revalidate.post
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              properties:
+                qaCheckCategories:
+                  description: 'QA check categories to revalidate. If not specified, all active categories will be checked. You can get the list of available QA check categories via [Get Project](#operation/api.projects.get)'
+                  type: array
+                  items: { type: string, enum: [terms, ai] }
+                  example: [ai]
+                languageIds:
+                  description: 'Language IDs to revalidate. If not specified, all languages will be checked. Get Project Target Languages via [Get Project](#operation/api.projects.get)'
+                  type: array
+                  items: { type: string }
+                  example: [uk, fr]
+                failedOnly:
+                  description: 'If true, only languages with failed QA checks will be revalidated'
+                  type: boolean
+                  default: false
+                  example: true
+                externalQaCheckIds:
+                  description: 'External QA check IDs to revalidate. Available only for Enterprise. You can get the list of available external QA check IDs via [Get Project](#operation/api.projects.get)'
+                  type: array
+                  items: { type: integer }
+                  example: [1, 2, 3]
+              type: object
+      responses:
+        '202':
+          description: 'QA checks revalidation job created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseQaCheckRevalidationResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '409':
+          description: 'QA check revalidation is already in progress'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
+  '/projects/{projectId}/qa-checks/revalidate/{revalidationId}':
+    get:
+      tags:
+        - 'Translation Status'
+      summary: 'QA Checks Revalidation Status'
+      description: "**Required scopes:** `project.status.qa-check` (Read and Write).\n\nReturns the status of QA checks revalidation job"
+      operationId: api.projects.qa-checks.revalidate.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          name: revalidationId
+          in: path
+          description: 'QA Checks Revalidation Identifier, consists of 36 characters. Get via [Revalidate QA Checks](#operation/api.projects.qa-checks.revalidate.post)'
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 'QA checks revalidation status'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseQaCheckRevalidationResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or QA check revalidation with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+    delete:
+      tags:
+        - 'Translation Status'
+      summary: 'Cancel QA Checks Revalidation'
+      description: "**Required scopes:** `project.status.qa-check` (Read and Write).\n\nCancels the QA checks revalidation job"
+      operationId: api.projects.qa-checks.revalidate.delete
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          name: revalidationId
+          in: path
+          description: 'QA Checks Revalidation Identifier, consists of 36 characters. Get via [Revalidate QA Checks](#operation/api.projects.qa-checks.revalidate.post)'
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 'QA checks revalidation was successfully canceled'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or QA check revalidation with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
   '/projects/{projectId}/qa-checks':
     get:
       tags:
@@ -12357,7 +12526,7 @@ paths:
         -
           $ref: '#/components/parameters/ProjectId'
         -
-          $ref: '#/components/parameters/BuildId'
+          $ref: '#/components/parameters/ReviewedSourceFilesBuildId'
       responses:
         '200':
           description: 'Reviewed String'
@@ -12408,7 +12577,7 @@ paths:
         -
           $ref: '#/components/parameters/ProjectId'
         -
-          $ref: '#/components/parameters/BuildId'
+          $ref: '#/components/parameters/ReviewedSourceFilesBuildId'
       responses:
         '200':
           description: 'Reviewed String'
@@ -27398,20 +27567,13 @@ components:
           type: boolean
           default: true
         translatableElements:
-          description: 'This is an array of strings, where each item is the XPaths to DOM element that should be imported'
+          description: "This is an array of strings, where each item is the XPaths to DOM element that should be imported.\n\nSupported XPath patterns:\n- `/path/to/node` — Absolute path to a specific node\n- `/path/to/attribute[@attr]` — Absolute path to an attribute\n- `//node` — All nodes with the specified name\n- `//[@attr]` — All elements with the specified attribute\n- `nodeone/nodetwo` — Relative path\n- `/nodeone//nodetwo` — Mixed absolute and descendant path\n- `//node[@attr]` — All nodes with the specified name and attribute"
           type: array
           items:
             type: string
-            enum:
-              - /path/to/node
-              - '/path/to/attribute[@attr]'
-              - //node
-              - '//[@attr]'
-              - nodeone/nodetwo
-              - /nodeone//nodetwo
-              - '//node[@attr]'
-            example:
-              - //node
+          example:
+            - /path/to/node
+            - '//node[@attr]'
         srxStorageId:
           description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany).\n\n  Storage identifier of the SRX segmentation rules file. Read more about [Custom Segmentation](https://support.crowdin.com/custom-segmentation/#segmentation-examples)."
           type: integer
@@ -28860,17 +29022,10 @@ components:
           type: boolean
           example: true
         translatableElements:
+          description: "This is an array of strings, where each item is the XPaths to DOM element that should be imported.\n\nSupported XPath patterns:\n- `/path/to/node` — Absolute path to a specific node\n- `/path/to/attribute[@attr]` — Absolute path to an attribute\n- `//node` — All nodes with the specified name\n- `//[@attr]` — All elements with the specified attribute\n- `nodeone/nodetwo` — Relative path\n- `/nodeone//nodetwo` — Mixed absolute and descendant path\n- `//node[@attr]` — All nodes with the specified name and attribute"
           type: array
           items:
             type: string
-            enum:
-              - /path/to/node
-              - '/path/to/attribute[@attr]'
-              - //node
-              - '//[@attr]'
-              - nodeone/nodetwo
-              - /nodeone//nodetwo
-              - '//node[@attr]'
           example:
             - //node
             - '//node[@attr]'
@@ -29009,10 +29164,24 @@ components:
             - xlsx
           example: csv
         exportFields:
-          description: "Array fields for export:\n * 'term'\n * 'description'\n * 'partOfSpeech'\n * 'type'\n * 'status'\n * 'gender'\n * 'note'\n * 'url'\n * 'conceptDefinition'\n * 'conceptSubject'\n * 'conceptNote'\n * 'conceptUrl'\n * 'conceptFigure'\n\n__Note:__ Used for export CSV or XLSX format only"
+          description: "Array fields for export.\n\n__Note:__ Used for export CSV or XLSX format only"
           type: array
           items:
             type: string
+            enum:
+              - term
+              - description
+              - partOfSpeech
+              - type
+              - status
+              - gender
+              - note
+              - url
+              - conceptDefinition
+              - conceptSubject
+              - conceptNote
+              - conceptUrl
+              - conceptFigure
           default:
             - term
             - description
@@ -31981,6 +32150,21 @@ components:
         approvalProgress:
           type: integer
           example: 86
+        qaChecksStatus:
+          properties:
+            total:
+              type: integer
+              example: 10
+            inProgress:
+              type: integer
+              example: 5
+            passed:
+              type: integer
+              example: 4
+            failed:
+              type: integer
+              example: 1
+          type: object
       type: object
     ProjectProgress:
       title: 'Language Translation Progress'
@@ -32941,21 +33125,14 @@ components:
           type: boolean
           default: true
         translatableElements:
-          description: 'This is an array of strings, where each item is the XPaths to DOM element that should be imported'
+          description: "This is an array of strings, where each item is the XPaths to DOM element that should be imported.\n\nSupported XPath patterns:\n- `/path/to/node` — Absolute path to a specific node\n- `/path/to/attribute[@attr]` — Absolute path to an attribute\n- `//node` — All nodes with the specified name\n- `//[@attr]` — All elements with the specified attribute\n- `nodeone/nodetwo` — Relative path\n- `/nodeone//nodetwo` — Mixed absolute and descendant path\n- `//node[@attr]` — All nodes with the specified name and attribute"
           type: array
           items:
             type: string
-            enum:
-              - /path/to/node
-              - '/path/to/attribute[@attr]'
-              - //node
-              - '//[@attr]'
-              - nodeone/nodetwo
-              - /nodeone//nodetwo
-              - '//node[@attr]'
-            example:
-              - //node
           default: []
+          example:
+            - /path/to/node
+            - '//node[@attr]'
         contentSegmentation:
           description: "Defines whether to split long texts into smaller text segments.\n\n __Important!__ This option disables the possibility to upload existing translations for XML files when enabled."
           type: boolean
@@ -34570,21 +34747,14 @@ components:
           type: boolean
           default: true
         translatableElements:
-          description: 'This is an array of strings, where each item is the XPaths to DOM element that should be imported'
+          description: "This is an array of strings, where each item is the XPaths to DOM element that should be imported.\n\nSupported XPath patterns:\n- `/path/to/node` — Absolute path to a specific node\n- `/path/to/attribute[@attr]` — Absolute path to an attribute\n- `//node` — All nodes with the specified name\n- `//[@attr]` — All elements with the specified attribute\n- `nodeone/nodetwo` — Relative path\n- `/nodeone//nodetwo` — Mixed absolute and descendant path\n- `//node[@attr]` — All nodes with the specified name and attribute"
           type: array
           items:
             type: string
-            enum:
-              - /path/to/node
-              - '/path/to/attribute[@attr]'
-              - //node
-              - '//[@attr]'
-              - nodeone/nodetwo
-              - /nodeone//nodetwo
-              - '//node[@attr]'
-            example:
-              - //node
           default: []
+          example:
+            - /path/to/node
+            - '//node[@attr]'
         contentSegmentation:
           description: "Defines whether to split long texts into smaller text segments.\n\n     Important! This option disables the possibility to upload existing translations for XML files when enabled."
           type: boolean
@@ -35390,6 +35560,16 @@ components:
         languagePairMapping:
           $ref: '#/components/schemas/LanguagePairMapping'
       type: object
+    EnterpriseQaCheckRevalidationResource:
+      description: 'QA Check Revalidation Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/EnterpriseQaCheckRevalidation'
     QaCheckCollectionResource:
       description: 'QaCheck Collection Resource'
       type: object
@@ -35416,6 +35596,16 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/QaCheck'
+    QaCheckRevalidationResource:
+      description: 'QA Check Revalidation Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/QaCheckRevalidation'
     QaCheckStatisticCollectionResource:
       description: 'QaCheck Statistic Collection Resource'
       type: object
@@ -35443,6 +35633,91 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/QaCheck'
+    QaCheckRevalidation:
+      title: 'QA Check Revalidation'
+      properties:
+        identifier:
+          type: string
+          example: b5215a34-1305-4b21-8054-fc2eb252842f
+        status:
+          type: string
+          example: created
+        progress:
+          description: 'in percentages'
+          type: integer
+          example: 0
+        attributes:
+          properties:
+            languageIds:
+              description: 'Language IDs to revalidate'
+              type: array
+              items:
+                type: string
+              example:
+                - uk
+                - fr
+            qaCheckCategories:
+              description: 'QA check categories to revalidate'
+              type: array
+              items:
+                type: string
+              example:
+                - ai
+            failedOnly:
+              description: 'If true, only languages with failed QA checks will be revalidated'
+              type: boolean
+              default: false
+              example: false
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-09-23T11:51:08+00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-09-23T11:51:08+00:00'
+        startedAt:
+          type: string
+          format: date-time
+          example: '2025-09-23T11:51:08+00:00'
+          nullable: true
+        finishedAt:
+          type: string
+          format: date-time
+          example: null
+          nullable: true
+      type: object
+    EnterpriseQaCheckRevalidation:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/QaCheckRevalidation'
+        -
+          properties:
+            attributes:
+              properties:
+                languageIds:
+                  description: 'Language IDs to revalidate'
+                  type: array
+                  items: { type: string }
+                  example: [uk, fr]
+                qaCheckCategories:
+                  description: 'QA check categories to revalidate'
+                  type: array
+                  items: { type: string }
+                  example: [ai]
+                failedOnly:
+                  description: 'If true, only languages with failed QA checks will be revalidated'
+                  type: boolean
+                  default: false
+                  example: false
+                externalQaCheckIds:
+                  description: 'External QA check IDs to revalidate. Available only for Enterprise'
+                  type: array
+                  items: { type: integer }
+                  example: [1, 2, 3]
+              type: object
     QaCheck:
       title: 'Translation Quality Assurance'
       description: 'QaCheck Response Model'
@@ -36500,6 +36775,8 @@ components:
         name:
           description: group-saving-activity
           type: string
+          enum:
+            - group-saving-activity
           example: group-saving-activity
         schema:
           $ref: '#/components/schemas/group-saving-activity.report'
@@ -36921,6 +37198,8 @@ components:
         name:
           description: translator-accuracy
           type: string
+          enum:
+            - translator-accuracy
           example: translator-accuracy
         schema:
           $ref: '#/components/schemas/translator-accuracy.report.general'
@@ -37006,6 +37285,8 @@ components:
         name:
           description: costs-estimation-pe
           type: string
+          enum:
+            - costs-estimation-pe
           example: costs-estimation-pe
         schema:
           description: 'Costs Estimation Post-Editing Report schema'
@@ -37269,6 +37550,8 @@ components:
         name:
           description: top-members
           type: string
+          enum:
+            - top-members
           example: top-members
         schema:
           description: 'Top Members Report schema'
@@ -37293,6 +37576,8 @@ components:
         name:
           description: translation-costs-pe
           type: string
+          enum:
+            - translation-costs-pe
           example: translation-costs-pe
         schema:
           description: 'Translation Costs Post-Editing Report schema'
@@ -37646,6 +37931,8 @@ components:
         name:
           description: contribution-raw-data
           type: string
+          enum:
+            - contribution-raw-data
           example: contribution-raw-data
         schema:
           description: 'Contribution Raw Data Report schema'
@@ -37923,6 +38210,8 @@ components:
         name:
           description: task-usage
           type: string
+          enum:
+            - task-usage
           example: task-usage
         schema:
           $ref: '#/components/schemas/task-usage.report'
@@ -38265,6 +38554,8 @@ components:
         name:
           description: source-content-updates
           type: string
+          enum:
+            - source-content-updates
           example: source-content-updates
         schema:
           $ref: '#/components/schemas/source-content-updates.report'
@@ -38311,6 +38602,8 @@ components:
         name:
           description: project-members
           type: string
+          enum:
+            - project-members
           example: project-members
         schema:
           $ref: '#/components/schemas/project-members.report'
@@ -38347,6 +38640,8 @@ components:
         name:
           description: editor-issues
           type: string
+          enum:
+            - editor-issues
           example: editor-issues
         schema:
           $ref: '#/components/schemas/issue-detail.report'
@@ -38393,6 +38688,8 @@ components:
         name:
           description: qa-check-issues
           type: string
+          enum:
+            - qa-check-issues
           example: qa-check-issues
         schema:
           $ref: '#/components/schemas/project-qa-check-issues.report'
@@ -38433,6 +38730,8 @@ components:
         name:
           description: translation-activity
           type: string
+          enum:
+            - translation-activity
           example: translation-activity
         schema:
           $ref: '#/components/schemas/project-consumption.report'
@@ -38453,6 +38752,8 @@ components:
         name:
           description: time-spent
           type: string
+          enum:
+            - time-spent
           example: time-spent
         schema:
           $ref: '#/components/schemas/project-time-spent.report'
@@ -38572,6 +38873,8 @@ components:
         name:
           description: saving-activity
           type: string
+          enum:
+            - saving-activity
           example: saving-activity
         schema:
           $ref: '#/components/schemas/saving-activity.report'
@@ -42842,6 +43145,14 @@ components:
             url:
               type: string
               example: 'https://example.com/file.jpg'
+            qaIssuesStatus:
+              description: 'QA Issues Status'
+              type: string
+              enum:
+                - inProgress
+                - failed
+                - passed
+              example: passed
     AssetTranslation:
       title: 'Asset Translation'
       type: object
@@ -43044,6 +43355,14 @@ components:
             text:
               type: string
               example: '{count, plural, one {# String} other {# Strings}}'
+            qaIssuesStatus:
+              description: 'QA Issues Status'
+              type: string
+              enum:
+                - inProgress
+                - failed
+                - passed
+              example: passed
     LanguageTranslation:
       properties:
         stringId:
@@ -43086,6 +43405,14 @@ components:
             text:
               type: string
               example: 'Confirm New Password'
+            qaIssuesStatus:
+              description: 'QA Issues Status'
+              type: string
+              enum:
+                - inProgress
+                - failed
+                - passed
+              example: passed
     PluralSuggestionOfLanguageTranslation:
       properties:
         translationId:
@@ -43137,6 +43464,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PluralSuggestionOfLanguageTranslation'
+        qaIssuesStatus:
+          description: 'QA Issues Status'
+          type: string
+          enum:
+            - inProgress
+            - failed
+            - passed
+          example: passed
       type: object
     StringApproval:
       title: 'String Approval'
@@ -48180,7 +48515,7 @@ components:
           type: string
           example: 'https://webhook.site/1c20d9b5-6e6a-4522-974d-9da7ea7595c9'
         events:
-          description: "You can configure webhooks for the following events:\n * 'file.added' — project file is added\n * 'file.updated' - project file is updated\n * 'file.reverted' - project file is reverted\n * 'file.deleted' - project file is deleted\n * 'file.translated' — project file is fully translated\n * 'file.approved' — project file is fully reviewed\n * 'project.translated' — all strings in project are translated\n * 'project.approved' — all strings in project are approved\n * 'project.built' - project are successfully built\n * 'translation.updated' — final translation of string is updated (using Replace in suggestions feature)\n * 'string.added' — source string is added\n * 'string.updated' — source string is updated\n * 'string.deleted' — source string is deleted\n * 'stringComment.created' - string comment/issue is added\n * 'stringComment.updated' - string comment/issue is updated\n * 'stringComment.deleted' - string comment/issue is deleted\n * 'stringComment.restored' - string comment/issue is restored\n * 'suggestion.added' — one of source strings is translated\n * 'suggestion.updated' — translation for source string is updated (using Replace in suggestions feature)\n * 'suggestion.deleted' — one of translations is deleted\n * 'suggestion.approved' — translation for string is approved\n * 'suggestion.disapproved' — approval for previously added translation is removed\n * 'task.added' - task is added\n * 'task.statusChanged' - task status was changed\n * 'task.updated' - task is updated\n * 'task.deleted' - task is deleted"
+          description: "You can configure webhooks for the following events:\n * 'file.added' — project file is added\n * 'file.updated' - project file is updated\n * 'file.reverted' - project file is reverted\n * 'file.deleted' - project file is deleted\n * 'file.translated' — project file is fully translated\n * 'file.approved' — project file is fully reviewed\n * 'file.qa.finished' - project file QA check is finished\n * 'project.translated' — all strings in project are translated\n * 'project.approved' — all strings in project are approved\n * 'project.qa.finished' — all strings in project are QA check is finished\n * 'project.built' - project are successfully built\n * 'translation.updated' — final translation of string is updated (using Replace in suggestions feature)\n * 'string.added' — source string is added\n * 'string.updated' — source string is updated\n * 'string.deleted' — source string is deleted\n * 'stringComment.created' - string comment/issue is added\n * 'stringComment.updated' - string comment/issue is updated\n * 'stringComment.deleted' - string comment/issue is deleted\n * 'stringComment.restored' - string comment/issue is restored\n * 'suggestion.added' — one of source strings is translated\n * 'suggestion.updated' — translation for source string is updated (using Replace in suggestions feature)\n * 'suggestion.deleted' — one of translations is deleted\n * 'suggestion.approved' — translation for string is approved\n * 'suggestion.disapproved' — approval for previously added translation is removed\n * 'task.added' - task is added\n * 'task.statusChanged' - task status was changed\n * 'task.updated' - task is updated\n * 'task.deleted' - task is deleted"
           type: array
           items:
             type: string
@@ -48191,8 +48526,10 @@ components:
               - file.deleted
               - file.translated
               - file.approved
+              - file.qa.finished
               - project.translated
               - project.approved
+              - project.qa.finished
               - project.built
               - translation.updated
               - string.added
@@ -48316,7 +48653,7 @@ components:
           type: string
           example: 'https://webhook.site/1c20d9b5-6e6a-4522-974d-9da7ea7595c9'
         events:
-          description: "You can configure webhooks for the following events:\n * 'file.added' — project file is added\n * 'file.updated' - project file is updated\n * 'file.reverted' - project file is reverted\n * 'file.deleted' - project file is deleted\n * 'file.translated' — project file is fully translated\n * 'file.approved' — project file is fully reviewed\n * 'project.translated' — all strings in project are translated\n * 'project.approved' — all strings in project are approved\n * 'project.built' - project are successfully built\n * 'translation.updated' — final translation of string is updated (using Replace in suggestions feature)\n * 'string.added' — source string is added\n * 'string.updated' — source string is updated\n * 'string.deleted' — source string is deleted\n * 'stringComment.created' - string comment/issue is added\n * 'stringComment.updated' - string comment/issue is updated\n * 'stringComment.deleted' - string comment/issue is deleted\n * 'stringComment.restored' - string comment/issue is restored\n * 'suggestion.added' — one of source strings is translated\n * 'suggestion.updated' — translation for source string is updated (using Replace in suggestions feature)\n * 'suggestion.deleted' — one of translations is deleted\n * 'suggestion.approved' — translation for string is approved\n * 'suggestion.disapproved' — approval for previously added translation is removed\n * 'task.added' - task is added\n * 'task.statusChanged' - task status was changed\n * 'task.updated' - task is updated\n * 'task.deleted' - task is deleted"
+          description: "You can configure webhooks for the following events:\n * 'file.added' — project file is added\n * 'file.updated' - project file is updated\n * 'file.reverted' - project file is reverted\n * 'file.deleted' - project file is deleted\n * 'file.translated' — project file is fully translated\n * 'file.approved' — project file is fully reviewed\n * 'file.qa.finished' - project file QA check is finished\n * 'project.translated' — all strings in project are translated\n * 'project.approved' — all strings in project are approved\n * 'project.qa.finished' - all strings in project QA check are finished\n * 'project.built' - project are successfully built\n * 'translation.updated' — final translation of string is updated (using Replace in suggestions feature)\n * 'string.added' — source string is added\n * 'string.updated' — source string is updated\n * 'string.deleted' — source string is deleted\n * 'stringComment.created' - string comment/issue is added\n * 'stringComment.updated' - string comment/issue is updated\n * 'stringComment.deleted' - string comment/issue is deleted\n * 'stringComment.restored' - string comment/issue is restored\n * 'suggestion.added' — one of source strings is translated\n * 'suggestion.updated' — translation for source string is updated (using Replace in suggestions feature)\n * 'suggestion.deleted' — one of translations is deleted\n * 'suggestion.approved' — translation for string is approved\n * 'suggestion.disapproved' — approval for previously added translation is removed\n * 'task.added' - task is added\n * 'task.statusChanged' - task status was changed\n * 'task.updated' - task is updated\n * 'task.deleted' - task is deleted"
           type: array
           items:
             type: string
@@ -48325,10 +48662,12 @@ components:
               - file.updated
               - file.reverted
               - file.deleted
+              - file.qa.finished
               - file.translated
               - file.approved
               - project.translated
               - project.approved
+              - project.qa.finished
               - project.built
               - translation.updated
               - string.added
@@ -50196,6 +50535,13 @@ components:
       required: true
       schema:
         type: integer
+    ReviewedSourceFilesBuildId:
+      name: buildId
+      in: path
+      description: 'Project Reviewed Source Files Build Identifier. Get via [List Reviewed Source Files Builds](#operation/api.projects.strings.reviewed-builds.getMany)'
+      required: true
+      schema:
+        type: integer
     WebhookId:
       name: webhookId
       in: path
@@ -50697,7 +51043,7 @@ tags:
     description: "\nClients are the organizations that order professional translation services from Vendors. Clients can invite an existing organization to become a Vendor for them.\n\nUse the API to get a list of the Clients you already cooperate with as a Vendor.\n"
   -
     name: Webhooks
-    description: "\nWebhooks allow you to collect information about events that happen in your Crowdin Enterprise projects. You can select the request type, content type, and add a custom payload, which allows you to create integrations with other systems on your own.\n\nYou can configure webhooks for the following events:\n * project file is fully translated\n * project file is fully reviewed\n * all strings in project are translated\n * all strings in project are reviewed\n * final translation of string is updated (using Replace in suggestions feature)\n * source string is added\n * source string is updated\n * source string is deleted\n * source string is translated\n * translation for source string is updated (using Replace in suggestions feature)\n * one of translations is deleted\n * translation for string is approved\n * approval for previously added translation is removed\n\nUse API to create, modify, and delete specific webhooks.\n"
+    description: "\nWebhooks allow you to collect information about events that happen in your Crowdin Enterprise projects. You can select the request type, content type, and add a custom payload, which allows you to create integrations with other systems on your own.\n\nYou can configure webhooks for the following events:\n * project file is fully translated\n * project file is fully reviewed\n * project file is fully QA checked\n * all strings in project are translated\n * all strings in project are reviewed\n * all strings in project QA check are finished\n * final translation of string is updated (using Replace in suggestions feature)\n * source string is added\n * source string is updated\n * source string is deleted\n * source string is translated\n * translation for source string is updated (using Replace in suggestions feature)\n * one of translations is deleted\n * translation for string is approved\n * approval for previously added translation is removed\n\nUse API to create, modify, and delete specific webhooks.\n"
     x-doc-sections:
       - file-based
   -
