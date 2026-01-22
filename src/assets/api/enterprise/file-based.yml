@@ -7786,7 +7786,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EnterpriseOrganizationWebhookResource'
+              $ref: '#/components/schemas/EnterpriseOrganizationWebhookCreateForm'
       responses:
         '201':
           description: 'Webhook was successfully added'
@@ -32555,6 +32555,7 @@ components:
             saveMetaInfoInSource:
               description: 'Context and max.length added in Crowdin will be visible in the downloaded files'
               type: boolean
+              default: true
               example: true
             type:
               description: 'Defines the project type. To create a file-based project, `type` should be set to 0.'
@@ -32567,6 +32568,7 @@ components:
             skipUntranslatedFiles:
               description: 'Defines whether to export only translated file'
               type: boolean
+              default: false
               example: false
             tmContextType:
               description: "TM perfect match searching mode. Available values:\n * segmentContext - searching by context\n * auto - context search for key-value formats and segment search for others\n * prevAndNextSegment - search by previous and next segment"
@@ -32794,7 +32796,7 @@ components:
             - 3
             - 4
             - 5
-          example: 1
+          example: 0
         tagsDetection:
           description: "Values available:\n * 0 - Auto\n * 1 - Count tags\n * 2 - Skip tags"
           type: integer
@@ -32857,34 +32859,38 @@ components:
         delayedWorkflowStart:
           description: 'Delay workflow start after project creation'
           type: boolean
-          default: 'false'
-          example: 'false'
+          default: false
+          example: false
         skipUntranslatedStrings:
           description: 'Defines whether to skip untranslated strings'
           type: boolean
+          default: false
           example: false
         exportWithMinApprovalsCount:
           description: "Defines whether to export only approved strings\n\n__Note:__ value greater than `0` can't be used with `exportStringsThatPassedWorkflow=true` in same request"
           type: integer
+          default: 0
           example: 0
         exportStringsThatPassedWorkflow:
           description: "Defines whether to export only strings that passed workflow\n\n__Note:__ `true` value can't be used with `exportWithMinApprovalsCount>0` in same request or in projects without an assigned workflow"
           type: boolean
-          example: true
+          default: false
+          example: false
         normalizePlaceholder:
           description: 'Enable the transformation of the placeholders to the unified format to improve the work with TM suggestions'
           type: boolean
-          example: true
+          default: false
+          example: false
         qaCheckIsActive:
           description: 'If `true` - QA checks are active'
           type: boolean
-          default: 'true'
+          default: true
           example: true
         qaApprovalsCount:
           description: 'Clear QA checks for translations with specific number of approvals'
           type: number
-          default: '1'
-          example: '1'
+          default: 1
+          example: 1
         qaCheckCategories:
           $ref: '#/components/schemas/qaCheckCategories'
         qaChecksIgnorableCategories:
@@ -44189,22 +44195,20 @@ components:
     EnterpriseTaskBySourceIdsForm:
       title: CreateBySourcesForm
       required:
-        - workflowStepId
         - title
         - languageId
         - fileIds
         - branchIds
         - stringIds
-        - type
       properties:
         type:
-          description: "Task type:\n *      0 - translate\n *      1 - proofread\n\n__Note:__ Can't be used with `workflowStepId` in same request"
+          description: "Task type:\n *      0 - translate\n *      1 - proofread\n\n__Note:__ One of fields `type` or `workflowStepId` is required. Both cannot be provided simultaneously"
           type: integer
           enum:
             - 0
             - 1
         workflowStepId:
-          description: "Task workflow step id\n\n__Note:__ Can't be used with `type` in same request"
+          description: "Task workflow step id\n\n__Note:__ One of fields `type` or `workflowStepId` is required. Both cannot be provided simultaneously"
           type: integer
         title:
           description: 'Task title'
@@ -44341,22 +44345,20 @@ components:
     EnterpriseTaskByStringIds:
       title: CreateByStringIdsForm
       required:
-        - workflowStepId
         - title
         - languageId
         - fileIds
         - branchIds
         - stringIds
-        - type
       properties:
         type:
-          description: "Task type:\n *      0 - translate\n *      1 - proofread\n\n__Note:__ Can't be used with `workflowStepId` in same request"
+          description: "Task type:\n *      0 - translate\n *      1 - proofread\n\n__Note:__ One of fields `type` or `workflowStepId` is required. Both cannot be provided simultaneously"
           type: integer
           enum:
             - 0
             - 1
         workflowStepId:
-          description: "Task workflow step id\n\n__Note:__ Can't be used with `type` in same request"
+          description: "Task workflow step id\n\n__Note:__ One of fields `type` or `workflowStepId` is required. Both cannot be provided simultaneously"
           type: integer
         title:
           description: 'Task title'
@@ -44686,8 +44688,6 @@ components:
     EnterprisePendingTaskCreateForm:
       required:
         - precedingTaskId
-        - type
-        - workflowStepId
         - title
       properties:
         precedingTaskId:
@@ -44695,12 +44695,12 @@ components:
           type: integer
           example: '1'
         type:
-          description: "Task type:\n *      1 - proofread\n\n__Note:__ Can't be used with `workflowStepId` in same request"
+          description: "Task type:\n *      1 - proofread\n\n__Note:__ One of fields `type` or `workflowStepId` is required. Both cannot be provided simultaneously"
           type: integer
           enum:
             - 1
         workflowStepId:
-          description: "Task workflow step id\n\n__Note:__ Can't be used with `type` in same request"
+          description: "Task workflow step id\n\n__Note:__ One of fields `type` or `workflowStepId` is required. Both cannot be provided simultaneously"
           type: integer
         title:
           description: 'Task title'
@@ -45648,6 +45648,7 @@ components:
       properties:
         teamId:
           description: 'Team Identifier. Get via [List Teams](#operation/api.teams.getMany)'
+          type: integer
           example: 1
         accessToAllWorkflowSteps:
           description: "Grant access to all project languages, translation, and proofreading workflow steps (current and future)\n\n__Note:__ This property is deprecated. Use `roles` instead"
@@ -47782,10 +47783,6 @@ components:
             value:
               type: object
     EnterpriseAddProjectMemberForm:
-      required:
-        - userIds
-        - usernames
-        - emails
       properties:
         userIds:
           description: "User Identifier. Get via [List Users](#operation/api.users.getMany)\n\n__Note:__ One of fields `userIds`, `usernames` or `emails` is required"
@@ -47794,13 +47791,13 @@ components:
             type: integer
             example: 1
         usernames:
-          description: 'User Names. Get via [List Users](#operation/api.users.getMany)'
+          description: "User Names. Get via [List Users](#operation/api.users.getMany)\n\n__Note:__ One of fields `userIds`, `usernames` or `emails` is required"
           type: array
           items:
             type: string
             example: john_smith
         emails:
-          description: 'User Emails.'
+          description: "User Emails.\n\n__Note:__ One of fields `userIds`, `usernames` or `emails` is required"
           type: array
           items:
             type: string
@@ -50879,14 +50876,14 @@ components:
       schema:
         type: string
     SystemStringsExporterSettingsId:
-      name: SystemStringsExporterSettingsId
+      name: systemStringsExporterSettingsId
       in: path
       description: 'System strings exporter Settings Identifier. Get via [List Project Strings Exporter Settings](#operation/api.projects.strings-exporter-settings.getMany)'
       required: true
       schema:
         type: integer
     FieldId:
-      name: FieldId
+      name: fieldId
       in: path
       description: 'Field Identifier. Get via [List Fields](#operation/api.fields.getMany)'
       required: true
