@@ -2439,6 +2439,425 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/applications/{applicationIdentifier}/api/crowdin-files':
+    get:
+      tags:
+        - Integrations
+      summary: 'List Crowdin Files'
+      operationId: api.applications.integrations.crowdin.files
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+        -
+          name: projectId
+          in: query
+          description: 'Project Identifier. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          required: true
+          schema:
+            type: integer
+            example: 12
+      responses:
+        '200':
+          description: 'Project files list'
+          content:
+            application/json:
+              schema:
+                properties:
+                  data: { $ref: '#/components/schemas/IntegrationCrowdinFiles' }
+                type: object
+      x-doc-sections:
+        - file-based
+  '/applications/{applicationIdentifier}/api/file-progress':
+    get:
+      tags:
+        - Integrations
+      summary: 'Get File Progress'
+      operationId: api.applications.integrations.file.progress
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+        -
+          name: projectId
+          in: query
+          description: 'Project Identifier. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          required: true
+          schema:
+            type: integer
+            example: 12
+        -
+          name: fileId
+          in: query
+          description: 'Get via [List Crowdin Files](#operation/api.applications.integrations.crowdin.files)'
+          required: true
+          schema:
+            type: integer
+            example: 102
+      responses:
+        '200':
+          description: 'File translation progress'
+          content:
+            application/json:
+              schema:
+                properties:
+                  data: { $ref: '#/components/schemas/IntegrationFileProgress' }
+                type: object
+      x-doc-sections:
+        - file-based
+  '/applications/{applicationIdentifier}/api/integration-files':
+    get:
+      tags:
+        - Integrations
+      summary: 'List Integration Files'
+      operationId: api.applications.integrations.integration.files
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+        -
+          name: projectId
+          in: query
+          description: 'Project Identifier. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          required: true
+          schema:
+            type: integer
+            example: 12
+      responses:
+        '200':
+          description: 'Integration files list'
+          content:
+            application/json:
+              schema:
+                properties:
+                  data: { $ref: '#/components/schemas/IntegrationIntegrationFiles' }
+                type: object
+      x-doc-sections:
+        - file-based
+  '/applications/{applicationIdentifier}/api/crowdin-update':
+    post:
+      tags:
+        - Integrations
+      summary: 'Update Crowdin Files'
+      operationId: api.applications.integrations.crowdin.update
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntegrationUpdateCrowdinFiles'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                properties:
+                  data: { $ref: '#/components/schemas/IntegrationUpdateResponse' }
+                type: object
+      x-doc-sections:
+        - file-based
+  '/applications/{applicationIdentifier}/api/integration-update':
+    post:
+      tags:
+        - Integrations
+      summary: 'Update Integration Files'
+      operationId: api.applications.integrations.integration.update
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntegrationFileLanguagePair'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                properties:
+                  data: { $ref: '#/components/schemas/IntegrationUpdateResponse' }
+                type: object
+      x-doc-sections:
+        - file-based
+  '/applications/{applicationIdentifier}/api/all-jobs':
+    get:
+      tags:
+        - Integrations
+      summary: 'List Jobs'
+      operationId: api.applications.integrations.job.list
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+        -
+          name: projectId
+          in: query
+          description: 'Project Identifier. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          required: true
+          schema:
+            type: integer
+            example: 12
+        -
+          name: limit
+          in: query
+          description: 'Number of jobs to return'
+          required: false
+          schema:
+            type: integer
+            example: 25
+        -
+          name: offset
+          in: query
+          description: 'Number of jobs to skip'
+          required: false
+          schema:
+            type: integer
+            example: 0
+      responses:
+        '200':
+          description: 'Job information retrieved successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationJobResponse'
+      x-doc-sections:
+        - file-based
+  '/applications/{applicationIdentifier}/api/job-info':
+    get:
+      tags:
+        - Integrations
+      summary: 'Get Job Info'
+      operationId: api.applications.integrations.job.info
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+        -
+          name: projectId
+          in: query
+          description: 'Project Identifier. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          required: true
+          schema:
+            type: integer
+            example: 12
+        -
+          name: jobId
+          in: query
+          required: true
+          schema:
+            type: string
+            example: 067da473-fc0b-43e3-b0a2-09d26af130c1
+      responses:
+        '200':
+          description: 'Job information retrieved successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationJobResponse'
+      x-doc-sections:
+        - file-based
+  '/applications/{applicationIdentifier}/api/jobs':
+    get:
+      tags:
+        - Integrations
+      summary: 'Get Job Info'
+      operationId: api.applications.integrations.job.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+        -
+          name: projectId
+          in: query
+          description: 'Project Identifier. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          required: true
+          schema:
+            type: integer
+            example: 12
+        -
+          name: jobId
+          in: query
+          required: false
+          schema:
+            type: string
+            example: 067da473-fc0b-43e3-b0a2-09d26af130c1
+      responses:
+        '200':
+          description: 'Job information retrieved successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationJobResponse'
+      deprecated: true
+      x-doc-sections:
+        - file-based
+    delete:
+      tags:
+        - Integrations
+      summary: 'Cancel Job'
+      operationId: api.applications.integrations.job.cancel
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+        -
+          name: projectId
+          in: query
+          description: 'Project Identifier. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          required: true
+          schema:
+            type: integer
+            example: 12
+        -
+          name: jobId
+          in: query
+          required: true
+          schema:
+            type: string
+            example: 067da473-fc0b-43e3-b0a2-09d26af130c1
+      responses:
+        '204':
+          description: 'Job canceled successfully'
+      x-doc-sections:
+        - file-based
+  '/applications/{applicationIdentifier}/api/settings':
+    get:
+      tags:
+        - Integrations
+      summary: 'Get Application Settings'
+      operationId: api.applications.integrations.settings.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+        -
+          name: projectId
+          in: query
+          description: 'Project Identifier. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          required: true
+          schema:
+            type: integer
+            example: 12
+      responses:
+        '200':
+          description: 'File translation progress'
+          content:
+            application/json:
+              schema:
+                properties:
+                  data: { $ref: '#/components/schemas/IntegrationSettingsResponse' }
+                type: object
+      x-doc-sections:
+        - file-based
+    post:
+      tags:
+        - Integrations
+      summary: 'Update Application Settings'
+      operationId: api.applications.integrations.settings.update
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntegrationUpdateSettingsData'
+      responses:
+        '204':
+          description: 'Application Settings was successfully update'
+      x-doc-sections:
+        - file-based
+  '/applications/{applicationIdentifier}/api/sync-settings':
+    get:
+      tags:
+        - Integrations
+      summary: 'Get Sync Settings'
+      operationId: api.applications.integrations.sync.settings.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+        -
+          name: projectId
+          in: query
+          description: 'Project Identifier. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          required: true
+          schema:
+            type: integer
+            example: 12
+        -
+          name: provider
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - crowdin
+              - integration
+      responses:
+        '200':
+          description: 'Application Sync Settings'
+          content:
+            application/json:
+              schema:
+                properties:
+                  data: { oneOf: [{ $ref: '#/components/schemas/IntegrationCrowdinSyncSettingsResponse' }, { $ref: '#/components/schemas/IntegrationIntegrationSyncSettingsResponse' }] }
+                type: object
+      x-doc-sections:
+        - file-based
+    post:
+      tags:
+        - Integrations
+      summary: 'Update Sync Settings'
+      operationId: api.applications.integrations.sync.settings.update
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntegrationUpdateSyncSettingsData'
+      responses:
+        '204':
+          description: 'Application Sync Settings was successfully update'
+      x-doc-sections:
+        - file-based
+  '/applications/{applicationIdentifier}/api/login-fields':
+    get:
+      tags:
+        - Integrations
+      summary: 'Integration Login Form Fields'
+      operationId: api.applications.integrations.integration.fields
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+      responses:
+        '200':
+          description: 'Login Form Fields'
+          content:
+            application/json:
+              schema:
+                properties:
+                  data: { $ref: '#/components/schemas/IntegrationLoginFieldsResponse' }
+                type: object
+      x-doc-sections:
+        - file-based
+  '/applications/{applicationIdentifier}/api/login':
+    post:
+      tags:
+        - Integrations
+      summary: 'Integration Login'
+      operationId: api.applications.integrations.integration.login
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntegrationLogin'
+      responses:
+        '204':
+          description: 'Login successful'
+      x-doc-sections:
+        - file-based
   '/projects/{projectId}/branches':
     get:
       tags:
@@ -19448,7 +19867,7 @@ paths:
             schema:
               $ref: '#/components/schemas/EnterpriseUserCreateModel'
       responses:
-        '200':
+        '201':
           description: 'User was successfully invited'
           content:
             application/json:
@@ -22961,6 +23380,329 @@ components:
           properties:
             value:
               $ref: '#/components/schemas/ApplicationInstallationReplaceValue'
+    IntegrationCrowdinFiles:
+      type: array
+      items:
+        anyOf:
+          -
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+            type: object
+          -
+            properties:
+              id:
+                type: string
+              parentId:
+                type: string
+              name:
+                type: string
+              type:
+                type: string
+            type: object
+      example:
+        -
+          id: 1
+          name: 'Landing pages'
+        -
+          id: 2
+          parentId: 1
+          name: 'Home Page'
+          type: json
+      x-doc-sections:
+        - file-based
+    IntegrationIntegrationFiles:
+      type: array
+      items:
+        anyOf:
+          -
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              parent_id:
+                type: string
+              node_type:
+                type: string
+            type: object
+          -
+            properties:
+              name:
+                type: string
+              id:
+                type: string
+              parentId:
+                type: string
+              type:
+                type: string
+              node_type:
+                type: string
+            type: object
+      example:
+        -
+          id: 1
+          name: 'Landing pages'
+          parent_id: 0
+          node_type: 0
+        -
+          name: Intro
+          id: 73291251883
+          parentId: 'Landing pages'
+          type: json
+          node_type: 1
+      x-doc-sections:
+        - file-based
+    IntegrationUpdateCrowdinFiles:
+      title: 'Update files'
+      required:
+        - projectId
+        - files
+      properties:
+        projectId:
+          description: 'Project Identifier. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          type: integer
+          example: 12
+        files:
+          $ref: '#/components/schemas/IntegrationIntegrationFiles'
+        uploadTranslations:
+          description: 'Upload exist translation from integration'
+          type: boolean
+          default: false
+          example: true
+      type: object
+      x-doc-sections:
+        - file-based
+    IntegrationFileLanguagePair:
+      title: 'Update files'
+      required:
+        - projectId
+        - files
+      properties:
+        projectId:
+          description: 'Project Id. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          type: integer
+          example: 12
+        files:
+          description: "- **{fileId}** _(integer)_: Crowdin File Id. Get via [List Crowdin Files](#operation/api.applications.integrations.crowdin.files)\n- **[{languageCode}]** _(array of strings)_: List Of  Language Id. Get via [List Supported Languages](https://support.crowdin.com/developer/api/v2/#tag/Languages/operation/api.languages.getMany)\n\n**Example:**\n  ```json\n  {\n   102: [\"de\", \"fr\"],\n   999: [\"uk\"]\n  }\n  ```\n"
+          type: object
+          example:
+            '102':
+              - de
+              - fr
+            '999':
+              - uk
+      type: object
+      x-doc-sections:
+        - file-based
+    IntegrationUpdateResponse:
+      properties:
+        jobId:
+          type: string
+          example: 067da473-fc0b-43e3-b0a2-09d26af130c1
+      type: object
+      x-doc-sections:
+        - file-based
+    IntegrationSettingsData:
+      type: object
+      example:
+        schedule: 0
+        condition: 0
+      additionalProperties:
+        type: string
+      x-doc-sections:
+        - file-based
+    IntegrationUpdateSettingsData:
+      title: 'Update Application Settings'
+      required:
+        - projectId
+        - config
+      properties:
+        projectId:
+          description: 'Project Identifier. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          type: integer
+          example: 12
+        config:
+          $ref: '#/components/schemas/IntegrationSettingsData'
+      type: object
+      x-doc-sections:
+        - file-based
+    IntegrationSettingsResponse:
+      $ref: '#/components/schemas/IntegrationSettingsData'
+    IntegrationCrowdinSyncSettingsResponse:
+      type: object
+      example:
+        '102':
+          - uk
+          - de
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      x-doc-sections:
+        - file-based
+    IntegrationIntegrationSyncSettingsResponse:
+      type: array
+      items:
+        properties:
+          name:
+            type: string
+          id:
+            type: string
+          parentId:
+            type: string
+          type:
+            type: string
+          node_type:
+            type: string
+          schedule:
+            type: boolean
+        type: object
+      x-doc-sections:
+        - file-based
+    IntegrationUpdateSyncSettingsData:
+      title: 'Update Application Sync Settings'
+      required:
+        - projectId
+        - provider
+        - files
+      properties:
+        projectId:
+          description: 'Project Identifier. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          type: integer
+          example: 12
+        provider:
+          type: string
+          enum:
+            - crowdin
+            - integration
+        files:
+          oneOf:
+            -
+              $ref: '#/components/schemas/IntegrationCrowdinSyncSettingsResponse'
+            -
+              $ref: '#/components/schemas/IntegrationIntegrationSyncSettingsResponse'
+      type: object
+      x-doc-sections:
+        - file-based
+    IntegrationFileProgress:
+      title: 'Language Translation Progress'
+      description: 'Language Translation File Progress Response Model'
+      properties:
+        languageId:
+          type: string
+          example: af
+        eTag:
+          type: string
+          example: fd0ea167420ef1687fd16635b9fb67a3
+        words:
+          properties:
+            total:
+              type: integer
+              example: 7249
+            translated:
+              type: integer
+              example: 3651
+            approved:
+              type: integer
+              example: 3637
+          type: object
+        phrases:
+          properties:
+            total:
+              type: integer
+              example: 3041
+            translated:
+              type: integer
+              example: 2631
+            approved:
+              type: integer
+              example: 2622
+          type: object
+        translationProgress:
+          type: integer
+          example: 86
+        approvalProgress:
+          type: integer
+          example: 86
+      type: object
+      x-doc-sections:
+        - file-based
+    IntegrationLoginFieldsResponse:
+      type: array
+      items:
+        properties:
+          key:
+            type: string
+            example: apiKey
+          name:
+            type: string
+            example: 'Service API key'
+        type: object
+      example:
+        -
+          key: email
+          name: 'User email'
+        -
+          key: password
+          name: 'User password'
+      x-doc-sections:
+        - file-based
+    IntegrationLogin:
+      title: Login
+      required:
+        - projectId
+        - credentials
+      properties:
+        projectId:
+          description: 'Project Identifier. Get via [List Projects](https://developer.crowdin.com/api/v2/#operation/api.projects.getMany)'
+          type: integer
+          example: 12
+        credentials:
+          $ref: '#/components/schemas/IntegrationLoginData'
+      type: object
+      x-doc-sections:
+        - file-based
+    IntegrationLoginData:
+      description: 'Login Form Fields. Get via [Integration Login Form Fields](#operation/api.applications.integrations.integration.fields)'
+      type: object
+      example:
+        email: user@crowdin.com
+        password: password
+      x-doc-sections:
+        - file-based
+    IntegrationJob:
+      properties:
+        id:
+          description: 'The Unique Identifier For The Job.'
+          type: string
+          example: 067da473-fc0b-43e3-b0a2-09d26af130c1
+        progress:
+          description: 'The Progress Of The Job.'
+          type: integer
+          example: 94
+        status:
+          description: 'The Current Status Of The Job.'
+          type: string
+          example: inProgress
+        title:
+          description: 'The Title Of The Job.'
+          type: string
+          example: 'Sync files to Crowdin'
+      type: object
+      x-doc-sections:
+        - file-based
+    IntegrationJobResponse:
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntegrationJob'
+      type: object
+      x-doc-sections:
+        - file-based
     ApplicationInstallationCreateForm:
       required:
         - url
@@ -51053,6 +51795,9 @@ tags:
   -
     name: Applications
     description: "\nCrowdin Apps are web applications that can be integrated with Crowdin to extend its functionality.\n\nUse the API to manage the necessary app data."
+  -
+    name: Integrations
+    description: "\nIntegration applications provide synchronization between Crowdin and external content management systems.\n\nUse the API to manage integration files, jobs, settings, and authentication."
   -
     name: 'External QA Checks'
     description: "\nExternal QA Checks are the tools that help to ensure the quality of the translations.\n\nYou can install an applicastion with External QA Check module to your organization and extend basic functionality with additional checks.\n"
