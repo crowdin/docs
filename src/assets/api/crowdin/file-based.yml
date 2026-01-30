@@ -511,6 +511,215 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/users/{userId}/ai/file-translations':
+    post:
+      tags:
+        - AI
+      summary: 'AI File Translations'
+      description: '**Required scopes:** `ai.translate` (Read and Write).'
+      operationId: api.users.ai.file-translations.post
+      parameters:
+        -
+          $ref: '#/components/parameters/UserId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiFileTranslationsForm'
+      responses:
+        '201':
+          description: 'AI File Translations job created successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiFileTranslationsJobResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'AI provider, AI prompt, TM, glossary, storage or user with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/users/{userId}/ai/file-translations/{jobIdentifier}':
+    get:
+      tags:
+        - AI
+      summary: 'Get File Translations Status'
+      description: '**Required scopes:** `ai.translate` (Read and Write).'
+      operationId: api.users.ai.file-translations.get
+      parameters:
+        -
+          $ref: '#/components/parameters/UserId'
+        -
+          name: jobIdentifier
+          in: path
+          description: 'AI File Translations job identifier'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'AI File Translations job status'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiFileTranslationsJobResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'AI File Translations job or user with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    delete:
+      tags:
+        - AI
+      summary: 'Cancel File Translations'
+      description: '**Required scopes:** `ai.translate` (Read and Write).'
+      operationId: api.users.ai.file-translations.delete
+      parameters:
+        -
+          $ref: '#/components/parameters/UserId'
+        -
+          name: jobIdentifier
+          in: path
+          description: 'AI File Translations job identifier'
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: 'AI File Translations job canceled successfully'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'AI File Translations job or user with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/users/{userId}/ai/file-translations/{jobIdentifier}/download':
+    get:
+      tags:
+        - AI
+      summary: 'Download Translated File'
+      description: '**Required scopes:** `ai.translate` (Read and Write).'
+      operationId: api.users.ai.file-translations.download
+      parameters:
+        -
+          $ref: '#/components/parameters/UserId'
+        -
+          name: jobIdentifier
+          in: path
+          description: 'AI File Translations job identifier'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'Download URL for translated file'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadLinkResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'AI File Translations job or user with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/users/{userId}/ai/file-translations/{jobIdentifier}/translations':
+    get:
+      tags:
+        - AI
+      summary: 'Download Translated File Strings'
+      description: '**Required scopes:** `ai.translate` (Read and Write).'
+      operationId: api.users.ai.file-translations.download-strings
+      parameters:
+        -
+          $ref: '#/components/parameters/UserId'
+        -
+          name: jobIdentifier
+          in: path
+          description: 'AI File Translations job identifier'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'Download URL for translated strings (source + target pairs)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadLinkResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'AI File Translations job or user with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
   '/users/{userId}/ai/prompts/{aiPromptId}/fine-tuning/datasets':
     post:
       tags:
@@ -2101,6 +2310,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'AI provider, AI prompt or user with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
         '405':
           description: 'Method Not Allowed'
           content:
@@ -17452,6 +17667,155 @@ components:
           format: date-time
           example: '2019-09-20T12:22:20+00:00'
       type: object
+    AiFileTranslationsForm:
+      required:
+        - storageId
+        - targetLanguageId
+      properties:
+        storageId:
+          description: 'Storage Identifier of the file to translate. Get via [List Storages](#operation/api.storages.getMany)'
+          type: integer
+          format: int64
+          example: 123
+        sourceLanguageId:
+          description: 'Source Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany). If not specified, auto-detection will be used.'
+          type: string
+          example: en
+        targetLanguageId:
+          description: 'Target Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: uk
+        type:
+          $ref: '#/components/schemas/ProjectFileType'
+        parserVersion:
+          description: "Using latest parser version by default.\n\n__Note:__ Must be used together with `type`"
+          type: integer
+          example: 1
+        tmIds:
+          description: 'Array of Translation Memory IDs. Get via [List TMs](#operation/api.tms.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 123
+        glossaryIds:
+          description: 'Array of Glossary Identifiers. Get via [List Glossaries](#operation/api.glossaries.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 456
+        aiPromptId:
+          description: "Pre-Translation Prompt Identifier. Get via [List Prompts](#operation/api.ai.prompts.getMany)\n\n__Note:__ Can't be used with `aiProviderId` or `aiModelId` in same request"
+          type: integer
+          example: 789
+        aiProviderId:
+          description: "AI Provider Identifier. Get via [List AI Providers](#operation/api.ai.providers.getMany)\n\n__Note:__ Must be used together with `aiModelId`. Can't be used with `aiPromptId` in same request"
+          type: integer
+          example: 12
+        aiModelId:
+          description: "AI Model ID. Get via [List AI Provider Models](#operation/api.ai.providers.models.getMany)\n\n__Note:__ Must be used together with `aiProviderId`. Can't be used with `aiPromptId` in same request"
+          type: string
+          example: gpt-4.1
+        instructions:
+          description: 'Custom instructions for translation'
+          type: array
+          items:
+            type: string
+            example: 'Keep a formal tone'
+        attachmentIds:
+          description: "Storage IDs of images to pass to AI as attachments (max 10). Get via [List Storages](#operation/api.storages.getMany)\n\nOnly image files are allowed:\n * jpeg\n * jpg\n * png\n * gif\n * webp"
+          type: array
+          format: int64
+          items:
+            type: integer
+            example: 123
+          maxItems: 10
+      type: object
+    AiFileTranslationsJobResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AiFileTranslationsJobResponseModel'
+    AiFileTranslationsJobResponseModel:
+      properties:
+        identifier:
+          type: string
+          example: 50fb3506-4127-4ba8-8296-f97dc7e3e0c3
+        status:
+          type: string
+          example: finished
+        progress:
+          description: 'in percentages'
+          type: integer
+          example: 100
+        attributes:
+          description: 'Job attributes including error info, stage, and metadata'
+          properties:
+            stage:
+              description: 'Current stage (start, import, translate, export, done)'
+              type: string
+              example: translate
+            error:
+              properties:
+                stage:
+                  type: string
+                  example: import
+                message:
+                  type: string
+                  example: 'Failed to parse file'
+              type: object
+              nullable: true
+            downloadName:
+              type: string
+              example: file.pdf
+              nullable: true
+            sourceLanguageId:
+              description: 'Source language code. If not passed in the request, would be resolved after file parse.'
+              type: string
+              example: en
+              nullable: true
+            targetLanguageId:
+              description: 'Target language code'
+              type: string
+              example: uk
+            originalFileName:
+              description: 'Original uploaded file name'
+              type: string
+              example: Sample_Chrome.json
+            detectedType:
+              description: 'Detected base file type'
+              type: string
+              example: chrome
+              nullable: true
+            parserVersion:
+              description: 'Parser version for the detected file type (if applicable)'
+              type: integer
+              example: 2
+              nullable: true
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-01-23T11:26:54+00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-01-23T11:26:54+00:00'
+          nullable: true
+        startedAt:
+          type: string
+          format: date-time
+          example: '2026-01-23T11:26:54+00:00'
+          nullable: true
+        finishedAt:
+          type: string
+          format: date-time
+          example: '2026-01-23T11:26:54+00:00'
+          nullable: true
+      type: object
     AiFineTuningDatasetGenerateForm:
       properties:
         projectIds:
@@ -19763,7 +20127,7 @@ components:
           maxItems: 500
           minItems: 1
         sourceLanguageId:
-          description: 'Source Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          description: 'Source Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany). If not specified, auto-detection will be used.'
           type: string
           example: en
         targetLanguageId:
@@ -41020,7 +41384,7 @@ components:
               format: int64
               example: 28
             firstLineContainsHeader:
-              type: bollean
+              type: boolean
               example: true
               nullable: true
             scheme:
