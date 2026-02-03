@@ -23713,6 +23713,8 @@ components:
             - /includeInContextPseudoLanguage
             - /labelIds
             - /excludeLabelIds
+            - /labelMatchRule
+            - /excludeLabelMatchRule
       type: object
       discriminator:
         propertyName: op
@@ -23755,16 +23757,14 @@ components:
     BundleCreateForm:
       required:
         - name
-        - format
         - sourcePatterns
-        - exportPattern
       properties:
         name:
           description: 'Defines name'
           type: string
           example: 'Resx bundle'
         format:
-          description: 'Defines export file format'
+          description: "Defines export file format. If not provided, files will be exported in their original format.\n\n__Note:__ Required for strings-based projects"
           type: string
           example: crowdin-resx
         sourcePatterns:
@@ -23780,9 +23780,10 @@ components:
             type: string
             example: /masterBranch
         exportPattern:
-          description: "Bundle export pattern. Defines bundle name in resulting translations bundle\n\n__Note:__ Can't contain `: * ? \" < > |` symbols"
+          description: "Bundle export pattern. Defines bundle name in resulting translations bundle. **Required** if `format` is specified. If `format` is not specified, uses default pattern based on file structure\n\n__Note:__ Can't contain `: * ? \" < > |` symbols"
           type: string
           example: strings-%two_letter_code%.resx
+          nullable: true
         isMultilingual:
           description: 'Export translations in multilingual file'
           type: boolean
@@ -23800,7 +23801,7 @@ components:
           type: boolean
           default: true
         labelIds:
-          description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
+          description: "Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)\n\n__Note:__ Can't be used when `format` is `null`"
           type: array
           items:
             type: integer
@@ -23808,13 +23809,39 @@ components:
             - 13
             - 27
         excludeLabelIds:
-          description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
+          description: "Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)\n\n__Note:__ Can't be used when `format` is `null`"
           type: array
           items:
             type: integer
           example:
             - 5
             - 8
+        labelMatchRule:
+          description: "Match rule for labels:\n- \"all\" - all labels must be present in string\n- \"any\" - any of the labels must be present in string\n\n __Note:__ Can only be used when `labelIds` parameter is provided"
+          type: string
+          default: all
+          enum:
+            - all
+            - any
+          nullable: true
+        excludeLabelMatchRule:
+          description: "Match rule for excluded labels:\n - \"all\" - all labels must be present in string\n - \"any\" - any of the labels must be present in string\n\n __Note:__ Can only be used when `excludeLabelIds` parameter is provided"
+          type: string
+          default: all
+          enum:
+            - all
+            - any
+          nullable: true
+        languageIds:
+          description: 'Language Identifiers. Get via [List Supported Languages](#operation/api.languages.getMany). If provided, bundle will only export specified languages. If not provided, bundle will export all project target languages.'
+          type: array
+          items:
+            type: string
+          example:
+            - uk
+            - de
+            - fr
+          nullable: true
       type: object
     BundleCollectionResource:
       description: 'Bundle Collection Resource'
@@ -23903,6 +23930,7 @@ components:
         format:
           type: string
           example: crowdin-resx
+          nullable: true
         sourcePatterns:
           type: array
           items:
@@ -23916,6 +23944,7 @@ components:
         exportPattern:
           type: string
           example: strings-%two_letters_code%.resx
+          nullable: true
         isMultilingual:
           type: boolean
           default: false
@@ -23928,6 +23957,20 @@ components:
         sourceLanguageExportPattern:
           type: string
           example: strings-%two_letters_code%.resx
+        labelMatchRule:
+          type: string
+          enum:
+            - all
+            - any
+          example: all
+          nullable: true
+        excludeLabelMatchRule:
+          type: string
+          enum:
+            - all
+            - any
+          example: any
+          nullable: true
         labelIds:
           type: array
           items:
@@ -23942,6 +23985,15 @@ components:
           example:
             - 5
             - 8
+        languageIds:
+          type: array
+          items:
+            type: string
+          example:
+            - uk
+            - de
+            - fr
+          nullable: true
         webUrl:
           type: string
           example: 'https://crowdin.com/project/test/translations#bundles:100'
@@ -42239,6 +42291,7 @@ components:
             - /fields
             - '/fields/{fieldSlug}'
             - /generateCostEstimate
+            - /generateTranslationCost
             - /reportSettingsTemplateId
           x-doc-sections:
             - string-based
@@ -42325,6 +42378,7 @@ components:
             - /excludeLabelIds
             - /excludeLabelMatchRule
             - /generateCostEstimate
+            - /generateTranslationCost
             - /reportSettingsTemplateId
           x-doc-sections:
             - string-based
@@ -42731,8 +42785,13 @@ components:
           type: boolean
           default: false
           example: false
+        generateTranslationCost:
+          description: 'Generate translation cost report for the task. Requires `reportSettingsTemplateId`'
+          type: boolean
+          default: false
+          example: false
         reportSettingsTemplateId:
-          description: 'Report Settings Templates Identifier. Get via [List Report Settings Templates](#operation/api.reports.settings-templates.getMany). Required when `generateCostEstimate` is `true`'
+          description: 'Report Settings Templates Identifier. Get via [List Report Settings Templates](#operation/api.reports.settings-templates.getMany). Required when `generateCostEstimate` or `generateTranslationCost` is `true`'
           type: integer
           example: 1
           nullable: true
@@ -42843,8 +42902,13 @@ components:
           type: boolean
           default: false
           example: false
+        generateTranslationCost:
+          description: 'Generate translation cost report for the task. Requires `reportSettingsTemplateId`'
+          type: boolean
+          default: false
+          example: false
         reportSettingsTemplateId:
-          description: 'Report Settings Templates Identifier. Get via [List Report Settings Templates](#operation/api.reports.settings-templates.getMany). Required when `generateCostEstimate` is `true`'
+          description: 'Report Settings Templates Identifier. Get via [List Report Settings Templates](#operation/api.reports.settings-templates.getMany). Required when `generateCostEstimate` or `generateTranslationCost` is `true`'
           type: integer
           example: 1
           nullable: true
@@ -42970,8 +43034,13 @@ components:
           type: boolean
           default: false
           example: false
+        generateTranslationCost:
+          description: 'Generate translation cost report for the task. Requires `reportSettingsTemplateId`'
+          type: boolean
+          default: false
+          example: false
         reportSettingsTemplateId:
-          description: 'Report Settings Templates Identifier. Get via [List Report Settings Templates](#operation/api.reports.settings-templates.getMany). Required when `generateCostEstimate` is `true`'
+          description: 'Report Settings Templates Identifier. Get via [List Report Settings Templates](#operation/api.reports.settings-templates.getMany). Required when `generateCostEstimate` or `generateTranslationCost` is `true`'
           type: integer
           example: 1
           nullable: true
@@ -43066,8 +43135,13 @@ components:
           type: boolean
           default: false
           example: false
+        generateTranslationCost:
+          description: 'Generate translation cost report for the task. Requires `reportSettingsTemplateId`'
+          type: boolean
+          default: false
+          example: false
         reportSettingsTemplateId:
-          description: 'Report Settings Templates Identifier. Get via [List Report Settings Templates](#operation/api.reports.settings-templates.getMany). Required when `generateCostEstimate` is `true`'
+          description: 'Report Settings Templates Identifier. Get via [List Report Settings Templates](#operation/api.reports.settings-templates.getMany). Required when `generateCostEstimate` or `generateTranslationCost` is `true`'
           type: integer
           example: 1
           nullable: true
@@ -43631,6 +43705,11 @@ components:
         generateCostEstimate:
           type: boolean
           example: true
+          nullable: true
+        generateTranslationCost:
+          type: boolean
+          example: true
+          nullable: true
         reportSettingsTemplateId:
           type: integer
           example: 1
