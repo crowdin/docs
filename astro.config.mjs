@@ -241,6 +241,7 @@ const config = defineConfig({
         rehypeExternalLinks,
         {
           target: '_blank', // Open external links in a new tab.
+          rel: 'follow',
         }
       ]
     ],
