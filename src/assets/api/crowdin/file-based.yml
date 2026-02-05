@@ -19348,6 +19348,7 @@ components:
             - open_ai
             - azure_open_ai
             - google_gemini
+            - google_gemini_ai_studio
             - mistral_ai
             - anthropic
             - x_ai
@@ -19363,6 +19364,8 @@ components:
               $ref: '#/components/schemas/ai.provider.credentials.azure_open_ai'
             -
               $ref: '#/components/schemas/ai.provider.credentials.google_gemini'
+            -
+              $ref: '#/components/schemas/ai.provider.credentials.google_gemini_ai_studio'
             -
               $ref: '#/components/schemas/ai.provider.credentials.mistral_ai'
             -
@@ -19382,7 +19385,7 @@ components:
           type: boolean
           default: true
         useSystemCredentials:
-          description: "Enables the paid service AI provider via Crowdin.\n\n__Note__: Set to true if `credentials` is not provided. Not supported for `custom_ai`, `x_ai`, `watsonx` and `deepseek` types."
+          description: "Enables the paid service AI provider via Crowdin.\n\n__Note__: Set to true if `credentials` is not provided. Not supported for `custom_ai`, `x_ai`, `watsonx`, `deepseek` and `google_gemini_ai_studio` types."
           type: boolean
           default: false
       type: object
@@ -19495,7 +19498,7 @@ components:
           type: string
       type: object
     ai.provider.credentials.google_gemini:
-      title: 'Google Gemini'
+      title: 'Google Gemini (Vertex AI)'
       required:
         - project
         - region
@@ -19510,6 +19513,15 @@ components:
         serviceAccountKey:
           description: 'Service account key'
           type: object
+      type: object
+    ai.provider.credentials.google_gemini_ai_studio:
+      title: 'Google Gemini (AI Studio)'
+      required:
+        - apiKey
+      properties:
+        apiKey:
+          description: 'API key from Google AI Studio'
+          type: string
       type: object
     ai.provider.credentials.mistral_ai:
       title: 'Mistral AI'
@@ -40908,7 +40920,6 @@ components:
               $ref: '#/components/schemas/Term'
     Term:
       title: Term
-      description: 'Class TermResponseModel'
       properties:
         id:
           type: integer
@@ -41197,7 +41208,7 @@ components:
       type: object
     TmLanguageScheme:
       title: 'Tm Schema'
-      description: "Defines data columns mapping. The passed value should be an associative array containing both language id and column number:\n * `{languageId}` – Crowdin id for the specified language. Get via [List Supported Languages](#operation/api.languages.getMany)\n * `{columnNumber}` – a column number. Please note, that column numbering starts at 0\n\n __Note:__ Required for CSV or XLS/XLSX files"
+      description: "Defines data columns mapping. The passed value should be an associative array containing both language id and column number:\n* `{languageId}` – Crowdin id for the specified language. Get via [List Supported Languages](#operation/api.languages.getMany)\n* `{columnNumber}` – a column number. Please note, that column numbering starts at 0\n\n__Note:__ Required for CSV or XLS/XLSX files"
       type: object
       example:
         en: 0
@@ -41211,7 +41222,7 @@ components:
         - storageId
       properties:
         storageId:
-          description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)\n\n Supported file formats:\n * TMX\n * CSV\n * XLS/XLSX\n\n See TMX 1.4b Specification"
+          description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)\n\nSupported file formats:\n* TMX\n* CSV\n* XLS/XLSX\n\nSee TMX 1.4b Specification"
           type: integer
           format: int64
         firstLineContainsHeader:
@@ -41346,17 +41357,20 @@ components:
         userId:
           type: integer
           example: 2
+          nullable: true
         name:
           type: string
           example: "Knowledge Base's TM"
         languageId:
           type: string
           example: fr
+          nullable: true
         languageIds:
           type: array
           items:
             type: string
             example: el
+          nullable: true
         segmentsCount:
           description: 'Translation units count'
           type: integer
@@ -41371,6 +41385,7 @@ components:
           items:
             type: integer
             example: 2
+          nullable: true
         webUrl:
           type: string
           example: 'https://crowdin.com/profile/username/resources/traslation-memory/1'
@@ -41378,6 +41393,7 @@ components:
           type: string
           format: date-time
           example: '2019-09-16T13:42:04+00:00'
+          nullable: true
       type: object
     TmConcordance:
       title: Tm
@@ -41420,7 +41436,6 @@ components:
           nullable: true
       type: object
     TmExport:
-      description: 'Class TmExportResponseModel'
       properties:
         identifier:
           type: string
@@ -41456,13 +41471,14 @@ components:
           type: string
           format: date-time
           example: '2019-09-23T11:26:54+00:00'
+          nullable: true
         finishedAt:
           type: string
           format: date-time
           example: '2019-09-23T11:26:54+00:00'
+          nullable: true
       type: object
     TmImport:
-      description: 'Class TmImportResponseModel'
       properties:
         identifier:
           type: string
@@ -41509,6 +41525,7 @@ components:
           type: string
           format: date-time
           example: '2019-09-23T11:51:08+00:00'
+          nullable: true
         finishedAt:
           type: string
           format: date-time
@@ -41561,23 +41578,23 @@ components:
     CrowdinTranslationCreateDirectoryBuildForm:
       properties:
         targetLanguageIds:
-          description: "Specify target languages for build. Get via [List Supported Languages](#operation/api.languages.getMany)\n\n Leave this field empty to build all target languages"
+          description: "Specify target languages for build. Get via [List Supported Languages](#operation/api.languages.getMany)\n\nLeave this field empty to build all target languages"
           type: array
           items:
             type: string
             example: uk
         skipUntranslatedStrings:
-          description: "Defines whether to export only translated strings\n\n__Note:__ `true` value can't be used with `skipUntranslatedFiles=true` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
+          description: "Defines whether to export only translated strings\n\n__Note:__ `true` value can't be used with `skipUntranslatedFiles=true` in same request\n\n[More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
         skipUntranslatedFiles:
-          description: "Defines whether to export only translated file\n\n__Note:__ `true` value can't be used with `skipUntranslatedStrings=true` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
+          description: "Defines whether to export only translated file\n\n__Note:__ `true` value can't be used with `skipUntranslatedStrings=true` in same request\n\n[More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
         exportApprovedOnly:
-          description: "Defines whether to export only approved strings\n\n [More info](https://support.crowdin.com/project-settings/export/)"
+          description: "Defines whether to export only approved strings\n\n[More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
@@ -41600,15 +41617,15 @@ components:
             type: string
             example: uk
         skipUntranslatedStrings:
-          description: "Defines whether to export only translated strings\n\n__Note:__ `true` value can't be used with `skipUntranslatedFiles=true` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
+          description: "Defines whether to export only translated strings\n\n__Note:__ `true` value can't be used with `skipUntranslatedFiles=true` in same request\n\n[More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           example: false
         skipUntranslatedFiles:
-          description: "Defines whether to export only translated files\n\n__Note:__ `true` value can't be used with `skipUntranslatedStrings=true` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
+          description: "Defines whether to export only translated files\n\n__Note:__ `true` value can't be used with `skipUntranslatedStrings=true` in same request\n\n[More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           example: false
         exportApprovedOnly:
-          description: "Defines whether to export only approved strings\n\n [More info](https://support.crowdin.com/project-settings/export/)"
+          description: "Defines whether to export only approved strings\n\n[More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           example: false
       type: object
@@ -41649,17 +41666,17 @@ components:
             type: integer
             example: 1
         skipUntranslatedStrings:
-          description: "Defines whether to export only translated strings\n\n__Note:__ Can't be used with `skipUntranslatedFiles` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
+          description: "Defines whether to export only translated strings\n\n__Note:__ Can't be used with `skipUntranslatedFiles` in same request\n\n[More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
         skipUntranslatedFiles:
-          description: "Defines whether to export only translated file\n\n__Note:__ Can't be used with `skipUntranslatedStrings` in same request\n\n [More info](https://support.crowdin.com/project-settings/export/)"
+          description: "Defines whether to export only translated file\n\n__Note:__ Can't be used with `skipUntranslatedStrings` in same request\n\n[More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
         exportApprovedOnly:
-          description: "Defines whether to export only approved strings\n\n [More info](https://support.crowdin.com/project-settings/export/)"
+          description: "Defines whether to export only approved strings\n\n[More info](https://support.crowdin.com/project-settings/export/)"
           type: boolean
           default: false
           example: false
@@ -41924,7 +41941,6 @@ components:
               $ref: '#/components/schemas/TranslationImportReport'
     AbstractDirectoryBuildResponseModel:
       title: 'Directory Build'
-      description: 'Class AbstractDirectoryBuildResponseModel'
       properties:
         id:
           type: integer
@@ -41963,7 +41979,6 @@ components:
       type: object
     AbstractProjectBuildResponse:
       title: 'Project Build'
-      description: 'Class AbstractProjectBuildResponseModel'
       properties:
         id:
           type: integer
@@ -42007,8 +42022,13 @@ components:
         -
           $ref: '#/components/schemas/AbstractDirectoryBuildResponseModel'
         -
+          properties:
+            attributes:
+              $ref: '#/components/schemas/CrowdinDirectoryBuildAttributesResponseModel'
+          type: object
+        -
           $ref: '#/components/schemas/AbstractDirectoryBuildResponseModel'
-    CrowdinDirectoryBuildResponseModel:
+    CrowdinDirectoryBuildAttributesResponseModel:
       title: 'Build Attributes'
       properties:
         directoryId:
@@ -42047,6 +42067,9 @@ components:
                   $ref: '#/components/schemas/CrowdinBuildAttributesResponseModel'
                 -
                   $ref: '#/components/schemas/CrowdinPseudoBuildAttributesResponseModel'
+          type: object
+        -
+          $ref: '#/components/schemas/AbstractProjectBuildResponse'
     CrowdinBuildAttributesResponseModel:
       title: 'Build Attributes'
       properties:
@@ -42177,10 +42200,11 @@ components:
           type: string
           format: date-time
           example: '2025-09-23T11:51:08+00:00'
+          nullable: true
         finishedAt:
           type: string
           format: date-time
-          example: null
+          example: '2025-09-23T11:51:08+00:00'
           nullable: true
       type: object
     StringBasedTranslationFileImport:
@@ -42255,10 +42279,11 @@ components:
           type: string
           format: date-time
           example: '2025-09-23T11:51:08+00:00'
+          nullable: true
         finishedAt:
           type: string
           format: date-time
-          example: null
+          example: '2025-09-23T11:51:08+00:00'
           nullable: true
       type: object
     TranslationFileImport:
@@ -44638,29 +44663,6 @@ components:
           - 3
           - 4
           - 5
-    SourceLanguageId:
-      name: sourceLanguageId
-      in: query
-      description: 'Defines Source Language in language pair. Get via [List Supported Languages](#operation/api.languages.getMany)'
-      schema:
-        type: string
-    TargetLanguageId:
-      name: targetLanguageId
-      in: query
-      description: 'Defines Target Language in language pair. Get via [List Supported Languages](#operation/api.languages.getMany)'
-      schema:
-        type: string
-    Format:
-      name: format
-      in: query
-      description: 'Defines TMs file format'
-      schema:
-        type: string
-        default: tmx
-        enum:
-          - tmx
-          - csv
-          - xlsx
     TranslationExportProgressBranchId:
       name: branchId
       in: query

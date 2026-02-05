@@ -17988,7 +17988,7 @@ paths:
         -
           name: groupId
           in: query
-          description: "Group Identifier. Get via [List Groups](#operation/api.groups.getMany)\n     *\n     * __Note__: Set 0 to see TMs of root group"
+          description: "Group Identifier. Get via [List Groups](#operation/api.groups.getMany)\n\n* __Note__: Set 0 to see TMs of root group"
           schema:
             type: integer
         -
@@ -22791,6 +22791,7 @@ components:
             - open_ai
             - azure_open_ai
             - google_gemini
+            - google_gemini_ai_studio
             - mistral_ai
             - anthropic
             - x_ai
@@ -22806,6 +22807,8 @@ components:
               $ref: '#/components/schemas/ai.provider.credentials.azure_open_ai'
             -
               $ref: '#/components/schemas/ai.provider.credentials.google_gemini'
+            -
+              $ref: '#/components/schemas/ai.provider.credentials.google_gemini_ai_studio'
             -
               $ref: '#/components/schemas/ai.provider.credentials.mistral_ai'
             -
@@ -22825,7 +22828,7 @@ components:
           type: boolean
           default: true
         useSystemCredentials:
-          description: "Enables the paid service AI provider via Crowdin.\n\n__Note__: Set to true if `credentials` is not provided. Not supported for `custom_ai`, `x_ai`, `watsonx` and `deepseek` types."
+          description: "Enables the paid service AI provider via Crowdin.\n\n__Note__: Set to true if `credentials` is not provided. Not supported for `custom_ai`, `x_ai`, `watsonx`, `deepseek` and `google_gemini_ai_studio` types."
           type: boolean
           default: false
       type: object
@@ -22938,7 +22941,7 @@ components:
           type: string
       type: object
     ai.provider.credentials.google_gemini:
-      title: 'Google Gemini'
+      title: 'Google Gemini (Vertex AI)'
       required:
         - project
         - region
@@ -22953,6 +22956,15 @@ components:
         serviceAccountKey:
           description: 'Service account key'
           type: object
+      type: object
+    ai.provider.credentials.google_gemini_ai_studio:
+      title: 'Google Gemini (AI Studio)'
+      required:
+        - apiKey
+      properties:
+        apiKey:
+          description: 'API key from Google AI Studio'
+          type: string
       type: object
     ai.provider.credentials.mistral_ai:
       title: 'Mistral AI'
@@ -47097,7 +47109,6 @@ components:
       type: object
     TeamMember:
       title: Team
-      description: 'Class TeamMemberResponseModel'
       properties:
         id:
           type: integer
@@ -47108,17 +47119,21 @@ components:
         firstName:
           type: string
           example: John
+          nullable: true
         lastName:
           type: string
           example: Doe
+          nullable: true
         avatarUrl:
           type: string
           example: ''
+          nullable: true
         addedAt:
           description: 'in UTC'
           type: string
           format: date-time
           example: '2019-09-23T09:04:29+00:00'
+          nullable: true
       type: object
     Team:
       title: Team
@@ -47145,6 +47160,7 @@ components:
           type: string
           format: date-time
           example: '2019-09-23T09:04:29+00:00'
+          nullable: true
       type: object
     TermPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
@@ -47319,7 +47335,6 @@ components:
               $ref: '#/components/schemas/Term'
     Term:
       title: Term
-      description: 'Class TermResponseModel'
       properties:
         id:
           type: integer
@@ -47583,7 +47598,7 @@ components:
           type: string
           example: fr
         groupId:
-          description: "Group Identifier – defines group to which TM is added. Get via [List Groups](#operation/api.groups.getMany)\n *\n * If '0' – TM will be available for all projects and groups in your workspace"
+          description: "Group Identifier – defines group to which TM is added. Get via [List Groups](#operation/api.groups.getMany)\n\n* If '0' – TM will be available for all projects and groups in your workspace"
           type: integer
           default: 0
           example: 2
@@ -47614,7 +47629,7 @@ components:
       type: object
     TmLanguageScheme:
       title: 'Tm Schema'
-      description: "Defines data columns mapping. The passed value should be an associative array containing both language id and column number:\n * `{languageId}` – Crowdin id for the specified language. Get via [List Supported Languages](#operation/api.languages.getMany)\n * `{columnNumber}` – a column number. Please note, that column numbering starts at 0\n\n __Note:__ Required for CSV or XLS/XLSX files"
+      description: "Defines data columns mapping. The passed value should be an associative array containing both language id and column number:\n* `{languageId}` – Crowdin id for the specified language. Get via [List Supported Languages](#operation/api.languages.getMany)\n* `{columnNumber}` – a column number. Please note, that column numbering starts at 0\n\n__Note:__ Required for CSV or XLS/XLSX files"
       type: object
       example:
         en: 0
@@ -47628,7 +47643,7 @@ components:
         - storageId
       properties:
         storageId:
-          description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)\n\n Supported file formats:\n * TMX\n * CSV\n * XLS/XLSX\n\n See TMX 1.4b Specification"
+          description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)\n\nSupported file formats:\n* TMX\n* CSV\n* XLS/XLSX\n\nSee TMX 1.4b Specification"
           type: integer
           format: int64
         firstLineContainsHeader:
@@ -47763,20 +47778,24 @@ components:
         groupId:
           type: integer
           example: 2
+          nullable: true
         userId:
           type: integer
           example: 2
+          nullable: true
         name:
           type: string
           example: "Knowledge Base's TM"
         languageId:
           type: string
           example: fr
+          nullable: true
         languageIds:
           type: array
           items:
             type: string
             example: el
+          nullable: true
         segmentsCount:
           description: 'Translation units count'
           type: integer
@@ -47791,6 +47810,7 @@ components:
           items:
             type: integer
             example: 2
+          nullable: true
         webUrl:
           type: string
           example: 'https://example.crowdin.com/u/tms/1'
@@ -47798,6 +47818,7 @@ components:
           type: string
           format: date-time
           example: '2019-09-16T13:42:04+00:00'
+          nullable: true
       type: object
     TmConcordance:
       title: Tm
@@ -47840,7 +47861,6 @@ components:
           nullable: true
       type: object
     TmExport:
-      description: 'Class TmExportResponseModel'
       properties:
         identifier:
           type: string
@@ -47876,13 +47896,14 @@ components:
           type: string
           format: date-time
           example: '2019-09-23T11:26:54+00:00'
+          nullable: true
         finishedAt:
           type: string
           format: date-time
           example: '2019-09-23T11:26:54+00:00'
+          nullable: true
       type: object
     TmImport:
-      description: 'Class TmImportResponseModel'
       properties:
         identifier:
           type: string
@@ -47929,6 +47950,7 @@ components:
           type: string
           format: date-time
           example: '2019-09-23T11:51:08+00:00'
+          nullable: true
         finishedAt:
           type: string
           format: date-time
@@ -48450,7 +48472,6 @@ components:
               $ref: '#/components/schemas/TranslationImportReport'
     AbstractDirectoryBuildResponseModel:
       title: 'Directory Build'
-      description: 'Class AbstractDirectoryBuildResponseModel'
       properties:
         id:
           type: integer
@@ -48489,7 +48510,6 @@ components:
       type: object
     AbstractProjectBuildResponse:
       title: 'Project Build'
-      description: 'Class AbstractProjectBuildResponseModel'
       properties:
         id:
           type: integer
@@ -48533,8 +48553,13 @@ components:
         -
           $ref: '#/components/schemas/AbstractDirectoryBuildResponseModel'
         -
+          properties:
+            attributes:
+              $ref: '#/components/schemas/EnterpriseDirectoryBuildAttributesResponseModel'
+          type: object
+        -
           $ref: '#/components/schemas/AbstractDirectoryBuildResponseModel'
-    EnterpriseDirectoryBuildResponseModel:
+    EnterpriseDirectoryBuildAttributesResponseModel:
       title: 'Build Attributes'
       properties:
         directoryId:
@@ -48573,6 +48598,9 @@ components:
                   $ref: '#/components/schemas/EnterpriseBuildAttributesResponseModel'
                 -
                   $ref: '#/components/schemas/EnterprisePseudoBuildAttributesResponseModel'
+          type: object
+        -
+          $ref: '#/components/schemas/AbstractProjectBuildResponse'
     EnterpriseBuildAttributesResponseModel:
       title: 'Build Attributes'
       properties:
@@ -48702,10 +48730,11 @@ components:
           type: string
           format: date-time
           example: '2025-09-23T11:51:08+00:00'
+          nullable: true
         finishedAt:
           type: string
           format: date-time
-          example: null
+          example: '2025-09-23T11:51:08+00:00'
           nullable: true
       type: object
     StringBasedTranslationFileImport:
@@ -48780,10 +48809,11 @@ components:
           type: string
           format: date-time
           example: '2025-09-23T11:51:08+00:00'
+          nullable: true
         finishedAt:
           type: string
           format: date-time
-          example: null
+          example: '2025-09-23T11:51:08+00:00'
           nullable: true
       type: object
     TranslationFileImport:
@@ -49295,7 +49325,6 @@ components:
       type: object
     EnterpriseUserAdminContextResponseModel:
       title: 'User details for admins'
-      type: object
       allOf:
         -
           $ref: '#/components/schemas/EnterpriseUserManagerContextResponseModel'
@@ -49350,6 +49379,9 @@ components:
               items:
                 type: string
                 example: authenticatorApp
+          type: object
+        -
+          $ref: '#/components/schemas/EnterpriseUserManagerContextResponseModel'
     EnterpriseUserManagerContextResponseModel:
       title: 'User details for managers'
       properties:
@@ -51369,29 +51401,6 @@ components:
           - 3
           - 4
           - 5
-    SourceLanguageId:
-      name: sourceLanguageId
-      in: query
-      description: 'Defines Source Language in language pair. Get via [List Supported Languages](#operation/api.languages.getMany)'
-      schema:
-        type: string
-    TargetLanguageId:
-      name: targetLanguageId
-      in: query
-      description: 'Defines Target Language in language pair. Get via [List Supported Languages](#operation/api.languages.getMany)'
-      schema:
-        type: string
-    Format:
-      name: format
-      in: query
-      description: 'Defines TMs file format'
-      schema:
-        type: string
-        default: tmx
-        enum:
-          - tmx
-          - csv
-          - xlsx
     TranslationExportProgressBranchId:
       name: branchId
       in: query
