@@ -34629,6 +34629,8 @@ components:
           oneOf:
             -
               $ref: '#/components/schemas/group-translation-costs-pe.report.general'
+            -
+              $ref: '#/components/schemas/group-translation-costs-pe.report.byTask'
       type: object
     group-translation-costs-pe.report.general:
       title: General
@@ -34741,6 +34743,97 @@ components:
           items:
             type: integer
             example: 13
+        skipArchiving:
+          description: 'If true, the report will not be saved to the archive for historical reference.'
+          type: boolean
+          default: false
+      type: object
+    group-translation-costs-pe.report.byTask:
+      title: 'By Task'
+      required:
+        - baseRates
+        - individualRates
+        - netRateSchemes
+      properties:
+        unit:
+          description: 'Defines report unit'
+          type: string
+          default: words
+          enum:
+            - strings
+            - words
+            - chars
+            - chars_with_spaces
+          example: words
+        currency:
+          description: 'Defines report currency'
+          type: string
+          default: USD
+          enum:
+            - USD
+            - EUR
+            - JPY
+            - GBP
+            - AUD
+            - CAD
+            - CHF
+            - CNY
+            - SEK
+            - NZD
+            - MXN
+            - SGD
+            - HKD
+            - NOK
+            - KRW
+            - TRY
+            - RUB
+            - INR
+            - BRL
+            - ZAR
+            - GEL
+            - UAH
+            - DDK
+            - PLN
+          example: USD
+        format:
+          description: 'Defines export file format'
+          type: string
+          default: xlsx
+          enum:
+            - xlsx
+            - csv
+            - json
+        baseRates:
+          description: 'Base rates'
+          type: object
+          allOf:
+            -
+              $ref: '#/components/schemas/translation-costs-pe.report.base-rates'
+        individualRates:
+          description: 'Individual rates (Custom rates for certain languages or users)'
+          type: array
+          items:
+            $ref: '#/components/schemas/translation-costs-pe.report.individual-rate'
+        netRateSchemes:
+          description: "Net Rate Schemes (Percentage paid of full translation rate)\n\n__Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
+          type: object
+          allOf:
+            -
+              $ref: '#/components/schemas/translation-costs-pe.report.net-rate-schemes'
+        taskIds:
+          description: 'Array of task ids. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 138
+        excludeApprovalsForEditedTranslations:
+          description: 'Exclude approvals when the same user has made translations for the string.'
+          type: boolean
+          default: false
+        preTranslatedStringsCategorizationAdjustment:
+          description: 'Repetitive translations of pre-translated strings are reported under TM or MT match rates instead of Other suggestion match rates, depending on the initial pre-translation type.'
+          type: boolean
+          default: false
         skipArchiving:
           description: 'If true, the report will not be saved to the archive for historical reference.'
           type: boolean
@@ -35552,6 +35645,12 @@ components:
           items:
             type: integer
             example: 13
+        taskIds:
+          description: 'Array of task ids. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 138
         skipArchiving:
           description: 'If true, the report will not be saved to the archive for historical reference.'
           type: boolean
@@ -35571,7 +35670,13 @@ components:
             - group-pre-translate-accuracy
           example: group-pre-translate-accuracy
         schema:
-          $ref: '#/components/schemas/group-pre-translate-accuracy.report.general'
+          description: 'Group Pre-translation Accuracy Report schema'
+          type: object
+          oneOf:
+            -
+              $ref: '#/components/schemas/group-pre-translate-accuracy.report.general'
+            -
+              $ref: '#/components/schemas/group-pre-translate-accuracy.report.byTask'
       type: object
     group-pre-translate-accuracy.report.general:
       title: General
@@ -35600,6 +35705,30 @@ components:
               items:
                 type: integer
                 example: 13
+            skipArchiving:
+              description: 'If true, the report will not be saved to the archive for historical reference.'
+              type: boolean
+              default: false
+    group-pre-translate-accuracy.report.byTask:
+      title: 'By Task'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DefaultReportShemaWithoutDate'
+        -
+          properties:
+            matchScoreCategories:
+              description: 'Split into categories by match score. Ranges should be in descending order (e.g., 100-90, 89-80)'
+              type: array
+              items:
+                type: string
+                example: 100-90
+            taskIds:
+              description: 'Array of task ids. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 138
             skipArchiving:
               description: 'If true, the report will not be saved to the archive for historical reference.'
               type: boolean
@@ -46857,6 +46986,7 @@ components:
                   items: { type: integer, example: 313 }
               type: object
           type: object
+          nullable: true
         givenAccessAt:
           type: string
           format: date-time
@@ -48272,7 +48402,7 @@ components:
           type: integer
       type: object
     CrowdinManualVendor:
-      description: "Task vendor:\n *   \"alconost\" - Alconost,\n *   \"babbleon\" - Babble-on,\n *   \"tomedes\" - Tomedes,\n *   \"e2f\" - e2f,\n *   \"write_path_admin\" - WritePath,\n *   \"inlingo\" - Inlingo,\n *   \"acclaro\" - Acclaro,\n *   \"translate_by_humans\" - Translate by Humans,\n *   \"lingo24\" - Lingo24,\n *   \"assertio_language_services\" - ASSERTIO Language Services,\n *   \"gte_localize\" - GTE Localize,\n *   \"kettu_solutions\" - Kettu Solutions,\n *   \"languageline_solutions\" - LanguageLine Translation Solutions"
+      description: "Task vendor:\n *   \"alconost\" - Alconost,\n *   \"babbleon\" - Babble-on,\n *   \"tomedes\" - Tomedes,\n *   \"e2f\" - e2f,\n *   \"write_path_admin\" - WritePath,\n *   \"inlingo\" - Inlingo,\n *   \"acclaro\" - Acclaro,\n *   \"translate_by_humans\" - Translate by Humans,\n *   \"lingo24\" - Lingo24,\n *   \"gte_localize\" - GTE Localize,\n *   \"kettu_solutions\" - Kettu Solutions"
       type: string
     EnterpriseTaskAssignee:
       title: 'Task assignee'
