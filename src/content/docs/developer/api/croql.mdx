@@ -14,22 +14,22 @@ You can use CroQL with the following API methods:
 
 <Tabs syncKey="product">
   <TabItem label="Crowdin">
-    * [List Strings](/developer/api/v2/#operation/api.projects.strings.getMany)
-    * [List Strings](/developer/api/v2/string-based/#operation/api.projects.strings.getMany) <Badge text="String-based" variant="note" />
-    * [List Language Translations](/developer/api/v2/#operation/api.projects.languages.translations.getMany)
-    * [List Language Translations](/developer/api/v2/string-based/#operation/api.projects.languages.translations.getMany) <Badge text="String-based" variant="note" />
-    * [List TM Segments](/developer/api/v2/#operation/api.tms.segments.getMany)
-    * [List TM Segments](/developer/api/v2/string-based/#operation/api.tms.segments.getMany) <Badge text="String-based" variant="note" />
+    * [List Strings](/developer/api/v2/#tag/Source-Strings/operation/api.projects.strings.getMany)
+    * [List Strings](/developer/api/v2/string-based/#tag/Source-Strings/operation/api.projects.strings.getMany) <Badge text="String-based" variant="note" />
+    * [List Language Translations](/developer/api/v2/#tag/StringAsset-Translations/operation/api.projects.languages.translations.getMany)
+    * [List Language Translations](/developer/api/v2/string-based/#tag/String-Translations/operation/api.projects.languages.translations.getMany) <Badge text="String-based" variant="note" />
+    * [List TM Segments](/developer/api/v2/#tag/Translation-Memory/operation/api.tms.segments.getMany)
+    * [List TM Segments](/developer/api/v2/string-based/#tag/Translation-Memory/operation/api.tms.segments.getMany) <Badge text="String-based" variant="note" />
     * [List Terms](/developer/api/v2/#tag/Glossaries/operation/api.glossaries.terms.getMany)
     * [List Terms](/developer/api/v2/string-based/#tag/Glossaries/operation/api.glossaries.terms.getMany) <Badge text="String-based" variant="note" />
   </TabItem>
   <TabItem label="Crowdin Enterprise">
-    * [List Strings](/developer/enterprise/api/v2/#operation/api.projects.strings.getMany)
-    * [List Strings](/developer/enterprise/api/v2/string-based/#operation/api.projects.strings.getMany) <Badge text="String-based" variant="note" />
-    * [List Language Translations](/developer/enterprise/api/v2/#operation/api.projects.languages.translations.getMany)
-    * [List Language Translations](/developer/enterprise/api/v2/string-based/#operation/api.projects.languages.translations.getMany) <Badge text="String-based" variant="note" />
-    * [List TM Segments](/developer/enterprise/api/v2/#operation/api.tms.segments.getMany)
-    * [List TM Segments](/developer/enterprise/api/v2/string-based/#operation/api.tms.segments.getMany) <Badge text="String-based" variant="note" />
+    * [List Strings](/developer/enterprise/api/v2/#tag/Source-Strings/operation/api.projects.strings.getMany)
+    * [List Strings](/developer/enterprise/api/v2/string-based/#tag/Source-Strings/operation/api.projects.strings.getMany) <Badge text="String-based" variant="note" />
+    * [List Language Translations](/developer/enterprise/api/v2/#tag/StringAsset-Translations/operation/api.projects.languages.translations.getMany)
+    * [List Language Translations](/developer/enterprise/api/v2/string-based/#tag/String-Translations/operation/api.projects.languages.translations.getMany) <Badge text="String-based" variant="note" />
+    * [List TM Segments](/developer/enterprise/api/v2/#tag/Translation-Memory/operation/api.tms.segments.getMany)
+    * [List TM Segments](/developer/enterprise/api/v2/string-based/#tag/Translation-Memory/operation/api.tms.segments.getMany) <Badge text="String-based" variant="note" />
     * [List Terms](/developer/enterprise/api/v2/#tag/Glossaries/operation/api.glossaries.terms.getMany)
     * [List Terms](/developer/enterprise/api/v2/string-based/#tag/Glossaries/operation/api.glossaries.terms.getMany) <Badge text="String-based" variant="note" />
   </TabItem>
@@ -193,8 +193,68 @@ These queries are used to retrieve information about source strings.
   text contains "ABC" and (count of translations where (text contains "ABC") = 0)
   ```
 
+#### Field Queries
+
+These queries are used to retrieve information about source strings based on the [Fields](/enterprise/fields/) assigned to them.
+
+* Strings with a specific field name and an exact field value:
+
+  *Use case: Find strings where the "Priority" field is set to "High".*
+  ```graphql wrap
+  count of fields where (name = "Priority" and value = "High") > 0
+  ```
+
+* Strings with a specific field slug and a value containing a specific word:
+
+  *Use case: Find strings where the "category" slug contains the word "mobile".*
+  ```graphql wrap
+  count of fields where (slug = "field-category" and value contains "mobile") > 0
+  ```
+
+* Strings that have a specific field applied by its name:
+
+  *Use case: Find all strings that have a "Department" field assigned, regardless of the value.*
+  ```graphql wrap
+  count of fields where (name = "Department") > 0
+  ```
+
+* Strings that have a specific field applied by its slug:
+
+  *Use case: Find strings using a specific system identifier for an "Owner" field.*
+  ```graphql wrap
+  count of fields where (slug = "field-internal-owner") > 0
+  ```
+
+* Strings that have a field whose name contains a specific word:
+
+  *Use case: Find strings that have any "Status" related fields (e.g., Legal Status, Review Status).*
+  ```graphql wrap
+  count of fields where (name contains "Status") > 0
+  ```
+
+* Strings that have any field with a non-empty value:
+
+  *Use case: Find strings that have any metadata filled in.*
+  ```graphql wrap
+  count of fields where (value != "") > 0
+  ```
+
+* Strings that have a text-type field with a non-empty value:
+
+  *Use case: Useful for ensuring metadata comments or descriptions are actually filled in.*
+  ```graphql wrap
+  count of fields where (type = "text" and value != "") > 0
+  ```
+
+* Strings matching multiple specific field names where the value contains a specific word:
+
+  *Use case: Check if either "Platform" or "Environment" fields contain the word "Production".*
+  ```graphql wrap
+  count of fields where ((name = "Platform" or name = "Environment") and value contains "Production") > 0
+  ```
+
 <details>
-  <summary><strong>Using String Queries in Crowdin API</strong></summary>
+  <summary><strong>Using String and Field Queries in Crowdin API</strong></summary>
     Use your query in the following Crowdin API endpoints:
 
     ```shell title="Crowdin" wrap
@@ -497,6 +557,10 @@ CroQL can be used in the following contexts: source string context, translation 
   "is hidden": false,
   "is duplicate": false,
   "isPassedWorkflow": true,
+  "fields": {
+    "priority": "High",
+    "legal-status": "approved"
+  },
   "file": {
     "id": 32,
     "name": "sample.csv",
@@ -674,6 +738,14 @@ CroQL can be used in the following contexts: source string context, translation 
     <td>
       <p><strong>Type:</strong> <code>boolean</code></p>
       <p><strong>Description:</strong> Crowdin Enterprise only. The source string passed through a project workflow.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>fields</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object</code></p>
+      <p><strong>Description:</strong> Crowdin Enterprise only. An object containing custom properties ([Fields](/enterprise/fields/)) assigned to a string.<br/>
+      You can filter these by <code>name</code>, <code>slug</code>, <code>value</code>, and <code>type</code>.</p>
     </td>
   </tr>
   <tr>
