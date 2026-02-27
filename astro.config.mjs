@@ -220,7 +220,8 @@ const config = defineConfig({
           'encrypted',
           'warning',
           'groups',
-          'reply'
+          'reply',
+          'payments'
         ],
       }
     })
