@@ -168,7 +168,6 @@ const config = defineConfig({
               label: 'Crowdin Help',
               description: 'Crowdin.com documentation',
               paths: ['**', '!enterprise/**', '!developer/**'],
-
             },
             {
               label: 'Crowdin Enterprise',
@@ -179,6 +178,15 @@ const config = defineConfig({
               label: 'Developer Portal',
               description: 'Developer Portal documentation',
               paths: ['developer/**'],
+            },
+            {
+              label: 'API',
+              description: `
+- [Crowdin API (file-based)](${site}/_llms-txt/api/crowdin/file-based.txt): index and per-route files.
+- [Crowdin API (string-based)](${site}/_llms-txt/api/crowdin/string-based.txt): index and per-route files.
+- [Crowdin Enterprise API (file-based)](${site}/_llms-txt/api/enterprise/file-based.txt): index and per-route files.
+- [Crowdin Enterprise API (string-based)](${site}/_llms-txt/api/enterprise/string-based.txt): index and per-route files.`,
+              paths: [],
             },
           ],
           exclude: ['ai-fine-tuning', 'enterprise/ai-fine-tuning'],
