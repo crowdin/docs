@@ -181,7 +181,7 @@ const config = defineConfig({
             },
             {
               label: 'API',
-              description: `
+              description: `Crowdin API and Crowdin Enterprise API specs
 - [Crowdin API (file-based)](${site}/_llms-txt/api/crowdin/file-based.txt): index and per-route files.
 - [Crowdin API (string-based)](${site}/_llms-txt/api/crowdin/string-based.txt): index and per-route files.
 - [Crowdin Enterprise API (file-based)](${site}/_llms-txt/api/enterprise/file-based.txt): index and per-route files.
