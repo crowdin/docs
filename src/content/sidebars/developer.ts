@@ -75,6 +75,7 @@ export default [
       },
       { slug: path('graphql-api') },
       { slug: path('croql') },
+      { slug: path('crowdin-mcp-server') },
       { slug: path('language-codes') },
     ],
     collapsed: true,
