@@ -1,12 +1,10 @@
 ---
 title: Crowdin MCP Server
 description: Manage your Crowdin projects using natural-language AI commands.
-slug: crowdin-mcp-server
-sidebar:
-  order: 2
+slug: developer/crowdin-mcp-server
 ---
 
-import { Steps, Aside } from '@astrojs/starlight/components';
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
 import ReadMore from '~/components/ReadMore.astro';
 
@@ -35,18 +33,26 @@ This section provides the details needed to connect your AI client to Crowdin.
 To connect to your Crowdin account, the MCP Server uses a **Personal Access Token (PAT)**. This token is your secure key. When you create a token, you must grant it specific **scopes** (permissions) that define what actions it can perform. For the MCP Server to function correctly, the token you use must have the necessary scopes for the commands you want to give. For example, to create a project task, your token will need the **Tasks (Read and Write)** scope.
 
 <ReadMore>
-  Read more about [Creating a Personal Access Token](/account-settings/#creating-a-personal-access-token).
+  Read more about [Creating a Personal Access Token (Crowdin)](/account-settings/#creating-a-personal-access-token) or [Creating a Personal Access Token (Crowdin Enterprise)](/enterprise/account-settings/#creating-a-personal-access-token).
 </ReadMore>
 
 ### Endpoint Structure
 
-Construct the URL based on your role in the project and the tool set you wish to use.
+Construct the URL based on your role in the project (Crowdin) or organization or project (Crowdin Enterprise) and the tool set you wish to use.
+
+Crowdin MCP endpoint:
 
 ```
 https://mcp.crowdin.com/mcp/{tool-set}
 ```
 
-Replace `{tool-set}` with a role from the table below.
+Crowdin Enterprise MCP endpoint:
+
+```
+https://{your-organization-domain}.mcp.crowdin.com/mcp/{tool-set}
+```
+
+Replace `{tool-set}` with a role from the table below. For Crowdin Enterprise, replace `{your-organization-domain}` with your organization's unique name.
 
 ### Available Tool Sets
 
@@ -54,6 +60,7 @@ Replace `{tool-set}` with a role from the table below.
 * **`developer`** - Source files, builds, and integrations.
 * **`translator`** - Translation and linguistic tools.
 * **`asset-manager`** - Glossaries and translation memory.
+* **`admin`** - User management and organization configuration. **(Crowdin Enterprise only.)**
 
 <Aside>
   For best performance, it is highly recommended to specify a tool set. If omitted, all tools will be available, but the AI's performance may be less focused.
@@ -63,16 +70,32 @@ Replace `{tool-set}` with a role from the table below.
 
 Here is a basic JSON configuration snippet for your client.
 
-```json
-{
-  "crowdin": {
-    "url": "https://mcp.crowdin.com/mcp/project-manager",
-    "headers": {
-      "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+<Tabs syncKey="product">
+  <TabItem label="Crowdin">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://mcp.crowdin.com/mcp/project-manager",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+        }
+      }
     }
-  }
-}
-```
+    ```
+  </TabItem>
+  <TabItem label="Crowdin Enterprise">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://{your-organization-domain}.mcp.crowdin.com/mcp/project-manager",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
 
 ## Configuring Your AI Client
 
@@ -106,16 +129,32 @@ To set up the MCP client in Crowdin Agentic AI, follow these steps:
   5. Switch to the **MCP** section and click **Add custom MCP**.
   6. Enter the following configuration:
 
-     ```json
-     {
-       "crowdin": {
-         "url": "https://mcp.crowdin.com/mcp/project-manager",
-         "headers": {
-           "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+     <Tabs syncKey="product">
+       <TabItem label="Crowdin">
+         ```json
+         {
+           "crowdin": {
+             "url": "https://mcp.crowdin.com/mcp/project-manager",
+             "headers": {
+               "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+             }
+           }
          }
-       }
-     }
-     ```
+         ```
+       </TabItem>
+       <TabItem label="Crowdin Enterprise">
+         ```json
+         {
+           "crowdin": {
+             "url": "https://{your-organization-domain}.mcp.crowdin.com/mcp/project-manager",
+             "headers": {
+               "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+             }
+           }
+         }
+         ```
+       </TabItem>
+     </Tabs>
 
   7. Click **Save**.
 </Steps>
@@ -129,24 +168,48 @@ To set up the MCP client in Claude Desktop, follow these steps:
   2. Click **Edit Config** to locate the `claude_desktop_config.json` file.
   3. Open `claude_desktop_config.json` and enter the following configuration:
 
-     ```json
-     {
-       "mcpServers": {
-         "crowdin": {
-           "command": "npx",
-             "args": [
-               "mcp-remote@latest",
-               "https://mcp.crowdin.com/mcp/project-manager",
-               "--header",
-               "Authorization:${AUTH_TOKEN}"
-             ],
-             "env": {
-               "AUTH_TOKEN": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+     <Tabs syncKey="product">
+       <TabItem label="Crowdin">
+         ```json
+         {
+           "mcpServers": {
+             "crowdin": {
+               "command": "npx",
+               "args": [
+                 "mcp-remote@latest",
+                 "https://mcp.crowdin.com/mcp/project-manager",
+                 "--header",
+                 "Authorization:${AUTH_TOKEN}"
+               ],
+               "env": {
+                 "AUTH_TOKEN": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+               }
              }
+           }
          }
-       }
-     }
-     ```
+         ```
+       </TabItem>
+       <TabItem label="Crowdin Enterprise">
+         ```json
+         {
+           "mcpServers": {
+             "crowdin": {
+               "command": "npx",
+               "args": [
+                 "mcp-remote@latest",
+                 "https://{your-organization-domain}.mcp.crowdin.com/mcp/project-manager",
+                 "--header",
+                 "Authorization:${AUTH_TOKEN}"
+               ],
+               "env": {
+                 "AUTH_TOKEN": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+               }
+             }
+           }
+         }
+         ```
+       </TabItem>
+     </Tabs>
 
   4. Save the changes, and restart the Claude Desktop app.
 </Steps>
@@ -167,45 +230,57 @@ The real power of the MCP server comes from chaining commands to complete tasks.
 
 ### Project Manager
 
-1.  **Check Progress:**
-  ```
-  What's the proofreading progress for the 'Q4 Mobile Release' project in German?
-  ```
-2.  **Identify Bottleneck:** The AI responds that German proofreading is only 30% complete.
-3.  **Take Action:**
-  ```
-  Create a task to proofread all unapproved strings in German for that project and assign it to 'John Doe'.
-  ```
+1. **Check Progress:**
+    ```text wrap
+    What's the proofreading progress for the 'Q4 Mobile Release' project in German?
+    ```
+2. **Identify Bottleneck:** The AI responds that German proofreading is only 30% complete.
+3. **Take Action:**
+    ```text wrap
+    Create a task to proofread all unapproved strings in German for that project and assign it to 'John Doe'.
+    ```
 
 ### Developer / Translation Requestor
 
-1.  **Add New Source Files:** When a new feature is ready, the developer adds the source text files to the localization project using Cursor.
-  ```
-  Add the file 'new_onboarding_feature.json' to the 'Mobile App Q4' project.
-  ```
-2.  **Monitor Translation Progress:** As the deadline approaches, they check the translators' progress to ensure the project is on track.
-  ```
-  What is the translation progress for the 'Mobile App Q4' project?
-  ```
-3.  **Publish Final Translations:** Once translations are complete and approved, the developer publishes them to their production environment using a pre-configured distribution.
-  ```
-  Create a new release for our 'Production CDN' distribution.
-  ```
+1. **Add New Source Files:** When a new feature is ready, the developer adds the source text files to the localization project using Cursor.
+    ```text wrap
+    Add the file 'new_onboarding_feature.json' to the 'Mobile App Q4' project.
+    ```
+2. **Monitor Translation Progress:** As the deadline approaches, they check the translators' progress to ensure the project is on track.
+    ```text wrap
+    What is the translation progress for the 'Mobile App Q4' project?
+    ```
+3. **Publish Final Translations:** Once translations are complete and approved, the developer publishes them to their production environment using a pre-configured distribution.
+    ```text wrap
+    Create a new release for our 'Production CDN' distribution.
+    ```
 
 ### Translator
 
-1.  **Find Work:** A translator's first step is to find strings that are ready for them to work on.
-  ```
-  Show me all high-priority untranslated strings for French in the 'iOS App' project.
-  ```
-2.  **Ensure Consistency:** To maintain quality, they check the glossary for correct terminology.
-  ```
-  What is the approved translation for the term 'workspace' in the French glossary?
-  ```
-3.  **Request Context:** If a string is ambiguous, they request visual context for an accurate translation.
-  ```
-  For string ID 'xyz-789', show me its screenshot.
-  ```
+1. **Find Work:** A translator's first step is to find strings that are ready for them to work on.
+    ```text wrap
+    Show me all high-priority untranslated strings for French in the 'iOS App' project.
+    ```
+2. **Ensure Consistency:** To maintain quality, they check the glossary for correct terminology.
+    ```text wrap
+    What is the approved translation for the term 'workspace' in the French glossary?
+    ```
+3. **Request Context:** If a string is ambiguous, they request visual context for an accurate translation.
+    ```text wrap
+    For string ID 'xyz-789', show me its screenshot.
+    ```
+
+### Admin (Crowdin Enterprise only)
+
+1. **Audit Permissions:**
+    ```text wrap
+    Show me the organization members of the 'German Translation' team.
+    ```
+2. **Identify Need for Change:** The AI lists the members. The admin notices a user that has left the company.
+3. **Take Action:**
+    ```text wrap
+    Delete 'John Doe' from the organization.
+    ```
 
 ## Best Practices
 
