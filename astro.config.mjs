@@ -229,7 +229,8 @@ const config = defineConfig({
           'warning',
           'groups',
           'reply',
-          'payments'
+          'payments',
+          'undo'
         ],
       }
     })

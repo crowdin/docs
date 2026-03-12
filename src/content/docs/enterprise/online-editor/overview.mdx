@@ -36,7 +36,6 @@ import multilingualMode from '!/crowdin/online-editor/multilingual_mode.png';
 import multilingualModeGrid from '!/crowdin/online-editor/multilingual_mode_grid.png';
 import rtlLanguages from '!/crowdin/online-editor/rtl.png';
 import commandPalette from '!/crowdin/online-editor/command_palette.png';
-import quickAccessToMenuTabs from '!/enterprise/online-editor/quick_access.png';
 import translationProgressIndicators from '!/crowdin/online-editor/translation_progress_indicators.png';
 import searchTmTab from '!/crowdin/online-editor/search_tm_tab.png';
 import replaceInSuggestionsResults from '!/crowdin/online-editor/replace_in_suggestions_results.png';
@@ -46,11 +45,10 @@ import workflowFilter from '!/enterprise/online-editor/workflow_filter.png';
 import sharedComments from '!/enterprise/online-editor/shared_comments.png';
 import multipleApprovals from '!/enterprise/online-editor/multiple_approvals.png';
 import taskName from '!/crowdin/online-editor/task_name.png';
-import taskMenu from '!/crowdin/online-editor/task_menu.png';
 
 The Editor is the main place in Crowdin Enterprise where project members can work on translations. It allows users to suggest, vote on, review, and approve translations online.
 
-Using the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, you can switch between files for translation, change translation languages, contact a manager, change the view, and access help materials.
+Using the main menu at the top of the Editor (**File**, **Edit**, **View**, **Workflow** (only in [projects with a workflow](/enterprise/creating-project/#projects-with-a-workflow)), **Language**, **Project**, **Help**), you can select content for translation, download or upload translations, perform various string actions, change the Editor's layout, switch target languages, access project pages and switch projects, access help materials, and more.
 
 ## Core Features
 
@@ -92,7 +90,7 @@ There also might be the following icons besides strings:
 
 #### Suggesting Translations
 
-To suggest a translation, select a string from the list and enter your suggestion in the field next to the original text. When you're done, click **Save**. Your suggestion will be added to the string's translation suggestions list, and you'll automatically move on to the next string.
+To suggest a translation, select a string from the list and enter your suggestion in the field next to the original text. When you're done, click <Icon name="mdi:content-save" class="inline-icon" /> **Save translation**. Your suggestion will be added to the string's translation suggestions list, and you'll automatically move on to the next string. If you need to discard your current input and revert to the previous state, click <Icon name="material-symbols:undo" class="inline-icon" /> **Cancel**.
 
 <Image src={suggestingTranslations} alt="Suggesting Translations" />
 
@@ -210,8 +208,9 @@ Available filter options:
 * *Need to Be Voted* &ndash; Show already translated strings.
 * *Not Approved* &ndash; Show strings that are already translated but not yet approved by a proofreader.
 * *Approved* &ndash; Show only strings with approved translations.
-* *QA issues* &ndash; Show strings with no QA issues or with unresolved QA issues in the current language.
-* *Machine Translation* &ndash; Show strings that are translated by TM or MT suggestions without changes. Often these strings require additional review.
+* *Unsaved Translations* &ndash; Show strings with translations you entered but haven't saved yet.
+* *QA issues* &ndash; Show strings with or without unresolved QA issues in the current language, with the possibility to filter by specific errors.
+* *Machine Translations* &ndash; Show strings that are translated by TM, MT, or AI suggestions without changes. Often these strings require additional review.
 * *With Comments* &ndash; Show strings that have comments.
 * *With Unresolved Issues* &ndash; Show strings with unresolved issues in the current language or all languages.
 * *Hidden* &ndash; Show strings that are hidden from translators. Strings can be hidden by project managers or automatically hidden by Crowdin Enterprise when they are marked as duplicates.
@@ -223,6 +222,19 @@ Available filter options:
 </Aside>
 
 <Image src={stringsFilter} alt="Strings Filter" />
+
+#### Viewing Surrounding Strings for Context
+
+When translating, understanding the surrounding text can be crucial for accuracy. The Editor allows you to display the strings that immediately precede and follow your active strings in the source file, even if they don't match your current filter criteria.
+
+To toggle this context view on or off, click the <Icon name="garden:puzzle-piece-fill-12" class="inline-icon" /> **Show surrounding strings for context** icon next to the search field, or select this option from the [String menu](#string-menu). When enabled, the Editor will load and display up to five preceding and five succeeding strings for all strings currently displayed on the page.
+
+##### Working with Context Strings
+
+Context strings are visually marked with a puzzle icon <Icon name="garden:puzzle-piece-fill-12" class="inline-icon" /> and appear greyed out to distinguish them from the strings in your primary filtered view. How you can interact with them depends on how you accessed the Editor:
+
+* **Normal Editor Mode:** When you open a source file directly in the Editor, you can interact with context strings just like regular strings. Despite being greyed out, you can still select them, add translations, vote on them, and approve them.
+* **Task Mode:** When you open a specific task in the Editor, context strings are provided purely for reference. They are strictly read-only, meaning their input fields and action buttons are disabled. This ensures you have the necessary context without accidentally modifying strings outside your assigned task scope.
 
 #### Viewing String Statistics
 
@@ -264,19 +276,34 @@ You might also get automatic Quality Assurance (QA) check pop-up messages to avo
 
 <Image src={qaPopUp} alt="QA pop-up" />
 
+### Managing Source Strings
+
+Project members with manager permissions (or higher) can manage source strings directly within the Editor, allowing for quick corrections and updates without needing to switch to the project's **Sources** tab.
+
+You can access these options via the **Edit** menu at the top of the Editor. The most common actions are also available as quickly accessible buttons in the top toolbar:
+
+* <Icon name="mdi:plus" class="inline-icon" /> **Add String** &ndash; Add a new string to the currently opened file.
+* <Icon name="mdi:pencil" class="inline-icon" /> **Edit String** &ndash; Modify the selected source text, identifier (key), context, labels, or maximum length limit.
+* **Delete String** &ndash; Permanently remove the string from the file (available via the **Edit** menu; supported only for specific file formats).
+* **Hide String / Make String Visible** &ndash; Toggle the string's visibility for translators. Hidden strings are accessible only to project managers or higher (available via the **Edit** menu or [String menu](#string-menu)).
+
+<ReadMore>
+  Read more about [String Management](/enterprise/string-management/).
+</ReadMore>
+
 ### String Menu
 
 Clicking <Icon name="mdi:dots-vertical" class="inline-icon" /> in the upper-right allows you to:
 
-* **Remove My Approvals/All Approvals** &ndash; Remove the approvals for a translation, reverting its status to unapproved. (Available for proofreaders or higher.)
+* **Remove My Approvals / All Approvals** &ndash; Remove the approvals for a translation, reverting its status to unapproved. (Available for proofreaders or higher.)
 * **Remove Translation** &ndash; Clear translations for the selected strings along with the associated TM records. Duplicate translations from master strings remain unaffected.
-* **Hide/Make Visible** &ndash; Toggle the visibility of a string for translators. Hidden strings are accessible only to project managers or higher.
+* **Hide String / Make String Visible** &ndash; Toggle the visibility of a string for translators. Hidden strings are accessible only to project managers or higher.
 * **Pre-translate** &ndash; Initiate [pre-translation](#pre-translation-in-the-editor) directly in the Editor using Translation Memory (TM), Machine Translation (MT), or AI.
 * **Copy String URL** &ndash; Access a specific string using its unique link or share it with colleagues.
 * **Copy Source Skeleton** &ndash; Copy untranslatable elements to the translation section. This action can be applied to one or multiple selected strings. Useful when translating strings with ICU message syntax or HTML tags.
 * **Clear Selected Input** &ndash; Clear the translation field for the selected string.
 * **Translation History** &ndash; View all the modifications made to the string.
-* **View String In Context** &ndash; Display the string along with other strings surrounding it in the source file, helping you understand its context better.
+* **Show / Hide surrounding strings for context** &ndash; Display up to five preceding and five succeeding strings for all strings currently loaded in the Editor to help you understand their context. This performs the exact same action as the <Icon name="garden:puzzle-piece-fill-12" class="inline-icon" /> button in the main toolbar.
 * **Labels** &ndash; Add or manage labels assigned to the string, helping to categorize or identify it for specific purposes.
 * **Max. Length** &ndash; View and edit the maximum character length allowed for the string translation. Clicking this option opens a modal with the following settings:
   * **Proportional to source texts** &ndash; Set the maximum length as a percentage of the source text length. Use the slider or manually enter a percentage (e.g., 100%, 150%, 200%) to define the limit.
@@ -294,15 +321,15 @@ In the translation window, you will also see the *Maximum length of translation*
 
 Additional action buttons available when translating a string:
 
-- <Icon name="copy-source" class="inline-icon dark:invert" /> - _Copy Source_. Use it to keep the initial string structure while translating messages with replacement tokens or elements of ICU message syntax. This action can be applied to one or multiple selected strings.
-- <Icon name="mdi:delete-outline" class="inline-icon" /> - _Clear_. Use it when you need to clear the translation field quickly. Alternatively, use the *Clear Selected Input* option from the string menu.
-- <Icon name="mdi:form-textbox" class="inline-icon" /> - _Text selection mode_. Use it when you want to copy a part of the translation from Translation Memory (TM) or Machine Translations (MT) (Comfortable mode only).
+* <Icon name="copy-source" class="inline-icon dark:invert" /> **Copy Source** &ndash; Use it to keep the initial string structure while translating messages with replacement tokens or elements of ICU message syntax. This action can be applied to one or multiple selected strings.
+* <Icon name="mdi:delete-outline" class="inline-icon" /> **Clear** &ndash; Use it when you need to wipe the translation field quickly (Comfortable mode only). For other modes, use the <Icon name="material-symbols:undo" class="inline-icon" /> **Cancel** button, or the **Clear Selected Input** option from the **Edit** menu or the [String menu](#string-menu).
+* <Icon name="mdi:form-textbox" class="inline-icon" /> **Text selection mode** &ndash; Use it when you want to copy a part of the translation from Translation Memory (TM) or Machine Translations (MT) (Comfortable mode only).
 
 <Aside>
   When using **Copy Source** or **Copy Source Skeleton** for multiple strings in the [**Multilingual**](#multilingual-mode) mode, the action will only apply to the active language (the one you last clicked in), not to all languages selected in the view.
 </Aside>
 
-### Context and Translations
+### Context & Translations
 
 This section contains the resources that might be useful:
 
@@ -437,15 +464,15 @@ To edit the TM suggestion, follow these steps:
 
 To completely delete a TM segment from the TM, delete all TM records across all languages and click **Save**.
 
-### Terms
+### Terminology
 
-Underlined words or phrases in strings indicate project-specific terminology, which should be translated according to the provided term description. You can view detailed explanations by hovering over the underlined text or visiting the Terms section.
+Underlined words or phrases in strings indicate project-specific terminology, which should be translated according to the provided term description. You can view detailed explanations by hovering over the underlined text or visiting the Terminology section.
 
-The Terms section allows you to browse the project glossary (if available) and search for specific terms. If a term is not found in the glossary, Wikipedia explanations will be displayed as a reference.
+The Terminology section allows you to browse the project glossary (if available) and search for specific terms. If a term is not found in the glossary, Wikipedia explanations will be displayed as a reference.
 
 Some terms may already have translations, which help maintain consistency across the project. To reuse a translated term, simply click on the underlined text, and its translation will automatically appear in the translation field.
 
-<Image src={terms} alt="Terms" />
+<Image src={terms} alt="Terminology" />
 
 ### File Context
 
@@ -470,8 +497,8 @@ The Editor offers several viewing modes to accommodate different translation wor
 
 You can switch between Editor modes using the following methods:
 
-- **Via Main menu** &ndash; click on the **Main menu** <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, select **View**, and choose the preferred mode.
-- **Via Editor View icon** &ndash; click the **Editor View** icon in the upper-right corner and choose the preferred mode.
+* **Via View menu** &ndash; Go to **View** in the main menu and choose the preferred mode.
+* **Via Editor View icon** &ndash; Click the **Editor View** icon in the upper-right corner and choose the preferred mode (this icon is available only if the **Horizontal Menu** is disabled in the [Editor Settings](#appearance)).
 
 ### Side-by-Side Mode
 
@@ -491,7 +518,7 @@ The multilingual mode provides similar features as the side-by-side mode and all
 
 <Image src={multilingualMode} alt="Multilingual Mode" />
 
-Once you switch to the multilingual mode, select the languages you'd like to work with, and click **Apply**. To add new languages or remove some of the earlier selected ones, click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, choose **Language**, alternatively click on the **Languages** in the upper-left corner, then do the necessary modifications to the language list and click **Apply**.
+Once you switch to the multilingual mode, select the languages you'd like to work with, and click **Apply**. To add new languages or remove some of the earlier selected ones, go to **Language** in the main menu, then do the necessary modifications to the language list and click **Apply**.
 
 ### Multilingual Mode (Grid)
 
@@ -593,6 +620,7 @@ The AI tab allows to configure custom prompts and shortcuts for AI Assistant. Th
 - *Default Editor View* &ndash; set the default view mode that will be used each time you open the Editor.
 - *Compact strings view* &ndash; if enabled, only the beginnings of the long strings will be shown in the string list.
 - *Translation Preview* &ndash; if enabled, a translation preview will be displayed for translated strings in the string list.
+- *Horizontal Menu* &ndash; If enabled, the main menu is displayed horizontally at the top of the Editor. This layout is enabled by default. If disabled, the main menu collapses under the <Icon name="mdi:menu" class="inline-icon" /> icon in the upper-left corner.
 - *HTML Tags Displaying* &ndash; you can choose **Show** or **Hide** option that applies to all HTML tags. If you choose **Auto**, tags will be hidden in HTML, Haml, XML, Web XML, Markdown, and DOCX files but shown in other file formats. When tags are hidden, you can expect the following:
   ```
   <a href="https://sample.com">Sample</a>
@@ -640,16 +668,24 @@ Set the **Light** or **Dark** theme, or select **Auto** to allow the Editor to s
 
 Use keyboard shortcuts to take actions in the editor quickly. Check the list of keyboard shortcuts by clicking the *keyboard* <Icon name="mdi:keyboard" class="inline-icon" /> icon in the upper-right corner. Most of the hotkeys can be customized to your personal preferences. Click on the necessary key combination, and modify it with the help of your keyboard.
 
-### Quick Access to Menu Sections
+### Navigation and Quick Access
 
-Easy access to most-used menu items in one click:
+The navigation path in the upper-left corner of the Editor displays your current context within the workspace, offering quick access to file statistics, task information, and project navigation. Its behavior depends on whether the **Horizontal Menu** is enabled in your [Editor Settings](#appearance).
 
-- *Project* &ndash; click on the current project name (*Impact* in the below screenshot)
-- *Language* &ndash; click on the current language (*French* in the below screenshot)
-- *Files* &ndash; click on the current file name (*impact.xml* in the below screenshot)
-- *Editor Mode* (only in [projects with a workflow](/enterprise/creating-project/#projects-with-a-workflow)) &ndash; click on the current step (*Translate* in the below screenshot)
+**When the Horizontal Menu is enabled (default):**
 
-<Image src={quickAccessToMenuTabs} alt="Quick Access to Menu Sections" />
+The path serves as a visual indicator of your location (project name, target language, file name, or workflow step (only in [projects with a workflow](/enterprise/creating-project/#projects-with-a-workflow))) and provides quick-reference information on hover:
+
+* **File Statistics** &ndash; Hovering over the file name opens a popover displaying the translation and approval progress (word counts and percentages) for that specific file.
+* **Task Details** &ndash; When you open a task in the Editor, the task title appears in the path alongside its corresponding task type icon. Hovering over the task title reveals a popover with additional details, including a direct clickable link to the task (opens in a new tab), the target language, and the task type.
+
+**When the Horizontal Menu is disabled:**
+
+You can click the individual items in the navigation path to open their respective dropdown menus:
+
+* **Project** &ndash; Click the current project name to access project-level options.
+* **Language** &ndash; Click the current language to switch to another target language.
+* **File** &ndash; Click the current file name to open the File menu.
 
 ### Translation Progress Indicators
 
@@ -657,13 +693,13 @@ Use translation and approval indicators to monitor the progress of the currently
 
 There are two types of indicators available in the Editor:
 
-* **Circular Progress Indicators** – Located in the upper-right corner of the toolbar, these show the percentage of translated and approved content for the file or folder you're working on.
-* **Detailed Progress Breakdown** – Accessible via the **Main menu > File**, this provides information on the total word count, number of translated, pre-translated, and approved words, along with percentage completion for each.
+* **Circular Progress Indicators** &ndash; Located in the upper-right corner of the toolbar, these show the percentage of translated and approved content for the file or folder you're working on.
+* **Detailed Progress Breakdown** &ndash; Hover over the file name in the top navigation path to view a popover with information on the total word count, number of translated, pre-translated, and approved words, along with the percentage completion for each. (If the **Horizontal Menu** is disabled, this breakdown is located in the **Main menu > File**).
 
 <Image src={translationProgressIndicators} alt="Translation Progress Indicators" />
 
 <Aside type="tip">
-  Translation and approval progress updates automatically every 2 minutes. To refresh progress manually, click the circular progress indicators in the upper-right corner. This also refreshes the progress displayed in **Main menu > File**.
+  Translation and approval progress updates automatically every 2 minutes. To refresh progress manually, click the circular progress indicators in the upper-right corner. This also refreshes the progress displayed in the detailed progress breakdown.
 </Aside>
 
 ### Context Menu Options for Selected Words
@@ -689,28 +725,28 @@ The Editor features an integrated file browser in a collapsible left-side panel,
 
 How you interact with the file browser depends on your current Editor mode:
 
-- **In Side-by-Side, Multilingual, and Multilingual (Grid) Modes** – You can show or hide the file browser panel by clicking the <Icon name="mdi:dock-left" class="inline-icon" /> icon in the upper-right corner or by using the keyboard shortcut <KBD>Ctrl</KBD>+<KBD>[</KBD>. Alternatively, you can open the panel by clicking the current file name in the upper-left corner or by selecting **File > Open** from the **Main Menu** <Icon name="mdi:menu" class="inline-icon" />.
-- **In Comfortable Mode** – The left panel can be switched between two views: **Files** and **Strings**. When you select an item in the **Files** view, the **Strings** view automatically updates to show the relevant content.
+* **In Side-by-Side, Multilingual, and Multilingual (Grid) Modes** – You can show or hide the file browser panel by clicking the <Icon name="mdi:dock-left" class="inline-icon" /> icon in the upper-right corner or by using the keyboard shortcut <KBD>Ctrl</KBD>+<KBD>[</KBD>. Alternatively, you can open the panel by selecting **File > Open** from the main menu or with the keyboard shortcut <KBD>Ctrl</KBD>+<KBD>O</KBD> or <KBD>Cmd</KBD>+<KBD>O</KBD>.
+* **In Comfortable Mode** – The left panel can be switched between two views: **Files** and **Strings**. When you select an item in the **Files** view, the **Strings** view automatically updates to show the relevant content.
 
 <Image src={fileBrowser} alt="The file browser panel in the Editor" />
 
-At the bottom of the file browser, you can see the path of the selected item (e.g., `/app/src/main/res/values/strings.xml`) and a summary of your selection (e.g., `Currently selected: strings.xml` or `Currently selected: 3 files`).
+At the bottom of the file browser, you can see the path of the selected item (e.g., `/app/src/main/res/values/strings.xml`) and a summary of your selection (e.g., `Currently selected: strings.xml` or `Currently selected: 3 files`). Project members with manager permissions can also toggle the visibility of hidden files (if any) in the tree by clicking the <Icon name="mdi:eye-off-outline" class="inline-icon" /> **Hidden Files** icon in the file browser toolbar.
 
 <Aside type="tip">
   You can select multiple files and folders using common selection shortcuts:
-  - To select a continuous range, click the first item, hold <KBD>Shift</KBD>, and then click the last item.
-  - To select or deselect several individual items, hold <KBD>Ctrl</KBD> or <KBD>⌘</KBD> and click on the files or folders you need.
+  * To select a continuous range, click the first item, hold <KBD>Shift</KBD>, and then click the last item.
+  * To select or deselect several individual items, hold <KBD>Ctrl</KBD> or <KBD>Cmd</KBD> and click on the files or folders you need.
 </Aside>
 
 To see all strings in the project, open the file browser and select **All Strings** at the top of the file list.
 
-To quickly find and reopen one of the files you recently worked on, click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, go to **File** and select the needed file from the **Recent files** section.
+To quickly find and reopen one of the files you recently worked on, go to **File > Recent Files** and select the needed file.
 
 ### Source and Translated File Preview
 
 In addition to the [WYSIWYG file preview](#wysiwyg-file-preview), which shows files as they would appear when rendered, there are **Source File Preview** and **Translated File Preview** modes that allow users to view the raw content of both source and translated files directly within the Editor. These previews provide insight into the file's structure, layout, and formatting, helping users ensure accurate translations within the correct context. This is particularly helpful for identifying discrepancies or formatting issues without leaving the Editor. While the **Translated File Preview** is available to all users, the **Source File Preview** is restricted to members with Developer / Translation Requestor permissions or higher.
 
-To open a file in either of these previews, click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, go to **File**, and select the needed file preview mode.
+To open a file in either of these previews, go to **File** in the main menu, and select the needed file preview mode.
 
 ### Replace in Suggested Translations
 
@@ -721,13 +757,12 @@ To replace previously added translations with the new ones, follow these steps:
 <Steps>
   1. On the project *Dashboard* page, select the necessary language.
   2. Click **All Strings > Translate** (or **All Strings > Go to Editor** for projects without a workflow) or choose a file for translation.
-  3. Click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner.
-  4. Go to **File > Replace in Translations**.
-  5. Enter the word, phrase, or sentence you want to substitute and the text to replace it with. Similarly to [string search](#string-search), you can use the *Match case* and *Exact match* options to refine the search results.
-  6. From the drop-down menu, specify the scope of your search, selecting between *File*, *All files*, or *Filtered strings* options.
-  7. Click **Find** to preview the strings that will be replaced. <Image src={replaceInSuggestionsResults} alt="Find and Replace results" class="width-xl" />
-  8. *(Optional)* Click the *Settings* drop-down menu on the right and select what information to display in the search results other than translations. You can choose between *Key*, *Context*, and *Source*.
-  9. Select the translations you want to replace and click **Replace Selected** to finish.
+  3. Go to **Edit > Replace in Translations**.
+  4. Enter the word, phrase, or sentence you want to substitute and the text to replace it with. Similarly to [string search](#string-search), you can use the *Match case* and *Exact match* options to refine the search results.
+  5. From the drop-down menu, specify the scope of your search, selecting between *File*, *All files*, or *Filtered strings* options.
+  6. Click **Find** to preview the strings that will be replaced. <Image src={replaceInSuggestionsResults} alt="Find and Replace results" class="width-xl" />
+  7. *(Optional)* Click the *Settings* drop-down menu on the right and select what information to display in the search results other than translations. You can choose between *Key*, *Context*, and *Source*.
+  8. Select the translations you want to replace and click **Replace Selected** to finish.
 </Steps>
 
 While translators can perform replacements only in their own translations, project members with proofreader permissions (or higher) can modify all suggested translations. Authorship of translations is preserved.
@@ -741,14 +776,13 @@ To replace source texts, follow these steps:
 <Steps>
   1. On the project *Dashboard* page, select the necessary language.
   2. Click **Translate All** or choose a file for translation.
-  3. Click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner.
-  4. Go to **File > Replace in Sources**.
-  5. Enter the word, phrase, or sentence you want to substitute and the text to replace it with. Similarly to [string search](#string-search), you can use the *Match case* and *Exact match* options to refine the search results.
-  6. From the drop-down menu, specify the scope of your search, selecting between *File*, *All files*, or *Filtered strings* options.
-  7. Click **Find** to preview the strings that will be replaced. <Image src={replaceInSourcesResults} alt="Find and Replace results" class="width-xl" />
-  8. *(Optional)* Click the *Settings* drop-down menu on the right and select what information to display in the search results other than strings. You can choose between *Key* and *Context*.
-  9. In the lower-left corner, click the drop-down menu and select the preferred behavior for the translations of the source strings to be replaced. You can choose between *Keep Translations*, *Remove Approvals*, or *Delete Translations*.
-  10. Select the source strings you want to replace and click **Replace Selected** to finish.
+  3. Go to **Edit > Replace in Sources**.
+  4. Enter the word, phrase, or sentence you want to substitute and the text to replace it with. Similarly to [string search](#string-search), you can use the *Match case* and *Exact match* options to refine the search results.
+  5. From the drop-down menu, specify the scope of your search, selecting between *File*, *All files*, or *Filtered strings* options.
+  6. Click **Find** to preview the strings that will be replaced. <Image src={replaceInSourcesResults} alt="Find and Replace results" class="width-xl" />
+  7. *(Optional)* Click the *Settings* drop-down menu on the right and select what information to display in the search results other than strings. You can choose between *Key* and *Context*.
+  8. In the lower-left corner, click the drop-down menu and select the preferred behavior for the translations of the source strings to be replaced. You can choose between *Keep Translations*, *Remove Approvals*, or *Delete Translations*.
+  9. Select the source strings you want to replace and click **Replace Selected** to finish.
 </Steps>
 
 ### Pre-translation in the Editor
@@ -758,10 +792,9 @@ The **Pre-translation** feature in the Editor allows you to apply translations t
 To apply Pre-translation in the Editor, follow these steps:
 
 <Steps>
-  1. You can apply pre-translation in the Editor in two ways:
-      * **Main menu** &ndash; click on the Main menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner, go to **File** and select the preferred pre-translation method.
-      * **String menu** (available in **Side-by-Side** and **Multilingual** modes) &ndash; click <Icon name="mdi:dots-vertical" class="inline-icon" /> in the upper-right and select the preferred pre-translation method.
-  2. Configure the following pre-translation parameters:
+  1. Open the String menu by clicking <Icon name="mdi:dots-vertical" class="inline-icon" /> in the upper-right and select **Pre-translate**.
+  2. Select the preferred pre-translation method.
+  3. Configure the following pre-translation parameters:
       * **Scope** – select which strings to apply pre-translation to:
         * **Selected strings** (Specific to **Side-by-Side** and **Multilingual** modes) – applies only to strings manually selected in the Editor.
         * **Filtered strings** – applies to all strings matching the current filter.
@@ -788,7 +821,7 @@ To apply Pre-translation in the Editor, follow these steps:
         * **All (skip auto-substituted translations)** – approve everything except translations improved by auto-substitution.
       * **Translation engine** (Specific to pre-translation via MT) – select the machine translation engine to use.
       * **AI prompt** (Specific to pre-translation via AI) – select the prompt that will guide the AI model’s behavior during pre-translation.
-  3. Click **Pre-Translation**.
+  4. Click **Pre-Translation**.
 </Steps>
 
 In Side-by-side and Comfortable modes, pre-translation is applied to the single language currently selected in the Editor. In Multilingual mode, translations are applied across all selected languages, as this mode allows working with multiple languages simultaneously.
@@ -813,22 +846,24 @@ You can create a custom filter for strings by clicking the **Filter strings** <I
 
 The filter dialog contains the following parameters, which you can combine to narrow down your search:
 
-* **Strings added** – Filter strings that were imported into the project within a specific date range.
-* **Strings updated** – Filter source strings that were updated within a specific date range.
-* **Translations updated** – Filter strings where translations were added or updated (including new suggestions, approvals, or votes) within a specific date range.
+* **Strings Added** – Filter strings that were imported into the project within a specific date range.
+* **Strings Updated** – Filter source strings that were updated within a specific date range.
+* **Translations Updated** – Filter strings where translations were added or updated (including new suggestions, approvals, or votes) within a specific date range.
 * [**Verbal Expression**](#verbal-expressions) – Filter strings using complex structural patterns.
-* [**Labels**](#filtering-by-labels) – Include or exclude strings based on their assigned labels.
-* **Translations** – Filter by translation status. Options include *Untranslated*, *Partially translated (plurals)*, *Translated*, *Same as source string*, and *Modified source strings*.
-* **Duplicates** – Filter strings based on their duplicate status. Options include *Master strings*, *Duplicates only*, *Duplicates with shared translations*, and *Duplicates with own translations*.
-* **TM, MT and AI** – Filter strings based on their translation origin. Options include *Translated by TM*, *Translated by MT*, *Translated by AI*, or any combination of the three.
-* **Pre-translation** – Filter strings based on whether pre-translation was applied. Options include *Used* or *Not used*.
-* **Comments** – Filter strings by comments or issues. You can filter by the presence of comments, unresolved issues, or specific issue types (e.g., *Lack of contextual information*, *Mistake in source string*).
-* **Screenshots** – Filter strings that are *With screenshots* or *Without screenshots*.
+* [**Labels**](#filtering-by-labels) – Include or exclude strings based on their assigned labels. <Aside>This option only appears if your project uses labels.</Aside>
+* **Translations** – Filter by translation status. Options include *Untranslated*, *Partially Translated (Plurals)*, *Translated*, *Same as Source String*, and *Modified Source Strings*.
+* **Duplicates** – Filter strings based on their duplicate status. Options include *Master Strings*, *Duplicates Only*, *Duplicates with Shared Translations*, and *Duplicates with Own Translations*. <Aside>This option only appears if your project contains duplicate strings.</Aside>
+* **Approvals** – Filter strings by their approval status. Options include *Translated, Not Approved*, *Partially Approved (Plurals)*, *Approved*, and *Have Translations After Approval*.
+* **TM, MT and AI** – Filter strings based on their translation origin. Options include *Translated by MT*, *Translated by TM*, *Translated by AI*, or *Translated by TM or MT or AI*.
+* **Pre-translation** – Filter strings based on whether pre-translation was applied. Options include *Used* or *Not Used*.
+* **Comments** – Filter strings by comments or issues. Options include *Do Not Have Comments*, *Have Comments*, *Unresolved Issues*, *General Question Issues*, *Current Translation Is Wrong Issues*, *Lack of Contextual Information Issues*, or *Mistake in Source String Issues*.
+* **Screenshots** – Filter strings that are *With Screenshots* or *Without Screenshots*.
 * **Visibility** – Filter strings by their visibility to translators: *Visible* or *Hidden*.
-* **QA Issues** – Filter strings based on quality assurance issues. You can filter for strings with any QA issue, no QA issues, or specific types like *Tags mismatch* or *Spelling mistakes*.
+* **QA Issues** – Filter strings based on quality assurance issues. Options include *Without QA Checks*, *QA check in progress*, *All* issues, or specific errors like *Tags mismatch*, *Spelling mistakes*, and *Punctuation mismatch*.
 * **String Type** – Filter by string format. Options include *Simple String*, *Plurals*, or *ICU*.
 * **Votes** – Filter strings by the net number of votes. Options are *Greater Than* or *Less Than* a specified number.
-* **Translated by** – Filter for strings translated (or not translated) by a specific project member.
+* **Translated By** – Filter for strings *Translated By* or *Not Translated By* a specific project member.
+* **Approved By** – Filter for strings *Approved By* or *Not Approved By* a specific project member.
 
 #### Verbal Expressions
 
@@ -869,14 +904,14 @@ Here are a couple of examples of how this logic works in practice:
 
 #### Sorting Options
 
-* **Sort by** – Organize the filtered strings based on a selected criterion. The available options are:
-    * *Original sort order*
-    * *Strings added* (by date)
-    * *Translations updated* (by date)
-    * *Last comment added* (by date)
+* **Sort By** – Organize the filtered strings based on a selected criterion. The available options are:
+    * *Original Sort Order*
+    * *Strings Added*
+    * *Translations Updated*
+    * *Last Comment Added*
     * *Alphabet (Source Text)*
     * *Alphabet (Identifier)*
-    * *Length* (of the source string)
+    * *Length*
     * *Votes*
 * You can also set the sort order to **Ascending** or **Descending**.
 
@@ -900,28 +935,26 @@ In Side-by-Side or Multilingual modes, you can pin <Icon name="mdi:pin" class="i
 
 ### Customizing Right Panel Section Order
 
-To personalize your workspace in the Editor, you can reorder the sections in the right panel (e.g., AI Assistant, Context and Translations, Comments, etc.) by dragging their icons.
+To personalize your workspace in the Editor, you can reorder the sections in the right panel (e.g., AI Assistant, Context & Translations, Comments, etc.) by dragging their icons.
 
 Click and hold the icon of the section you'd like to move, then drag it to a new position. The updated order will remain applied as you continue working in the Editor.
 
 ## Tasks in the Editor
 
-Once a translator or proofreader has a task assigned, all the task details are accessible from the editor:
+Once a translator or proofreader has a task assigned, all the task details are accessible from the Editor.
 
-The name of the task is displayed at the top of the toolbar.
+The name of the task is displayed in the navigation path in the upper-left corner. Hovering over the task name reveals a popover with additional details, including the task ID, a direct link to the task, due date, the target language, the task type, and the assignee.
 
 <Image src={taskName} alt="Task name" />
 
 Filters and searches apply to a particular task only.
 
-Task details can be accessed by clicking the menu <Icon name="mdi:menu" class="inline-icon" /> in the upper-left corner.
+<Aside type="tip">
+  Since tasks only display specific assigned strings, you can use the **Show surrounding strings for context** feature to view adjacent strings in the file. <ReadMore>Read more about [viewing surrounding strings](#viewing-surrounding-strings-for-context).</ReadMore>
+</Aside>
 
-The task menu consists of the following components and features:
+When working on a task, the standard **File** menu is replaced by the **Task** menu. You can access it by clicking **Task** in the main menu. It contains the following options:
 
-- name, due date, language, type of the task, and assignee
-- options to download and upload translations for the particular task
-- possibility to quit the particular task editor and show all project strings
-- [Replace in Translations](#replace-in-suggested-translations) option
-- [Replace in Sources](#replace-in-sources) option
-
-<Image src={taskMenu} alt="Task menu" />
+* File and string navigation options (**Open**, **All Strings**, **File Previews**)
+* Options to **Export** and **Upload** translations for the particular task
+* **Project Strings** &ndash; select this option to quit the particular task editor and show all project strings.
