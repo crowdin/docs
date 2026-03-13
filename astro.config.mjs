@@ -232,6 +232,9 @@ const config = defineConfig({
           'payments',
           'undo'
         ],
+        garden: [
+          'puzzle-piece-fill-12'
+        ],
       }
     })
   ],
