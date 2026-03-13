@@ -7658,6 +7658,17 @@ paths:
         -
           $ref: '#/components/parameters/ProjectId'
         -
+          name: orderBy
+          in: query
+          description: 'Read more about [sorting rules](#section/Introduction/Sorting)'
+          schema:
+            type: string
+            enum:
+              - priority
+              - status
+              - createdAt
+          example: 'priority desc,createdAt'
+        -
           $ref: '#/components/parameters/PaginationLimit'
         -
           $ref: '#/components/parameters/PaginationOffset'
@@ -7767,6 +7778,64 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
+        '503':
+          description: 'Service Unavailable'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+    patch:
+      tags:
+        - Translations
+      summary: 'Pre-Translation Batch Operations'
+      description: '**Required scopes:** `project.translation` (Read and Write).'
+      operationId: api.projects.pre-translations.patchBatch
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreTranslationMassPatch'
+      responses:
+        '200':
+          description: 'Pre-translations were successfully updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrowdinPreTranslationUpdatedCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorPatchCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
         '503':
           description: 'Service Unavailable'
           content:
@@ -11703,7 +11772,7 @@ paths:
           description: 'Filter strings by `labelIds`. Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
           schema:
             type: string
-            example: '1,2,3,4,5'
+          example: '1,2,3,4,5'
         -
           name: fileId
           in: query
@@ -12456,7 +12525,7 @@ paths:
         '204':
           description: 'String/Asset Comment was successfully deleted'
         '404':
-          description: 'Project or string or string/asset comment with specified id was not found'
+          description: 'Project or string/asset comment with specified id was not found'
           content:
             application/json:
               schema:
@@ -12520,7 +12589,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorCollectionResource'
         '404':
-          description: 'Project or string or string/asset comment with specified id was not found'
+          description: 'Project or string/asset comment with specified id was not found'
           content:
             application/json:
               schema:
@@ -13972,6 +14041,275 @@ paths:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
       x-doc-sections:
         - file-based
+  /style-guides:
+    get:
+      tags:
+        - 'Style Guides'
+      summary: 'List Style Guides'
+      description: '**Required scopes:** `style-guide` (Read only).'
+      operationId: api.style-guides.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+        -
+          name: orderBy
+          in: query
+          description: 'Read more about [sorting rules](#section/Introduction/Sorting)'
+          schema:
+            type: string
+            default: name
+            enum:
+              - id
+              - name
+              - userId
+              - createdAt
+          example: 'createdAt desc,name'
+        -
+          name: userId
+          in: query
+          description: 'List user style guides'
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'List Style Guides'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrowdinStyleGuideCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'User not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+    post:
+      tags:
+        - 'Style Guides'
+      summary: 'Create Style Guide'
+      description: '**Required scopes:** `style-guide` (Read and Write).'
+      operationId: api.style-guides.post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrowdinStyleGuideCreateForm'
+      responses:
+        '201':
+          description: 'Style Guide was successfully created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrowdinStyleGuideResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'User not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/style-guides/{styleGuideId}':
+    get:
+      tags:
+        - 'Style Guides'
+      summary: 'Get Style Guide'
+      description: '**Required scopes:** `style-guide` (Read only).'
+      operationId: api.style-guides.get
+      parameters:
+        -
+          name: styleGuideId
+          in: path
+          description: 'Style Guide Identifier'
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: 'Style Guide data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrowdinStyleGuideResource'
+        '404':
+          description: 'Style Guide with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+    delete:
+      tags:
+        - 'Style Guides'
+      summary: 'Delete Style Guide'
+      description: '**Required scopes:** `style-guide` (Read and Write).'
+      operationId: api.style-guides.delete
+      parameters:
+        -
+          name: styleGuideId
+          in: path
+          description: 'Style Guide Identifier'
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: 'Style Guide was successfully deleted'
+        '404':
+          description: 'Style Guide with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+    patch:
+      tags:
+        - 'Style Guides'
+      summary: 'Edit Style Guide'
+      description: '**Required scopes:** `style-guide` (Read and Write).'
+      operationId: api.style-guides.patch
+      parameters:
+        -
+          name: styleGuideId
+          in: path
+          description: 'Style Guide Identifier'
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>. Supported paths: /name, /aiInstructions, /languageIds, /projectIds, /isShared, /storageId.'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StyleGuidePatch'
+      responses:
+        '200':
+          description: 'Style Guide was successfully updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrowdinStyleGuideResource'
+        '400':
+          description: 'Invalid Request Body'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '404':
+          description: 'Style Guide with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '500':
+          description: 'Internal Server Error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerErrorExceptionResource'
   '/users/{userId}/tasks':
     get:
       tags:
@@ -18848,7 +19186,7 @@ components:
         aiModelId:
           description: 'Ai Model id. Get via [List AI Provider Models](#operation/api.ai.providers.models.getMany)'
           type: string
-          example: gpt-3.5-turbo-instruct
+          example: gpt-5.4
         isEnabled:
           description: 'If `aiProviderId` or `aiModelId` is not set, default value would be `false`'
           type: boolean
@@ -18989,6 +19327,8 @@ components:
         publicProjectDescription:
           type: boolean
         siblingsStrings:
+          type: boolean
+        retryOnQaIssues:
           type: boolean
       type: object
     ai.prompt.config.basic_mode.assist:
@@ -19168,6 +19508,9 @@ components:
                 type: string
                 example: uk
           type: object
+        retryOnQaIssues:
+          description: 'Available only for pre-translate action'
+          type: boolean
       type: object
     ai.prompt.config.crowdin_advanced_mode:
       title: 'Advanced mode'
@@ -19234,6 +19577,9 @@ components:
           description: 'Options to compile the prompt. Get from configurator'
           type: object
           additionalProperties: true
+        retryOnQaIssues:
+          description: 'Available only for pre-translate action and may be disabled by AI prompt provider'
+          type: boolean
       type: object
     EnterpriseAiPromptCollectionResource:
       description: 'AI Prompt Collection Resource'
@@ -19352,7 +19698,7 @@ components:
           nullable: true
         aiModelId:
           type: string
-          example: gpt-3.5-turbo-instruct
+          example: gpt-5.4
           nullable: true
         isEnabled:
           type: boolean
@@ -19619,7 +19965,7 @@ components:
           type: array
           items:
             type: string
-            example: gpt-3.5-turbo-instruct
+            example: gpt-5.4
       type: object
     ai.provider.enterprise_configuration.actionRule:
       title: 'Action rule'
@@ -19871,7 +20217,7 @@ components:
       properties:
         id:
           type: string
-          example: gpt-3.5-turbo-instruct
+          example: gpt-5.4
         provider:
           type: string
           example: open_ai
@@ -28620,6 +28966,59 @@ components:
           format: date-time
           example: '2019-09-23T09:19:07+00:00'
       type: object
+    PreTranslationMassPatch:
+      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      type: array
+      items:
+        $ref: '#/components/schemas/PreTranslationMassOperation'
+      example:
+        -
+          op: replace
+          path: /9e7de270-4f83-41cb-b606-2f90631f26e2/status
+          value: canceled
+        -
+          op: replace
+          path: /9e7de270-4f83-41cb-b606-2f90631f26e2/priority
+          value: high
+    PreTranslationMassOperation:
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - '/{preTranslationId}/status'
+            - '/{preTranslationId}/priority'
+          example: '/{preTranslationId}/status'
+      type: object
+      discriminator:
+        propertyName: op
+        mapping:
+          replace: '#/components/schemas/PreTranslationMassOperationReplace'
+    PreTranslationMassOperationReplace:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/PreTranslationMassOperation'
+        -
+          properties:
+            value:
+              example: canceled
+              oneOf:
+                -
+                  type: string
     PreTranslationPatch:
       type: array
       items:
@@ -28642,6 +29041,7 @@ components:
           format: json-pointer
           enum:
             - /status
+            - /priority
       type: object
       discriminator:
         propertyName: op
@@ -28713,6 +29113,13 @@ components:
             - mt
             - ai
           example: mt
+        priority:
+          type: string
+          default: normal
+          enum:
+            - low
+            - normal
+            - high
         engineId:
           description: 'Machine Translation engine Identifier. Read more about how to get the [MT engine identifier](https://support.crowdin.com/configuring-machine-translation-engines#mt-engine-ids).'
           type: integer
@@ -28820,6 +29227,22 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/EnterprisePreTranslation'
+    CrowdinPreTranslationUpdatedCollectionResource:
+      description: 'Pre-Translation Updated Collection Resource'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CrowdinPreTranslationResource'
+      type: object
+    EnterprisePreTranslationUpdatedCollectionResource:
+      description: 'Pre-Translation Updated Collection Resource'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnterprisePreTranslationResource'
+      type: object
     PreTranslationReport:
       description: 'Pre-Translation Report'
       properties:
@@ -28907,6 +29330,13 @@ components:
         translateWithPerfectMatchOnly:
           type: boolean
           example: true
+        priority:
+          type: string
+          enum:
+            - low
+            - normal
+            - high
+          example: normal
       type: object
     EnterprisePreTranslateAttributes:
       allOf:
@@ -29796,6 +30226,12 @@ components:
           type: integer
           default: null
           example: 1
+        assignedStyleGuides:
+          description: 'Style Guide IDs to assign to project. Get via [List Style Guides](#operation/api.style-guides.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 1
         inContext:
           description: "Enable In-Context translations.\n\n__Note:__ Must be used together with `inContextPseudoLanguageId`"
           type: boolean
@@ -31262,6 +31698,11 @@ components:
                   $ref: '#/components/schemas/assigned-tm'
               type: object
             assignedGlossaries:
+              type: array
+              items:
+                type: integer
+                example: 2
+            assignedStyleGuides:
               type: array
               items:
                 type: integer
@@ -36415,7 +36856,6 @@ components:
         - resx
         - gettext
         - i18next_json
-        - macosx
         - properties
         - properties_xml
         - properties_play
@@ -36535,12 +36975,12 @@ components:
         updateStrings:
           description: 'Update strings that have the same keys'
           type: boolean
-          default: 'false'
+          default: false
           example: true
         cleanupMode:
           description: 'If `true`, all strings with a system label that do not exist in the file will be deleted.'
           type: boolean
-          default: 'false'
+          default: false
           example: true
         importOptions:
           $ref: '#/components/schemas/StringBasedFileUploadOptions'
@@ -36560,8 +37000,6 @@ components:
         -
           $ref: '#/components/schemas/CollectionResource'
         -
-          $ref: '#/components/schemas/CollectionResource'
-        -
           properties:
             data:
               type: array
@@ -36569,6 +37007,9 @@ components:
                 $ref: '#/components/schemas/CrowdinFileBasedStringResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
+          type: object
+        -
+          $ref: '#/components/schemas/CollectionResource'
     CrowdinFileBasedStringResource:
       description: 'String Resource'
       type: object
@@ -36591,12 +37032,11 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/CrowdinFileBasedStringResource'
+          type: object
     CrowdinStringBasedStringCollectionResource:
       description: 'String Collection Resource'
       type: object
       allOf:
-        -
-          $ref: '#/components/schemas/CollectionResource'
         -
           $ref: '#/components/schemas/CollectionResource'
         -
@@ -36607,6 +37047,9 @@ components:
                 $ref: '#/components/schemas/CrowdinStringBasedStringResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
+          type: object
+        -
+          $ref: '#/components/schemas/CollectionResource'
     CrowdinStringBasedStringResource:
       description: 'String Resource'
       type: object
@@ -36629,6 +37072,7 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/CrowdinStringBasedStringResource'
+          type: object
     StringBasedStringUploadResource:
       description: 'String Upload Resource'
       type: object
@@ -36832,6 +37276,10 @@ components:
             - replace
             - remove
             - add
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
       type: object
       discriminator:
         propertyName: op
@@ -36840,7 +37288,6 @@ components:
           remove: '#/components/schemas/StringCommentMassOperationRemove'
           add: '#/components/schemas/StringCommentMassOperationAdd'
     StringCommentMassOperationReplace:
-      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -36861,7 +37308,6 @@ components:
               type: string
               example: true
     StringCommentMassOperationRemove:
-      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       type: object
       allOf:
         -
@@ -36875,7 +37321,6 @@ components:
               enum:
                 - '/{commentId}'
     StringCommentMassOperationAdd:
-      description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -36923,7 +37368,6 @@ components:
           replace: '#/components/schemas/StringCommentOperationReplace'
           test: '#/components/schemas/StringCommentOperationTest'
     StringCommentOperationReplace:
-      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -36937,7 +37381,6 @@ components:
                 -
                   type: string
     StringCommentOperationTest:
-      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -38365,6 +38808,200 @@ components:
           description: 'Vote action'
           type: string
           example: up
+      type: object
+    StyleGuidePatch:
+      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      type: array
+      items:
+        $ref: '#/components/schemas/StyleGuideOperation'
+    StyleGuideOperation:
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+            - test
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - /name
+            - /aiInstructions
+            - /languageIds
+            - /projectIds
+            - /isShared
+            - /storageId
+      type: object
+      discriminator:
+        propertyName: op
+        mapping:
+          replace: '#/components/schemas/StyleGuideOperationReplace'
+          test: '#/components/schemas/StyleGuideOperationTest'
+    StyleGuideOperationReplace:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/StyleGuideOperation'
+        -
+          properties:
+            value:
+              oneOf:
+                -
+                  type: string
+                -
+                  type: integer
+                -
+                  type: boolean
+                -
+                  type: array
+                  items: { type: integer }
+    StyleGuideOperationTest:
+      description: 'A JSON Patch `Test` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.6)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/StyleGuideOperation'
+        -
+          properties:
+            value:
+              oneOf:
+                -
+                  type: string
+                -
+                  type: integer
+                -
+                  type: boolean
+                -
+                  type: array
+                  items: { type: integer }
+    CrowdinStyleGuideCreateForm:
+      required:
+        - name
+        - storageId
+      properties:
+        name:
+          description: 'Style Guide name'
+          type: string
+          example: "Be My Eyes iOS's Style Guide"
+        aiInstructions:
+          description: 'Style Guide instructions for AI models'
+          type: string
+          nullable: true
+        languageIds:
+          description: 'Style Guide Language Identifier list. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: array
+          items:
+            type: string
+          example:
+            - uk
+            - fr
+            - de
+        projectIds:
+          description: 'Project ids to assign style guide to'
+          type: array
+          items:
+            type: integer
+          example:
+            - 1
+            - 2
+            - 3
+        isShared:
+          description: 'Whether style guide should be shared to all projects within the account'
+          type: boolean
+          example: false
+        storageId:
+          description: 'Storage identifier.'
+          type: integer
+          example: 1
+          nullable: true
+      type: object
+    CrowdinStyleGuideCollectionResource:
+      description: 'Style Guide Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CrowdinStyleGuideResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    CrowdinStyleGuideResource:
+      description: 'Style Guide Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/StyleGuide'
+    StyleGuide:
+      title: 'Style Guide'
+      properties:
+        id:
+          type: integer
+          example: 2
+        name:
+          type: string
+          example: "Be My Eyes iOS's Style Guide"
+        aiInstructions:
+          type: string
+          example: 'Rules to be used by AI models'
+          nullable: true
+        userId:
+          type: integer
+          example: 2
+        languageIds:
+          type: array
+          items:
+            type: string
+            example: uk
+          example:
+            - uk
+            - fr
+            - de
+          nullable: true
+        projectIds:
+          type: array
+          items:
+            type: integer
+            example: 6
+          nullable: true
+        isShared:
+          description: 'Whether style guide should be shared to all projects within the account'
+          type: boolean
+          example: false
+        webUrl:
+          type: string
+          example: 'https://crowdin.com/profile/{userName}/style-guides?id=1'
+        downloadLink:
+          type: string
+          example: 'https://storage.crowdin.com/style-guide/123/456/file.pdf'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2019-09-16T13:42:04+00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2019-09-16T13:42:04+00:00'
       type: object
     TaskSettingsTemplatePatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
@@ -45655,6 +46292,9 @@ tags:
   -
     name: Glossaries
     description: "\nGlossaries help to explain some specific terms or the ones often used in the project so that they can be properly and consistently translated.\n\nUse API to manage glossaries or specific terms. Glossary export and import are [asynchronous operations](#section/Introduction/Asynchronous-Operations) and shall be completed with sequence of API methods.\n"
+  -
+    name: 'Style Guides'
+    description: "\nStyle Guides help to provide additional context for the translators.\n\nUse API to manage style guides.\n"
   -
     name: 'Translation Memory'
     description: "\nTranslation Memory (TM) is a vault of translations that were previously made in other projects. Those translations can be reused to speed up the translation process. Every translation made in the project is automatically added to the project Translation Memory.\n\nUse API to create, upload, download, or remove specific TM. Translation Memory export and import are [asynchronous operations](#section/Introduction/Asynchronous-Operations) and shall be completed with sequence of API methods.\n"
