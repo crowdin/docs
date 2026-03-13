@@ -69,7 +69,7 @@ AP.getContext(function(contextData) {
 
 ##### Response Payload Example
 
-```json collapse={11-45}
+```json collapse={12-21,25-59,62-64}
 {
   "project_id": 123,
   "organization_id": 100001,
@@ -77,7 +77,21 @@ AP.getContext(function(contextData) {
     "mode": "translate",
     "theme": "dark",
     "source_language_id": "en",
-    "target_language_id": "fr",
+    "target_language_id": "fr",          // Present in "translate" and "proofread"
+    "target_language_ids": ["fr", "uk"], // Present only in "multilingual"
+    "task_id": 327,                      // Present only if Task-based access control is enabled
+    "task": {
+      "id": 327,
+      "type": 2,
+      "status": 0,
+      "title": "New task",
+      "description": "Task description",
+      "created": "2025-01-01 10:30:00",
+      "to_language": "French",
+      "workflow_step_id": 0,
+      "workflow_step_title": "",
+      "language_id": "fr"
+    },
     "file": 987,
     "fileData": {
       "id": "987",
@@ -179,6 +193,27 @@ AP.getContext(function(contextData) {
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Description:</strong> The ID of the current target language (e.g., <code>"fr"</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">editor.target_language_ids</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Description:</strong> An array of target language IDs. <Aside>This field replaces <code>editor.target_language_id</code> when <code>editor.mode</code> is set to <code>multilingual</code>.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">editor.task_id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The numeric ID of the current task. <Aside>This is only present if [Task-based access control](/project-settings/privacy-collaboration/#privacy) is enabled in the project settings.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">editor.task</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> A detailed object containing metadata for the current task (e.g., title, status, description). Only present alongside <code>editor.task_id</code>.</p>
       </td>
     </tr>
     <tr>
@@ -1183,7 +1218,7 @@ AP.editor.getStringsList(function(strings) {
 
 #### AP.editor.getSelectedStrings(callback) {#get-selected-strings}
 
-Retrieves an array of objects for all strings that are currently selected (checked) by the user.
+Retrieves information about the strings currently selected (checked) by the user in the Editor list.
 
 <Aside>
   This method is only available in Editor views that support multiple string selection (like Side-by-Side and Multilingual).
@@ -1192,10 +1227,11 @@ Retrieves an array of objects for all strings that are currently selected (check
 **Example:**
 
 ```js
-AP.editor.getSelectedStrings(function(selectedData) {
-  if (selectedData && selectedData.length > 0) {
-    console.log("Selected strings count:", selectedData.length);
-    console.log("First selected string text:", selectedData[0].string.text);
+AP.editor.getSelectedStrings(function(selectedData, selectedCount) {
+  if (selectedData === 'all') {
+    console.log(`All ${selectedCount} strings are selected.`);
+  } else {
+    console.log(`Selected ${selectedCount} individual strings:`, selectedData);
   }
 });
 ```
@@ -1209,14 +1245,17 @@ AP.editor.getSelectedStrings(function(selectedData) {
       <td>
         <p><strong>Type:</strong> <code>function</code></p>
         <p><strong>Required:</strong> Yes</p>
-        <p><strong>Description:</strong> A callback function that handles the response. It receives an array of
-          <code>SelectedStringObject</code> items.</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives two arguments (in this order):</p>
+          <ul>
+            <li><code>selectedData</code> (Array|String): An array of <code>SelectedStringObject</code> items OR the string <code>"all"</code>.</li>
+            <li><code>selectedCount</code> (Integer): The total number of selected strings.</li>
+          </ul>
       </td>
     </tr>
   </tbody>
 </table>
 
-##### Response Payload Example
+##### Response Payload Example (Specific strings selected)
 
 ```json
 [
@@ -1260,7 +1299,17 @@ AP.editor.getSelectedStrings(function(selectedData) {
 ]
 ```
 
+##### Response Payload Example (All strings selected)
+
+If all strings in the project are selected, the first argument of the callback returns:
+
+```json
+"all"
+```
+
 ##### Response Object Structure
+
+The following fields apply to the `SelectedStringObject` items returned when `selectedData` is an array:
 
 <table>
   <tbody>
@@ -1290,6 +1339,10 @@ AP.editor.getSelectedStrings(function(selectedData) {
     </tr>
   </tbody>
 </table>
+
+<Aside type="caution">
+  Always check the type of <code>selectedData</code>. If the user selects all strings, the method returns the string <code>"all"</code> instead of an array.
+</Aside>
 
 #### AP.editor.getSelectedFiles(callback) {#get-selected-files}
 
