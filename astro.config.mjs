@@ -230,7 +230,8 @@ const config = defineConfig({
           'groups',
           'reply',
           'payments',
-          'undo'
+          'undo',
+          'split-scene-left-outline'
         ],
         garden: [
           'puzzle-piece-fill-12'
