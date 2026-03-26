@@ -231,7 +231,8 @@ const config = defineConfig({
           'reply',
           'payments',
           'undo',
-          'split-scene-left-outline'
+          'split-scene-left-outline',
+          'download'
         ],
         garden: [
           'puzzle-piece-fill-12'
