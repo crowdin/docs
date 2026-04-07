@@ -1,5 +1,6 @@
 ---
 const { product } = Astro.props;
+const errorLoadingLabel = Astro.locals.t('languages.errorLoading');
 
 const columns = [
     { key: 'twoLetters', label: 'Two-letters', dataKey: 'twoLettersCode', width: '15%' },
@@ -24,7 +25,7 @@ const columns = [
         </div>
     </div>
 
-    <crowdin-languages data-product={product}>
+    <crowdin-languages data-product={product} data-error-text={errorLoadingLabel}>
         <table class="w-full">
             <colgroup>
                 <col width="20%" />
@@ -195,7 +196,8 @@ const columns = [
                 const tbody = this.querySelector('.languages-list');
                 if (tbody) {
                     const colspan = 2 + COLUMNS.length;
-                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-red-500">Error loading languages</td></tr>`;
+                    const errorText = this.dataset.errorText as string;
+                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-red-500">${this.escapeHtml(errorText)}</td></tr>`;
                 }
             }
         }

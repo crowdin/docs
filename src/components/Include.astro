@@ -4,16 +4,26 @@ interface Props {
 }
 
 const { file } = Astro.props;
+const currentLocale = Astro.currentLocale ?? 'root';
 
 // Look up all the Markdown files in the includes folder.
-// TODO: handle current locale
 const includes = import.meta.glob('../content/includes/**/*.mdx');
 
-// Find the file that matches the passed `file` prop.
-const loader = includes[`../content/includes/${file}`];
+// Resolve locale-specific include first, then fall back to default include.
+const candidatePaths = currentLocale === 'root'
+  ? [`../content/includes/${file}`]
+  : [
+      `../content/includes/${currentLocale}/${file}`,
+      `../content/includes/${file}`,
+    ];
+
+const loaderPath = candidatePaths.find((path) => path in includes);
+const loader = loaderPath ? includes[loaderPath] : undefined;
 
 if (!loader) {
-  throw new Error(`Could not find \`${file}\`.`)
+  throw new Error(
+    `Could not find include \`${file}\` for locale \`${currentLocale}\`. Checked: ${candidatePaths.join(', ')}.`
+  );
 }
 
 const { Content } = await loader() as any;

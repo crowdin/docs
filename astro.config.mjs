@@ -38,6 +38,17 @@ const config = defineConfig({
   integrations: [
     starlight({
       title: 'Crowdin Docs',
+      defaultLocale: 'root',
+      locales: {
+        root: {
+          label: 'English',
+          lang: 'en',
+        },
+        "de-DE": {
+          label: 'Deutsch',
+          lang: 'de-DE',
+        },
+      },
       logo: {
         replacesTitle: true,
         light: './src/assets/logo/dark.svg',
@@ -60,12 +71,12 @@ const config = defineConfig({
         {
           label: "leading",
           items: [
-            { label: "Crowdin Help", link: "/introduction", attrs: { id: "crowdin-nav-button", class: "nav-link" } },
-            { label: "Enterprise Help", link: "/enterprise/introduction", attrs: { id: "enterprise-nav-button", class: "nav-link" } },
-            { label: "Developer Portal", link: "/developer/crowdin-apps-about", attrs: { id: "developer-nav-button", class: "nav-link" } },
-            { label: "Store", link: "https://store.crowdin.com", attrs: { target: "_blank", class: "nav-link" } },
-            { label: "Blog", link: "https://crowdin.com/blog", attrs: { target: "_blank", class: "nav-link" } },
-            { label: "Community", link: "https://community.crowdin.com/", attrs: { target: "_blank", class: "nav-link" } },
+            { label: "Crowdin Help", slug: "introduction", attrs: { id: "crowdin-nav-button", class: "nav-link" } },
+            { label: "Enterprise Help", slug: "enterprise/introduction", attrs: { id: "enterprise-nav-button", class: "nav-link" } },
+            { label: "Developer Portal", slug: "developer/crowdin-apps-about", attrs: { id: "developer-nav-button", class: "nav-link" } },
+            { label: "Store", link: "https://store.crowdin.com", attrs: { id: "store-nav-button", target: "_blank", class: "nav-link" } },
+            { label: "Blog", link: "https://crowdin.com/blog", attrs: { id: "blog-nav-button", target: "_blank", class: "nav-link" } },
+            { label: "Community", link: "https://community.crowdin.com/", attrs: { id: "community-nav-button", target: "_blank", class: "nav-link" } },
             { label: "Crowdin.com", link: "https://crowdin.com/", attrs: { target: "_blank", class: "nav-link" } },
           ],
         }
@@ -157,6 +168,13 @@ const config = defineConfig({
             '/developer/api/v2/string-based/**',
             '/developer/enterprise/api/v2/**',
             '/developer/enterprise/api/v2/string-based/**',
+            '/de-DE/developer/api/v2/**',
+            '/de-DE/developer/api/v2/string-based/**',
+            '/de-DE/developer/enterprise/api/v2/**',
+            '/de-DE/developer/enterprise/api/v2/string-based/**',
+            '/de-DE/introduction/**',
+            '/de-DE/enterprise/introduction/**',
+            '/de-DE/developer/crowdin-apps-about/**',
           ],
         }),
         starlightHeadingBadges(),
@@ -202,9 +220,10 @@ const config = defineConfig({
     // https://docs.astro.build/en/guides/integrations-guide/sitemap/#configuration
     sitemap({
       i18n: {
-        defaultLocale: 'en',
+        defaultLocale: 'root',
         locales: {
-          en: 'en-US',
+          root: 'en-US',
+          "de-DE": 'de-DE',
         },
       },
       filter: (page) =>

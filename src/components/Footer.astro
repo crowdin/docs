@@ -1,9 +1,19 @@
 ---
 import Default from '@astrojs/starlight/components/Footer.astro';
 import Feedback from '~/components/Feedback.astro';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { getStarlightLocaleForUrl, isStarlightHomepage } from '~/utils/starlightRoute';
 
-const isHomepage = Astro.locals.starlightRoute.id === '';
+const isHomepage = isStarlightHomepage(Astro.locals.starlightRoute);
+const locale = getStarlightLocaleForUrl(Astro.locals.starlightRoute);
 const year = new Date().getFullYear();
+
+const statusLabel = Astro.locals.t('footer.status');
+const termsLabel = Astro.locals.t('footer.terms');
+const privacyLabel = Astro.locals.t('footer.privacy');
+const cookiesLabel = Astro.locals.t('footer.cookies');
+const securityLabel = Astro.locals.t('footer.security');
+const llmsLabel = Astro.locals.t('footer.llms');
 
 const showFeedback = !isHomepage &&
     !['404', 'iframe/privacy-policy', 'iframe/terms'].includes(Astro.locals.starlightRoute.id);
@@ -25,12 +35,12 @@ const showFeedback = !isHomepage &&
         <div class="flex flex-col gap-6 text-sm sm:flex-row sm:items-center">
             <p class="sm:mr-auto">Crowdin &copy; {year}</p>
             <div class="grid grid-cols-2 gap-4 sm:flex sm:gap-6">
-                <a class="no-underline" href="https://status.crowdin.com/" target="_blank">Status</a>
-                <a class="no-underline" href="/terms/">Terms of Service</a>
-                <a class="no-underline" href="/privacy-policy/">Privacy Policy</a>
-                <a class="no-underline" href="/cookies/">Cookies Statement</a>
-                <a class="no-underline" href="https://crowdin.com/page/security">Security</a>
-                <a class="no-underline" href="/llms.txt">Docs for LLMs</a>
+                <a class="no-underline" href="https://status.crowdin.com/" target="_blank">{statusLabel}</a>
+                <a class="no-underline" href={getRelativeLocaleUrl(locale, 'terms')}>{termsLabel}</a>
+                <a class="no-underline" href={getRelativeLocaleUrl(locale, 'privacy-policy')}>{privacyLabel}</a>
+                <a class="no-underline" href={getRelativeLocaleUrl(locale, 'cookies')}>{cookiesLabel}</a>
+                <a class="no-underline" href="https://crowdin.com/page/security">{securityLabel}</a>
+                <a class="no-underline" href="/llms.txt">{llmsLabel}</a>
             </div>
         </div>
     </footer>

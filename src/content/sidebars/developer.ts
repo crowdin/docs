@@ -1,9 +1,11 @@
 /**
  * https://starlight.astro.build/reference/configuration/#sidebaritem
  */
+import { sidebarLabel } from '../../utils/i18n';
+
 export default [
   {
-    label: 'Crowdin Apps',
+    ...sidebarLabel('crowdinApps'),
     items: [
       { slug: path('crowdin-apps-about') },
       { slug: path('crowdin-apps-quick-start') },
@@ -13,32 +15,32 @@ export default [
       { slug: path('crowdin-apps-security') },
       { slug: path('crowdin-apps-user-interface') },
       {
-        label: 'Publishing',
+        ...sidebarLabel('publishing'),
         autogenerate: { directory: path('crowdin-apps', 'publishing') },
         collapsed: true,
       },
     ],
   },
   {
-    label: 'Modules',
+    ...sidebarLabel('modules'),
     items: [
       {
-        label: 'UI Modules',
+        ...sidebarLabel('uiModules'),
         autogenerate: { directory: path('modules', 'ui-modules') },
         collapsed: true,
       },
       {
-        label: 'AI Modules',
+        ...sidebarLabel('aiModules'),
         autogenerate: { directory: path('modules', 'ai-modules') },
         collapsed: true,
       },
       {
-        label: 'File Processing Modules',
+        ...sidebarLabel('fileProcessingModules'),
         autogenerate: { directory: path('modules', 'file-processing-modules') },
         collapsed: true,
       },
       {
-        label: 'Other',
+        ...sidebarLabel('other'),
         autogenerate: { directory: path('modules', 'other') },
         collapsed: true,
       }
@@ -46,32 +48,32 @@ export default [
     collapsed: true,
   },
   {
-    label: 'Capabilities',
+    ...sidebarLabel('capabilities'),
     autogenerate: { directory: path('capabilities') },
     collapsed: true,
   },
   {
-    label: 'API',
+    ...sidebarLabel('api'),
     items: [
       {
         slug: path('api'),
-        label: 'Overview',
+        ...sidebarLabel('overview'),
       },
       {
-        label: 'Crowdin API (File-based)',
-        link: 'developer/api/v2'
+        ...sidebarLabel('crowdinApiFileBased'),
+        link: '/developer/api/v2/'
       },
       {
-        label: 'Crowdin API (String-based)',
-        link: 'developer/api/v2/string-based'
+        ...sidebarLabel('crowdinApiStringBased'),
+        link: '/developer/api/v2/string-based/'
       },
       {
-        label: 'Enterprise API (File-based)',
-        link: 'developer/enterprise/api/v2'
+        ...sidebarLabel('enterpriseApiFileBased'),
+        link: '/developer/enterprise/api/v2/'
       },
       {
-        label: 'Enterprise API (String-based)',
-        link: 'developer/enterprise/api/v2/string-based'
+        ...sidebarLabel('enterpriseApiStringBased'),
+        link: '/developer/enterprise/api/v2/string-based/'
       },
       { slug: path('graphql-api') },
       { slug: path('croql') },
@@ -81,52 +83,52 @@ export default [
     collapsed: true,
   },
   {
-    label: 'Dev Tools',
+    ...sidebarLabel('devTools'),
     items: [
       {
         slug: path('dev-tools'),
-        label: 'Overview',
+        ...sidebarLabel('overview'),
       },
       {
         slug: path('configuration-file')
       },
       {
-        label: 'Console Client (CLI)',
+        ...sidebarLabel('consoleClientCli'),
         link: 'https://crowdin.github.io/crowdin-cli/',
         attrs: { target: '_blank' },
       },
       {
-        label: 'GitHub Action',
+        ...sidebarLabel('githubAction'),
         link: 'https://github.com/marketplace/actions/crowdin-action',
         attrs: { target: '_blank' },
       },
       {
-        label: 'Visual Studio Code Plugin',
+        ...sidebarLabel('visualStudioCodePlugin'),
         link: 'https://marketplace.visualstudio.com/items?itemName=Crowdin.vscode-crowdin',
         attrs: { target: '_blank' },
       },
       {
-        label: 'Android Studio Plugin',
+        ...sidebarLabel('androidStudioPlugin'),
         link: 'https://github.com/crowdin/android-studio-plugin#readme',
         attrs: { target: '_blank' },
       },
       {
-        label: 'Android SDK',
+        ...sidebarLabel('androidSdk'),
         link: 'https://crowdin.github.io/mobile-sdk-android/',
         attrs: { target: '_blank' },
       },
       {
-        label: 'iOS SDK',
+        ...sidebarLabel('iosSdk'),
         link: 'https://crowdin.github.io/mobile-sdk-ios/',
         attrs: { target: '_blank' },
       },
       {
-        label: 'Website JS SDK',
+        ...sidebarLabel('websiteJsSdk'),
         link: 'https://crowdin.github.io/ota-client-js/',
         attrs: { target: '_blank' },
       },
         {
-            label: 'Flutter SDK',
+            ...sidebarLabel('flutterSdk'),
             link: 'https://github.com/crowdin/flutter-sdk#readme',
             attrs: { target: '_blank' },
         },
@@ -134,12 +136,12 @@ export default [
     collapsed: true,
   },
   {
-    label: 'Security',
+    ...sidebarLabel('security'),
     autogenerate: { directory: path('security') },
     collapsed: true,
   },
   {
-    label: 'Guides',
+    ...sidebarLabel('guides'),
     autogenerate: { directory: path('guides') },
     collapsed: true,
   }

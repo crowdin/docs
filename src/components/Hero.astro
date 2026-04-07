@@ -3,8 +3,15 @@ import Default from '@astrojs/starlight/components/Hero.astro';
 import Search from '@astrojs/starlight/components/Search.astro';
 import { LinkButton } from '@astrojs/starlight/components';
 import { Image } from 'astro:assets';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { getStarlightLocaleForUrl, isStarlightHomepage } from '~/utils/starlightRoute';
 
-const isHomepage = Astro.locals.starlightRoute.id === '';
+const isHomepage = isStarlightHomepage(Astro.locals.starlightRoute);
+const locale = getStarlightLocaleForUrl(Astro.locals.starlightRoute);
+
+const crowdinHelpLabel = Astro.locals.t('hero.crowdinHelp');
+const enterpriseHelpLabel = Astro.locals.t('hero.enterpriseHelp');
+const developerPortalLabel = Astro.locals.t('hero.developerPortal');
 
 const { data } = Astro.locals.starlightRoute.entry;
 const { title, tagline, image, actions } = data.hero || {};
@@ -118,11 +125,11 @@ if (image) {
 
                 <div class="mb-4 flex flex-wrap justify-center gap-2 sm:hidden">
                     <div class="flex justify-center gap-2 w-full sm:w-auto">
-                        <LinkButton href="/introduction/">Crowdin Help</LinkButton>
-                        <LinkButton href="/enterprise/introduction/">Enterprise Help</LinkButton>
+                        <LinkButton href={getRelativeLocaleUrl(locale, 'introduction')}>{crowdinHelpLabel}</LinkButton>
+                        <LinkButton href={getRelativeLocaleUrl(locale, 'enterprise/introduction')}>{enterpriseHelpLabel}</LinkButton>
                     </div>
                     <div class="flex justify-center w-full">
-                        <LinkButton href="/developer/crowdin-apps-about/">Developer Portal</LinkButton>
+                        <LinkButton href={getRelativeLocaleUrl(locale, 'developer/crowdin-apps-about')}>{developerPortalLabel}</LinkButton>
                     </div>
                 </div>
 
