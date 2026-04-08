@@ -174,3 +174,5 @@ You can use `npm run watch:api` to watch for changes in the API documentation du
 2. In [`src/utils/i18n.ts`](src/utils/i18n.ts), add the locale to `starlightLocales` (same key as the translated docs folder; see [Starlight i18n](https://starlight.astro.build/guides/i18n/)), import the new JSON from [`src/content/i18n/`](src/content/i18n/), and wire it into `sidebarLabel`’s `translations`.
 
 New keys in English [`en.json`](src/content/i18n/en.json) need matching entries in [`src/content/config.ts`](src/content/config.ts).
+
+3. In `crowdin.yml`, add the locale to the `ignore` list in the `files` section for the `includes` file.

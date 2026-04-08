@@ -1,15 +1,25 @@
 ---
+import { basename } from 'node:path';
+
 interface Props {
+  /** Base name only (e.g. `word-counter.mdx`). Crowdin writes translations to `includes/<locale>/`. */
   file: string;
 }
 
-const { file } = Astro.props;
+const { file: fileProp } = Astro.props;
+const file = basename(fileProp);
+if (file !== fileProp || file.includes('..')) {
+  throw new Error(
+    `Include \`file\` must be a single MDX file name in src/content/includes/ (no paths). Got: ${JSON.stringify(fileProp)}`
+  );
+}
+
 const currentLocale = Astro.currentLocale ?? 'root';
 
 // Look up all the Markdown files in the includes folder.
 const includes = import.meta.glob('../content/includes/**/*.mdx');
 
-// Resolve locale-specific include first, then fall back to default include.
+// Resolve locale-specific include first (Crowdin: includes/%two_letters_code%/<name>), then English default.
 const candidatePaths = currentLocale === 'root'
   ? [`../content/includes/${file}`]
   : [
