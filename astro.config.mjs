@@ -74,9 +74,9 @@ const config = defineConfig({
             { label: "Crowdin Help", slug: "introduction", attrs: { id: "crowdin-nav-button", class: "nav-link" } },
             { label: "Enterprise Help", slug: "enterprise/introduction", attrs: { id: "enterprise-nav-button", class: "nav-link" } },
             { label: "Developer Portal", slug: "developer/crowdin-apps-about", attrs: { id: "developer-nav-button", class: "nav-link" } },
-            { label: "Store", link: "https://store.crowdin.com", attrs: { id: "store-nav-button", target: "_blank", class: "nav-link" } },
-            { label: "Blog", link: "https://crowdin.com/blog", attrs: { id: "blog-nav-button", target: "_blank", class: "nav-link" } },
-            { label: "Community", link: "https://community.crowdin.com/", attrs: { id: "community-nav-button", target: "_blank", class: "nav-link" } },
+            { label: "Store", link: "https://store.crowdin.com", attrs: { target: "_blank", class: "nav-link" } },
+            { label: "Blog", link: "https://crowdin.com/blog", attrs: { target: "_blank", class: "nav-link" } },
+            { label: "Community", link: "https://community.crowdin.com/", attrs: { target: "_blank", class: "nav-link" } },
             { label: "Crowdin.com", link: "https://crowdin.com/", attrs: { target: "_blank", class: "nav-link" } },
           ],
         }

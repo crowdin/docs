@@ -16,6 +16,7 @@ export const collections = {
     loader: i18nLoader(),
     schema: i18nSchema({
       extend: z.object({
+        sidebar: z.record(z.string(), z.string()).optional(),
         'copyContent': z.string().optional(),
         'editLink.loading': z.string().optional(),
         'editLink.copied': z.string().optional(),
@@ -33,15 +34,6 @@ export const collections = {
         'hero.crowdinHelp': z.string().optional(),
         'hero.enterpriseHelp': z.string().optional(),
         'hero.developerPortal': z.string().optional(),
-        'languages.toggleCode': z.string().optional(),
-        'languages.code': z.string().optional(),
-        'languages.name': z.string().optional(),
-        'languages.twoLetters': z.string().optional(),
-        'languages.threeLetters': z.string().optional(),
-        'languages.locale': z.string().optional(),
-        'languages.android': z.string().optional(),
-        'languages.osx': z.string().optional(),
-        'languages.osxLocale': z.string().optional(),
         'languages.errorLoading': z.string().optional(),
         'formats.alt': z.string().optional(),
         'formats.supported': z.string().optional(),

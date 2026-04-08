@@ -1,14 +1,13 @@
-import { sidebar as defaultSidebar } from '../content/sidebars/i18n/en';
-import { sidebar as translatedSidebar } from '../content/sidebars/i18n/de-DE';
+import deDE from '../content/i18n/de-DE.json';
+import en from '../content/i18n/en.json';
 
-export type SidebarTranslationKey = keyof typeof defaultSidebar;
-const deSidebar: Record<SidebarTranslationKey, string> = translatedSidebar;
+export type SidebarTranslationKey = keyof typeof en.sidebar;
 
 export function sidebarLabel(key: SidebarTranslationKey) {
   return {
-    label: defaultSidebar[key],
+    label: en.sidebar[key],
     translations: {
-      'de-DE': deSidebar[key],
+      'de-DE': deDE.sidebar[key],
     },
   };
 }
