@@ -166,3 +166,11 @@ The API documentation is implemented using custom pages (`src/pages/developer/**
 Also, scss files should be compiled using the `npm run build:api` command, as Vite doesn't "see" them and won't bundle them automatically (due to the use of custom html pages).
 
 You can use `npm run watch:api` to watch for changes in the API documentation during development.
+
+## Adding a new language
+
+1. Add the language to `export_languages` in [`src/content/crowdin.yml`](src/content/crowdin.yml) and sync so Crowdin writes translated MDX and UI JSON (paths come from the `files` section).
+
+2. In [`src/utils/i18n.ts`](src/utils/i18n.ts), add the locale to `starlightLocales` (same key as the translated docs folder; see [Starlight i18n](https://starlight.astro.build/guides/i18n/)), import the new JSON from [`src/content/i18n/`](src/content/i18n/), and wire it into `sidebarLabel`’s `translations`.
+
+New keys in English [`en.json`](src/content/i18n/en.json) need matching entries in [`src/content/config.ts`](src/content/config.ts).

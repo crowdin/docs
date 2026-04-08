@@ -16,6 +16,7 @@ import icon from 'astro-icon';
 import crowdinSidebar from './src/content/sidebars/crowdin.ts';
 import enterpriseSidebar from './src/content/sidebars/enterprise.ts';
 import developerSidebar from './src/content/sidebars/developer.ts';
+import { starlightLocales } from './src/utils/i18n.ts';
 
 import customConsentScript from './src/scripts/custom-consent-mode.js?raw';
 import postHogScript from './src/scripts/posthog.js?raw';
@@ -39,16 +40,7 @@ const config = defineConfig({
     starlight({
       title: 'Crowdin Docs',
       defaultLocale: 'root',
-      locales: {
-        root: {
-          label: 'English',
-          lang: 'en',
-        },
-        "de-DE": {
-          label: 'Deutsch',
-          lang: 'de-DE',
-        },
-      },
+      locales: starlightLocales,
       logo: {
         replacesTitle: true,
         light: './src/assets/logo/dark.svg',
@@ -168,13 +160,13 @@ const config = defineConfig({
             '/developer/api/v2/string-based/**',
             '/developer/enterprise/api/v2/**',
             '/developer/enterprise/api/v2/string-based/**',
-            '/de-DE/developer/api/v2/**',
-            '/de-DE/developer/api/v2/string-based/**',
-            '/de-DE/developer/enterprise/api/v2/**',
-            '/de-DE/developer/enterprise/api/v2/string-based/**',
-            '/de-DE/introduction/**',
-            '/de-DE/enterprise/introduction/**',
-            '/de-DE/developer/crowdin-apps-about/**',
+            '/*/developer/api/v2/**',
+            '/*/developer/api/v2/string-based/**',
+            '/*/developer/enterprise/api/v2/**',
+            '/*/developer/enterprise/api/v2/string-based/**',
+            '/*/introduction/**',
+            '/*/enterprise/introduction/**',
+            '/*/developer/crowdin-apps-about/**',
           ],
         }),
         starlightHeadingBadges(),
@@ -220,10 +212,9 @@ const config = defineConfig({
     // https://docs.astro.build/en/guides/integrations-guide/sitemap/#configuration
     sitemap({
       i18n: {
-        defaultLocale: 'root',
+        defaultLocale: 'en',
         locales: {
-          root: 'en-US',
-          "de-DE": 'de-DE',
+          en: 'en-US',
         },
       },
       filter: (page) =>
