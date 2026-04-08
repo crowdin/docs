@@ -12,11 +12,7 @@ export function isStarlightHomepage(route: StarlightRouteLike): boolean {
   );
 }
 
-export function getStarlightLocaleForUrl(route: StarlightRouteLike): string {
-  return route.lang;
-}
-
-export function getStarlightCurrentProduct(route: StarlightRouteLike): string | undefined {
+export function getCurrentProduct(route: StarlightRouteLike): string | undefined {
   const slugSegments = route.slug.split('/').filter(Boolean);
   const nonLocaleSegments =
     route.locale && slugSegments[0] === route.locale
