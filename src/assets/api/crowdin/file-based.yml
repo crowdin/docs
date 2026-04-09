@@ -9157,16 +9157,10 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                -
-                  $ref: '#/components/schemas/AndroidSystemStringsExporterSettings'
-                -
-                  $ref: '#/components/schemas/MacOSXSystemStringsExporterSettings'
-                -
-                  $ref: '#/components/schemas/XliffSystemStringsExporterSettings'
+              $ref: '#/components/schemas/SystemStringsExporterSettingsPatch'
       responses:
-        '201':
-          description: 'Strings Exporter Settings was successfully created'
+        '200':
+          description: 'Strings Exporter Settings was successfully updated'
           content:
             application/json:
               schema:
@@ -10665,12 +10659,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RevisionResource'
-        '404':
-          description: 'Project, file, or revision with specified id was not found'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundExceptionResource'
         '401':
           description: Unauthorized
           content:
@@ -10683,6 +10671,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project, file, or revision with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
         '405':
           description: 'Method Not Allowed'
           content:
@@ -32885,6 +32879,32 @@ components:
                 $ref: '#/components/schemas/QaCheckResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
+    QaCheckFileStatisticCollectionResource:
+      description: 'QA Check File Statistic Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/QaCheckFileStatisticResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    QaCheckFileStatisticResource:
+      description: 'QA Check File Statistic Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/QaCheckFileStatistic'
     QaCheckResource:
       description: 'QaCheck Resource'
       type: object
@@ -32986,6 +33006,16 @@ components:
           format: date-time
           example: null
           nullable: true
+      type: object
+    QaCheckFileStatistic:
+      title: 'QA Check File Statistic'
+      properties:
+        fileId:
+          type: integer
+          example: 2
+        total:
+          type: integer
+          example: 5
       type: object
     QaCheck:
       title: 'Translation Quality Assurance'
@@ -35098,6 +35128,34 @@ components:
           type: string
           format: date-time
           example: '2025-09-27T07:00:14+00:00'
+        fileIds:
+          description: 'Array of file ids. Get via [List Files](#operation/api.projects.files.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 138
+          x-doc-sections:
+            - file-based
+        directoryIds:
+          description: 'Array of directory ids. Get via [List Directories](#operation/api.projects.directories.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 11
+          x-doc-sections:
+            - file-based
+        branchIds:
+          description: 'Array of branch ids. Get via [List Branches](#operation/api.projects.branches.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 18
+        userIds:
+          description: 'Array of user ids. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 1
       type: object
     ProjectTranslationActivity:
       title: 'Project Translation Activity'
@@ -35150,6 +35208,12 @@ components:
           type: string
           format: date-time
           example: '2025-09-27T07:00:14+00:00'
+        userIds:
+          description: 'Array of user ids. Get via [List Project Members](#operation/api.projects.members.getMany)'
+          type: array
+          items:
+            type: integer
+            example: 1
       type: object
     TimeSpent:
       title: 'Time Spent'
@@ -36008,7 +36072,6 @@ components:
               $ref: '#/components/schemas/Revision'
     Revision:
       title: Revision
-      description: 'Class RevisionResponseModel'
       properties:
         id:
           type: integer
@@ -36023,15 +36086,6 @@ components:
           type: integer
           example: null
           nullable: true
-        info:
-          properties:
-            added:
-              $ref: '#/components/schemas/revision-info'
-            deleted:
-              $ref: '#/components/schemas/revision-info'
-            updated:
-              $ref: '#/components/schemas/revision-info'
-          type: object
         date:
           type: string
           format: date-time
@@ -36046,6 +36100,15 @@ components:
         words:
           type: integer
           example: 43
+        info:
+          properties:
+            added:
+              $ref: '#/components/schemas/revision-info'
+            deleted:
+              $ref: '#/components/schemas/revision-info'
+            updated:
+              $ref: '#/components/schemas/revision-info'
+          type: object
       type: object
     ScreenshotPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
@@ -36092,7 +36155,7 @@ components:
                 -
                   type: string
     ScreenshotOperationTest:
-      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      description: 'A JSON Patch `Test` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -36152,7 +36215,7 @@ components:
                 -
                   type: string
     TagOperationTest:
-      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      description: 'A JSON Patch `Test` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -36185,19 +36248,19 @@ components:
           description: 'Automatically tags screenshot'
           type: boolean
         fileId:
-          description: "File Identifier. Get via [List Files](#operation/api.projects.files.getMany)\n\n  __Note:__ Must be used together with `autoTag`. Can't be used with `directoryId` or `branchId` in same request"
+          description: "File Identifier. Get via [List Files](#operation/api.projects.files.getMany)\n\n__Note:__ Must be used together with `autoTag`. Can't be used with `directoryId` or `branchId` in same request"
           type: integer
           example: 48
           x-doc-sections:
             - file-based
         branchId:
-          description: "Branch identifier. Get via [List Branches](#operation/api.projects.branches.getMany)\n\n __Note:__ Must be used together with `autoTag`. Can't be used with `fileId` or `directoryId` in the same request"
+          description: "Branch identifier. Get via [List Branches](#operation/api.projects.branches.getMany)\n\n__Note:__ Must be used together with `autoTag`. Can't be used with `fileId` or `directoryId` in the same request"
           type: integer
           example: null
           x-doc-sections:
             - file-based
         directoryId:
-          description: "Directory Identifier. Get via [List Directories](#operation/api.projects.directories.getMany)\n\n __Note:__ Must be used together with `autoTag`. Can't be used with fileId or branchId in same request"
+          description: "Directory Identifier. Get via [List Directories](#operation/api.projects.directories.getMany)\n\n__Note:__ Must be used together with `autoTag`. Can't be used with fileId or branchId in same request"
           type: integer
           example: null
           x-doc-sections:
@@ -36389,7 +36452,6 @@ components:
         tagsCount:
           type: integer
           example: 1
-          nullable: true
         tags:
           type: array
           items:
@@ -36417,7 +36479,6 @@ components:
       type: object
     ScreenshotTag:
       title: Tag
-      description: 'Class TagResponseModel'
       properties:
         id:
           type: integer
