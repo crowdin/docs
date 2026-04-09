@@ -9187,16 +9187,10 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                -
-                  $ref: '#/components/schemas/AndroidSystemStringsExporterSettings'
-                -
-                  $ref: '#/components/schemas/MacOSXSystemStringsExporterSettings'
-                -
-                  $ref: '#/components/schemas/XliffSystemStringsExporterSettings'
+              $ref: '#/components/schemas/SystemStringsExporterSettingsPatch'
       responses:
-        '201':
-          description: 'Strings Exporter Settings was successfully created'
+        '200':
+          description: 'Strings Exporter Settings was successfully updated'
           content:
             application/json:
               schema:
@@ -34855,6 +34849,32 @@ components:
                 $ref: '#/components/schemas/QaCheckResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
+    QaCheckFileStatisticCollectionResource:
+      description: 'QA Check File Statistic Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/QaCheckFileStatisticResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    QaCheckFileStatisticResource:
+      description: 'QA Check File Statistic Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/QaCheckFileStatistic'
     QaCheckResource:
       description: 'QaCheck Resource'
       type: object
@@ -34987,6 +35007,16 @@ components:
                   items: { type: integer }
                   example: [1, 2, 3]
               type: object
+    QaCheckFileStatistic:
+      title: 'QA Check File Statistic'
+      properties:
+        fileId:
+          type: integer
+          example: 2
+        total:
+          type: integer
+          example: 5
+      type: object
     QaCheck:
       title: 'Translation Quality Assurance'
       description: 'QaCheck Response Model'
@@ -36126,6 +36156,12 @@ components:
           type: string
           format: date-time
           example: '2019-09-27T07:00:14+00:00'
+        userIds:
+          description: 'Array of user ids for filtering'
+          type: array
+          items:
+            type: integer
+            example: 1
       type: object
     GroupSavingActivity:
       title: 'Group Saving Activity'
@@ -38064,6 +38100,14 @@ components:
       allOf:
         -
           $ref: '#/components/schemas/DefaultReportShemaWithDate'
+        -
+          properties:
+            userIds:
+              description: 'Array of user ids. Get via [List Project Members](#operation/api.projects.members.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 1
     TimeSpent:
       title: 'Time Spent'
       description: 'Explore detailed statistics on task creation, workload, progress, and performance.'
@@ -38215,6 +38259,18 @@ components:
               enum:
                 - currency
                 - relative
+            branchIds:
+              description: 'Array of branch ids. Get via [List Branches](#operation/api.projects.branches.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 18
+            userIds:
+              description: 'Array of user ids. Get via [List Project Members](#operation/api.projects.members.getMany)'
+              type: array
+              items:
+                type: integer
+                example: 1
     DefaultReportShemaWithDate:
       properties:
         unit:
@@ -39408,7 +39464,6 @@ components:
               $ref: '#/components/schemas/Revision'
     Revision:
       title: Revision
-      description: 'Class RevisionResponseModel'
       properties:
         id:
           type: integer
@@ -39423,15 +39478,6 @@ components:
           type: integer
           example: null
           nullable: true
-        info:
-          properties:
-            added:
-              $ref: '#/components/schemas/revision-info'
-            deleted:
-              $ref: '#/components/schemas/revision-info'
-            updated:
-              $ref: '#/components/schemas/revision-info'
-          type: object
         date:
           type: string
           format: date-time
@@ -39446,6 +39492,15 @@ components:
         words:
           type: integer
           example: 43
+        info:
+          properties:
+            added:
+              $ref: '#/components/schemas/revision-info'
+            deleted:
+              $ref: '#/components/schemas/revision-info'
+            updated:
+              $ref: '#/components/schemas/revision-info'
+          type: object
       type: object
     ScreenshotPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
@@ -39492,7 +39547,7 @@ components:
                 -
                   type: string
     ScreenshotOperationTest:
-      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      description: 'A JSON Patch `Test` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -39552,7 +39607,7 @@ components:
                 -
                   type: string
     TagOperationTest:
-      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      description: 'A JSON Patch `Test` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -39765,7 +39820,6 @@ components:
         tagsCount:
           type: integer
           example: 1
-          nullable: true
         tags:
           type: array
           items:
@@ -39793,7 +39847,6 @@ components:
       type: object
     ScreenshotTag:
       title: Tag
-      description: 'Class TagResponseModel'
       properties:
         id:
           type: integer
