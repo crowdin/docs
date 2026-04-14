@@ -160,10 +160,10 @@ The V2 endpoint supports optional HTTP headers that make tool filtering more con
 
 | Header                 | Values                                                                                                   | Description                                                                                                                                              |
 |------------------------|----------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `crowdin-tool-sets`    | `all`, or comma-separated names (for example, `ai,reports,webhooks`; see [Available Tool Sets](#available-tool-sets)) | Controls which tool sets are loaded. By default, the server loads a curated set of commonly used tool sets. Set to `all` to load every available tool set. |
+| `crowdin-tool-sets`    | `all`, or comma-separated names (for example, `ai,reports,webhooks`; see [Available Tool Sets](#available-tool-sets)) | Controls which tool sets are loaded. By default, the server loads all available tool sets. Set a comma-separated list to limit tools to a focused workflow. |
 | `crowdin-read-only`    | `true` or `false`                                                                                        | When set to `true`, only read-only tools (list and get operations) are exposed. Useful for safe exploration or read-only integrations.                 |
 | `crowdin-project-type` | `string-based` or `file-based`                                                                           | Filters out tools that are not applicable to the specified project type, reducing noise for the AI agent.                                              |
-| `crowdin-tool-filter`  | Comma-separated patterns (for example, `projects_*`, `*_get_many`)                                      | Applies wildcard pattern matching to tool names, allowing you to include only a specific subset of tools.                                              |
+| `crowdin-tool-filter`  | Comma-separated patterns (for example, `project*`, `list_*`)                                      | Applies wildcard pattern matching to tool names, allowing you to include only a specific subset of tools.                                              |
 
 **Example — read-only access for a string-based project:**
 
@@ -198,9 +198,9 @@ The V2 endpoint supports optional HTTP headers that make tool filtering more con
   </TabItem>
 </Tabs>
 
-**Example — loading additional tool sets:**
+**Example — limiting tool sets for a focused workflow:**
 
-By default, the server loads a curated set of tool sets that cover the core localization workflow (projects, source files, strings, translations, translation status, languages, TM, glossaries, labels, tasks, and storage). If your workflow requires tools from other categories, you can add them explicitly:
+By default, the server loads all available tool sets. If you want to focus the agent on a specific workflow, set `crowdin-tool-sets` explicitly.
 
 <Tabs syncKey="product">
   <TabItem label="Crowdin">
@@ -210,7 +210,7 @@ By default, the server loads a curated set of tool sets that cover the core loca
         "url": "https://mcp.crowdin.com/v2/mcp",
         "headers": {
           "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}",
-          "crowdin-tool-sets": "all"
+          "crowdin-tool-sets": "source_files,source_strings,string_translations,translation_status,tasks,reports,webhooks"
         }
       }
     }
@@ -223,7 +223,7 @@ By default, the server loads a curated set of tool sets that cover the core loca
         "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
         "headers": {
           "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}",
-          "crowdin-tool-sets": "all"
+          "crowdin-tool-sets": "source_files,source_strings,string_translations,translation_status,tasks,reports,webhooks,teams,organization,workflows,security_logs"
         }
       }
     }
