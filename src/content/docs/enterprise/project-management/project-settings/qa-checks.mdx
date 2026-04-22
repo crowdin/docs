@@ -8,6 +8,7 @@ sidebar:
 ---
 
 import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
 import { Image } from 'astro:assets';
 import ReadMore from '~/components/ReadMore.astro';
 import Include from '~/components/Include.astro';
@@ -29,8 +30,8 @@ By default, QA checks are enabled. To select the needed QA checks in your projec
 
 <Steps>
   1. Open your project and go to **Settings > Quality assurance**.
-  1. Select the QA check types according to your preferences.
-  1. For each selected QA check type, choose whether it should be possible to save translations with QA issues by selecting one of two options: **Error** and **Warning**.
+  2. Select the QA check types according to your preferences.
+  3. For each selected QA check type, choose whether it should be possible to save translations with QA issues by selecting one of two options: **Error** and **Warning**.
 </Steps>
 
 **Warning** &ndash; translators are notified about QA issues with suggestions for fixes, but they can still save the translation using the **Save anyway** button.
@@ -49,22 +50,15 @@ Once enabled, QA checks will work in the background and scan the translations fo
   href="/enterprise/custom-qa-checks/"
 />
 
-## Spell Checker Ignore List
+## Revalidate QA Checks
 
-If your project contains some uncommon words that are not recognized by the Spell checker, you can add them to the Ignore list to exclude them from being checked.
+Use the **Revalidate** button to re-run enabled QA checks for all project translations and update issue statuses. This is useful after modifying settings, AI prompts, terminology, or external QA checks.
 
-This is useful for project-specific terminology, like brand names or proper nouns (e.g., `MyApp`), which you might expect not to be flagged as errors. Since the Spell checker and Glossary are separate features, adding terms to the Glossary does not automatically add them to the Spellcheck ignore list. Adding them here is the correct way to prevent them from being flagged.
+<Aside>
+  The **Revalidate** button is only available when at least one supported QA check category is active (**Consistent terminology**, **AI-powered check**, or **external QA checks**).
+</Aside>
 
-<Image src={qaChecksAddToIgnoreList} alt="QA Checks Add to Ignore list" />
-
-To review the words added to the Ignore list for the Spell checker, follow these steps:
-
-<Steps>
-  1. Open your project and go to **Settings > Quality assurance**.
-  1. Click *Ignore list* on the top right side.
-</Steps>
-
-In the opened window you can see the list of words added to the ignore list. You can filter or remove them from the list if necessary.
+Once revalidation starts, the button is disabled and a **Cancel** button appears. When the process is complete, a confirmation notification is shown.
 
 ## QA Check Parameters
 
@@ -104,18 +98,18 @@ In the opened window you can see the list of words added to the ignore list. You
 - Inconsistent punctuation in source and translation
 - Spacing before and after punctuation marks
 
-**Character case** &ndash; the lower or upper case that used differently in source and translated strings.
+**Character case** &ndash; the lower or upper case that is used differently in source and translated strings.
 
 - Initial capitalization
 - Unexpected multiple capitalized characters in succession
 
-**Special characters** &ndash; new paragraphs, currency signs, and other special characters that used differently in translated strings.
+**Special characters** &ndash; new paragraphs, currency signs, and other special characters that are used differently in translated strings.
 
 - Bracket consistency
 - Markup language entities
 - Quotes and quote escapes
 
-**Open translation issues by project members** &ndash; show reported translation issues on the Proofread workflow step.
+**Open translation issues by project members** &ndash; shows reported translation issues on the Proofread workflow step.
 
 **Spelling mistakes** &ndash; underline misspelled words.
 
@@ -149,3 +143,43 @@ In the opened window you can see the list of words added to the ignore list. You
 </ReadMore>
 
 **Outdated translation** &ndash; flags translations that may need to be revised after their corresponding source strings have been modified.
+
+## Spell Checker Ignore List
+
+If your project contains some uncommon words that are not recognized by the Spell checker, you can add them to the Ignore list to exclude them from being checked.
+
+This is useful for project-specific terminology, like brand names or proper nouns (e.g., `MyApp`), which you might expect not to be flagged as errors. Since the Spell checker and Glossary are separate features, adding terms to the Glossary does not automatically add them to the Spellcheck ignore list. Adding them here is the correct way to prevent them from being flagged.
+
+<Image src={qaChecksAddToIgnoreList} alt="QA Checks Add to Ignore list" />
+
+To review the words added to the Ignore list for the Spell checker, follow these steps:
+
+<Steps>
+  1. Open your project and go to **Settings > Quality assurance**.
+  2. Click **Ignore list** on the top right side.
+</Steps>
+
+In the opened window you can see the list of words added to the ignore list. You can filter or remove them from the list if necessary.
+
+## QA Issue Indicators
+
+When QA checks detect issues, visual indicators appear across the project interface to help you quickly spot and navigate to translation quality problems.
+
+### QA Issues Summary
+
+The project Dashboard and each language page display a summary button showing the total number of unresolved QA issues — **N QA issues for all languages** on the Dashboard, and **N QA issues for [Language]** on the language page.
+
+Clicking the button opens a panel with the following details:
+
+- The total number of unresolved QA issues.
+- The change delta in the format `+N/-N/+N`. Hover over it to see the breakdown: how many issues were created, resolved, and are in progress.
+- **Open in Editor** &ndash; opens the Editor filtered to strings with QA issues.
+- <Icon name="mdi:cog" class="inline-icon" /> &ndash; links directly to [**Settings > Quality Assurance**](#configure-qa-checks).
+
+### Per-Language Indicators
+
+Languages with unresolved QA issues are marked with a <Icon name="material-symbols:warning" class="inline-icon" /> indicator showing the number of issues on the project Dashboard. This is an informational indicator that shows at a glance which languages contain unresolved QA issues.
+
+### Per-File Indicators
+
+Files with unresolved QA issues are marked with a <Icon name="material-symbols:warning" class="inline-icon" /> indicator showing the number of issues on the language page. This is an informational indicator that shows at a glance which files contain unresolved QA issues.
