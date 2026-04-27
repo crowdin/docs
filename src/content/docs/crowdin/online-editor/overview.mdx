@@ -20,7 +20,7 @@ import stringSearch from '!/crowdin/online-editor/string_search.png';
 import stringsFilter from '!/crowdin/online-editor/strings_filter.png';
 import terms from '!/crowdin/online-editor/terms.png';
 import requestContext from '!/crowdin/online-editor/request_context.png';
-import qaPopUp from '!/crowdin/online-editor/qa_pop-up.png';
+import qaInlineBanner from '!/crowdin/online-editor/qa_inline_banner.png';
 import pluralForms from '!/crowdin/online-editor/plural_forms.png';
 import stringMenu from '!/crowdin/online-editor/string_menu.png';
 import otherLanguagesTab from '!/crowdin/online-editor/other_languages_tabs.png';
@@ -97,7 +97,15 @@ Besides the status icons, strings can also display the following markers:
 
 #### Suggesting Translations
 
-To suggest a translation, select a string from the list and enter your suggestion in the field next to the original text. When you're done, click <Icon name="mdi:content-save" class="inline-icon" /> **Save translation**. Your suggestion will be added to the string's translation suggestions list, and you'll automatically move on to the next string. If you need to discard your current input and revert to the previous state, click <Icon name="material-symbols:undo" class="inline-icon" /> **Cancel**.
+To suggest a translation, select a string from the list and enter your suggestion in the field next to the original text.
+
+To streamline the translation process, you can enable the Auto-save feature. When the **Auto-save translations** setting is enabled in the [Editor Settings](#general), your translations are automatically saved when you switch to another string. A "Saving..." indicator will appear briefly, followed by a "Saved" confirmation.
+
+By default, Auto-save is disabled, meaning you need to manually click <Icon name="mdi:content-save" class="inline-icon" /> **Save translation** for each string. When Auto-save is disabled, the **Save translation** button acts as the primary action and appears green. When Auto-save is enabled, the button becomes gray, as manual saving is optional.
+
+Once saved, your suggestion will be added to the string's translation suggestions list, and you'll automatically move on to the next string.
+
+If you need to discard your current input and revert to the previous state before saving, click <Icon name="material-symbols:undo" class="inline-icon" /> **Cancel**.
 
 <Image src={suggestingTranslations} alt="Suggesting Translations" />
 
@@ -262,9 +270,31 @@ If a string has multiple plural forms, all variants of the string are displayed 
 
 ### QA Checks
 
-You might also get automatic Quality Assurance (QA) check pop-up messages to avoid some translation inaccuracy. For example, you can see notifications about inconsistency in punctuation, space mismatch, missing variables, and more.
+To help you maintain translation quality and prevent common inaccuracies, the Editor automatically performs Quality Assurance (QA) checks. These checks scan for issues like punctuation discrepancies, spacing mismatches, missing placeholders, or inconsistent terminology.
 
-<Image src={qaPopUp} alt="QA pop-up" />
+If issues are detected when you attempt to save a translation or when Auto-save triggers upon navigating to the next string, an inline **Review issues to save** banner will appear below your translation. An orange warning badge will also appear on the **Save** button.
+
+<Image src={qaInlineBanner} alt="QA issues inline banner" />
+
+Depending on how QA checks are configured in the project settings, the Editor handles detected issues in two ways:
+
+* **Errors (Blocking Issues):** Saving the translation and navigation (e.g., changing target languages, opening a different file, or applying filters) are prevented until you resolve the issue. Hovering over the **Save** button will display a "Resolve blocking issues first" tooltip. Note that errors are strictly enforced and will trigger the banner even if you disabled the **QA issues** option in your personal Editor settings. You can still switch to translate another string, but the translation for the current string will remain unsaved until the error is fixed.
+* **Warnings (Non-blocking Issues):** For less critical inconsistencies, the behavior depends on whether the **QA issues** option is enabled in your [Editor Settings](#general):
+  * **Setting ON:** The inline banner displays the warnings. Navigation is blocked until you resolve the issues or click **Save Anyway**.
+  * **Setting OFF:** The translation saves automatically (if Auto-save is enabled) without displaying the banner, bypassing these warnings entirely.
+
+<Aside>
+  Project managers define whether a specific QA check acts as an Error or a Warning. However, some critical checks (e.g., syntax errors) are permanently locked as Errors to prevent severe translation issues.
+</Aside>
+
+#### Auto-fixing QA Issues
+
+For many common errors, the inline QA banner provides automatic quick-fixes:
+
+* Click the <Icon name="mdi:magic-staff" class="inline-icon" /> **Autofix** icon next to an individual issue to apply the correction automatically.
+* Click **Fix (N)** in the banner header to instantly apply all available auto-fixes for the current string.
+
+Once the issues are resolved, the translation will automatically save and allow you to continue.
 
 ### Managing Source Strings
 
@@ -587,11 +617,11 @@ The Editor settings are grouped into tabs that contain various options for confi
 ### General
 
 - *Translation Memory Suggestions* &ndash; you can specify the minimum similarity match (in percentages) for translation memory suggestions shown under the translation field.
-- *QA issues* &ndash; if enabled, the pop-up messages with warnings will appear each time you try to save a translation with some inaccuracy (punctuation/tags/spaces mismatch, missing variables, etc.)
-  <Image src={qaPopUp} alt="QA pop-up" />
+- *QA issues* &ndash; if enabled, inline banners with warnings will appear each time you try to save a translation with some inaccuracy (punctuation/tags/spaces mismatch, missing variables, etc.)
 - *Auto-complete* &ndash; if enabled, the pop-up with translation prediction and automatic translation completion will appear while you type the translation.
 - *Auto-approve* &ndash; if enabled, the translations added by proofreaders or members with higher permissions are automatically approved.
 - *Automatically move to next string* &ndash; if enabled, you'll be automatically moved to the next string after saving a new translation or approving an existing one.
+- *Auto-save translations* – if enabled, your translations are automatically saved when you navigate between strings.
 
 ### Appearance
 
