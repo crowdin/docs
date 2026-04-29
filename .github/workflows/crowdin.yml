@@ -13,10 +13,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Restore Crowdin cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .crowdin
+          key: crowdin-${{ github.ref_name }}
+          restore-keys: crowdin-${{ github.ref_name }}-
+
       - name: Crowdin Action
         uses: crowdin/github-action@v2
         with:
           upload_sources: true
+          upload_sources_args: "--cache"
           upload_translations: false
           download_translations: false
           config: src/content/crowdin.yml
@@ -25,3 +33,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+
+      - name: Save Crowdin cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .crowdin
+          key: crowdin-${{ github.ref_name }}-${{ github.run_id }}
