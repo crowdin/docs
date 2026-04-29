@@ -1,9 +1,9 @@
-import en from '../content/i18n/en.json';
-import de from '../content/i18n/de.json';
-import da from '../content/i18n/da.json';
-import fr from '../content/i18n/fr.json';
-import pt from '../content/i18n/pt.json';
-import es from '../content/i18n/es.json';
+import en from '../content/strings/en.json';
+import de from '../content/strings/de.json';
+import da from '../content/strings/da.json';
+import fr from '../content/strings/fr.json';
+import pt from '../content/strings/pt.json';
+import es from '../content/strings/es.json';
 
 export const starlightLocales = {
   root: { label: 'English',  lang: 'en' },
