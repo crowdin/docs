@@ -9,14 +9,15 @@ This guide defines translation rules for both humans and AI assistants. It is in
 3. Preserve structure, formatting, and technical correctness.
 4. Keep terminology consistent across pages.
 5. Prefer clarity and natural phrasing in the target language.
+6. Follow the product terminology glossary if one exists.
+7. Keep UI labels consistent with product UI translations.
+8. Keep capitalization style consistent with source conventions.
 
 ## Never change these by accident
 
 - Code blocks and inline code unless explicitly requested.
 - Component names, tag names, props, attributes, imports, IDs, and file paths.
-- Frontmatter keys and schema fields.
 - Placeholders/tokens such as `%s`, `%d`, `{count}`, `{name}`, `<0>...</0>`, `${value}`.
-- Tracking/query placeholders and template variables.
 
 ## Link localization rules
 
@@ -24,6 +25,7 @@ When translating, localize internal links according to the site routing strategy
 
 - Translate visible link text.
 - Internal links should point to the target locale version of the same page.
+- If a page has a custom frontmatter `slug`, localize that slug as well and include the locale prefix (for example, `/<locale>/...`).
 - External links (`https://...`) usually stay unchanged unless a localized destination exists.
 - Keep anchors (`#...`) unchanged.
 
@@ -39,15 +41,7 @@ When translating, localize internal links according to the site routing strategy
 
 ## Markdown/MDX translation rules
 
-- Preserve heading hierarchy and list structure.
 - Keep Markdown and MDX syntax valid.
 - Do not break component usage in MDX.
 - Translate plain text inside components only when safe and appropriate.
 - Keep shortcodes/macros/directives and their parameters intact.
-
-## Tone and terminology
-
-- Follow the product terminology glossary if one exists.
-- Keep UI labels consistent with product UI translations.
-- Avoid mixing formal/informal tone unless style guide permits it.
-- Keep capitalization style consistent with source conventions.
