@@ -6,30 +6,12 @@ import pt from '../content/i18n/pt.json';
 import es from '../content/i18n/es.json';
 
 export const starlightLocales = {
-  root: {
-    label: 'English',
-    lang: 'en',
-  },
-  'de': {
-    label: 'Deutsch',
-    lang: 'de',
-  },
-  'da': {
-    label: 'Dansk',
-    lang: 'da',
-  },
-  'fr': {
-    label: 'Français',
-    lang: 'fr',
-  },
-  'pt': {
-    label: 'Português (Portugal)',
-    lang: 'pt-PT',
-  },
-  'es': {
-    label: 'Español',
-    lang: 'es-ES',
-  },
+  root: { label: 'English',  lang: 'en' },
+  'de': { label: 'Deutsch', lang: 'de' },
+  'da': { label: 'Dansk', lang: 'da' },
+  'fr': { label: 'Français', lang: 'fr' },
+  'pt': { label: 'Português (Portugal)', lang: 'pt-PT' },
+  'es': { label: 'Español', lang: 'es-ES' },
 } as const;
 
 export type SidebarTranslationKey = keyof typeof en.sidebar;
