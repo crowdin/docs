@@ -1,9 +1,11 @@
+import { sidebarLabel } from '../../utils/i18n';
+
 /**
  * https://starlight.astro.build/reference/configuration/#sidebaritem
  */
 export default [
   {
-    label: 'Getting Started',
+    ...sidebarLabel('gettingStarted'),
     items: [
       { slug: 'introduction' },
       { slug: 'for-managers' },
@@ -12,7 +14,7 @@ export default [
       { slug: 'migrating-to-crowdin' },
       { slug: 'additional-support-services' },
       {
-        label: 'Account',
+        ...sidebarLabel('account'),
         autogenerate: { directory: path('getting-started', 'account') },
         collapsed: true,
       },
@@ -20,12 +22,12 @@ export default [
     collapsed: true,
   },
   {
-    label: 'Translation Process',
+    ...sidebarLabel('translationProcess'),
     autogenerate: { directory: path('translation-process') },
     collapsed: true,
   },
   {
-    label: 'Project Management',
+    ...sidebarLabel('projectManagement'),
     items: [
       { slug: 'creating-project' },
       { slug: 'screenshots' },
@@ -33,17 +35,17 @@ export default [
       { slug: 'discussions' },
       { slug: 'webhooks' },
       {
-        label: 'Sources',
+        ...sidebarLabel('sources'),
         autogenerate: { directory: path('project-management', 'sources') },
         collapsed: true,
       },
       {
-        label: 'Translations',
+        ...sidebarLabel('translations'),
         autogenerate: { directory: path('project-management', 'translations') },
         collapsed: true,
       },
       {
-        label: 'Project Settings',
+        ...sidebarLabel('projectSettings'),
         autogenerate: { directory: path('project-management', 'project-settings') },
         collapsed: true,
       }
@@ -51,37 +53,37 @@ export default [
     collapsed: true,
   },
   {
-    label: 'Team Management',
+    ...sidebarLabel('teamManagement'),
     autogenerate: { directory: path('team-management') },
     collapsed: true,
   },
   {
-    label: 'Integrations',
+    ...sidebarLabel('integrations'),
     autogenerate: { directory: path('integrations') },
     collapsed: true,
   },
   {
-    label: 'Localization Resources',
+    ...sidebarLabel('localizationResources'),
     autogenerate: { directory: path('localization-resources') },
     collapsed: true,
   },
   {
-    label: 'Online Editor',
+    ...sidebarLabel('onlineEditor'),
     autogenerate: { directory: path('online-editor') },
     collapsed: true,
   },
   {
-    label: 'Tasks',
+    ...sidebarLabel('tasks'),
     autogenerate: { directory: path('tasks') },
     collapsed: true,
   },
   {
-    label: 'Reports',
+    ...sidebarLabel('reports'),
     autogenerate: { directory: path('reports') },
     collapsed: true,
   },
   {
-    label: 'Billing and Payments',
+    ...sidebarLabel('billingAndPayments'),
     autogenerate: { directory: path('billing') },
     collapsed: true,
   }

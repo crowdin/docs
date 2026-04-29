@@ -16,6 +16,7 @@ import icon from 'astro-icon';
 import crowdinSidebar from './src/content/sidebars/crowdin.ts';
 import enterpriseSidebar from './src/content/sidebars/enterprise.ts';
 import developerSidebar from './src/content/sidebars/developer.ts';
+import { starlightLocales } from './src/utils/i18n.ts';
 
 import customConsentScript from './src/scripts/custom-consent-mode.js?raw';
 import postHogScript from './src/scripts/posthog.js?raw';
@@ -38,6 +39,8 @@ const config = defineConfig({
   integrations: [
     starlight({
       title: 'Crowdin Docs',
+      defaultLocale: 'root',
+      locales: starlightLocales,
       logo: {
         replacesTitle: true,
         light: './src/assets/logo/dark.svg',
@@ -60,9 +63,9 @@ const config = defineConfig({
         {
           label: "leading",
           items: [
-            { label: "Crowdin Help", link: "/introduction", attrs: { id: "crowdin-nav-button", class: "nav-link" } },
-            { label: "Enterprise Help", link: "/enterprise/introduction", attrs: { id: "enterprise-nav-button", class: "nav-link" } },
-            { label: "Developer Portal", link: "/developer/crowdin-apps-about", attrs: { id: "developer-nav-button", class: "nav-link" } },
+            { label: "Crowdin Help", slug: "introduction", attrs: { id: "crowdin-nav-button", class: "nav-link" } },
+            { label: "Enterprise Help", slug: "enterprise/introduction", attrs: { id: "enterprise-nav-button", class: "nav-link" } },
+            { label: "Developer Portal", slug: "developer/crowdin-apps-about", attrs: { id: "developer-nav-button", class: "nav-link" } },
             { label: "Store", link: "https://store.crowdin.com", attrs: { target: "_blank", class: "nav-link" } },
             { label: "Blog", link: "https://crowdin.com/blog", attrs: { target: "_blank", class: "nav-link" } },
             { label: "Community", link: "https://community.crowdin.com/", attrs: { target: "_blank", class: "nav-link" } },
@@ -131,6 +134,7 @@ const config = defineConfig({
         Search: './src/components/Search.astro',
         SocialIcons: './src/components/SocialIcons.astro',
         EditLink: './src/components/EditLink.astro',
+        FallbackContentNotice: './src/components/FallbackContentNotice.astro',
       },
       customCss: [
         './src/style/global.css',
@@ -157,6 +161,13 @@ const config = defineConfig({
             '/developer/api/v2/string-based/**',
             '/developer/enterprise/api/v2/**',
             '/developer/enterprise/api/v2/string-based/**',
+            '/*/developer/api/v2/**',
+            '/*/developer/api/v2/string-based/**',
+            '/*/developer/enterprise/api/v2/**',
+            '/*/developer/enterprise/api/v2/string-based/**',
+            '/*/introduction/**',
+            '/*/enterprise/introduction/**',
+            '/*/developer/crowdin-apps-about/**',
           ],
         }),
         starlightHeadingBadges(),

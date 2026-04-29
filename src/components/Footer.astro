@@ -1,8 +1,11 @@
 ---
 import Default from '@astrojs/starlight/components/Footer.astro';
 import Feedback from '~/components/Feedback.astro';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { isStarlightHomepage } from '~/utils/starlightRoute';
 
-const isHomepage = Astro.locals.starlightRoute.id === '';
+const isHomepage = isStarlightHomepage(Astro.locals.starlightRoute);
+const locale = Astro.locals.starlightRoute.lang;
 const year = new Date().getFullYear();
 
 const showFeedback = !isHomepage &&
@@ -25,12 +28,12 @@ const showFeedback = !isHomepage &&
         <div class="flex flex-col gap-6 text-sm sm:flex-row sm:items-center">
             <p class="sm:mr-auto">Crowdin &copy; {year}</p>
             <div class="grid grid-cols-2 gap-4 sm:flex sm:gap-6">
-                <a class="no-underline" href="https://status.crowdin.com/" target="_blank">Status</a>
-                <a class="no-underline" href="/terms/">Terms of Service</a>
-                <a class="no-underline" href="/privacy-policy/">Privacy Policy</a>
-                <a class="no-underline" href="/cookies/">Cookies Statement</a>
-                <a class="no-underline" href="https://crowdin.com/page/security">Security</a>
-                <a class="no-underline" href="/llms.txt">Docs for LLMs</a>
+                <a class="no-underline" href="https://status.crowdin.com/" target="_blank">{Astro.locals.t('footer.status')}</a>
+                <a class="no-underline" href={getRelativeLocaleUrl(locale, 'terms')}>{Astro.locals.t('footer.terms')}</a>
+                <a class="no-underline" href={getRelativeLocaleUrl(locale, 'privacy-policy')}>{Astro.locals.t('footer.privacy')}</a>
+                <a class="no-underline" href={getRelativeLocaleUrl(locale, 'cookies')}>{Astro.locals.t('footer.cookies')}</a>
+                <a class="no-underline" href="https://crowdin.com/page/security">{Astro.locals.t('footer.security')}</a>
+                <a class="no-underline" href="/llms.txt">{Astro.locals.t('footer.llms')}</a>
             </div>
         </div>
     </footer>

@@ -12,10 +12,13 @@ const { editUrl } = Astro.locals.starlightRoute;
             class="sl-flex print:hidden hidden md:flex"
             id="copy-to-clipboard"
             data-edit-url={editUrl}
-            aria-label="Copy page content to clipboard"
+            aria-label={Astro.locals.t('copyContent')}
+            data-loading-label={Astro.locals.t('editLink.loading')}
+            data-copied-label={Astro.locals.t('editLink.copied')}
+            data-error-label={Astro.locals.t('editLink.error')}
         >
             <Icon name="document" size="1.2em" />
-            Copy content
+            {Astro.locals.t('copyContent')}
         </a>
     )}
 </div>
@@ -31,13 +34,16 @@ const { editUrl } = Astro.locals.starlightRoute;
             e.preventDefault();
 
             const originalText = copyButton.innerHTML;
+            const loadingText = copyButton.getAttribute('data-loading-label');
+            const copiedText = copyButton.getAttribute('data-copied-label');
+            const errorText = copyButton.getAttribute('data-error-label');
             const editUrl = copyButton.getAttribute('data-edit-url')!;
             const rawUrl = editUrl
                 .replace('github.com', 'raw.githubusercontent.com')
                 .replace('/edit/', '/');
 
             try {
-                copyButton.innerHTML = '<span>Loading...</span>';
+                copyButton.innerHTML = `<span>${loadingText}</span>`;
                 copyButton.style.pointerEvents = 'none';
 
                 const response = await fetch(rawUrl);
@@ -49,10 +55,10 @@ const { editUrl } = Astro.locals.starlightRoute;
 
                 await navigator.clipboard.writeText(content);
 
-                copyButton.innerHTML = '<span>Copied!</span>';
+                copyButton.innerHTML = `<span>${copiedText}</span>`;
             } catch (error) {
                 console.error('Error copying to clipboard:', error);
-                copyButton.innerHTML = '<span>Error!</span>';
+                copyButton.innerHTML = `<span>${errorText}</span>`;
             } finally {
                 setTimeout(() => {
                     copyButton.innerHTML = originalText;
