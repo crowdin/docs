@@ -43,6 +43,7 @@ export const collections = {
         'social.applePodcast': z.string().optional(),
         'social.spotifyPodcast': z.string().optional(),
         'modal.header': z.string().optional(),
+        'translateInCrowdin': z.string().optional(),
       }),
     }),
   }),

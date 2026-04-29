@@ -171,6 +171,6 @@ You can use `npm run watch:api` to watch for changes in the API documentation du
 
 1. Add the language to `export_languages` in [`src/content/crowdin.yml`](src/content/crowdin.yml) and sync so Crowdin writes translated MDX and UI JSON (paths come from the `files` section). Add ignore rules for the new language in the `files` section.
 
-2. In [`src/utils/i18n.ts`](src/utils/i18n.ts), add the locale to `starlightLocales` (same key as the translated docs folder; see [Starlight i18n](https://starlight.astro.build/guides/i18n/)), import the new JSON from [`src/content/strings/`](src/content/strings/), and wire it into `sidebarLabel`’s `translations`.
+2. In [`src/utils/i18n.ts`](src/utils/i18n.ts), add the locale to `starlightLocales` (same key as the translated docs folder; see [Starlight i18n](https://starlight.astro.build/guides/i18n/)), import the new JSON from [`src/content/i18n/`](src/content/i18n/), and wire it into `sidebarLabel`’s `translations`.
 
-New keys in English [`en.json`](src/content/strings/en.json) need matching entries in [`src/content/config.ts`](src/content/config.ts).
+New keys in English [`en.json`](src/content/i18n/en.json) need matching entries in [`src/content/config.ts`](src/content/config.ts).

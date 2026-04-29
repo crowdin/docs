@@ -134,6 +134,7 @@ const config = defineConfig({
         Search: './src/components/Search.astro',
         SocialIcons: './src/components/SocialIcons.astro',
         EditLink: './src/components/EditLink.astro',
+        FallbackContentNotice: './src/components/FallbackContentNotice.astro',
       },
       customCss: [
         './src/style/global.css',
