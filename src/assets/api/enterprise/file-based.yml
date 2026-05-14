@@ -1271,7 +1271,6 @@ paths:
             type: string
             enum:
               - pre_translate
-              - assist
               - alignment
               - qa_check
         -
@@ -3563,7 +3562,7 @@ paths:
   '/projects/{projectId}/bundles':
     get:
       tags:
-        - Bundles
+        - Translations
       summary: 'List Bundles'
       description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.bundles.getMany
@@ -3613,7 +3612,7 @@ paths:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
     post:
       tags:
-        - Bundles
+        - Translations
       summary: 'Add Bundle'
       description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.bundles.post
@@ -3665,7 +3664,7 @@ paths:
   '/projects/{projectId}/bundles/{bundleId}':
     get:
       tags:
-        - Bundles
+        - Translations
       summary: 'Get Bundle'
       description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.bundles.get
@@ -3707,7 +3706,7 @@ paths:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
     delete:
       tags:
-        - Bundles
+        - Translations
       summary: 'Delete Bundle'
       description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.bundles.delete
@@ -3745,7 +3744,7 @@ paths:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
     patch:
       tags:
-        - Bundles
+        - Translations
       summary: 'Edit Bundle'
       description: '**Required scopes:** `project.source.file` (Read and Write).'
       operationId: api.projects.bundles.patch
@@ -3800,7 +3799,7 @@ paths:
   '/projects/{projectId}/bundles/{bundleId}/exports/{exportId}/download':
     get:
       tags:
-        - Bundles
+        - Translations
       summary: 'Download Bundle'
       description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.bundles.exports.download.get
@@ -3845,7 +3844,7 @@ paths:
   '/projects/{projectId}/bundles/{bundleId}/exports':
     post:
       tags:
-        - Bundles
+        - Translations
       summary: 'Export Bundle'
       description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.bundles.exports.post
@@ -3854,13 +3853,18 @@ paths:
           $ref: '#/components/parameters/ProjectId'
         -
           $ref: '#/components/parameters/BundleId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnterpriseBundleExportForm'
       responses:
         '202':
           description: 'Bundle export was successfully started'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BundleExportResource'
+                $ref: '#/components/schemas/EnterpriseBundleExportResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -3900,7 +3904,7 @@ paths:
   '/projects/{projectId}/bundles/{bundleId}/exports/{exportId}':
     get:
       tags:
-        - Bundles
+        - Translations
       summary: 'Check Bundle Export Status'
       description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.bundles.exports.get
@@ -3917,7 +3921,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BundleExportResource'
+                $ref: '#/components/schemas/EnterpriseBundleExportResource'
         '401':
           description: Unauthorized
           content:
@@ -5476,7 +5480,7 @@ paths:
   '/projects/{projectId}/bundles/{bundleId}/files':
     get:
       tags:
-        - Bundles
+        - Translations
       summary: 'Bundle List Files'
       description: '**Required scopes:** `project.source.file` (Read only).'
       operationId: api.projects.bundles.files.getMany
@@ -16833,6 +16837,13 @@ paths:
           $ref: '#/components/parameters/PaginationOffset'
         -
           $ref: '#/components/parameters/EnterpriseTaskStatus'
+        -
+          name: batchId
+          in: query
+          description: 'Filter by task batch. Get `batchId` via [List Tasks](#operation/api.projects.tasks.getMany)'
+          required: false
+          schema:
+            type: integer
       responses:
         '200':
           description: 'Tasks list'
@@ -22360,8 +22371,6 @@ components:
                 -
                   $ref: '#/components/schemas/ai.prompt.completion.resources.pre_translate'
                 -
-                  $ref: '#/components/schemas/ai.prompt.completion.resources.assist'
-                -
                   $ref: '#/components/schemas/ai.prompt.completion.resources.qa_check'
                 -
                   $ref: '#/components/schemas/ai.prompt.completion.resources.custom'
@@ -22379,8 +22388,6 @@ components:
               oneOf:
                 -
                   $ref: '#/components/schemas/ai.prompt.completion.resources.pre_translate'
-                -
-                  $ref: '#/components/schemas/ai.prompt.completion.resources.assist'
                 -
                   $ref: '#/components/schemas/ai.prompt.completion.resources.alignment'
                 -
@@ -22432,21 +22439,6 @@ components:
               type: string
               example: 'one,few,many,other'
             fileContent:
-              type: string
-              example: N/A
-      additionalProperties:
-        type: string
-    ai.prompt.completion.resources.overridePromptValues.assist:
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/ai.prompt.completion.resources.overridePromptValues.common'
-        -
-          properties:
-            pluralForms:
-              type: string
-              example: 'one,few,many,other'
-            filteredStrings:
               type: string
               example: N/A
       additionalProperties:
@@ -22538,33 +22530,6 @@ components:
         overridePromptValues:
           $ref: '#/components/schemas/ai.prompt.completion.resources.overridePromptValues.pre_translate'
       type: object
-    ai.prompt.completion.resources.assist:
-      title: 'Resources for prompt with assist action'
-      required:
-        - projectId
-      properties:
-        projectId:
-          type: integer
-        sourceLanguageId:
-          description: '__Note__: If not specified, the source language of the project will be used'
-          type: string
-        targetLanguageId:
-          type: string
-        stringIds:
-          description: '__Note:__ Must be used together with `targetLanguageId`. You can assign up to 500 strings at a time.'
-          type: array
-          items:
-            type: integer
-            example: 78253
-        filteredStringIds:
-          description: '__Note:__ You can assign up to 500 strings at a time.'
-          type: array
-          items:
-            type: integer
-            example: 78254
-        overridePromptValues:
-          $ref: '#/components/schemas/ai.prompt.completion.resources.overridePromptValues.assist'
-      type: object
     ai.prompt.completion.resources.alignment:
       title: 'Resources for prompt with alignment action'
       required:
@@ -22637,11 +22602,9 @@ components:
           type: string
           example: 'Pre-translate prompt'
         action:
-          description: 'AI prompt action. __Note:__ `assist` is deprecated'
           type: string
           enum:
             - pre_translate
-            - assist
             - qa_check
         aiProviderId:
           description: 'AI Provider identifier. Get via [List AI Providers](#operation/api.ai.providers.getMany)'
@@ -22674,19 +22637,15 @@ components:
         -
           properties:
             action:
-              description: 'AI prompt action. __Note:__ `assist` is deprecated'
               type: string
               enum:
                 - pre_translate
-                - assist
                 - qa_check
             config:
               description: 'AI prompt configuration'
               oneOf:
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
-                -
-                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.assist'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.qa_check'
                 -
@@ -22705,11 +22664,9 @@ components:
         -
           properties:
             action:
-              description: 'AI prompt action. __Note:__ `assist` is deprecated'
               type: string
               enum:
                 - pre_translate
-                - assist
                 - alignment
                 - qa_check
             config:
@@ -22717,8 +22674,6 @@ components:
               oneOf:
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
-                -
-                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.assist'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.alignment'
                 -
@@ -22794,72 +22749,6 @@ components:
         retryOnQaIssues:
           type: boolean
       type: object
-    ai.prompt.config.basic_mode.assist:
-      title: 'Basic mode (assist action)'
-      required:
-        - mode
-      properties:
-        mode:
-          type: string
-          enum:
-            - basic
-        companyDescription:
-          description: 'Use field `snippets` instead'
-          type: string
-          deprecated: true
-        projectDescription:
-          description: 'Use field `snippets` instead'
-          type: string
-          deprecated: true
-        audienceDescription:
-          description: 'Use field `snippets` instead'
-          type: string
-          deprecated: true
-        customPlaceholders:
-          description: 'Use field `snippets` instead'
-          type: array
-          items:
-            type: string
-            example: '%custom:companyDescription%'
-          deprecated: true
-        snippets:
-          description: 'Array of snippets. Get via [List AI Snippets](#operation/api.ai.snippets.getMany)'
-          type: array
-          items:
-            type: string
-            example: '%custom:companyDescription%'
-        otherLanguageTranslations:
-          properties:
-            isEnabled:
-              type: boolean
-              default: true
-            languageIds:
-              description: 'Array of language ids. Get via [List Supported Languages](#operation/api.languages.getMany)'
-              type: array
-              items:
-                type: string
-                example: uk
-          type: object
-        glossaryTerms:
-          type: boolean
-        tmSuggestions:
-          type: boolean
-        fileContext:
-          type: boolean
-        generateFileSummary:
-          type: boolean
-        screenshots:
-          type: boolean
-        fileContent:
-          type: boolean
-        publicProjectDescription:
-          type: boolean
-        siblingsStrings:
-          type: boolean
-        filteredStrings:
-          type: boolean
-      type: object
-      deprecated: true
     ai.prompt.config.basic_mode.alignment:
       title: 'Basic mode (alignment action)'
       required:
@@ -22955,10 +22844,6 @@ components:
           type: boolean
         prompt:
           type: string
-        fileContent:
-          description: '__Note:__ Available only for Assist action'
-          type: boolean
-          default: 'false'
         otherLanguageTranslations:
           properties:
             isEnabled:
@@ -23152,7 +23037,6 @@ components:
           type: string
           example: 'Pre-translate prompt'
         action:
-          description: '__Note:__ `assist` is deprecated'
           type: string
           example: pre_translate
         aiProviderId:
@@ -23224,8 +23108,6 @@ components:
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
                 -
-                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.assist'
-                -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.alignment'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.qa_check'
@@ -23246,8 +23128,6 @@ components:
               oneOf:
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
-                -
-                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.assist'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.qa_check'
                 -
@@ -23439,11 +23319,9 @@ components:
         -
           properties:
             action:
-              description: '__Note:__ `assist` is deprecated'
               type: string
               enum:
                 - pre_translate
-                - assist
                 - alignment
                 - qa_check
     ai.provider.crowdin_configuration.actionRule:
@@ -23455,11 +23333,9 @@ components:
         -
           properties:
             action:
-              description: '__Note:__ `assist` is deprecated'
               type: string
               enum:
                 - pre_translate
-                - assist
                 - qa_check
     ai.provider.credentials.open_ai:
       title: OpenAI
@@ -24048,9 +23924,9 @@ components:
           format: json-pointer
           enum:
             - /preTranslationAiPromptId
-            - /assistActionAiPromptId
             - /editorSuggestionAiPromptId
-            - /shortcuts
+            - /alignmentActionAiPromptId
+            - /qaCheckActionAiPromptId
       type: object
       discriminator:
         propertyName: op
@@ -24101,10 +23977,6 @@ components:
         preTranslationAiPromptId:
           type: integer
           example: 2
-        assistActionAiPromptId:
-          type: integer
-          example: 2
-          deprecated: true
         editorSuggestionAiPromptId:
           type: integer
           example: 5
@@ -24116,27 +23988,6 @@ components:
           type: integer
           example: 8
           nullable: true
-        shortcuts:
-          type: array
-          items:
-            type: object
-            oneOf:
-              -
-                $ref: '#/components/schemas/AiSettingsShortcuts'
-      type: object
-    AiSettingsShortcuts:
-      properties:
-        name:
-          description: 'Shortcut name'
-          type: string
-          example: 'My first shortcut'
-        prompt:
-          description: 'Shortcut prompt'
-          type: string
-          example: 'Make translation shorter'
-        enabled:
-          type: boolean
-          deprecated: true
       type: object
     AiTranslateForm:
       required:
@@ -24716,36 +24567,6 @@ components:
             scopes:
               type: object
             iframe:
-              type: object
-    AiToolCallWidgetsModule:
-      title: 'AI Tool Call Widgets Module'
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/AiToolCallsModule'
-        -
-          properties:
-            iframe:
-              type: object
-    AiToolCallsModule:
-      title: 'AI Provider Module'
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/Module'
-        -
-          properties:
-            identifier:
-              type: string
-              example: example-application
-            url:
-              type: string
-              example: /ai-tools
-            toolType:
-              type: string
-              enum:
-                - function
-            function:
               type: object
     ApplicationInstallationResponseModel:
       title: 'Application Installation'
@@ -26767,6 +26588,33 @@ components:
             - fr
           nullable: true
       type: object
+    EnterpriseBundleExportForm:
+      properties:
+        targetLanguageIds:
+          description: "Specify target languages for export. Get via [List Supported Languages](#operation/api.languages.getMany)\n\n * Leave this field empty to export all target languages"
+          type: array
+          items:
+            type: string
+            example: uk
+        skipUntranslatedStrings:
+          description: "Defines whether to export only translated strings\n\n__Note:__ `true` value can't be used with `skipUntranslatedFiles=true` in same request"
+          type: boolean
+          example: false
+        skipUntranslatedFiles:
+          description: "Defines whether to export only translated files\n\n__Note:__ `true` value can't be used with `skipUntranslatedStrings=true` in same request"
+          type: boolean
+          example: false
+        exportWithMinApprovalsCount:
+          description: "Defines whether to export only strings with a minimum number of approvals\n\n__Note:__ value greater than `0` can't be used with `exportStringsThatPassedWorkflow=true` in same request"
+          type: integer
+          example: 0
+        exportStringsThatPassedWorkflow:
+          description: "Defines whether to export only strings that passed workflow\n\n__Note:__ `true` value can't be used with `exportWithMinApprovalsCount > 0` in same request or in projects without an assigned workflow"
+          type: boolean
+          example: true
+      type: object
+      x-doc-sections:
+        - file-based
     BundleCollectionResource:
       description: 'Bundle Collection Resource'
       type: object
@@ -26783,16 +26631,6 @@ components:
                 $ref: '#/components/schemas/BundleResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
-    BundleExportResource:
-      description: 'Bundle Export Resource'
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/Resource'
-        -
-          properties:
-            data:
-              $ref: '#/components/schemas/BundleExport'
     BundleResource:
       description: 'Bundle Resource'
       type: object
@@ -26803,45 +26641,16 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/Bundle'
-    BundleExport:
-      properties:
-        identifier:
-          type: string
-          example: 50fb3506-4127-4ba8-8296-f97dc7e3e0c3
-        status:
-          type: string
-          example: finished
-        progress:
-          description: 'in percentages'
-          type: integer
-          example: 100
-        attributes:
-          properties:
-            bundleId:
-              type: integer
-              example: 38
-          type: object
-        createdAt:
-          type: string
-          format: date-time
-          example: '2019-09-23T11:26:54+00:00'
-        updatedAt:
-          type: string
-          format: date-time
-          example: '2019-09-23T11:26:54+00:00'
-        startedAt:
-          type: string
-          format: date-time
-          example: '2019-09-23T11:26:54+00:00'
-        finishedAt:
-          type: string
-          format: date-time
-          example: '2019-09-23T11:26:54+00:00'
-        eta:
-          type: string
-          example: '1 second'
-          deprecated: true
+    EnterpriseBundleExportResource:
+      description: 'Bundle Export Resource'
       type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/BundleExport'
     Bundle:
       title: Bundle
       properties:
@@ -26929,6 +26738,66 @@ components:
           type: string
           format: date-time
           example: '2019-09-20T12:22:20+00:00'
+      type: object
+    BundleExport:
+      properties:
+        identifier:
+          type: string
+          example: 50fb3506-4127-4ba8-8296-f97dc7e3e0c3
+        status:
+          type: string
+          example: finished
+        progress:
+          description: 'in percentages'
+          type: integer
+          example: 100
+        attributes:
+          properties:
+            bundleId:
+              type: integer
+              example: 38
+            targetLanguageIds:
+              type: array
+              items:
+                type: string
+                example: uk
+            skipUntranslatedStrings:
+              type: boolean
+              example: false
+            skipUntranslatedFiles:
+              type: boolean
+              example: false
+              x-doc-sections:
+                - file-based
+            exportWithMinApprovalsCount:
+              type: integer
+              example: 0
+            exportStringsThatPassedWorkflow:
+              type: boolean
+              example: true
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+          example: '2019-09-23T11:26:54+00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2019-09-23T11:26:54+00:00'
+        startedAt:
+          type: string
+          format: date-time
+          example: '2019-09-23T11:26:54+00:00'
+          nullable: true
+        finishedAt:
+          type: string
+          format: date-time
+          example: '2019-09-23T11:26:54+00:00'
+          nullable: true
+        eta:
+          type: string
+          example: '1 second'
+          deprecated: true
       type: object
     ClientCollectionResource:
       description: 'Clients Collection'
@@ -29104,7 +28973,7 @@ components:
           nullable: true
       type: object
     ProjectFileType:
-      description: "Values available:\n- empty value or 'auto' — Try to detect file type by extension or MIME type\n- 'android' — Android (*.xml)\n- 'macosx' — Mac OS X / iOS (*.strings)\n- 'resx' — .NET, Windows Phone (*.resx)\n- 'properties' — Java (*.properties)\n- 'gettext' — GNU GetText (*.po, *.pot)\n- 'yaml' — Ruby On Rails (*.yaml, *.yml)\n- 'php' — Hypertext Preprocessor (*.php)\n- 'json' — Generic JSON (*.json)\n- 'xml' — Generic XML (*.xml)\n- 'ini' — Generic INI (*.ini)\n- 'rc' — Windows Resources (*.rc)\n- 'resw' — Windows 8 Metro (*.resw)\n- 'resjson' — Windows 8 Metro (*.resjson)\n- 'qtts' — Nokia Qt (*.ts)\n- 'joomla' — Joomla localizable resources (*.ini)\n- 'chrome' — Google Chrome Extension (*.json)\n- 'dtd' — Mozilla DTD (*.dtd)\n- 'dklang' — Delphi DKLang (*.dklang)\n- 'flex' — Flex (*.properties)\n- 'nsh' — NSIS Installer Resources (*.nsh)\n- 'wxl' — WiX Installer (*.wxl)\n- 'xliff' — XLIFF (*.xliff, *.xlf)\n- 'xliff_two' — XLIFF 2.0 (*.xliff, *.xlf)\n- 'html' — HTML (*.html, *.htm, *.xhtml, *.xhtm, *.xht, *.hbs, *.liquid)\n- 'haml' — Haml (*.haml)\n- 'txt' — Plain Text (*.txt)\n- 'csv' — Comma Separated Values (*.csv)\n- 'md' — Markdown (*.md, *.text, *.markdown...)\n- 'flsnp' — MadCap Flare (*.flnsp, .flpgpl .fltoc)\n- 'fm_html' — Jekyll HTML (*.html)\n- 'fm_md' — Jekyll Markdown (*.md)\n- 'mediawiki' — MediaWiki (*.wiki, *.wikitext, *.mediawiki)\n- 'docx' — Microsoft Office, OpenOffice.org Documents, Adobe InDesign, Adobe FrameMaker(*.docx, *.dotx, *.docm, *.dotm, *.xlsx, *.xltx, *.xlsm, *.xltm, *.pptx, *.potx, *.ppsx, *.pptm, *.potm, *.ppsm, *.odt, *.ods, *.odg, *.odp, *.imdl, *.mif)\n- 'xlsx' — Microsoft Excel (*.xlsx)\n- 'sbv' — Youtube .sbv (*.sbv)\n- 'properties_play' — Play Framework\n- 'properties_xml' — Java Application (*.xml)\n- 'maxthon' — Maxthon Browser (*.ini)\n- 'go_json' — Go (*.gotext.json)\n- 'dita' — DITA Document (*.dita, *.ditamap)\n- 'mif' — Adobe FrameMaker (*.mif)\n- 'idml' — Adobe InDesign (*.idml)\n- 'stringsdict' — iOS (*.stringsdict)\n- 'plist' — Mac OS property list (*.plist)\n- 'vtt' — Video Subtitling and WebVTT (*.vtt)\n- 'vdf' — Steamworks Localization Valve Data File (*.vdf)\n- 'srt' — SubRip .srt (*.srt)\n- 'stf' — Salesforce (*.stf)\n- 'toml' — Toml (*.toml)\n- 'contentful_rt' — Contentful (*.json)\n- 'svg' — SVG (*.svg)\n- 'js' — JavaScript (*.js)\n- 'coffee' — CoffeeScript (*.coffee)\n- 'nestjs_i18n' - NestJS i18n\n- 'loc' — LOC (*.loc)\n\n__Note__: Use `docx` type to import each cell as a separate source string for XLSX file"
+      description: "Values available:\n- empty value or 'auto' — Try to detect file type by extension or MIME type\n- 'android' — Android (*.xml)\n- 'macosx' — Mac OS X / iOS (*.strings)\n- 'resx' — .NET, Windows Phone (*.resx)\n- 'properties' — Java (*.properties)\n- 'gettext' — GNU GetText (*.po, *.pot)\n- 'yaml' — Ruby On Rails (*.yaml, *.yml)\n- 'php' — Hypertext Preprocessor (*.php)\n- 'json' — Generic JSON (*.json)\n- 'xml' — Generic XML (*.xml)\n- 'ini' — Generic INI (*.ini)\n- 'rc' — Windows Resources (*.rc)\n- 'resw' — Windows 8 Metro (*.resw)\n- 'resjson' — Windows 8 Metro (*.resjson)\n- 'qtts' — Nokia Qt (*.ts)\n- 'joomla' — Joomla localizable resources (*.ini)\n- 'chrome' — Google Chrome Extension (*.json)\n- 'dtd' — Mozilla DTD (*.dtd)\n- 'dklang' — Delphi DKLang (*.dklang)\n- 'flex' — Flex (*.properties)\n- 'nsh' — NSIS Installer Resources (*.nsh)\n- 'wxl' — WiX Installer (*.wxl)\n- 'xliff' — XLIFF (*.xliff, *.xlf)\n- 'xliff_two' — XLIFF 2.0 (*.xliff, *.xlf)\n- 'html' — HTML (*.html, *.htm, *.xhtml, *.xhtm, *.xht, *.hbs, *.liquid)\n- 'haml' — Haml (*.haml)\n- 'txt' — Plain Text (*.txt)\n- 'csv' — Comma Separated Values (*.csv)\n- 'md' — Markdown (*.md, *.text, *.markdown...)\n- 'flsnp' — MadCap Flare (*.flnsp, .flpgpl .fltoc)\n- 'fm_html' — Jekyll HTML (*.html)\n- 'fm_md' — Jekyll Markdown (*.md)\n- 'mediawiki' — MediaWiki (*.wiki, *.wikitext, *.mediawiki)\n- 'docx' — Microsoft Office, OpenOffice.org Documents, Adobe InDesign, Adobe FrameMaker(*.docx, *.dotx, *.docm, *.dotm, *.xlsx, *.xltx, *.xlsm, *.xltm, *.pptx, *.potx, *.ppsx, *.pptm, *.potm, *.ppsm, *.odt, *.ods, *.odg, *.odp, *.imdl, *.mif)\n- 'vsdx' — Microsoft Visio (*.vsdx, *.vsdm)\n- 'xlsx' — Microsoft Excel (*.xlsx)\n- 'sbv' — Youtube .sbv (*.sbv)\n- 'properties_play' — Play Framework\n- 'properties_xml' — Java Application (*.xml)\n- 'maxthon' — Maxthon Browser (*.ini)\n- 'go_json' — Go (*.gotext.json)\n- 'dita' — DITA Document (*.dita, *.ditamap)\n- 'mif' — Adobe FrameMaker (*.mif)\n- 'idml' — Adobe InDesign (*.idml)\n- 'stringsdict' — iOS (*.stringsdict)\n- 'plist' — Mac OS property list (*.plist)\n- 'vtt' — Video Subtitling and WebVTT (*.vtt)\n- 'vdf' — Steamworks Localization Valve Data File (*.vdf)\n- 'srt' — SubRip .srt (*.srt)\n- 'stf' — Salesforce (*.stf)\n- 'toml' — Toml (*.toml)\n- 'contentful_rt' — Contentful (*.json)\n- 'svg' — SVG (*.svg)\n- 'js' — JavaScript (*.js)\n- 'coffee' — CoffeeScript (*.coffee)\n- 'nestjs_i18n' - NestJS i18n\n- 'loc' — LOC (*.loc)\n\n__Note__: Use `docx` type to import each cell as a separate source string for XLSX file"
       type: string
       default: auto
       enum:
@@ -29144,6 +29013,7 @@ components:
         - fm_md
         - mediawiki
         - docx
+        - vsdx
         - xlsx
         - sbv
         - properties_play
@@ -29371,6 +29241,28 @@ components:
           default: true
         srxStorageId:
           description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany).\n\n  Storage identifier of the SRX segmentation rules file. Read more about [Custom Segmentation](https://support.crowdin.com/custom-segmentation/#segmentation-examples)."
+          type: integer
+          format: int64
+          default: null
+          example: 61
+      type: object
+    VsdxFileImportOptions:
+      title: 'Vsdx File Import Options'
+      properties:
+        cleanTagsAggressively:
+          description: 'When checked, strips additional formatting tags related to text spacing.'
+          type: boolean
+          default: false
+        translateHyperlinkUrls:
+          description: 'When checked, exposes hidden hyperlinks for translation.'
+          type: boolean
+          default: false
+        contentSegmentation:
+          description: 'Defines whether to split long texts into smaller text segments.'
+          type: boolean
+          default: true
+        srxStorageId:
+          description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany).\n\n Storage identifier of the SRX segmentation rules file. Read more about [Custom Segmentation](https://support.crowdin.com/custom-segmentation/#segmentation-examples)."
           type: integer
           format: int64
           default: null
@@ -29958,6 +29850,8 @@ components:
         -
           $ref: '#/components/schemas/DocxFileImportOptions'
         -
+          $ref: '#/components/schemas/VsdxFileImportOptions'
+        -
           $ref: '#/components/schemas/HtmlFileImportOptions'
         -
           $ref: '#/components/schemas/FMHtmlFileImportOptions'
@@ -29994,6 +29888,8 @@ components:
           $ref: '#/components/schemas/WebXmlFileImportOptions'
         -
           $ref: '#/components/schemas/DocxFileUpdateOptions'
+        -
+          $ref: '#/components/schemas/VsdxFileImportOptions'
         -
           $ref: '#/components/schemas/HtmlFileUpdateOptions'
         -
@@ -30350,6 +30246,8 @@ components:
                 -
                   $ref: '#/components/schemas/DocxFileImportOptionsResponseModel'
                 -
+                  $ref: '#/components/schemas/VsdxFileImportOptionsResponseModel'
+                -
                   $ref: '#/components/schemas/SegmentationImportOptionsResponseModel'
                 -
                   $ref: '#/components/schemas/CustomSegmentationImportOptionsResponseModel'
@@ -30681,6 +30579,26 @@ components:
         importTranslations:
           type: boolean
           example: true
+      type: object
+    VsdxFileImportOptionsResponseModel:
+      title: 'VSDX File Import Options'
+      properties:
+        cleanTagsAggressively:
+          description: 'When checked, strips additional formatting tags related to text spacing.'
+          type: boolean
+          default: false
+        translateHyperlinkUrls:
+          description: 'When checked, exposes hidden hyperlinks for translation.'
+          type: boolean
+          default: false
+        contentSegmentation:
+          description: 'Defines whether to split long texts into smaller text segments.'
+          type: boolean
+          default: true
+        customSegmentation:
+          description: 'Specifies whether custom segmentation rules are used.'
+          type: boolean
+          default: false
       type: object
     WebXmlFileImportOptionsResponseModel:
       title: 'WebXml File Import Options'
@@ -33484,6 +33402,10 @@ components:
           type: array
           items:
             type: integer
+        customInstruction:
+          description: "Custom instruction for AI pre-translation. This instruction will be appended to the AI prompt text.\n\n__Note:__ Available only for AI pre-translation method"
+          type: string
+          maxLength: 10000
       type: object
     FallbackLanguagesScheme:
       title: 'Fallback Languages'
@@ -33577,6 +33499,10 @@ components:
           description: 'Source language identifier. Get via [Project Target Languages](#operation/api.projects.get)'
           type: string
           example: en
+        customInstruction:
+          description: "Custom instruction for AI pre-translation. This instruction will be appended to the AI prompt text.\n\n__Note:__ Available only for AI pre-translation method"
+          type: string
+          maxLength: 10000
       type: object
     CrowdinPreTranslationCollectionResource:
       description: 'Pre-Translation Collection Resource'
@@ -34077,7 +34003,6 @@ components:
             - '/fields/{fieldSlug}'
             - /tm
             - /preTranslationAiPromptId
-            - /assistActionAiPromptId
             - /editorSuggestionAiPromptId
             - /alignmentActionAiPromptId
             - /qaCheckActionAiPromptId
@@ -34780,11 +34705,6 @@ components:
           description: 'AI Prompt ID to be used as prompt for AI pre-translation as default value'
           type: integer
           example: 11
-          deprecated: true
-        assistActionAiPromptId:
-          description: 'AI Prompt ID to be used as prompt for AI Assist action in Editor'
-          type: integer
-          example: 12
           deprecated: true
         editorSuggestionAiPromptId:
           description: 'AI Prompt ID to be used as prompt for AI Suggestion action in Editor'
@@ -36375,11 +36295,6 @@ components:
               example: 2
               nullable: true
               deprecated: true
-            assistActionAiPromptId:
-              type: integer
-              example: 11
-              nullable: true
-              deprecated: true
             editorSuggestionAiPromptId:
               type: integer
               example: 3
@@ -36488,6 +36403,8 @@ components:
               $ref: '#/components/schemas/MadcapFlsnpFileFormatSettingsResponse'
             -
               $ref: '#/components/schemas/DocxFileFormatSettingsResponse'
+            -
+              $ref: '#/components/schemas/VsdxFileFormatSettingsResponse'
             -
               $ref: '#/components/schemas/IdmlFileFormatSettingsResponse'
             -
@@ -37198,6 +37115,31 @@ components:
           default: null
           nullable: true
       type: object
+    VsdxFileFormatSettingsResponse:
+      title: 'VSDX file format settings'
+      properties:
+        cleanTagsAggressively:
+          description: 'When checked, strips additional formatting tags related to text spacing.'
+          type: boolean
+          default: false
+        translateHyperlinkUrls:
+          description: 'When checked, exposes hidden hyperlinks for translation.'
+          type: boolean
+          default: false
+        contentSegmentation:
+          description: "Defines whether to split long texts into smaller text segments.\n\nImportant! This option disables the possibility to upload existing translations for XML files when enabled."
+          type: boolean
+          default: true
+        customSegmentation:
+          description: 'Specifies whether custom segmentation rules are used.'
+          type: boolean
+          default: false
+        exportPattern:
+          description: "File format export pattern. Defines file name and path in resulting translations bundle\n\nNote: Can't contain `: * ? \" < > |` symbols"
+          type: string
+          default: null
+          nullable: true
+      type: object
     IdmlFileFormatSettingsResponse:
       title: 'Idml file format settings'
       properties:
@@ -37325,10 +37267,6 @@ components:
       title: 'Project AI Settings'
       properties:
         preTranslationAiPromptId:
-          type: integer
-          example: 2
-          deprecated: true
-        assistActionAiPromptId:
           type: integer
           example: 2
           deprecated: true
@@ -37847,7 +37785,7 @@ components:
                   items: { type: string }
     GroupTopMembers:
       title: 'Group Top Members'
-      description: 'Generate a list of translators based on a specific period of time to see who contributed the most to your project’s translation.'
+      description: "Generate a list of translators based on a specific period of time to see who contributed the most to your project's translation."
       required:
         - name
         - schema
@@ -38352,7 +38290,7 @@ components:
             - project
           example: user
         typeTasks:
-          description: "Task type:\n *      0 - translate\n *      1 - proofread\n *      2 - translate by vendor\n *      3 - proofread by vendor"
+          description: "Task type:\n * 0 - translate\n * 1 - proofread\n * 2 - translate by vendor\n * 3 - proofread by vendor"
           type: integer
           enum:
             - 0
@@ -38418,7 +38356,7 @@ components:
             - project
           example: user
         typeTasks:
-          description: "Task type:\n *       0 - translate\n *       1 - proofread\n *       2 - translate by vendor\n *       3 - proofread by vendor"
+          description: "Task type:\n * 0 - translate\n * 1 - proofread\n * 2 - translate by vendor\n * 3 - proofread by vendor"
           type: integer
           enum:
             - 0
@@ -38480,7 +38418,7 @@ components:
             - project
           example: user
         typeTasks:
-          description: "Task type:\n *      0 - translate\n *      1 - proofread\n *      2 - translate by vendor\n *      3 - proofread by vendor"
+          description: "Task type:\n * 0 - translate\n * 1 - proofread\n * 2 - translate by vendor\n * 3 - proofread by vendor"
           type: integer
           enum:
             - 0
@@ -38546,7 +38484,7 @@ components:
             - project
           example: user
         typeTasks:
-          description: "Task type:\n *      0 - translate\n *      1 - proofread\n *      2 - translate by vendor\n *      3 - proofread by vendor"
+          description: "Task type:\n * 0 - translate\n * 1 - proofread\n * 2 - translate by vendor\n * 3 - proofread by vendor"
           type: integer
           enum:
             - 0
@@ -38618,7 +38556,7 @@ components:
             - project
           example: user
         typeTasks:
-          description: "Task type:\n *      0 - translate\n *      1 - proofread\n *      2 - translate by vendor\n *      3 - proofread by vendor"
+          description: "Task type:\n * 0 - translate\n * 1 - proofread\n * 2 - translate by vendor\n * 3 - proofread by vendor"
           type: integer
           enum:
             - 0
@@ -38937,7 +38875,7 @@ components:
             type: integer
             example: 13
         typeTasks:
-          description: "Task type:\n *     0 - translate\n *     1 - proofread\n *     2 - translate by vendor\n *     3 - proofread by vendor"
+          description: "Task type:\n * 0 - translate\n * 1 - proofread\n * 2 - translate by vendor\n * 3 - proofread by vendor"
           type: integer
           enum:
             - 0
@@ -39571,7 +39509,7 @@ components:
       type: object
     TopMembers:
       title: 'Top Members'
-      description: 'Generate a list of translators based on a specific period of time to see who contributed the most to your project’s translation.'
+      description: "Generate a list of translators based on a specific period of time to see who contributed the most to your project's translation."
       required:
         - name
         - schema
@@ -40316,7 +40254,7 @@ components:
             - type
           example: user
         typeTasks:
-          description: "Task type:\n *     0 - translate\n *     1 - proofread\n *     2 - translate by vendor\n *     3 - proofread by vendor"
+          description: "Task type:\n * 0 - translate\n * 1 - proofread\n * 2 - translate by vendor\n * 3 - proofread by vendor"
           type: integer
           enum:
             - 0
@@ -40375,7 +40313,7 @@ components:
             - type
           example: user
         typeTasks:
-          description: "Task type:\n *      0 - translate\n *      1 - proofread\n *      2 - translate by vendor\n *      3 - proofread by vendor"
+          description: "Task type:\n * 0 - translate\n * 1 - proofread\n * 2 - translate by vendor\n * 3 - proofread by vendor"
           type: integer
           enum:
             - 0
@@ -40430,7 +40368,7 @@ components:
             - type
           example: user
         typeTasks:
-          description: "Task type:\n *     0 - translate\n *     1 - proofread\n *     2 - translate by vendor\n *     3 - proofread by vendor"
+          description: "Task type:\n * 0 - translate\n * 1 - proofread\n * 2 - translate by vendor\n * 3 - proofread by vendor"
           type: integer
           enum:
             - 0
@@ -40489,7 +40427,7 @@ components:
             - type
           example: user
         typeTasks:
-          description: "Task type:\n *     0 - translate\n *     1 - proofread\n *     2 - translate by vendor\n *     3 - proofread by vendor"
+          description: "Task type:\n * 0 - translate\n * 1 - proofread\n * 2 - translate by vendor\n * 3 - proofread by vendor"
           type: integer
           enum:
             - 0
@@ -40554,7 +40492,7 @@ components:
             - type
           example: user
         typeTasks:
-          description: "Task type:\n *     0 - translate\n *     1 - proofread\n *     2 - translate by vendor\n *     3 - proofread by vendor"
+          description: "Task type:\n * 0 - translate\n * 1 - proofread\n * 2 - translate by vendor\n * 3 - proofread by vendor"
           type: integer
           enum:
             - 0
@@ -40854,7 +40792,7 @@ components:
             type: integer
             example: 13
         typeTasks:
-          description: "Task type:\n *         0 - translate\n *         1 - proofread\n *         2 - translate by vendor\n *         3 - proofread by vendor"
+          description: "Task type:\n * 0 - translate\n * 1 - proofread\n * 2 - translate by vendor\n * 3 - proofread by vendor"
           type: integer
           enum:
             - 0
@@ -41516,7 +41454,7 @@ components:
           items:
             $ref: '#/components/schemas/user-post-edit-report-settings-template-form.individual-rate'
         netRateSchemes:
-          description: "Net Rate Schemes (Percentage paid of full translation rate)\n *\n * __Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
+          description: "Net Rate Schemes (Percentage paid of full translation rate)\n\n__Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
           type: object
           allOf:
             -
@@ -41758,7 +41696,7 @@ components:
           items:
             $ref: '#/components/schemas/post-edit-report-settings-template.individual-rate'
         netRateSchemes:
-          description: "Net Rate Schemes (Percentage paid of full translation rate)\n *\n * __Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
+          description: "Net Rate Schemes (Percentage paid of full translation rate)\n\n__Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
           type: object
           allOf:
             -
@@ -41910,6 +41848,7 @@ components:
       description: 'Generate Group Report Response Model'
       properties:
         identifier:
+          description: 'Class GroupReportResponseModel'
           type: string
           example: 50fb3506-4127-4ba8-8296-f97dc7e3e0c3
         status:
@@ -42113,7 +42052,7 @@ components:
           items:
             $ref: '#/components/schemas/user-post-edit-report-settings-template.individual-rate'
         netRateSchemes:
-          description: "Net Rate Schemes (Percentage paid of full translation rate)\n *\n *__Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
+          description: "Net Rate Schemes (Percentage paid of full translation rate)\n\n__Note:__ A new translation will be included in the report at the lowest rate if multiple scheme categories can be applied to the translation"
           type: object
           allOf:
             -
@@ -46145,9 +46084,11 @@ components:
             - /excludeLabelMatchRule
             - /fields
             - '/fields/{fieldSlug}'
+            - /resetScope
             - /generateCostEstimate
             - /generateTranslationCost
             - /reportSettingsTemplateId
+            - /batchId
           x-doc-sections:
             - file-based
       type: object
@@ -46496,6 +46437,7 @@ components:
           example: true
       type: object
     EnterpriseTaskCreateForm:
+      title: 'Task Create Form'
       type: object
       oneOf:
         -
@@ -46503,7 +46445,7 @@ components:
         -
           $ref: '#/components/schemas/EnterpriseTaskByStringIds'
     EnterpriseTaskBySourceIds:
-      title: CreateByFileIdsForm
+      title: 'Create By File Ids Form'
       type: object
       allOf:
         -
@@ -46511,7 +46453,6 @@ components:
       x-doc-sections:
         - file-based
     EnterpriseTaskBySourceIdsForm:
-      title: CreateBySourcesForm
       required:
         - title
         - languageId
@@ -46664,9 +46605,14 @@ components:
             -
               $ref: '#/components/schemas/EnterpriseAdditionalFields'
           nullable: true
+        batchId:
+          description: 'Task Batch Identifier. Get via [List Tasks](#operation/api.projects.tasks.getMany). Allows grouping tasks into a batch'
+          type: integer
+          example: 1
+          nullable: true
       type: object
     EnterpriseTaskByStringIds:
-      title: CreateByStringIdsForm
+      title: 'Create By String Ids Form'
       required:
         - title
         - languageId
@@ -46789,8 +46735,14 @@ components:
             -
               $ref: '#/components/schemas/EnterpriseAdditionalFields'
           nullable: true
+        batchId:
+          description: 'Task Batch Identifier. Get via [List Tasks](#operation/api.projects.tasks.getMany). Allows grouping tasks into a batch'
+          type: integer
+          example: 1
+          nullable: true
       type: object
     EnterpriseVendorTaskCreateForm:
+      title: 'Vendor Task Create Form'
       type: object
       oneOf:
         -
@@ -46798,7 +46750,7 @@ components:
         -
           $ref: '#/components/schemas/EnterpriseVendorTaskByStringIds'
     EnterpriseVendorTaskBySourceIds:
-      title: CreateByFileIdsForm
+      title: 'Create By File Ids Form'
       type: object
       allOf:
         -
@@ -46806,7 +46758,6 @@ components:
       x-doc-sections:
         - file-based
     EnterpriseVendorTaskBySourceIdsForm:
-      title: CreateBySourcesForm
       required:
         - workflowStepId
         - title
@@ -46923,7 +46874,7 @@ components:
           nullable: true
       type: object
     EnterpriseVendorTaskByStringIds:
-      title: CreateByStringIdsForm
+      title: 'Create By String Ids Form'
       required:
         - workflowStepId
         - title
@@ -47024,6 +46975,7 @@ components:
           nullable: true
       type: object
     EnterprisePendingTaskCreateForm:
+      title: 'Pending Task Create Form'
       required:
         - precedingTaskId
         - title
@@ -47033,10 +46985,11 @@ components:
           type: integer
           example: '1'
         type:
-          description: "Task type:\n * 1 - proofread\n\n__Note:__ One of fields `type` or `workflowStepId` is required. Both cannot be provided simultaneously"
+          description: "Task type:\n * 1 - proofread\n * 3 - proofread by vendor (requires `vendor` field)\n\n__Note:__ One of fields `type` or `workflowStepId` is required. Both cannot be provided simultaneously"
           type: integer
           enum:
             - 1
+            - 3
         workflowStepId:
           description: "Task workflow step id\n\n__Note:__ One of fields `type` or `workflowStepId` is required. Both cannot be provided simultaneously"
           type: integer
@@ -47046,6 +46999,10 @@ components:
         description:
           description: 'Task description'
           type: string
+        vendor:
+          description: 'Vendor identifier. Required when `type` is `3`. Get via [List Vendors](#operation/api.projects.vendors.getMany)'
+          type: string
+          nullable: true
         assignees:
           description: 'Task assigned users'
           type: array
