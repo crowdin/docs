@@ -1,0 +1,136 @@
+---
+title: Import Settings
+description: Configure how placeholders, duplicates, and word counts are handled
+slug: enterprise/project-settings/import
+sidebar:
+  order: 10
+  label: Import
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import ReadMore from '~/components/ReadMore.astro';
+import assignCustomPlaceholder from '!/enterprise/project-management/settings/custom_placeholders_assign.png';
+
+In the **Import** section of the Project Settings, you can configure how Crowdin should handle placeholders, duplicate strings, and word counts in your project.
+
+## Source Strings
+
+Improve the translation consistency and streamline your workflow by unifying placeholders and handling duplicate strings.
+
+### Unify Placeholders
+
+Enable this option to transform placeholders into a unified format within the Editor (e.g., displaying both Android `%s` and iOS `%@` as `[%s]`). This improves Translation Memory efficiency by making suggestions completely interchangeable across platforms.
+
+On export, placeholders are converted back to the original syntax. This feature applies only to Android XML, iOS strings, iOS XLIFF, and Apple Strings Catalog.
+
+### Duplicate Strings
+
+You can save time by translating all duplicates with the same translation and hiding these instances from translators. This can affect accuracy.
+
+Crowdin's localization process is based on translating source strings to the defined target languages. In Crowdin Enterprise, the localization process is based on translating the source strings to the defined target languages. Each unique source string first uploaded or added (for CSV and other formats supporting [string editing](/enterprise/string-management/#string-editing)) in Crowdin is considered a master string. All other strings that are identical to the master string but were uploaded or created later are considered duplicated strings.
+
+<Aside>
+  In [string-based](/enterprise/creating-project/#string-based-project) projects, duplicate strings are managed using the **Show within a version branch (regular detection)** option, which is enabled by default and cannot be changed.
+</Aside>
+
+#### Duplicated Strings Management
+
+If your project contains duplicated strings, you can choose how the system should treat them using the following options:
+
+* **Show** &ndash; translators will translate each instance (string) separately. Duplicated strings won’t be hidden.
+* **Show, but auto-translate them** &ndash; duplicate strings will be automatically translated but remain visible to translators. Once the master string is translated, its translation is automatically shared with all duplicates. Translators can review and re-translate each duplicate with their own translation as needed. If a unique translation is provided for a specific duplicate, it will override the shared translation for that string alone, allowing for precise context-specific translations without affecting the other duplicates. If a translator removes a duplicate's unique translation, it will be automatically translated with a translation from a master string.
+* **Show within a version branch (regular detection)** &ndash; duplicates will be hidden only between [version branches](/enterprise/version-management/).
+* **Show within a version branch (strict detection)** &ndash; duplicates will be hidden only between version branches.
+* **Hide (regular detection)** &ndash; all duplicates will share the same translation.
+* **Hide (strict detection)** &ndash; all duplicates will share the same translation.
+
+Regular duplicate detection &ndash; when comparing strings, Crowdin considers only source texts.
+
+Strict duplicate detection &ndash; when comparing strings, Crowdin considers both string identifiers (keys) and source texts.
+
+<Aside type="tip">
+  If your source files contain strings with apparent identifiers (keys), it's better to use a **strict** version of the Duplicate Strings options. In other cases, feel free to use a **regular** one.
+</Aside>
+
+#### Show all duplicates
+
+When this option is selected, all the duplicated strings will be visible to translators. When this option is selected, all the duplicated strings will be visible to translators.
+
+💡 **Use case**: works perfectly for projects where the same words might have various meanings depending on the context.
+
+#### Show, but auto-translate duplicates
+
+When this option is selected, all duplicate strings are shown and automatically translated. Once the master string is translated, its translation is automatically shared among all duplicates. This allows translators to review and re-translate duplicate strings if necessary.
+
+💡 **Use case**: works excellently if you want to save time but still require automatic translations to be reviewed.
+
+To better illustrate how the **Show, but auto-translate them** option works, consider the following five-string JSON file: two strings are unique, and three strings have identical source text.
+
+```json
+{
+    "hello": "Hello",
+    "welcome": "Welcome!",
+    "save1": "Save",
+    "save2": "Save",
+    "save3": "Save"
+}
+```
+
+Upon importing this file, the system marks the first of these identical strings (`"save1": "Save"`) as the master string with the "Master" marking, while the subsequent two identical strings (`"save2": "Save"` and `"save3": "Save"`) are labeled as duplicates of this master string with the "Duplicate" marking.
+
+Once you set the Duplicate strings option to **Show, but auto-translate them**, the system keeps all five strings visible to translators and for the master string and its two duplicates, automatic translation propagation is enabled. This means that translations are automatically shared from the master string to its duplicates.
+
+Let's consider the following scenarios:
+
+* *Master string is translated first* &ndash; the system immediately propagates the translation of the master string to its duplicates. As a result, all three identical strings (the master string and its two duplicates) are displayed with translations. However, translators can review and re-translate each duplicate with their own translation as needed. If a unique translation is provided for a specific duplicate, it will override the shared translation for that string alone, allowing for precise context-specific translations without affecting the other duplicates. If a translator removes a duplicate's unique translation, it will be automatically translated with a translation from a master string.
+
+* *One of the duplicates is translated first* &ndash; the system does not propagate the translation of the duplicate to the master string or the other duplicate. Consequently, one duplicate string is displayed with a translation, while the master string and the other duplicate remain untranslated.
+
+#### Show within a version branch. Duplicates are hidden only between version branches
+
+When this option is selected, only the master strings that were originally uploaded to the system will be available for translations. All duplicated strings will automatically gain the original strings' translations and will be hidden in all version branches. This option is available in two versions: regular duplicates detection, strict duplicates detection. If your source files contain strings with apparent identifiers (keys), it's better to use a *strict* version of this option. In other cases, feel free to use a *regular* one.
+
+Couple of things to keep in mind:
+
+* The system always checks the path to the string throughout the branches. For example, even if the strings are the same in different version branches (`branch1` and `branch2`), but their paths are different (branch1 - `/localization/android.xml` and branch2 - `/localization/apps/android.xml`), they won’t be recognized as duplicates.
+* This option works only for the strings located in the files that have the same format. For example, if there is the same string in `android.xml` and `ios.strings` files, it won’t be recognized as a duplicate.
+
+💡 **Use case**: works perfectly for continuous projects with various version branches. Allows translators to work with unique strings in separate branches.
+
+#### Hide all duplicates
+
+When this option is selected, the system spots the duplicated strings in all files. Only the master strings that were originally uploaded are visible and should be translated. The hidden duplicated strings will automatically share the translations from the corresponding master strings. This option is available in two versions: regular duplicates detection, strict duplicates detection. If your source files contain strings with apparent identifiers (keys), it's better to use a *strict* version of this option. In other cases, feel free to use a *regular* one.
+
+💡 **Use case**: works great for projects with narrow scopes where all duplicates share the same context.
+
+## Word count
+
+You can set the preferred way Crowdin Enterprise should count words in your project. Specifically, it applies to whether HTML tags should be counted as regular words or not. By default, Crowdin Enterprise considers HTML tags as regular words for most of the supported formats, excluding the following ones: HTML, Front Matter HTML, HAML, MD, Front Matter MD, XML, WEBXML, IDML, XLIFF, XLIFF 2.0, ADOC, DOCX, DITA.
+
+* **Auto (default)** &ndash; HTML tags will be counted as regular words or skipped depending on the source file format.
+* **Count tags** &ndash; all HTML tags will be counted as regular words.
+* **Skip tags** &ndash; all HTML tags won't be counted.
+
+<Aside>
+  When you change the word count option, only newly uploaded words will be counted according to the new settings. So it's recommended to set the preferred word count settings before uploading source files to the project.
+</Aside>
+
+<ReadMore>
+  More information about Crowdin [Word Counter](/enterprise/word-counter/).
+</ReadMore>
+
+## Assign custom placeholder
+
+To assign the created custom placeholder to a project, follow these steps:
+
+<Steps>
+  1. Open your project and go to **Settings > Import**.
+  2. Click **Assign Custom placeholder**.
+  3. In the appeared dialog, select a placeholder from the **Placeholder** drop-down list and specify the desired order of placeholder execution (useful when you’d like to use multiple custom placeholders within one project), select whether you’d like your custom placeholders to be executed before the default placeholders, whether to allow your project participants to save translations without a placeholder, assign to all or specified formats.
+  4. Click **Save**. <Image src={assignCustomPlaceholder} alt="Assign Custom Placeholder" class="width-xl" />
+</Steps>
+
+<ReadMore>
+  Read more about [Custom Placeholders](/enterprise/custom-placeholders/).
+</ReadMore>

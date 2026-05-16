@@ -1,0 +1,993 @@
+---
+title: Relatórios do Projeto
+description: View your project status and various localization reports
+slug: enterprise/project-reports
+sidebar:
+  order: 1
+---
+
+import { Image } from 'astro:assets';
+import Include from '~/components/Include.astro';
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import KBD from '~/components/KBD.astro';
+import reportsTab from '!/enterprise/reports/project_reports_tab.png';
+import costEstimateGenerating from '!/enterprise/reports/reports_cost_estimate_generating.png';
+import addTmMatchType from '!/enterprise/reports/reports_cost_estimate_add_tm_match_type.png';
+import addCustomRates from '!/enterprise/reports/reports_cost_estimate_add_custom_rates.png';
+import costEstimateGenerated from '!/enterprise/reports/reports_cost_estimate_generated.png';
+import translationCostGenerating from '!/enterprise/reports/reports_translation_cost_generating.png';
+import addMtMatchType from '!/enterprise/reports/reports_add_mt_match_type.png';
+import addCustomRatesTranslationCost from '!/enterprise/reports/reports_translation_cost_add_custom_rates.png';
+import translationCostGenerated from '!/enterprise/reports/reports_translation_cost_generated.png';
+import preTranslationAccuracyGenerated from '!/enterprise/reports/reports_pre_translation_accuracy_generated.png';
+import translatorAccuracyGenerated from '!/enterprise/reports/reports_translator_accuracy_generated.png';
+import topMembersSorted from '!/enterprise/reports/reports_top_members_sorted.png';
+import archiveViewing from '!/enterprise/reports/project_reports_archive_viewing.png';
+
+To view your project status along with existing issues, assess the effectiveness of pre-translation methods, estimate and count the translation cost, keep track of the most active members, and view historical data of previously generated reports, open your project and select **Reports** on the left sidebar.
+
+<Image src={reportsTab} alt="Relatórios do Projeto" />
+
+## Project Overview
+
+Use this section to get a comprehensive summary of your project's health, monitor key activities, and track progress over selected time periods. In the upper-right corner, you can select a report unit (*words*, *strings*, *characters*, or *characters with spaces*) that will apply to all reports in this section. The comparisons shown in percentage are counted by comparing the chosen period of time to the same previous period of time (e.g., if you select a month, the current month is compared to the previous one).
+
+To download reports for further analysis or record-keeping, click **Export** and select the preferred format (CSV, XLSX, or JSON).
+
+In the reports that feature interactive graphs, you can hover over data points for more detailed information, such as daily or monthly totals for each category.
+
+The **Project size** section displays the primary statistics for your project's volume:
+
+* *Translatable*: The total amount of text available for translation.
+* *Hidden*: The total amount of text in hidden strings.
+* *Total*: The total amount of text in the project (*Translatable* + *Hidden*).
+* *Translation to*: The number of target languages in the project.
+
+Below the main statistics, the **Overview** section contains the following reports:
+
+### Activity Summary
+
+This report tracks the overall translation and proofreading activity in the project. You can filter the data by **Date Range**, **Language**, and **Member**. The report is split into two main parts: **Translation** and **Proofreading**.
+
+Each part displays the total work completed during the selected period with a percentage comparison to the previous period. You can expand the **Breakdown by Language** section in each part to view a table of the same metrics broken down by target language.
+
+<Aside>
+  The Activity Summary shows information about all the translations made in the project (including duplicate translations made by the same translator, removed translations, etc.).
+</Aside>
+
+#### Translation
+
+This section shows the volume of translated text, broken down by the following key metrics:
+
+* *Total (end of period)*
+* *Human Translation*
+* *Translation Memory*
+* *Machine Translation*
+* *AI*
+
+The **Translation** graph below the metrics displays multiple lines simultaneously for each translation type. By hovering over the data points, you can view daily or monthly totals for each category.
+
+#### Proofreading
+
+This section shows the volume of approved text and voting activity. The main metric displayed is *Approved* words.
+
+The **Proofreading** graph visualizes the approval and voting activity over time, showing two distinct lines: *Approved Words* and *Votes*. By hovering over the data points, you can view the daily or monthly totals for both approved texts and votes cast.
+
+### Translation Savings Summary
+
+Use this report to review the savings achieved in your project by using Translation Memory (TM), Machine Translation (MT), and Artificial Intelligence (AI).
+
+You can filter the data by **Date Range**, **Language**, **Member**, and **Files** or **Branches** depending on the project type. By default, the **Files/Branches** filter is set to **All files/branches**. Clicking it opens a drop-down with a file tree where you can select specific items. The selection is saved automatically when you press <KBD>Esc</KBD> or click outside the drop-down. After that, the filter displays **Currently selected: N files/branches**. The report uses a **Rates template** to calculate savings. By default, it uses the **Default Net Rate Scheme**, but you can select a custom template to reflect specific agreements.
+
+Using the **Mode** dropdown, you can switch between viewing the data as **%** (percentage) or **currency**.
+
+<Aside>
+  The **currency** mode is only available when a custom, user-created rates template is selected. The **Default Net Rate Scheme** only supports the **%** mode.
+</Aside>
+
+The **Translation Savings** section displays the **Total** savings as a percentage or in currency for the selected period, along with a breakdown of savings from **Translation Memory**, **Machine Translation**, and **AI**.
+
+The bar chart below visualizes these savings over time. Savings are calculated for each string only once, upon the first manual contribution (a new translation or an approval). This also includes approving a translation that originated from a Pre-translation (in this case, the saving is attributed to the date and method of the pre-translation).
+
+If a string has a combination of TM and MT/AI suggestions available, the new contribution is counted towards the category with the highest potential saving value.
+
+Hovering over the bars provides detailed information on savings per method on a daily or monthly basis. For a more granular view, you can also expand the **Breakdown by languages** section to see a table of savings for each specific language.
+
+#### Default Net Rate Scheme
+
+The **Default Net Rate Scheme** is the standard, built-in template used for calculation if no custom template is selected. This scheme defines savings based on a tiered "Net Rate" model, which reflects industry standards where not all matches provide equal value.
+
+For example, a low-percentage fuzzy match (e.g., below 75%) is often reworked entirely by a translator. Therefore, this scheme considers such matches to provide **0%** savings, even though a match was suggested.
+
+The default scheme is divided into two categories, each with its own rates:
+
+**Saving Rates: TM**
+
+| Match Type                               | Net Rate | Saving |
+| ---------------------------------------- | -------- | ------ |
+| Perfect Match / Approval Without Changes | 5%       | 95%    |
+| 100% / Approval Without Changes          | 15%      | 85%    |
+| 95-99% Fuzzy Match                       | 35%      | 65%    |
+| 85-94% Fuzzy Match                       | 55%      | 45%    |
+| 75-84% Fuzzy Match                       | 75%      | 25%    |
+| \< 75% Fuzzy Match      | 100%     | 0%     |
+
+**Saving Rates: MT / AI**
+
+| Match Type               | Net Rate | Saving |
+| ------------------------ | -------- | ------ |
+| Approval Without Changes | 10%      | 90%    |
+| 99-90%                   | 30%      | 70%    |
+| 89-70%                   | 50%      | 50%    |
+| 69-50%                   | 75%      | 25%    |
+| \< 50%  | 100%     | 0%     |
+
+Here are a few examples of how savings are calculated based on these default rates:
+
+* **TM Example:** A 10-word string is translated using a **95-99% Fuzzy Match** from your TM. According to the table, this match type has a saving of **65%**. Therefore, the report will count **6.5 words** (10 words \* 65%) as saved.
+* **MT/AI Example (Approval):** A 10-word string is pre-translated by an MT engine. A proofreader reviews and approves it without making any changes. This action falls into the **Approval Without Changes** category, which has a saving of **90%**. The report will count **9 words** (10 words \* 90%) as saved.
+* **MT/AI Example (Manual Edit):** A 10-word string has an MT suggestion. A translator edits the suggestion (or writes their own translation). The system compares the translator's *final saved translation* to the *original MT suggestion* and finds they are **80% similar**. This action falls into the **89-70%** match category, which has a saving of **50%**. The report will count 5 words (10 words \* 50%) as saved.
+* **No Savings Example:** A 10-word string has a **\< 75% Fuzzy Match**. According to the TM table, this provides **0%** saving. Even though there was a match, it's not counted as a saving in the report, as it likely required a full re-translation.
+
+### Source Content Updates
+
+This report tracks changes made to the source content over a selected time frame. You can filter the data by **Date Range**. The report displays the **Total (end of period)** volume of text, along with specific metrics for content that has been **Added**, **Deleted**, or **Modified**.
+
+<Aside>
+  Report data may be displayed with a delay of up to 24 hours.
+</Aside>
+
+The bar graph helps you visualize when the most significant content updates occurred. By hovering over the bars, you can see the specific changes that occurred each day or month.
+
+### QA Check Issues
+
+This report provides insights into the automated Quality Assurance (QA) checks, highlighting potential inconsistencies in translations. You can filter the data by **Date Range** and **Language**.
+
+<Aside>
+  Report data may be displayed with a delay of up to 24 hours.
+</Aside>
+
+Key metrics include:
+
+* *New (Period)*: The number of new QA issues found within the selected period.
+* *Total (end of period)*: The total number of unresolved QA issues at the end of the selected period.
+* *Per 1000 words*: The density of QA issues relative to the word count. This metric includes approved content and is only shown if the total word count is greater than 1000.
+* *Content with Issues*: The volume of text that contains QA issues, including approved content.
+* *Content with Issues Rate*: The percentage of text that has QA issues, including approved content.
+
+Below the metrics, the report also features several additional components:
+
+* **Breakdown by Language**: An expandable section that shows a table of the key metrics broken down by each target language.
+* **Issues Trend**: A line graph that monitors the total number of QA issues over time. You can hover over data points to see the total number of issues for a specific day.
+* **Issues by languages**: A heatmap-style table that visualizes the distribution of QA issue types (e.g., *Spelling mistakes*, *Consistent terminology*) across all target languages. You can hover over a cell to see the precise number of issues for that specific language and type.
+
+### Problemas Reportados
+
+This report tracks issues manually created by project members to report problems or ask questions. You can filter the data by **Date Range** and **Issue Type**. The main metrics show the *Total*, *Created*, and *Resolved* issues, each with a comparison to the previous period.
+
+This report consists of the following components:
+
+* **Issues by Type**: A table showing the total, created, and resolved counts for each issue category (e.g., *General question*, *Current translation is wrong*).
+* **Incorrect Translations by Language**: A table focusing on the *Current translation is wrong* issue type, breaking down the numbers by language.
+* **Cumulative Created vs Resolved Issues**: A line graph that visualizes the cumulative number of created versus resolved issues.
+* **Average Resolution Time by Issue Type**: A bar chart showing the average time in days it takes to resolve each type of issue.
+* **Top Reporters & Resolvers**: A leaderboard of members who have reported and resolved the most issues, with sortable columns for *Name*, *Issues Reported*, and *Issues Resolved*.
+
+### Project Members
+
+This report helps you monitor the activity and changes among your project members, which can help managers assess the level of engagement. You can filter the data by **Date Range**. The report displays key metrics about your member base for the selected period, including:
+
+* *Total (end of period)*: The total number of members in the project.
+* *Active*: The number of members who were active during the period.
+  <Aside>
+      An active member is a contributor who performs translation-related activities such as adding suggestions, approving translations, voting, commenting on strings, or managing glossary terms.
+  </Aside>
+* *New*: The number of newly joined members.
+* *Pending (end of period)*: The number of users with pending join requests (including both incoming and outgoing invitations).
+
+A graph below the metrics displays the trend of the total member count over time.
+
+## Cost Estimate
+
+Use this report to plan your budget and count the approximate cost of translations. Set the translation and approval rates to see the cost for untranslated and not approved strings in the project.
+
+You can generate a Cost Estimate report based on the following filter parameters:
+
+* Tasks: Not selected, All tasks, or multiple specific tasks.
+* Language: All or specific target language.
+* Strings Added: All time, Today, Yesterday, Last 7 days, Last 30 days, Last month, or Custom range.
+* Files: All or specific files.
+* Workflow step (Specific to [projects with a workflow](/enterprise/creating-project/#projects-with-a-workflow)): All or a specific workflow step.
+* Labels (Specific to [projects with labels](/enterprise/project-settings/labels/)): Not selected, Strings with selected labels, or Strings without selected labels.
+
+<Aside>
+  Final translation cost might differ due to various factors such as added or deleted texts, multiple people translating the same string into the same language (both of them will be counted in the Translation Cost), and others.
+</Aside>
+
+### Geração de um Relatório {#generating-cost-estimate}
+
+To generate the Cost Estimate report, follow these steps:
+
+<Steps>
+  1. Select the preferred currency and the report unit (word, string, character, or characters (including spaces)).
+  2. Use the available filter parameters to specify the report data you're interested in.
+  3. Set your [rates](#rates-cost-estimate) for translations and approvals.
+  4. Click **Generate**.
+</Steps>
+
+<Image src={costEstimateGenerating} alt="Generating Cost Estimate" />
+
+<Aside>
+  Rates are automatically saved after you click *Generate*.
+</Aside>
+
+#### Cost Estimate Queue {#queue-cost-estimate}
+
+After you click **Generate**, the Cost Estimate report is added to a queue and processed in the background. This ensures that multiple reports generated by different users or with different filters don’t override one another. Each report is generated separately and appears in the **Reports > Archive** section once completed (if the **Save to archive** option was selected).
+
+When a report is added to the queue, a notification appears confirming that the report generation has been queued, with quick access to view the queue or close the message.
+
+While the report is being generated, a pop-up in the lower-right corner of the screen shows the queue status. The status updates automatically as the report progresses:
+
+* **Pending** – the report is waiting in the queue and has not started processing yet.
+* **In progress** – the report generation has started. A progress bar shows the current percentage.
+* **Completed** – the report has been generated successfully and can be accessed via the [Archive](#archive).
+* **Failed** – an error occurred during report generation.
+
+Each report runs independently, so you can safely generate multiple Cost Estimate reports with different filters without affecting those that might have been started earlier and are still in progress.
+
+### Rates {#rates-cost-estimate}
+
+You can set the prices for Base rates (full translation, proofread) and configure Net Rate Schemes (percentage of the full translation rate paid for translation using TM suggestions).
+
+#### Base Rates {#base-rates-cost-estimate}
+
+In the Base Rates section, you can set rates for the following types of work:
+
+* **Full translation** &ndash; for each translation made by a person.
+  <Aside>If the string has multiple translations made by the same person, only one is counted. If the string has several translations made by different people, each of them is counted.</Aside>
+* **Proofread** &ndash; for each approved translation.
+
+#### Net Rate Schemes {#net-rate-schemes-cost-estimate}
+
+In the Net Rate Schemes section, in addition to the base rates, you can set the percentage of the full translation rate to be paid for translations made using TM suggestions of various TM Match types. By default, you can configure the percentage of the full translation rate for the following TM Match types:
+
+* **101 (perfect)** &ndash; for translations made using Perfect match TM suggestions (source strings are identical to TM suggestion by text and context).
+* **100** &ndash; for translations made using 100% match TM suggestions (source strings are identical to TM suggestion only by text).
+
+You can also add your own TM match types, specifying the preferred percentage of text similarity and the percentage of the full translation rate to be paid for such a translation.
+
+To add your own TM match types, follow these steps:
+
+<Steps>
+  1. Click <Icon name="mdi:cog" class="inline-icon" /> in the Net Rate Schemes section.
+  2. Click on the appeared <Icon name="mdi:plus" class="inline-icon" /> button.
+  3. Specify the TM match range and the percentage of the full translation rate.
+  4. Click <Icon name="mdi:cog" class="inline-icon" /> to save the settings.
+</Steps>
+
+<Image src={addTmMatchType} alt="Adding TM Match Type" class="width-lg" />
+
+#### Adding Custom Rates {#custom-rates-cost-estimate}
+
+In addition to base rates that are applied to all languages by default, you can add custom rates for specific languages. To add custom rates, click **Add custom rates**.
+
+To select the language or languages for custom rates, click the drop-down menu, and select the ones you need. You can create as many custom rates as you need.
+
+<Image src={addCustomRates} alt="Adding Custom Rates" />
+
+#### Rate Templates
+
+If you plan to work with multiple rate configurations, save them as templates by clicking **Save as > New rates template**, then specify the template name and click **Save**.
+
+When saving a new template you can choose the template visibility using the following options:
+
+* **Share with all project members** &ndash; makes the template visible to all translators within the project. Regardless of the number of translators or their different rates, they all will have access to the template. It can include both general rates and custom rates for specific languages and translators, along with a net rate scheme. This transparency promotes clarity in pricing, allowing translators to review rates, generate reports on their translations, and calculate cost estimates. The key benefit is that translators understand the net rate scheme and can apply their base rate, even if it's not included in the template.
+
+* **Share with managers within the organization** &ndash; makes the template global, visible only to managers across all projects of the organization. This option streamlines rate consistency across various projects.
+
+If neither of the options is selected, the template remains visible only to managers within the current project, limiting access to a select group of project members. These options provide flexibility in controlling who can view and use the rate template to accommodate different organizational preferences.
+
+Saved templates allow you to quickly switch between different configurations for report generation.
+
+Click **Templates** to view and manage your saved rate templates.
+
+### Include Pre-translated Strings
+
+Select **Include pre-translated strings** if you want to include pre-translated strings in a Cost Estimate report. By default, this option is selected.
+
+For example, you have an untranslated string `Validate your username` in your project. You generate a Cost Estimate report with the **Include pre-translated strings** option selected. This string will be included in the Cost Estimate. Then you pre-translate this string via TM or MT engine and once again generate a Cost Estimate report with the **Include pre-translated strings** option selected. This time, the pre-translated string `Validate your username` won't be included in the Cost Estimate report.
+
+On the other hand, with the **Include pre-translated strings** option cleared, the string `Validate your username` will be included in the Cost Estimate report both times, when untranslated and when pre-translated via TM or MT engine.
+
+### Calculate Internal Fuzzy Matches
+
+Internal Fuzzy Matches are partial (fuzzy) TM matches found among untranslated strings in your project that can potentially be added to the Translation Memory. For example, if the first string in a file is `Validate your username` and the last one is `Validate your username again`, there is an internal fuzzy match.
+
+To include fuzzy (99% and less) internal matches, as well as perfect (101%) and 100% matches, in your Cost Estimate report and get a more comprehensive prediction of how many strings can be added to the TM if translated in sequence, select **Calculate Internal Fuzzy Matches**. Note that these calculations are approximate because the actual translation order may differ.
+
+If you clear **Calculate Internal Fuzzy Matches**, the Cost Estimate report will only show perfect (101%) and 100% internal matches (repetitions), and will not include any fuzzy matches.
+
+<Aside>
+  Internal Fuzzy Matches are counted according to the [Net Rate Schemes](#net-rate-schemes-cost-estimate) configurations.
+</Aside>
+
+### Result Analysis {#result-analysis-cost-estimate}
+
+When the Cost Estimate report is generated, it displays the following details:
+
+<Aside>
+  The generated Cost Estimate report is available for viewing in the [Archive](#archive) section.
+</Aside>
+
+##### Cost Summary
+
+* **Total** - General cost estimate for all languages (including translation, proofreading, and any TM savings).
+* **Subtotals** - Cost estimate for each target language:
+  * **Translation** – Cost for strings requiring new or updated translations (no high–percentage match leverage).
+  * **Proofreading** – Cost for reviewing translations.
+  * **TM Savings** – Savings from existing translations (in TM or within the project).
+  * **Weighted Words / Strings / Characters / Characters with Spaces** – Final word count for cost calculations after applying TM/internal match discounts.
+
+##### Categories
+
+Each row in the main table represents a match category or status:
+
+* **Total** – Summarizes all strings, words, and characters, as well as the weighted units after match discounts and percentage of the total.
+
+* **TM Match (total)** – Untranslated strings matching entries in Translation Memory, often split into:
+  * **101% (perfect)** – Exact text and context match.
+  * **100%** – Exact text match, but context differs.
+
+* **Repetitions (total)** or **Internal Match (total)** – Untranslated strings matching other strings within the project. Displaying depends on whether **Calculate Internal Fuzzy Matches** is enabled. Subcategories (e.g., 101%, 100%, and fuzzy) depend on your Net Rate Schemes.
+
+  <Aside>
+      Depending on your project settings, the Cost Estimate report results may vary:
+      * If **Auto-substitution** is enabled, some strings initially below 100% may become 100% matches after auto-substitution and be counted under Internal Match.
+      * If your project is set to [hide duplicate strings](/project-settings/import/#hide-all-duplicates), the report won’t show any repetitions since they’re not visible for translation.
+  </Aside>
+
+  If an untranslated string has both a 101% TM match and a 100% internal match, it counts toward TM match.
+
+* **No Match** – Strings with no TM or internal matches, requiring translation from scratch.
+
+* **Not Approved** – Translated strings that still awaiting approval.
+
+* **Not Translated** – Completely untranslated strings requiring full translation.
+
+##### Columns
+
+* **Strings / Words / Characters / Characters with Spaces** – Basic volume metrics.
+  <Aside>
+      The selected report unit column is shown in bold, while other unit columns appear in lighter (muted) text.
+  </Aside>
+* **Weighted Words / Strings / Characters / Characters with Spaces** – Shows the adjusted metric after factoring in repetitions and fuzzy matches, reflecting the actual translation effort.
+* **%** – Share of weighted units in each category.
+
+##### Folder/File Breakdown
+
+After the main table, each language subtotal also includes a table showing data for each folder or file, indicating how many strings are **Not Approved**, **Not Translated**, match the **TM**, match **Internal**, or have **No Match**. This helps identify where to focus your translation efforts and budget.
+
+##### Export
+
+To download the Cost Estimate report, click **Export** and select the preferred format (CSV, XLSX, or JSON) for further analysis or record-keeping.
+
+<Image src={costEstimateGenerated} alt="Cost Estimate Generated" />
+
+## Translation Cost
+
+Use this report to calculate the actual translation and proofreading costs based on the volume of units completed by contributors (e.g., words).
+
+You can generate a Translation Cost report based on the following filter parameters:
+
+* Tasks: Not selected, All Tasks, or multiple specific tasks.
+* Group by: Member or language.
+* Time period: All time, Today, Yesterday, Last 7 days, Last 30 days, Last month, or Custom range.
+* Workflow step (Specific to projects with a [workflow](/enterprise/creating-project/#projects-with-a-workflow)): All or specific workflow step.
+* Files: All files (including deleted files and strings) or Selected files (including deleted strings).
+* Branches (Specific to [string-based projects](/enterprise/creating-project/#string-based-project)): All branches or Selected branches.
+* Language: All or specific target language.
+* Users: All or specific users.
+* Labels (Specific to projects with [labels](/enterprise/project-settings/labels/)): Not selected, Strings with selected labels, or Strings without selected labels.
+
+### Geração de um Relatório {#generating-translation-cost}
+
+To generate the Translation Cost report, follow these steps:
+
+<Steps>
+  1. Select the preferred currency and the report unit (word, string, character, or characters (including spaces)).
+  2. Use the available filter parameters to specify the report data you're interested in.
+  3. Set your [rates](#rates-translation-cost) for translations and approvals.
+  4. *(Optional)* Clear **Save to archive** if you don't want to save the report to the [Archive](#archive).
+  5. Click **Generate**.
+</Steps>
+
+<Image src={translationCostGenerating} alt="Generating Translation Cost" />
+
+<Aside>
+  Rates are automatically saved after you click **Generate**.
+</Aside>
+
+<Aside>
+  If the scope of a task changes after contributions have already been made (e.g., if some strings were removed from the task), these contributions will still be included when generating a Translation Cost report for **All Tasks** or a **specific task**.
+</Aside>
+
+### Rates {#rates-translation-cost}
+
+You can set the prices for Base rates (full translation, proofread) and configure Net Rate Schemes (percentage of the full translation rate paid for translation using TM suggestions, MT suggestions, and existing translations).
+
+#### Base Rates {#base-rates-translation-cost}
+
+In the Base Rates section, you can set rates for the following types of work:
+
+* **Full translation** &ndash; for each translation made by a person.
+  <Aside>If the string has several translations made by the same person, only one will be counted. If the string has several translations made by different people, each of them will be counted.</Aside>
+* **Proofread** &ndash; for each approved translation.
+
+#### Net Rate Schemes {#net-rate-schemes-translation-cost}
+
+In the Net Rate Schemes section, in addition to the base rates, you can set the percentage of the full translation rate to be paid for translations made using TM suggestions, MT suggestions, and other translations of various Match types.
+
+By default, you can configure the percentage of the full translation rate for the following match type categories:
+
+**TM Match types:**
+
+* **101 (perfect)** &ndash; for translations made using Perfect match TM suggestions (source strings are identical to TM suggestion by text and context).
+* **100** &ndash; for translations made using 100% match TM suggestions (source strings are identical to TM suggestion only by text).
+
+**MT Match types:**
+
+* **100** &ndash; for translations made using 100% match MT suggestions (new suggested translations are identical to MT suggestion).
+
+**AI Match types:**
+
+* **100** &ndash; for translations made using 100% match AI suggestions (new suggested translations are identical to AI suggestion).
+
+**Other translations types:**
+
+* **100** &ndash; for translations made using existing translations (new suggested translations are identical to the existing translations).
+
+If a string has a combination of TM and MT suggestions and existing translations, the new translation is counted at the lowest Net Rate Scheme value. For example, if a string has a 101% (perfect) TM match suggestion (10% of the full translation rate) and a 100% MT match suggestion (5% of the full translation rate), the new translation added to this string will be counted at a 5% of the full translation rate.
+
+You can also add your own TM, MT, and Other translations match types, specifying the preferred percentage of text similarity and the percentage of the full translation rate to be paid for such a translation.
+
+To add your own match types, follow these steps:
+
+<Steps>
+  1. Click <Icon name="mdi:cog" class="inline-icon" /> in the Net Rate Schemes section.
+  2. Click on the appeared <Icon name="mdi:plus" class="inline-icon" /> button.
+  3. Specify the match range and the percentage of the full translation rate.
+  4. Click <Icon name="mdi:cog" class="inline-icon" /> to save the settings.
+</Steps>
+
+<Image src={addMtMatchType} alt="Adding MT/Other Translation Match Type" />
+
+#### Adding Custom Rates {#custom-rates-translation-cost}
+
+In addition to base rates that are applied to all languages and users by default, you can add custom rates for specific languages and users. To add custom rates, click **Add custom rates**.
+
+To select the languages and members for custom rates, click the drop-down menus, and select the ones you need. You can create as many custom rates as you need.
+
+<Image src={addCustomRatesTranslationCost} alt="Adding Custom Rates" />
+
+### Using Additional Translation Cost Options
+
+* **Exclude Approvals for Edited Translations:** select this option to exclude approvals when the same user has translated the string. This helps ensure that your cost reporting is more accurate by avoiding the duplication of approval costs.
+
+* **Pre-Translated Strings Categorization Adjustment:** select this option to have repetitive translations of pre-translated strings categorized under TM or MT match rates, rather than the default Other suggestion match rates. This is useful because post-editing translations from MT engines usually requires more effort than post-editing translations from human translators, leading to a more precise and fair measure of costs related to your translators.
+
+### Result Analysis {#result-analysis-translation-cost}
+
+When the Translation Cost report is generated, it displays the following details:
+
+##### Cost Summary
+
+* **Total** - General translation cost (including TM, MT, and AI savings, weighted words, and pre-translated words).
+* **User and Language Totals** - Below the general translation cost, the report shows totals for each user or language, depending on the selected **Group by** filter:
+  * **Group by Member** - Shows each translator or proofreader general translation cost (including TM, MT, and AI savings, weighted words, and pre-translated words), along with language subtotals within.
+  * **Group by Language** - Shows each target language general translation cost (including TM, MT, and AI savings, weighted words, and pre-translated words), along with translator or proofreader subtotals within.
+* **Subtotals** - Subtotal translation cost for each target language or user:
+  * **Savings** - The amount saved with leveraged matches from TM, MT, or AI.
+  * **Weighted Words / Strings / Characters / Characters with Spaces** – Shows the adjusted metric after applying repetitions and fuzzy matches, reflecting the actual translation effort.
+  * **Pre-translated Words / Strings / Characters / Characters with Spaces** - Shows how many units were pre-translated.
+
+Within each user (or language) section, you’ll see a further breakdown of work types and match types in the tables:
+
+##### Translation & Post-Editing
+
+Each row in the Translation & Post-Editing section represents a match category or total:
+
+* **No Match** – No leverage from TM, MT, or AI (full rate).
+* **TM Match** – Uses Translation Memory (with possible subcategories like **101% (perfect)** or **100%**).
+* **MT Match** – Uses Machine Translation (e.g., **100%**).
+* **AI Match** – Uses AI-based suggestions (e.g., **100%**).
+* **Other translations Match** – Leverage from existing translations added by other users.
+* **Total** – Summarizes all translated units under that user/language.
+
+##### Columns
+
+* **Strings / Words / Characters / Characters with Spaces** – Number of units handled at each match type.
+* **Rate per unit** – The price assigned per match type (based on your configured [Net Rate Schemes](#net-rate-schemes-translation-cost) and base rates).
+* **Price** – Total cost for the units × rate in that match category.
+
+##### Proofreading
+
+* **Words / Strings / Characters / Characters with Spaces** – Number of units that were proofread and approved.
+* **Rate per unit** – Proofreading rate.
+* **Price** – Total cost for proofread units (units × rate).
+
+##### Export
+
+To download the Translation Cost report, click **Export** and select the preferred format (CSV, XLSX, or JSON) for further analysis or record-keeping.
+
+<Image src={translationCostGenerated} alt="Translation Cost Generated" />
+
+## Pre-translation Accuracy
+
+Use this report to evaluate the translation quality of pre-translation methods (AI, MT, and TM) used in your project and identify the most efficient ones.
+
+This report analyzes the post-editing effort required for pre-translated strings. It compares the initial pre-translation against the final approved translation to calculate a Match Score. This helps you identify which AI prompts or MT engines require the least amount of human editing, allowing you to adjust your workflow and increase the usage of the best-performing methods.
+
+The Match Score metric is calculated at the character level. The report unit you select (Strings, Words, Characters, or Characters with spaces) determines how the results are displayed (e.g., if you select Strings, the entire source string is placed in a category based on its total match score).
+
+### Report Scope
+
+* Includes only source strings that have a translation added via pre-translation which was subsequently approved.
+* The report considers pre-translations added within the selected **Time period**, regardless of when they were approved.
+* If multiple pre-translations exist for a string, each is included with its match score.
+
+### Recommended Workflow
+
+To get the most actionable insights from this report, we recommend the following flow:
+
+<Steps>
+  1. **Pre-translate** &ndash; Apply pre-translation to your source content using AI, MT, or TM.
+  2. **Post-edit & Approve** &ndash; Have your proofreaders review the pre-translated strings. They should fix any errors or stylistic issues (post-editing) and approve the final versions.
+  3. **Measure Accuracy** &ndash; Generate the Pre-translation Accuracy report.
+  4. **Optimize** &ndash; Identify which AI prompt, MT engine, or TM required the least amount of human editing. Update your workflow to use that high-performing method for future translations.
+</Steps>
+
+### Geração de um Relatório {#generating-pre-translation-accuracy}
+
+You can generate a Pre-translation Accuracy report based on the following filters:
+
+* **Task**: Not selected, All Tasks, or a specific task (available only if the project has tasks).
+* **Language**: All, or specific language.
+* **Time period**: All time, Today, Yesterday, Last 7 days, Last 30 days, Last month, or Custom range. This filter selects the range of when the strings were pre-translated.
+* **Files**: All files or Selected files.
+* **Labels**: Not selected, Strings with selected labels, or Strings without selected labels (available only if the project has labels).
+
+Additionally, using the report's **Settings**, you can configure **Match Score Categories**. These settings determine how the graph groups translations that were edited. For example, if you set a category for 99-90%, source strings where the approved translation matches the pre-translation within that range will be grouped together. Anything below your lowest defined match category will be treated as **No Match** (New Translation).
+
+To generate the Pre-translation Accuracy report, follow these steps:
+
+<Steps>
+  1. Select the preferred report unit (words, strings, characters, or characters with spaces).
+  2. Select the preferred way to group the histogram data (Day or Month).
+     * When grouped by Day, the stacked histogram will have more bars, giving a more granular, day-by-day view.
+     * When grouped by Month, the data is displayed in fewer, broader monthly segments.
+  3. *(Optional)* Select the task if you want to generate a report based on work done within all or specific tasks. Alternatively, leave it as **Not selected** to generate a report based on a wider content scope.
+  4. Select the preferred language.
+  5. Select the **Time period**.
+  6. *(Optional)* Select **Files** to specify the source content. You can choose **All files** or **Selected files**.
+  7. *(Optional)* Select **Labels** to filter strings based on their labels. You can choose **Strings with selected labels** or **Strings without selected labels**.
+  8. *(Optional)* Clear **Save to archive** if you don't want to save the report to the [Archive](#archive).
+  9. Click **Settings** to configure your Match Score Categories.
+  10. Click **Generate**.
+</Steps>
+
+### Result Analysis {#result-analysis-pre-translation-accuracy}
+
+When the report is generated, you will see the information grouped into pre-translation methods (via AI, MT, and TM):
+
+* **Pre-translation via AI**:
+  * Total approved words, pre-translated by AI
+  * Separate graphs for each prompt (maximum 10 prompts displayed)
+* **Pre-translation via MT**:
+  * Total approved words, pre-translated by MT
+  * Separate graphs for each MT engine (maximum 10 engines displayed)
+* **Pre-translation via TM**:
+  * Total approved words, pre-translated by TM
+
+Each section displays the volume of source content, broken down by the following key metrics. (For this explanation, we assume **Strings** was selected as the report unit):
+
+* **Total** – The total number of source strings to which translations were added via pre-translation and subsequently approved. This includes strings approved without changes and strings where a proofreader added a corrected translation that was then approved.
+* **100% Match** – The number of source strings where the approved translation matches the translation added via pre-translation exactly (100%).
+* **Match Score Ranges** (e.g., 70-99% Match) – The number of source strings where the approved translation matches the pre-translation within the configured percentage range. This indicates that a proofreader edited the pre-translation, but the final approved version remains similar to the original suggestion.
+* **Avg. Match Score** – The average percentage of similarity between the initial pre-translations and the final approved texts. A higher percentage means the pre-translations were accurate and required fewer edits.
+* **No Match** – The number of source strings where the approved translation differs from the pre-translation by more than the lowest percent in your configured match score categories. In these cases, the translation was changed so significantly during proofreading that it is treated as a complete rewrite (a new translation).
+* **Quality Score** – Measures overall quality based on the average match score achieved for the translated content. It is calculated as follows: `100 - ((Unedited + (Edited * (100 - Avg. Match Score))) / Total)`
+
+The **Stacked Histogram** below the metrics visualizes the distribution of these categories over time. Each bar represents the volume of source units processed, stacked by their quality category (e.g., *100% Match*, *Match Score: 99-90%*, *No Match*).
+
+To download the Pre-translation Accuracy report, click **Export** and select the preferred export format (CSV, XLSX, or JSON).
+
+<Image src={preTranslationAccuracyGenerated} alt="Pre-translation Accuracy Generated" />
+
+## Translator Accuracy
+
+Use this report to evaluate the translation quality of individual translators in your project and identify top performers.
+
+This report analyzes the post-editing effort required for translations submitted by human translators. It compares each translator’s initial translation against the final approved version to calculate a **Match Score**. This helps you identify translators who consistently produce high-quality work requiring minimal corrections, as well as those who may benefit from additional guidance or training.
+
+The Match Score metric is calculated at the character level. The report unit you select (Strings, Words, or Characters) determines how the results are displayed (e.g., if you select Strings, the entire source string is placed in a category based on its total match score).
+
+### Report Scope
+
+* Includes only source strings that have a translation submitted by a human translator which was subsequently approved.
+* The report considers translations added within the selected **Time period**, regardless of when they were approved.
+* If multiple translations exist for a string, each is included with its match score.
+
+### Recommended Workflow
+
+To get the most actionable insights from this report, we recommend the following flow:
+
+<Steps>
+  1. **Translate** &ndash; Have your translators translate the project content.
+  2. **Proofread & Approve** &ndash; Have your proofreaders review the translations. They should fix any errors or stylistic issues (post-editing) and approve the final versions.
+  3. **Measure Accuracy** &ndash; Generate the Translator Accuracy report to see how much the proofreaders had to edit each translator's work.
+  4. **Feedback** &ndash; Use the findings to provide targeted feedback. Translators with high **100% Match** rates are your top performers, while high **No Match** rates might indicate a need for better glossary adherence or style guide training.
+</Steps>
+
+### Geração de um Relatório {#generating-translator-accuracy}
+
+You can generate a Translator Accuracy report based on the following filters:
+
+* **Users**: All or selected users.
+* **Language**: All or specific language.
+* **Time period**: All time, Today, Yesterday, Last 7 days, Last 30 days, Last month, or Custom range. This filter selects the range of when the translations were added.
+* **Files**: All files or Selected files.
+* **Labels**: Not selected, Strings with selected labels, or Strings without selected labels (available only if the project has labels).
+
+Additionally, using the report's **Settings**, you can configure **Match Score Categories**. These settings determine how the graph groups translations that were edited. For example, if you set a category for 99-90%, source strings where the approved translation matches the initial translation within that range will be grouped together. Anything below your lowest defined match category will be treated as **No Match** (New Translation).
+
+To generate the Translator Accuracy report, follow these steps:
+
+<Steps>
+  1. Select the preferred report unit (words, strings, characters, or characters with spaces).
+  2. *(Optional)* Select one or more users if you want to generate the report for specific translators only. Otherwise, choose **All** to include everyone.
+  3. Select the preferred language or choose **All** if you want to include every target language.
+  4. Select the **Time period**.
+  5. *(Optional)* Select **Files** to specify the source content. You can choose **All files** or **Selected files**.
+  6. *(Optional)* Select **Labels** to filter strings based on their labels. You can choose **Strings with selected labels** or **Strings without selected labels**.
+  7. *(Optional)* Clear **Save to archive** if you don't want to save the report to the [Archive](#archive).
+  8. Click **Settings** to configure your Match Score Categories.
+  9. Click **Generate**.
+</Steps>
+
+### Result Analysis {#result-analysis-translator-accuracy}
+
+When the report is generated, you will see the information grouped by language, and each translator is listed with their individual statistics.
+
+In each section, the data is displayed as a **Pie Chart**. The chart visualizes the proportion of source content based on how closely the translator's initial work matched the final approved version:
+
+* **100% Match** &ndash; The number of source units where the approved translation matches the translator's initial translation exactly (approved without edits).
+* **Match Score Ranges** (e.g., 99-90% Match) &ndash; The number of source units where the approved translation is an edited version of the translator's work but remains similar within the configured percentage range.
+* **No Match** &ndash; The number of source units where the approved translation differs significantly from the translator's initial work (below the lowest configured match category). In these cases, the translation was changed so significantly during proofreading that it is treated as a complete rewrite (a new translation).
+
+To download the Translator Accuracy report, click **Export** and select the preferred export format (CSV, XLSX, or JSON).
+
+<Image src={translatorAccuracyGenerated} alt="Translator Accuracy Generated" />
+
+## Time Spent
+
+Use this report to calculate the cost of work based on the time contributors spend on tasks. This report is particularly useful when paying translators and proofreaders by the hour rather than by the volume of content (e.g., words).
+
+The report uses the [time logged by contributors](/enterprise/user-tasks/#logging-time-spent-on-a-task) directly in a task's comments.
+
+You can generate a **Time Spent** report based on the following filter parameters:
+
+* **Group by**: Member, Language, or Tasks.
+* **Time period**: All time, Today, Yesterday, Last 7 days, Last 30 days, Last month, or Custom range.
+* **Tasks**: Not selected, All Tasks, or multiple specific tasks.
+* **Language**: All or a specific target language.
+* **Type**: All types, Translate, Proofread, Translate by vendor, or Proofread by vendor.
+* **Users**: All users or specific users.
+
+### Geração de um Relatório {#generating-time-spent}
+
+To generate the **Time Spent** report, follow these steps:
+
+<Steps>
+  1. Select the preferred currency.
+  2. Set your [rates](#rates-time-spent).
+  3. Use the available filter parameters to specify the report data you're interested in.
+  4. *(Optional)* Clear **Save to archive** if you don't want to save the report to the [Archive](#archive).
+  5. Click **Generate**.
+</Steps>
+
+<Aside>
+  Rates are automatically saved after you click **Generate**.
+</Aside>
+
+### Rates {#rates-time-spent}
+
+You can set the hourly prices for work done by contributors in the project. Unlike the **Translation Cost** report, the unit for the **Time Spent** report is fixed to **hour**.
+
+#### Base Rate {#base-rate-time-spent}
+
+In the **Base Rate** section, you can set the hourly rate that will be applied to all work types (translation and proofreading) done in the project. This rate serves as the default for all languages and members.
+
+#### Adding Custom Rates {#custom-rates-time-spent}
+
+In addition to the base rate that is applied to all languages and users by default, you can add custom rates for specific languages and users. To add custom rates, click **Add custom rates**.
+
+To select the languages and users for custom rates, click the drop-down menu, and select the ones you need. You can create as many custom rates as you need.
+
+#### Rate Templates {#rate-templates-time-spent}
+
+If you plan to work with multiple rate configurations, save them as templates by clicking **Save as > New rates template**, then specify the template name and click **Save**.
+
+Click **Templates** to view and manage your saved rate templates.
+
+<Aside>
+  Templates saved for the **Time Spent** report can't be applied to other reports, and consequently, rate templates saved for other reports can't be applied here.
+</Aside>
+
+### Result Analysis {#result-analysis-time-spent}
+
+When the **Time Spent** report is generated, it displays the following details:
+
+<Aside>
+  The generated **Time Spent** report is available for viewing in the [Archive](#archive) section. The time logged for a task is included in the report even if the associated task is later deleted.
+</Aside>
+
+##### Cost Summary
+
+* **Total** - The total calculated cost and total time spent for the selected time period.
+* **User/Language/Task Totals** - The report shows totals for each member, language, or task, depending on the selected **Group by** filter.
+
+Below the summary, the report shows a detailed breakdown in a table format:
+
+##### Columns
+
+* **Language** – The target language for the work performed.
+* **Time Spent** – The total time logged by the contributor for the work in that language.
+* **Rate per hour** – The hourly rate applied (based on your configured [Base Rate](#base-rate-time-spent) and [Custom Rates](#custom-rates-time-spent)).
+* **Price** – The total cost calculated for the work in that language.
+
+##### Export
+
+To download the **Time Spent** report, click **Export** and select the preferred format (CSV, XLSX, or JSON) for further analysis or record-keeping.
+
+## Task Usage
+
+Use this report to get a detailed overview of task management within your project. It allows you to analyze workload distribution, compare creation and resolution rates, track team performance and efficiency, monitor task completion times, and review associated costs.
+
+The **Task Usage** report has the following global filters that are applied to all sub-reports by default:
+
+* **Group by**: *Language* or *Type*.
+* **Time period**: *All time*, *Today*, *Yesterday*, *Last 7 days*, *Last 30 days*, *Last month*, or *Custom range*.
+* **Language**: *All* or a specific target language.
+* **Type**: *All types*, *Translate*, *Proofread*, *Translate by vendor*, or *Proofread by vendor*.
+* **Created by**: *All members* or a specific member.
+
+Each sub-report below has its own set of filters that are pre-populated from these global settings but can be individually adjusted. This allows you to start with a broad overview and then narrow the scope to specific data sets for each type of analysis.
+
+To download reports for further analysis or record-keeping, click **Export** and select the preferred format (CSV, XLSX, or JSON).
+
+In the reports that feature interactive graphs, you can hover over data points for more detailed information, such as daily or monthly totals for each category.
+
+### Workload
+
+This section helps you understand the volume and current status of tasks across your project. You can generate a Workload report based on the following filter parameters:
+
+* **Group by**: *Language*, *Type*, or *User*.
+* **Time period**: *All time*, *Today*, *Yesterday*, *Last 7 days*, *Last 30 days*, *Last month*, or *Custom range*.
+* **Language**: *All* or a specific target language.
+* **Type**: *All types*, *Translate*, *Proofread*, *Translate by vendor*, or *Proofread by vendor*.
+* **Created by**: *All members* or a specific member.
+* **Assignee**: *All members* or a specific member.
+
+The primary metrics show a snapshot of your project's workload, including:
+
+* *Total tasks (period)*: The number of tasks found within the selected period.
+* *To Do*: The number of tasks that have not yet been started.
+* *In Progress*: The number of tasks that are currently being worked on.
+* *Done*: The number of tasks where all work has been completed but are not yet closed.
+* *Closed*: The number of tasks that have been completed and formally closed.
+* *Active tasks volume*: The total volume of content (e.g., words) in all tasks that are not in a *Closed* state.
+* *Throughput task volume*: The total volume of content (e.g., words) in all tasks that are in a *Done* or *Closed* state within the selected period.
+
+For a more granular view, you can expand the **Breakdown by languages** section to see a table of these metrics for each target language.
+
+### Created vs Resolved
+
+This section helps you compare the rate of task creation against the rate of task resolution over time, which is useful for monitoring your team's throughput and managing backlogs.
+
+You can generate a Created vs Resolved report based on the following filter parameters:
+
+* **Group by**: *Language* or *Type*.
+* **Time period**: *All time*, *Today*, *Yesterday*, *Last 7 days*, *Last 30 days*, *Last month*, or *Custom range*.
+* **Language**: *All* or a specific target language.
+* **Type**: *All types*, *Translate*, *Proofread*, *Translate by vendor*, or *Proofread by vendor*.
+* **Created by**: *All members* or a specific member.
+
+This section displays the following primary metrics:
+
+* *Created*: The total number of tasks created within the selected time period.
+* *Resolved*: The total number of tasks that were resolved (i.e., moved to a *Done* or *Closed* state) within the selected time period.
+
+Below the metrics, a line graph visualizes the cumulative number of created versus resolved tasks over time, allowing you to see trends at a glance. Additionally, you can expand the **Breakdown by languages** section to see the number of created and resolved tasks for each target language in a table format.
+
+### Task Performance
+
+This section helps you evaluate team performance and efficiency by tracking how tasks are completed in relation to their due dates.
+
+You can generate a Task Performance report based on the following filter parameters:
+
+* **Group by**: *Language* or *Type*.
+* **Time period**: *All time*, *Today*, *Yesterday*, *Last 7 days*, *Last 30 days*, *Last month*, or *Custom range*.
+* **Language**: *All* or a specific target language.
+* **Type**: *All types*, *Translate*, *Proofread*, *Translate by vendor*, or *Proofread by vendor*.
+* **Created by**: *All members* or a specific member.
+* **Assignee**: *All members* or a specific member.
+
+This section displays the following primary metrics:
+
+* *Total with Due Date*: The total number of tasks that have a due date set within the selected period.
+* *Total Open Overdue*: The number of tasks that are currently past their due date but are not yet closed.
+* *Closed Overdue*: The number of tasks that were completed and closed after their due date.
+* *Closed on Time*: The number of tasks that were completed and closed on or before their due date.
+* *On-time rate*: The percentage of tasks closed on or before their due date out of all closed tasks within the selected period.
+
+Below the metrics, a stacked bar chart visualizes the performance over time, comparing the number of tasks *Closed Overdue* against those *Closed on Time*. For a more detailed view, you can expand the **Breakdown by languages** section to see a performance breakdown for each target language.
+
+### Task Completion Time
+
+This section provides detailed analytics on how long it takes for tasks to move from creation to completion, helping you identify potential bottlenecks in your workflow.
+
+You can generate a Task Completion Time report based on the following filter parameters:
+
+* **Group by**: *Language* or *Type*.
+* **Time period**: *All time*, *Today*, *Yesterday*, *Last 7 days*, *Last 30 days*, *Last month*, or *Custom range*.
+* **Language**: *All* or a specific target language.
+* **Type**: *All types*, *Translate*, *Proofread*, *Translate by vendor*, or *Proofread by vendor*.
+* **Created by**: *All members* or a specific member.
+* **Assignee**: *All members* or a specific member.
+* **Size (words)**: *Any*, or a custom range of words.
+
+This section displays the following primary metrics:
+
+* *Avg. completion time*: The average time taken for tasks to be completed from the moment of creation.
+* *Median*: The median time taken for task completion, representing the typical time for most tasks.
+* *80th percentile*: The time within which 80% of tasks are completed. This helps to understand the upper range of completion times while ignoring extreme outliers.
+* *Max. completion time*: The longest time taken to complete any single task in the selected set.
+* *Avg. waiting time*: The average time a task spends in a *To Do* state before work begins.
+* *Avg. overdue time*: The average amount of time by which tasks were completed past their due date. This is calculated only for tasks that were closed overdue.
+* *Avg. active work time*: The average time spent actively working on a task. This excludes the initial time a task spends in the *To Do* state.
+
+The primary metrics are also available in the expandable **Breakdown by languages** section, which shows a detailed table of completion and waiting times for each target language.
+
+### Task Cost
+
+This section helps you review and analyze the financial costs associated with tasks in your project.
+
+This report totals the costs for all tasks that have either a recorded [Cost Estimate](#cost-estimate) or [Translation Cost](#translation-cost). The actual cost from the Translation Cost report is always prioritized. To include a task's financial data in this summary, you must first generate a cost or estimate report for that specific task.
+
+You can generate a Task Cost report based on the following filter parameters:
+
+* **Group by**: *Language* or *Type*.
+* **Time period**: *All time*, *Today*, *Yesterday*, *Last 7 days*, *Last 30 days*, *Last month*, or *Custom range*.
+* **Language**: *All* or a specific target language.
+* **Type**: *All types*, *Translate*, *Proofread*, *Translate by vendor*, or *Proofread by vendor*.
+* **Created by**: *All members* or a specific member.
+* **Status**: *To Do*, *In Progress*, *Done*, *Closed*, or *For Approval*. You can select multiple statuses at once.
+
+This section displays the following primary metrics. If multiple currencies are used in the tasks, the costs for each will be displayed separately.
+
+* *Task costs with estimates*: The total cost for all tasks within the filtered selection that have an associated estimate or actual cost.
+* *Task costs with estimates (active)*: The total cost for only the *active* tasks (those in a "To Do" or "In Progress" state) within the filtered selection.
+
+For a more detailed view, you can expand the **Breakdown by languages** section. This table shows the number of tasks and their associated costs for each language, also broken down by total versus active tasks.
+
+## Contribution Raw Data Report
+
+In addition to the Translation Cost report, which is based on the Contribution Raw Data and grouped by languages, you can retrieve this detailed contribution raw data using the [Generate Report](/developer/enterprise/api/v2/#operation/api.projects.reports.post) (Contribution Raw Data schema) or via the [Raw Report Data](https://store.crowdin.com/raw-report) app available on the Crowdin Store. This allows you to generate your own custom report according to your specific requirements.
+
+The Contribution Raw Data report provides various columns depending on the selected mode (translations, approvals, or votes). Each column offers specific insights, for example `source string text hash`, which is useful for identifying changes in source strings despite having the same `stringId`. It's important to note that multiple records can exist for the same `stringId` if the source hash or plural form varies.
+
+For repeated translations by the same user on the same source string, into the same target language, the same plural form, and if the source text has not changed, only the `translationId`, `targetUnits`, and `updatedAt` columns will update in the report statistics. Deleted translations are also included in the count. Understanding these columns can help you better interpret the raw data and optimize your localization process.
+
+View the available report columns and their mode applicability (i.e., translations, approvals, and votes) in the following table:
+
+<Include file="contribution-raw-data-report-columns.mdx" />
+
+## Melhores Membros
+
+The Top Members report allows you to see who contributed the most to your project's translation over time. This list includes all users who have ever contributed, even if they are no longer current project members.
+
+Default parameters:
+
+* *Text unit*: words
+* *Time period*: Last 30 days
+* *Sorted by*: translated text units. A member who translated the most is placed at the top of the list.
+* *Languages*: all languages
+* *Contributors*: all
+
+The **You** label appears next to your own username in the report table, making it easier to identify your personal contribution.
+
+Re-sort the members by clicking on the needed parameter. For example, if you want to analyze members by their proofreading activity, click on the *Approved* parameter to redo sorting.
+
+<Image src={topMembersSorted} alt="Melhores Membros" />
+
+### Generating a Custom List of Top Members
+
+To generate a custom list of top members, follow these steps:
+
+<Steps>
+  1. Select the preferred report unit (words, strings, characters with or without spaces).
+  2. Select the time period for which you want to see the activity of contributors.
+  3. To make a list of contributors for a specific language, select the language you need from the drop-down menu above the list. Alternatively, select **All languages**.
+</Steps>
+
+To find a specific member, use the search field. To open the member’s profile page, double-click on the name.
+
+The Top Members list includes the following columns:
+
+* *Rank* &ndash; contributor’s position in the list based on the currently selected sorting criteria (e.g., *Translated*, *Approved*, etc.).
+* *Name* &ndash; contributor's first name, last name and username.
+* *Languages* &ndash; project languages.
+* *Translated* &ndash; the number of translated source content units.
+* *Target* &ndash; the number of translated content units in a target language.
+  <br /> This parameter is not available for the *Strings* content unit because the number of source and translated strings is always the same.
+* *Approved* &ndash; the number of approved content units.
+* *Voted* &ndash; the number of votes a contributor made.
+* *"+" votes received* &ndash; the number of upvotes a contributor received for translations.
+* *"-" votes received* &ndash; the number of downvotes a contributor received for translations.
+* *Winning* &ndash; the number of approvals a contributor received for translations.
+* *Given access* &ndash; indicates when a member was granted access to a project.
+
+To customize the visibility of columns in the report, click <Icon name="material-symbols:table-chart" class="inline-icon" /> at the upper-right side of the table and select the preferred ones.
+
+To download the Top Members report, click **Export** and select the preferred export format (CSV, XLSX, or JSON).
+
+## Archive
+
+The Archive section allows you to access the records of previously generated Cost estimate and Translation cost reports, providing a convenient way to review historical data.
+
+This section also eliminates the need to wait for a report generation to complete. You can initiate a report generation and return to it later at your convenience. Within the Archive, you can review the report summary and, if necessary, download it in various supported file formats.
+
+Each project within an organization has its own independent archive section with previously generated reports available only to project members with manager permissions (or higher).
+
+Reports generated by translators based on their contributions are not added to the archives.
+
+### Viewing Previously Generated Reports
+
+To view the summary of the previously generated reports (i.e., archive records), follow these steps:
+
+<Steps>
+  1. Open your project and go to **Reports > Archive**.
+  2. Click on the name of the needed archive record.
+  3. Once you open the archive report record, you can view all the needed data.
+</Steps>
+
+<Image src={archiveViewing} alt="Viewing Previously Generated Reports" />
+
+### Exporting Previously Generated Reports
+
+To export the previously generated reports, follow these steps:
+
+<Steps>
+  1. Open your project and go to **Reports > Archive**.
+  2. Click <Icon name="mdi:dots-vertical" class="inline-icon" /> (or right-click) on the needed report in the list.
+  3. Click on the preferred file format to export.
+</Steps>
+
+### Deleting Previously Generated Reports
+
+To delete the previously generated reports, follow these steps:
+
+<Steps>
+  1. Open your project and go to **Reports > Archive**.
+  2. Click <Icon name="mdi:dots-vertical" class="inline-icon" /> (or right-click) on the needed report in the list.
+  3. Click **Delete**.
+</Steps>
+
+## Ver Também
+
+<CardGrid>
+  <LinkCard title="Organization Reports" description="View your organization status and various available reports." href="/enterprise/organization-reports/" />
+  <LinkCard title="Relatórios de Contribuição" description="Estimate and count the price of your contribution to the project." href="/enterprise/contributor-reports/" />
+</CardGrid>

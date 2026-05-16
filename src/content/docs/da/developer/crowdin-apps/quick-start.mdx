@@ -1,0 +1,1584 @@
+---
+title: Hurtig-start
+description: Learn how to build a Crowdin Application using Node.js
+slug: developer/crowdin-apps-quick-start
+---
+
+import { Steps, Aside, CardGrid, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
+
+In this article, you'll learn the basic principles of building a Crowdin Application using Node.js and the Vercel platform. You'll build and deploy a sample app using Next.js along the way.
+
+**Prerequisites**:
+
+* Installed [Node.js (version 18 or later)](https://nodejs.org/en/download/) and npm or pnpm.
+* Registered account on [Vercel](https://vercel.com/) with access to GitHub or another Git provider.
+* Crowdin account with permissions to create and install apps.
+* Created [OAuth application](/developer/authorizing-oauth-apps/) in Crowdin with `Client ID` and `Client Secret` values. These credentials will be used for authentication.
+
+## Opsætning
+
+In this step, download the sample app to your local machine and set up your development environment.
+
+Clone the repository:
+
+```bash
+git clone https://github.com/crowdin/apps-quick-start-nextjs.git
+cd apps-quick-start-nextjs
+git checkout v1.0-basic
+```
+
+Install the required dependencies:
+
+<Tabs syncKey="pkgManager">
+  <TabItem label="npm">
+
+```bash
+npm install
+```
+
+  </TabItem>
+  <TabItem label="pnpm">
+
+```bash
+pnpm install
+```
+
+  </TabItem>
+</Tabs>
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+Open the `.env.local` file and update it with your app credentials:
+
+```ini title=".env.local"
+# Where your app runs locally
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+
+# Credentials from Crowdin OAuth app
+CROWDIN_CLIENT_ID=<your-client-id>
+CROWDIN_CLIENT_SECRET=<your-client-secret>
+
+# Crowdin OAuth endpoint
+AUTH_URL=https://accounts.crowdin.com/oauth/token
+
+# Crowdin Apps iframe script (CDN)
+NEXT_PUBLIC_CROWDIN_IFRAME_SRC=https://cdn.crowdin.com/apps/dist/iframe.js
+```
+
+Start the development server:
+
+<Tabs syncKey="devCommand">
+  <TabItem label="npm">
+
+```bash
+npm run dev
+```
+
+  </TabItem>
+  <TabItem label="pnpm">
+
+```bash
+pnpm dev
+```
+
+  </TabItem>
+</Tabs>
+
+Once the app is running, open `http://localhost:3000` in your browser. You should see the app welcome page.
+
+At this point, you have a working app with the following structure:
+
+* `app/manifest.json/route.ts` – Serves the app manifest dynamically.
+* `app/project-menu/page.tsx` – The Project Menu module loaded inside Crowdin.
+
+In the current state, the app includes only the **Project Menu** module and does not yet require authentication. You’ll add OAuth and custom file format support in the next steps.
+
+<Aside type="tip" title="Interested in developing Crowdin Apps?">
+  Check out our [Crowdin Apps SDK](https://crowdin.github.io/app-project-module/) to create apps in just a few lines of code.
+</Aside>
+
+## App Manifest
+
+In this step, you’ll review the app manifest that describes your Crowdin App and defines how it integrates with the Crowdin interface.
+
+The manifest is served dynamically using a dedicated route located at `app/manifest.json/route.ts`. This file returns the required metadata about your app.
+
+```ts title="app/manifest.json/route.ts"
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  const manifestData = {
+    identifier: "getting-started",
+    name: "Getting Started",
+    baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+    logo: "/logo.svg",
+    authentication: {
+      type: "none"
+    },
+    scopes: ["project"],
+    modules: {
+      "project-menu": [
+        {
+          key: "menu",
+          name: "Getting Started",
+          url: "/project-menu"
+        }
+      ]
+    },
+  };
+
+  return NextResponse.json(manifestData);
+}
+```
+
+### Manifest Highlights
+
+* **baseUrl** – The root domain where your app is deployed. Crowdin uses this value to construct URLs for iframe modules and API calls. When deployed to Vercel, the production domain is injected automatically.
+* **authentication** – Set to `"none"` for this basic version of the app. We’ll change this to enable OAuth authentication later.
+* **modules**:
+  * `project-menu` – Adds a new tab inside Crowdin projects. When clicked, it opens the `/project-menu` route of your app inside an iframe.
+
+Once the app is deployed, the manifest will be available at the following URL:
+
+```
+https://<your-project-name>.vercel.app/manifest.json
+```
+
+You'll use this URL in the **Install from URL** dialog when installing the app in your Crowdin account later in this guide.
+
+## Deploying the App
+
+In this step, you'll deploy the app to the Vercel platform and obtain the production URL that will be used as the app's `baseUrl`.
+
+To deploy the app, follow these steps:
+
+<Steps>
+  1. Push the app code to a GitHub repository.
+  2. Log in to [Vercel](https://vercel.com/) and select **Import Git Repository**.
+  3. Choose your repository and proceed with the setup.
+  4. In the **Environment Variables** section, add the variables from your `.env.local` file:
+     * `CROWDIN_CLIENT_ID`
+     * `CROWDIN_CLIENT_SECRET`
+     * `NEXT_PUBLIC_BASE_URL` – set to your future production URL, e.g., `https://\<project-name>.vercel.app`
+     * `AUTH_URL` – `https://accounts.crowdin.com/oauth/token`
+     * `NEXT_PUBLIC_CROWDIN_IFRAME_SRC` – `https://cdn.crowdin.com/apps/dist/iframe.js`
+  5. Click **Deploy**.
+</Steps>
+
+Once deployed, Vercel will assign a production URL to your app. This URL will be used as the `baseUrl` in your manifest, as described in the previous step.
+You'll use it shortly to install the app in your Crowdin account.
+
+<Aside type="note" title="Edge Function Support">
+  The manifest is served through the Next.js App Router and runs as an Edge Function on Vercel. No additional configuration is required.
+</Aside>
+
+## Installing the App in Crowdin
+
+Once your app is deployed, you can install it in your Crowdin account using the [manual installation](/developer/crowdin-apps-installation/) method.
+
+Use the production manifest URL from your deployed Vercel app, for example:
+
+```
+https://<project-name>.vercel.app/manifest.json
+```
+
+After installation, a new tab called **Getting Started** will appear in your project navigation. If the app welcome page opens successfully, the app was installed correctly.
+
+## Adding API Access
+
+This section is optional and applies if you want your app to access the Crowdin API on behalf of the user or organization.
+
+### Setting Up the Database with Prisma
+
+To securely store organization credentials received during app installation, you'll need a database. This step uses [Prisma](https://www.prisma.io/) as an ORM. You can use SQLite for local development or switch to PostgreSQL or another provider for production.
+
+The data model is defined in `prisma/schema.prisma` and includes a single `Organization` model:
+
+```prisma title="prisma/schema.prisma"
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Organization {
+  id                   String    @id @default(cuid())
+  domain               String?
+  organizationId       Int
+  userId               Int
+  baseUrl              String
+  appId                String
+  appSecret            String
+  accessToken          String
+  accessTokenExpires   Int
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@map("organizations")
+}
+```
+
+Add the database connection string to your environment variables:
+
+```ini title=".env.local"
+# Database connection (PostgreSQL)
+DATABASE_URL="postgresql://username:password@localhost:5432/crowdin_app_db"
+```
+
+If your app is already deployed to Vercel, update the environment variables in your Vercel dashboard and redeploy.
+
+To apply the schema and generate the local database, run the following command:
+
+```bash
+npx prisma migrate dev --name init
+```
+
+This command creates a local SQLite database (or another provider if configured) and generates the required Prisma client.
+
+At this point, your app is ready to store and retrieve installation data. In the next step, you’ll configure routes to handle `installed` and `uninstall` events from Crowdin.
+
+### Handling Install and Uninstall Events
+
+When a Crowdin App is installed or uninstalled, Crowdin sends a signed `POST` request to the app’s backend. You’ll now create a dynamic route that handles both events.
+
+The handler is located in `app/events/[slug]/route.ts`. Based on the route parameter, it processes either the `installed` or `uninstall` event:
+
+```ts title="app/events/[slug]/route.ts"
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { refreshCrowdinToken } from '@/lib/crowdinAuth';
+
+/** Data structure received when Crowdin fires the *installed* event. */
+interface InstalledBody {
+  appId: string;
+  appSecret: string;
+  domain: string;
+  organizationId: string | number;
+  userId: string | number;
+  baseUrl: string;
+}
+
+/** Data structure received when Crowdin fires the *uninstall* event. */
+interface UninstallBody {
+  domain: string;
+  organizationId: string | number;
+}
+
+/**
+ * Unified POST handler for Crowdin *App events* (`installed`, `uninstall`).
+ * Dispatches based on the dynamic `slug` in the route.
+ */
+export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const body = await request.json();
+  const { slug } = await params;
+
+  switch (slug) {
+    case 'installed': {
+      const { CROWDIN_CLIENT_ID, CROWDIN_CLIENT_SECRET, AUTH_URL } = process.env;
+
+      if (!CROWDIN_CLIENT_ID || !CROWDIN_CLIENT_SECRET || !AUTH_URL) {
+        console.error('Missing environment variables for Crowdin OAuth');
+
+        return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+      }
+
+      const eventBody = body as InstalledBody;
+
+      let newTokenData: { accessToken: string; accessTokenExpires: number };
+      try {
+        newTokenData = await refreshCrowdinToken({
+          appId: eventBody.appId,
+          appSecret: eventBody.appSecret,
+          domain: eventBody.domain,
+          userId: Number(eventBody.userId),
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to obtain Crowdin token during installation.';
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
+      }
+
+      const organizationData = {
+        domain: eventBody.domain,
+        organizationId: Number(eventBody.organizationId),
+        appId: eventBody.appId,
+        appSecret: eventBody.appSecret,
+        userId: Number(eventBody.userId),
+        baseUrl: eventBody.baseUrl,
+        accessToken: newTokenData.accessToken,
+        accessTokenExpires: newTokenData.accessTokenExpires,
+      };
+
+      try {
+        const existingOrganization = await prisma.organization.findFirst({
+          where: {
+            domain: eventBody.domain,
+            organizationId: Number(eventBody.organizationId),
+          },
+        });
+
+        if (existingOrganization) {
+          await prisma.organization.update({
+            where: { id: existingOrganization.id },
+            data: organizationData,
+          });
+        } else {
+          await prisma.organization.create({
+            data: organizationData,
+          });
+        }
+
+        return NextResponse.json(
+          { message: 'Installation processed successfully' },
+          { status: 200 }
+        );
+      } catch (dbError) {
+        console.error('Database error during installed event:', dbError);
+
+        return NextResponse.json({ error: 'Database operation failed' }, { status: 500 });
+      }
+    }
+
+    case 'uninstall': {
+      const eventBody = body as UninstallBody;
+
+      try {
+        await prisma.organization.deleteMany({
+          where: {
+            domain: eventBody.domain,
+            organizationId: Number(eventBody.organizationId),
+          },
+        });
+
+        return NextResponse.json(
+          { message: 'Uninstallation processed successfully' },
+          { status: 200 }
+        );
+      } catch (dbError) {
+        console.error('Database error during uninstall event:', dbError);
+
+        return NextResponse.json({ error: 'Database operation failed' }, { status: 500 });
+      }
+    }
+
+    default:
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+}
+```
+
+This logic does the following:
+
+* On `installed`, saves the organization and app credentials to the database.
+* On `uninstall`, removes the organization entry.
+
+To activate these handlers, update your app manifest by adding the `events` block and changing the authentication type:
+
+```ts title="app/manifest.json/route.ts"
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  const manifestData = {
+    identifier: 'getting-started',
+    name: 'Getting Started',
+    baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+    logo: '/logo.svg',
+    authentication: {
+      type: 'crowdin_app',
+      clientId: process.env.CROWDIN_CLIENT_ID,
+    },
+    events: {
+      installed: '/events/installed',
+      uninstall: '/events/uninstall',
+    },
+    scopes: ['project'],
+    modules: {
+      'project-menu': [{ key: 'menu', name: 'Getting Started', url: '/project-menu' }]
+    },
+  };
+
+  return NextResponse.json(manifestData);
+}
+```
+
+After these changes, Crowdin will call the specified routes during app installation and removal.
+
+### Adding JWT Middleware
+
+When a Crowdin App is opened inside a project, Crowdin includes a signed JWT token in the request. To verify the token and extract user context, you’ll add middleware to your app.
+
+Create the `middleware.ts` file in the root of your project and add the following code:
+
+```ts title="middleware.ts"
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
+
+interface DecodedJwtPayload {
+  domain: string;
+  context: {
+    organization_id: number;
+    user_id: number;
+  };
+  iat?: number;
+  exp?: number;
+}
+
+const CROWDIN_CLIENT_SECRET = process.env.CROWDIN_CLIENT_SECRET;
+
+export async function middleware(request: NextRequest) {
+  if (!request.nextUrl.pathname.startsWith('/api')) {
+    return NextResponse.next();
+  }
+
+  const authHeader = request.headers.get('Authorization');
+  let token: string | undefined | null = authHeader?.startsWith('Bearer ')
+          ? authHeader.split(' ')[1]
+          : undefined;
+
+  if (!token) {
+    token = request.nextUrl.searchParams.get('jwtToken');
+  }
+
+  if (!token) {
+    return NextResponse.json(
+            { error: { message: 'User is not authorized. Missing or invalid token.' } },
+            { status: 401 }
+    );
+  }
+
+  if (!CROWDIN_CLIENT_SECRET) {
+    console.error('CROWDIN_CLIENT_SECRET is not defined in environment variables for middleware.');
+    return NextResponse.json(
+            { error: { message: 'Server configuration error in middleware.' } },
+            { status: 500 }
+    );
+  }
+
+  try {
+    const secretKey = new TextEncoder().encode(CROWDIN_CLIENT_SECRET);
+
+    const { payload } = (await jwtVerify(token, secretKey)) as { payload: DecodedJwtPayload };
+
+    const decodedJwt = payload;
+
+    console.log('decodedJwt', decodedJwt);
+
+    if (!decodedJwt.context?.user_id || !decodedJwt.context?.organization_id) {
+      console.error('Middleware: JWT is missing necessary fields (user_id or organization_id).');
+
+      return NextResponse.json({ error: { message: 'Invalid token payload.' } }, { status: 403 });
+    }
+
+    const requestHeaders = new Headers(request.headers);
+    if (decodedJwt) {
+      requestHeaders.set('x-decoded-jwt', JSON.stringify(decodedJwt));
+    }
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  } catch (error) {
+    console.error('Middleware JWT verification failed:', error);
+    let errorMessage = 'User is not authorized. Token verification failed.';
+    if (
+            error instanceof Error &&
+            (error.name === 'JWTExpired' ||
+                    error.name === 'JWSSignatureVerificationFailed' ||
+                    error.name === 'JWSInvalid')
+    ) {
+      errorMessage = `Token error: ${error.message}`;
+    }
+
+    return NextResponse.json({ error: { message: errorMessage } }, { status: 403 });
+  }
+}
+```
+
+Next.js will automatically run this middleware for every request that matches a path defined in the `matcher` configuration.
+
+Define the matcher at the end of the file:
+
+```ts title="middleware.ts"
+export const config = {
+  matcher: ['/api/user/:path*'],
+};
+```
+
+This ensures that any sensitive route (such as user info or file processing) is only accessible if the token is present and valid.
+
+### Creating the /api/user Route
+
+You’ll now create a protected API route that returns information about the currently authenticated Crowdin user. This route uses the decoded JWT payload and the stored organization credentials to retrieve a valid access token and make an API request to Crowdin.
+
+Create the `app/api/user/route.ts` file and add the following code:
+
+```ts title="app/api/user/route.ts"
+import { NextResponse, NextRequest } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import CrowdinApiClient from '@crowdin/crowdin-api-client';
+import { getValidOrganizationToken } from '@/lib/crowdinAuth';
+
+/**
+ * Subset of the JWT payload we expect from Crowdin. Provided by a middleware
+ * that decodes and verifies the token before reaching this handler.
+ */
+interface DecodedJwtPayload {
+  domain: string;
+  context: {
+    organization_id: number;
+  };
+  iat?: number;
+  exp?: number;
+}
+
+/**
+ * Extract organisation sub-domain (if any) from a Crowdin `baseUrl`.
+ */
+function getOrganizationDomain(baseUrl: string): string | undefined {
+  try {
+    const url = new URL(baseUrl);
+
+    if (url.hostname.endsWith('.crowdin.com')) {
+      return url.hostname.split('.')[0];
+    }
+  } catch (error) {
+    console.error('Invalid baseUrl format:', baseUrl, error);
+  }
+  return undefined;
+}
+
+/**
+ * Handle `GET /api/user` request – fetch the authenticated Crowdin user via
+ * Crowdin API. Requires a valid JWT (decoded by middleware) in the
+ * `x-decoded-jwt` header.
+ */
+export async function GET(request: NextRequest) {
+  const decodedJwtString = request.headers.get('x-decoded-jwt');
+
+  if (!decodedJwtString) {
+    console.error('Decoded JWT not found in headers. Middleware might not have run or failed.');
+
+    return NextResponse.json(
+            { error: { message: 'Authentication data not found.' } },
+            { status: 500 }
+    );
+  }
+
+  let decodedJwt: DecodedJwtPayload;
+  try {
+    decodedJwt = JSON.parse(decodedJwtString) as DecodedJwtPayload;
+  } catch (error) {
+    console.error('Failed to parse decoded JWT from headers:', error);
+    return NextResponse.json(
+            { error: { message: 'Invalid authentication data format.' } },
+            { status: 500 }
+    );
+  }
+
+  const organizationFromDb = await prisma.organization.findFirst({
+    where: {
+      domain: decodedJwt.domain,
+      organizationId: Number(decodedJwt.context.organization_id),
+    },
+  });
+
+  if (!organizationFromDb) {
+    return NextResponse.json({ error: { message: 'Organization not found.' } }, { status: 404 });
+  }
+
+  try {
+    const validAccessToken = await getValidOrganizationToken(organizationFromDb.id);
+
+    const organizationDomain = getOrganizationDomain(organizationFromDb.baseUrl);
+
+    const crowdinClient = new CrowdinApiClient({
+      token: validAccessToken,
+      ...(organizationDomain && { organization: organizationDomain }),
+    });
+
+    const userResponse = await crowdinClient.usersApi.getAuthenticatedUser();
+
+    return NextResponse.json(userResponse.data || {}, { status: 200 });
+  } catch (error: unknown) {
+    console.error('Error in GET /api/user:', error);
+
+    let errorMessage = 'An unknown error occurred.';
+    let statusCode = 500;
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      if (
+              errorMessage.includes('Organization not found') ||
+              errorMessage.includes('Failed to refresh Crowdin token')
+      ) {
+        statusCode = 400;
+      }
+    }
+
+    return NextResponse.json({ error: { message: errorMessage } }, { status: statusCode });
+  }
+}
+```
+
+This route performs the following:
+
+* Reads the decoded JWT payload from the request headers
+* Locates the organization by `domain` and `organizationId`
+* Retrieves or refreshes the access token using a helper function
+* Instantiates the Crowdin API client
+* Returns the current user’s information as JSON
+
+Make sure the `/api/user` route is included in your middleware matcher so it’s protected by the JWT verification logic:
+
+```ts title="middleware.ts"
+export const config = {
+  matcher: ['/api/user/:path*'],
+};
+```
+
+You can now test the integration by opening your installed app in Crowdin and calling the `/api/user` route, for example by clicking a **Show User Details** button in your Project Menu module.
+
+## Supporting a Custom File Format
+
+This section is optional and applies if you want your app to process custom files uploaded to Crowdin. You'll configure the `custom-file-format` module in your manifest, define the processing route, and handle file parsing and preview generation on the backend.
+
+By the end of this section, your app will:
+
+* Detect and process `.json` files that contain a specific key (e.g. `"hello_world"`)
+* Extract source strings and provide an HTML preview for translators
+* Rebuild translated files for export from Crowdin
+
+To implement this, follow the steps below.
+
+### Defining the Module in the Manifest
+
+To support processing custom files in Crowdin, define a `custom-file-format` module in your app manifest. In this example, the app will handle `.json` files that contain the `"hello_world"` key.
+
+```ts title="app/manifest.json/route.ts"
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  const manifestData = {
+    identifier: 'getting-started',
+    name: 'Getting Started',
+    baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+    logo: '/logo.svg',
+    authentication: {
+      type: 'crowdin_app',
+      clientId: process.env.CROWDIN_CLIENT_ID,
+    },
+    events: {
+      installed: '/events/installed',
+      uninstall: '/events/uninstall',
+    },
+    scopes: ['project'],
+    modules: {
+      'project-menu': [
+        {
+          key: 'menu',
+          name: 'Getting Started',
+          url: '/project-menu',
+        },
+      ],
+      'custom-file-format': [
+        {
+          key: 'custom-file-format',
+          type: 'custom-file-format',
+          url: '/api/file/process',
+          signaturePatterns: {
+            fileName: '.+\.json$',
+            fileContent: '"hello_world":',
+          },
+        },
+      ],
+    },
+  };
+
+  return NextResponse.json(manifestData);
+}
+```
+
+This configuration tells Crowdin:
+
+* To send matching files to your app’s `/api/file/process` route
+* To trigger this module only for `.json` files that include the key `"hello_world"`
+
+Crowdin will send the file contents to your app when parsing or rebuilding the file during the import/export flow.
+
+### Creating the File Processing Route
+
+To handle file parsing and rebuilding, you'll create a backend route that responds to Crowdin's `POST` requests.
+This route will distinguish between two job types: `parse-file` and `build-file`.
+
+Create the following route file:
+
+```ts title="app/api/file/process/route.ts"
+import { NextResponse, NextRequest } from 'next/server';
+import { parseFile, buildFile } from '@/lib/fileProcessing';
+import { TranslationEntry } from '@/lib/file-utils/types';
+
+/**
+ * Supported job types for the file processing endpoint.
+ */
+type JobType = 'parse-file' | 'build-file';
+
+/**
+ * Request body definition expected by the `/api/file/process` endpoint.
+ */
+interface ProcessRequestBody {
+  jobType: JobType | unknown;
+  file: { content?: string; contentUrl?: string; name: string };
+  targetLanguages: { id: string }[];
+  strings?: TranslationEntry[];
+  stringsUrl?: string;
+}
+
+const validateCommonFields = (body: ProcessRequestBody): { isValid: boolean; error?: string } => {
+  if (!body.file) {
+    return { isValid: false, error: 'File is missing in request' };
+  }
+
+  if (!body.file.name) {
+    return { isValid: false, error: 'File name is missing' };
+  }
+
+  if (!(body.file.content || body.file.contentUrl)) {
+    return { isValid: false, error: 'File content or URL is missing' };
+  }
+
+  return { isValid: true };
+};
+
+const validateBuildFileRequest = (
+        body: ProcessRequestBody
+): { isValid: boolean; error?: string } => {
+  if (!(body.strings || body.stringsUrl)) {
+    return { isValid: false, error: 'For build-file, you need to provide strings or stringsUrl' };
+  }
+
+  return { isValid: true };
+};
+
+const handleParseFile = async (body: ProcessRequestBody) => {
+  const validation = validateCommonFields(body);
+  if (!validation.isValid) {
+    return NextResponse.json({ error: { message: validation.error } }, { status: 400 });
+  }
+
+  const response = await parseFile({
+    file: body.file,
+    targetLanguages: body.targetLanguages,
+  });
+
+  return NextResponse.json(response, {
+    status: 200,
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Content-Type': 'application/json',
+    },
+  });
+};
+
+const handleBuildFile = async (body: ProcessRequestBody) => {
+  const commonValidation = validateCommonFields(body);
+  if (!commonValidation.isValid) {
+    return NextResponse.json({ error: { message: commonValidation.error } }, { status: 400 });
+  }
+
+  const buildValidation = validateBuildFileRequest(body);
+  if (!buildValidation.isValid) {
+    return NextResponse.json({ error: { message: buildValidation.error } }, { status: 400 });
+  }
+
+  // Create proper request object with correct types
+  const buildRequest: {
+    file: { content?: string; contentUrl?: string; name: string };
+    targetLanguages: { id: string }[];
+    strings?: TranslationEntry[];
+    stringsUrl?: string;
+  } = {
+    file: body.file,
+    targetLanguages: body.targetLanguages,
+  };
+
+  // Only add strings if it exists
+  if (body.strings) {
+    buildRequest.strings = body.strings;
+  }
+
+  // Only add stringsUrl if it exists
+  if (body.stringsUrl) {
+    buildRequest.stringsUrl = body.stringsUrl;
+  }
+
+  const response = await buildFile(buildRequest);
+
+  return NextResponse.json(response, {
+    status: 200,
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Content-Type': 'application/json',
+    },
+  });
+};
+
+/**
+ * Primary entry point – decide which file operation to perform based on
+ * `jobType` and delegate to the corresponding handler.
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = (await request.json()) as ProcessRequestBody;
+
+    if (!body.jobType) {
+      return NextResponse.json(
+              { error: { message: 'Missing jobType parameter in request' } },
+              { status: 400 }
+      );
+    }
+
+    switch (body.jobType) {
+      case 'parse-file':
+        return await handleParseFile(body);
+
+      case 'build-file':
+        return await handleBuildFile(body);
+
+      default:
+        const jobTypeMessage = typeof body.jobType === 'string' ? body.jobType : 'unknown type';
+        return NextResponse.json(
+                { error: { message: `Unknown job type: ${jobTypeMessage}` } },
+                { status: 400 }
+        );
+    }
+  } catch (e: unknown) {
+    console.error('Error processing file:', e);
+
+    const errorMessage =
+            e instanceof Error ? e.message : 'An unknown error occurred while processing the file';
+
+    return NextResponse.json(
+            {
+              error: {
+                message: errorMessage,
+                stack: process.env.NODE_ENV === 'development' && e instanceof Error ? e.stack : undefined,
+              },
+            },
+            {
+              status: 500,
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+    );
+  }
+}
+```
+
+This route:
+
+* Receives payloads from Crowdin when a file is uploaded or exported
+* For `parse-file`, extracts source strings and builds a preview
+* For `build-file`, injects translations into the original structure
+
+Make sure the `/api/file/process/:path*` route is included in your middleware matcher so it’s protected by the JWT verification logic:
+
+```ts title="middleware.ts"
+export const config = {
+  matcher: ['/api/user/:path*', '/api/file/process/:path*'],
+};
+```
+
+In the next step, you’ll implement the logic behind `parseFile` and `buildFile` in a helper module.
+
+### Implementing File Parsing and Rebuilding
+
+Now you’ll implement the logic behind the `parseFile` and `buildFile` functions referenced in the `/api/file/process` route. These helpers extract strings from uploaded files, generate a preview, and rebuild translated files during export.
+
+Create the following helper file:
+
+```ts title="lib/fileProcessing.ts"
+'use server';
+
+import React from 'react';
+import FilePreview from './FilePreview';
+import {
+  TranslationEntry,
+  ParseFileRequest,
+  BuildFileRequest,
+  PreviewStrings,
+} from './file-utils/types';
+import { uploadToBlob, exceedsMaxSize, generateUniqueFileName } from './file-utils/blob-storage';
+import { getContent, getStringsForExport, getTranslation } from './file-utils/content-processor';
+
+/**
+ * Processes the input file and generates strings for translation
+ * @param req The request to analyze the file
+ * @returns Strings for translation and HTML preview
+ */
+export async function parseFile(req: ParseFileRequest) {
+  const fileContent = await getContent(req.file);
+  const hasTargetLanguage = req.targetLanguages?.[0]?.id != null;
+
+  const { sourceStrings, previewStrings } = extractStringsFromContent(
+          fileContent,
+          hasTargetLanguage && req.targetLanguages[0] ? req.targetLanguages[0].id : undefined
+  );
+
+  const previewHtml = await generatePreviewHtml(req.file.name || 'Unknown file', previewStrings);
+
+  const fileBaseName = generateUniqueFileName(req.file.name);
+
+  const serializedStrings = JSON.stringify(sourceStrings);
+  if (!exceedsMaxSize(serializedStrings)) {
+    return {
+      data: {
+        strings: sourceStrings,
+        preview: Buffer.from(previewHtml).toString('base64'),
+      },
+    };
+  }
+
+  return {
+    data: {
+      stringsUrl: await uploadToBlob(
+              serializedStrings,
+              `parsed_files/${fileBaseName}_strings.json`,
+              'application/json'
+      ),
+      previewUrl: await uploadToBlob(
+              previewHtml,
+              `parsed_files/${fileBaseName}_preview.html`,
+              'text/html'
+      ),
+    },
+  };
+}
+
+/**
+ * Creates a file with translated strings
+ * @param req The request to create a file
+ * @returns File content or URL to download
+ */
+export async function buildFile(req: BuildFileRequest) {
+  const languageId = req.targetLanguages?.[0]?.id;
+  if (!languageId) {
+    throw new Error('Target language ID is missing');
+  }
+
+  const fileContent = await getContent(req.file);
+  const translations = await getStringsForExport(req);
+
+  if (!fileContent || typeof fileContent !== 'object' || Object.keys(fileContent).length === 0) {
+    throw new Error('No content to translate or invalid file content format');
+  }
+
+  const translatedContent = translateFileContent(fileContent, translations, languageId);
+
+  const responseContent = JSON.stringify(translatedContent, null, 2);
+  const fileBaseName = generateUniqueFileName(req.file.name);
+
+  if (!exceedsMaxSize(responseContent)) {
+    return {
+      data: {
+        content: Buffer.from(responseContent).toString('base64'),
+      },
+    };
+  }
+
+  return {
+    data: {
+      contentUrl: await uploadToBlob(
+              responseContent,
+              `built_files/${fileBaseName}_content.json`,
+              'application/json'
+      ),
+    },
+  };
+}
+
+/**
+ * Extracts strings for translation from the file content
+ * @param fileContent The file content
+ * @param languageId The language ID (optional)
+ * @returns Object with strings for translation and preview
+ */
+function extractStringsFromContent(
+        fileContent: Record<string, string>,
+        languageId?: string
+): { sourceStrings: TranslationEntry[]; previewStrings: PreviewStrings } {
+  const sourceStrings: TranslationEntry[] = [];
+  const previewStrings: PreviewStrings = {};
+  let previewIndex = 0;
+
+  if (!fileContent || typeof fileContent !== 'object') {
+    return { sourceStrings, previewStrings };
+  }
+
+  for (const key in fileContent) {
+    const value = fileContent[key];
+    if (typeof value !== 'string') {
+      continue;
+    }
+
+    let entryTranslations: Record<string, { text: string }> = {};
+    if (languageId) {
+      entryTranslations = { [languageId]: { text: value } };
+    }
+
+    sourceStrings.push({
+      identifier: key,
+      context: `Some context: \n ${value}`,
+      customData: '',
+      previewId: previewIndex,
+      labels: [],
+      isHidden: false,
+      text: value,
+      translations: entryTranslations,
+    });
+
+    previewStrings[key] = {
+      text: value,
+      id: previewIndex,
+    };
+    previewIndex++;
+  }
+
+  return { sourceStrings, previewStrings };
+}
+
+/**
+ * Generates HTML preview for the file
+ * @param fileName The file name
+ * @param previewStrings Strings for preview
+ * @returns HTML code for preview
+ */
+async function generatePreviewHtml(
+        fileName: string,
+        previewStrings: PreviewStrings
+): Promise<string> {
+  try {
+    const ReactDOMServer = (await import('react-dom/server')).default;
+    return ReactDOMServer.renderToStaticMarkup(
+            React.createElement(FilePreview, {
+              fileName,
+              strings: previewStrings,
+            })
+    );
+  } catch (err) {
+    console.error('Error rendering React preview:', err);
+    return `<html><body><h1>Error rendering preview for ${fileName}</h1></body></html>`;
+  }
+}
+
+/**
+ * Translates the file content
+ * @param fileContent The file content
+ * @param translations Translations
+ * @param languageId The language ID
+ * @returns Translated file content
+ */
+function translateFileContent(
+        fileContent: Record<string, string>,
+        translations: TranslationEntry[],
+        languageId: string
+): Record<string, string> {
+  const translatedContent = { ...fileContent };
+
+  for (const key of Object.keys(translatedContent)) {
+    if (typeof translatedContent[key] !== 'string') {
+      continue;
+    }
+    translatedContent[key] = getTranslation(translations, key, languageId, translatedContent[key]);
+  }
+
+  return translatedContent;
+}
+```
+
+This helper file exports two main functions:
+
+* `parseFile` – Extracts translatable strings and generates an HTML preview
+* `buildFile` – Reconstructs the final translated file using strings from Crowdin
+
+These functions rely on utilities for reading file content, formatting translations, and generating HTML. You'll implement those next.
+
+### Creating Utility Helpers
+
+This step implements the supporting functions used for parsing file content, generating previews, and preparing files for download or export. These helpers are referenced by `parseFile` and `buildFile`.
+
+First, create the TypeScript types that define the data structures:
+
+```ts title="lib/file-utils/types.ts"
+/**
+ * Types for working with the file system and translations
+ */
+
+/**
+ * Record for a single translation string
+ */
+export interface TranslationRecord {
+  text: string;
+}
+
+/**
+ * Record for a single translation string
+ */
+export interface TranslationEntry {
+  /** Unique identifier for the string */
+  identifier: string;
+  /** Context of string usage */
+  context: string;
+  /** Additional data for the string */
+  customData: string;
+  /** Preview ID */
+  previewId: number;
+  /** Labels for the string */
+  labels: string[];
+  /** Whether the string is hidden */
+  isHidden: boolean;
+  /** Original text */
+  text: string;
+  /** Translations for different languages */
+  translations: Record<string, TranslationRecord>;
+}
+
+/**
+ * Information about the file to process
+ */
+export interface FileInfo {
+  /** Base64-encoded file content */
+  content?: string;
+  /** URL to download file content */
+  contentUrl?: string;
+  /** File name */
+  name?: string;
+}
+
+/**
+ * Language information
+ */
+export interface LanguageInfo {
+  /** Language ID */
+  id: string;
+}
+
+/**
+ * Request to analyze a file
+ */
+export interface ParseFileRequest {
+  /** File information */
+  file: FileInfo;
+  /** Target languages */
+  targetLanguages: LanguageInfo[];
+}
+
+/**
+ * Request to create a file
+ */
+export interface BuildFileRequest {
+  /** File information */
+  file: FileInfo;
+  /** Target languages */
+  targetLanguages: LanguageInfo[];
+  /** Strings to translate */
+  strings?: TranslationEntry[];
+  /** URL to download strings */
+  stringsUrl?: string;
+}
+
+/**
+ * Structure of strings for preview
+ */
+export interface PreviewStrings {
+  [key: string]: {
+    text: string;
+    id: number;
+  };
+}
+
+/**
+ * Type of request to the file processing API
+ */
+export interface ProcessRequestBody {
+  /** Job type */
+  jobType: 'parse-file' | 'build-file' | unknown;
+  /** File information */
+  file: FileInfo;
+  /** Target languages */
+  targetLanguages: LanguageInfo[];
+  /** Strings to translate */
+  strings?: TranslationEntry[];
+  /** URL to download strings */
+  stringsUrl?: string;
+}
+```
+
+Create the content processor utilities:
+
+```ts title="lib/file-utils/content-processor.ts"
+import { FileInfo, TranslationEntry } from './types';
+
+/**
+ * Retrieve and parse the JSON content from the provided `FileInfo` structure.
+ *
+ * The function supports two mutually exclusive sources:
+ * 1.  `content`   – Base64 encoded string that will be decoded and parsed.
+ * 2.  `contentUrl` – Remote URL that will be fetched via HTTP `GET`.
+ *
+ * @throws When neither source is available or when the content cannot be
+ *         fetched/parsed.
+ */
+export async function getContent(file: FileInfo): Promise<Record<string, string>> {
+  if (file.content) {
+    try {
+      return JSON.parse(Buffer.from(file.content, 'base64').toString());
+    } catch (error) {
+      throw new Error(
+              `Failed to parse file content: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  if (file.contentUrl) {
+    try {
+      const response = await fetch(file.contentUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      throw new Error(
+              `Failed to load content from ${file.contentUrl}: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  throw new Error('File object must contain either content or contentUrl');
+}
+
+/**
+ * Resolve the array of `TranslationEntry` objects that should be used for the
+ * current build/export operation.
+ *
+ * The caller can either inline the strings directly (`req.strings`) or provide
+ * a link to a JSON file (`req.stringsUrl`). The helper normalises both cases
+ * so that the rest of the pipeline receives an in-memory array.
+ *
+ * @throws When neither `strings` nor `stringsUrl` is provided or when the
+ *         remote resource fails to load.
+ */
+export async function getStringsForExport(req: {
+  strings?: TranslationEntry[];
+  stringsUrl?: string;
+}): Promise<TranslationEntry[]> {
+  if (!req.strings && !req.stringsUrl) {
+    throw new Error('Received invalid data: strings not found');
+  }
+
+  if (req.strings) {
+    return req.strings;
+  }
+
+  if (req.stringsUrl) {
+    try {
+      const response = await fetch(req.stringsUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      throw new Error(
+              `Failed to load strings from ${req.stringsUrl}: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  return [];
+}
+
+/**
+ * Safely obtain a translation string for the requested language or return the
+ * fallback value when a translation is missing.
+ */
+export function getTranslation(
+        translations: TranslationEntry[],
+        stringId: string,
+        languageId: string,
+        fallbackTranslation: string
+): string {
+  const translation = translations.find(
+          t => t.identifier === stringId && t.translations && t.translations[languageId]
+  );
+
+  return translation?.translations[languageId]?.text || fallbackTranslation;
+}
+
+```
+
+Create the blob storage utilities for handling large files:
+
+```ts title="lib/file-utils/blob-storage.ts"
+import { put, BlobAccessError } from '@vercel/blob';
+import { v4 as uuidv4 } from 'uuid';
+
+const MAX_SIZE_BYTES = 1024 * 1024; // 1MB for data response size
+
+/**
+ * Ensure that an RW token for Vercel Blob Storage is present before any upload
+ * is attempted. Throws an `Error` when the token is missing so that the caller
+ * can handle configuration issues gracefully.
+ */
+function validateBlobAccess(): void {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.warn(
+            'BLOB_READ_WRITE_TOKEN is not set. Ensure Vercel Blob Storage is connected to the project.'
+    );
+    throw new Error('Vercel Blob access token is not configured.');
+  }
+}
+
+/**
+ * Checks if the content exceeds the maximum size for direct response
+ * @param content The content to check
+ * @returns True if exceeds max size
+ */
+export function exceedsMaxSize(content: string): boolean {
+  return Buffer.byteLength(content, 'utf8') > MAX_SIZE_BYTES;
+}
+
+/**
+ * Uploads content to blob storage and returns the URL
+ * @param content The content to upload
+ * @param path The path where to store the content
+ * @param contentType The content type
+ * @returns URL to access the uploaded content
+ */
+export async function uploadToBlob(
+        content: string,
+        path: string,
+        contentType: string
+): Promise<string> {
+  validateBlobAccess();
+
+  try {
+    // Split the path to get directory and filename
+    const lastSlashIndex = path.lastIndexOf('/');
+    const basePathname = lastSlashIndex >= 0 ? path.substring(0, lastSlashIndex + 1) : '';
+    const filename = lastSlashIndex >= 0 ? path.substring(lastSlashIndex + 1) : path;
+
+    if (!filename) {
+      throw new Error('Invalid path: filename cannot be empty');
+    }
+
+    const finalBasePath = basePathname || 'uploads/';
+    const finalFilename = filename;
+
+    // Ensure contentType is a valid string
+    const validContentType = contentType || 'application/octet-stream';
+
+    const blob = await put(finalBasePath + finalFilename, content, {
+      access: 'public',
+      contentType: validContentType,
+      addRandomSuffix: true,
+    });
+
+    return blob.url;
+  } catch (error) {
+    console.error('Error uploading to blob:', error);
+
+    if (error instanceof BlobAccessError) {
+      throw new Error(`Blob access error: ${error.message}`);
+    }
+
+    throw new Error(
+            `Failed to upload to blob storage: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+  }
+}
+
+/**
+ * Generates a unique filename without extension
+ * @param fileName Original filename
+ * @returns Base filename without extension
+ */
+export function generateUniqueFileName(fileName?: string): string {
+  const safeFileName = fileName || `file_${uuidv4()}`;
+  if (safeFileName.includes('.')) {
+    const parts = safeFileName.split('.');
+    return parts[0] || safeFileName;
+  }
+  return safeFileName;
+}
+
+```
+
+And create the corresponding React component to render a simple HTML preview:
+
+```tsx title="lib/FilePreview.tsx"
+'use server';
+
+import React from 'react';
+import Head from 'next/head';
+
+/**
+ * Describes a single string item that will be displayed in the preview.
+ * Each preview item keeps the original text and the unique identifier that
+ * helps React render a stable list.
+ */
+interface PreviewStringItem {
+  text: string;
+  id: number;
+}
+
+/**
+ * A map of string keys (i.e. translation identifiers) to their corresponding
+ * preview information. The key is the original string identifier, while the
+ * value provides a human-readable `text` representation and an `id` used as
+ * a React `key` when rendering lists.
+ */
+interface PreviewStrings {
+  [key: string]: PreviewStringItem;
+}
+
+/**
+ * Props accepted by the `FilePreview` React component.
+ */
+interface FilePreviewProps {
+  fileName: string;
+  strings: PreviewStrings;
+}
+
+/**
+ * Presentational component that renders a basic HTML preview of the parsed
+ * file. It shows the file name and a list of strings that were extracted
+ * from the file for translation.
+ *
+ * The component is intentionally free of any business logic – it only knows
+ * how to display the data that was already prepared by the server-side
+ * parser.
+ */
+const FilePreview: React.FC<FilePreviewProps> = ({ fileName, strings }) => {
+  return (
+          <>
+            <Head>
+              <meta charSet="utf-8" />
+              <title>Preview: {fileName}</title>
+            </Head>
+            <h1>File Preview: {fileName}</h1>
+            {Object.keys(strings).length > 0 ? (
+                    <ul>
+                      {Object.entries(strings).map(([key, value]) => (
+                              <li key={value.id}>
+                                <strong>{key}:</strong> {value.text}
+                              </li>
+                      ))}
+                    </ul>
+            ) : (
+                    <p>No strings to display.</p>
+            )}
+          </>
+  );
+};
+
+export default FilePreview;
+```
+
+These helpers let your app:
+
+* Read the uploaded file's content
+* Find the right translations for export
+* Generate an inline preview using React
+* Return a static HTML preview to display inside Crowdin
+
+In the next step, you'll optionally add support for large file handling using blob storage.
+
+### Handling Large Files with Blob Storage
+
+If the processed file data (either strings or preview HTML) exceeds Crowdin’s inline payload size limit (around 5 MB), your app should upload the content to a temporary location and return a download link instead.
+
+First, add the Vercel Blob Storage token to your environment variables:
+
+```ini title=".env.local"
+# Vercel Blob Storage token (for handling large files)
+BLOB_READ_WRITE_TOKEN=<your-vercel-blob-token>
+```
+
+If your app is already deployed to Vercel, update the environment variables in your Vercel dashboard and redeploy.
+
+Then, update your `parseFile` and `buildFile` logic to use this helper when needed. F.eks.:
+
+```ts
+if (Buffer.byteLength(previewHtml, 'utf8') > 5 * 1024 * 1024) {
+  const previewUrl = await uploadToBlob(previewHtml, 'preview.html', 'text/html');
+  return {
+    data: {
+      strings: sourceStrings,
+      previewUrl,
+    },
+  };
+}
+```
+
+This ensures compatibility with larger files while maintaining Crowdin’s required response structure. Crowdin will download the file from the provided URL and process it as if it were inline.
+
+### Testing the Custom File Format Implementation
+
+To verify that your custom file format module is working correctly, upload a test file to any Crowdin project where your app is installed.
+
+Use the following example content:
+
+```json
+{
+  "hello_world": "Hello World!",
+  "test": "This is a sample string for translation"
+}
+```
+
+Save this content to a `.json` file on your local machine (e.g. `sample.json`). Then, open your test project in Crowdin and upload the file via **Sources > Files**.
+
+Crowdin will detect that the file matches your custom-file-format signature and send it to your app’s `/api/file/process` route. If everything is set up correctly:
+
+* The **file will be parsed**, and two source strings will appear in the Editor.
+* The **left-side preview panel** will display a rendered HTML view using your app’s preview template.
+
+If the file content is large, Crowdin will download the preview from your app’s `previewUrl` instead of using inline data.
+
+## Updating the App Base URL
+
+If your app’s domain changes after it has been installed in Crowdin (for example, after moving from a staging to production environment), you’ll need to update the `baseUrl` and reinstall the app.
+
+Crowdin caches the `baseUrl` from the manifest at the time of installation. Updating the environment variable alone is not enough—Crowdin won’t re-read it until you reinstall the app.
+
+To update the deployment domain:
+
+<Steps>
+  1. Set the new value in your hosting environment (e.g. `NEXT_PUBLIC_BASE_URL=https://your-new-domain.vercel.app`).
+  2. Redeploy your app to apply the change.
+  3. Open your manifest URL in the browser and confirm that `baseUrl` reflects the new domain.
+  4. In Crowdin, go to **Account Settings > Crowdin Applications**.
+  5. Remove the old version of the app.
+  6. Reinstall the app using the updated manifest URL.
+</Steps>
+
+After reinstalling, Crowdin will use the updated domain for iframe modules and event delivery.
+
+## Se også
+
+<CardGrid>
+  <LinkCard title="Crowdin JS SDK" description="Helpers for Crowdin iframe apps." href="https://github.com/crowdin/apps-helpers" target="_blank" />
+  <LinkCard title="Environment Variables in Vercel" description="Define and manage variables in Vercel projects." href="https://vercel.com/docs/configuration/project/environment-variables" target="_blank" />
+  <LinkCard title="Next.js App Router" description="Docs for the App Router in Next.js 13+." href="https://nextjs.org/docs/app/building-your-application/routing" target="_blank" />
+</CardGrid>

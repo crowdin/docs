@@ -1,0 +1,147 @@
+---
+title: Tradutor Offline
+description: Downloading and uploading files for offline translation
+slug: offline-translation
+sidebar:
+  order: 6
+---
+
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import { Image } from 'astro:assets';
+import downloadFilesEditor from '!/crowdin/translation-process/download_files_editor.png';
+import downloadFiles from '!/crowdin/translation-process/download_files.png';
+import downloadFiles2 from '!/crowdin/translation-process/download_files_2.png';
+import downloadFilesExportFiltered from '!/crowdin/translation-process/download_files_export_filtered.png';
+import downloadUploadGrid from '!/crowdin/translation-process/download_upload_grid.png';
+import uploadTranslationsEditor from '!/crowdin/translation-process/upload_translations_editor.png';
+import uploadTranslationsLanguagePage from '!/crowdin/translation-process/upload_translations_language_page.png';
+import uploadTranslationsXliff from '!/crowdin/translation-process/upload_translations_xliff.png';
+
+Offline translation allows you to work on project files outside Crowdin using your preferred desktop CAT tools. Once translations are completed, you can upload them back to the project. This option is available only if downloads are enabled in the [Project Settings](/project-settings/privacy-collaboration/#privacy) by the project manager.
+
+## Downloading Files
+
+You can download each file separately (in original or XLIFF format), download filtered strings (in XLIFF format), or download all files for a specific language (in original or XLIFF format). It could be done via the Editor or the language page.
+
+<LinkCard title="XLIFF File Format Details" href="https://store.crowdin.com/xliff" target="_blank" />
+
+### Downloading a Single File via Editor
+
+To download a single file to translate offline, follow these steps:
+
+<Steps>
+  1. Open the necessary file in the Editor.
+  2. Go to **File** in the main menu and select **Download** or **Export as XLIFF**. <Image src={downloadFilesEditor} alt="Download File" />
+</Steps>
+
+### Downloading a Single File via Language Page
+
+<Steps>
+  1. Open your project and select a language.
+  2. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> next to the file you want to download.
+  3. Select **Download** or **Export in XLIFF**. <Image src={downloadFiles2} alt="Download File" />
+</Steps>
+
+### Downloading All Files for a Specific Language
+
+To download all the project files for a specific language, follow these steps:
+
+<Steps>
+  1. Open your project and select a language.
+  2. Click <Icon name="heroicons:arrows-up-down-solid" class="inline-icon" />.
+  3. Select **Download translations** or **Export in XLIFF**. <Image src={downloadFiles} alt="Download All Files" />
+</Steps>
+
+Using the **Download translations** option, you’ll get a ZIP archive with all the project files containing translations in the original format. This is useful if you want to test the localized version of your product.
+
+The **Export in XLIFF** option provides a single file containing all source strings and completed translations. This method is more convenient for offline translation in CAT tools, as it doesn’t require opening and exporting files individually. Most desktop localization tools support the XLIFF format.
+
+### Downloading Filtered Strings in XLIFF
+
+You can also export strings based on specific criteria. For example, you may want to export only untranslated strings, strings translated by a certain user, or strings with comments.
+
+To download filtered strings, follow these steps:
+
+<Steps>
+  1. Open the necessary file in the Editor.
+  2. Apply filters based on your desired criteria.
+  3. Go to **File** in the main menu and select **Export Filtered in XLIFF**. <Image src={downloadFilesExportFiltered} alt="Download Filtered Strings" />
+</Steps>
+
+If you are in the [Multilingual (Grid)](/online-editor/#multilingual-mode-grid) mode of the Editor, click the drop-down arrow next to a target language’s column and select **Export Filtered in XLIFF**. <Image src={downloadUploadGrid} alt="Export Filtered Strings from the Multilingual (Grid) mode" />
+
+<ReadMore>
+  Read more about [Online Editor](/online-editor/).
+</ReadMore>
+
+## Enviar Traduções
+
+After completing translations offline, you can upload them back to the project in the original or XLIFF format. Upload can be done via the Editor or the language page.
+
+### Uploading Translations via Editor
+
+To upload a file with translations, follow these steps:
+
+<Steps>
+  1. Open the needed file in the Editor.
+  2. Go to **File** in the main menu and select **Upload Translations**. <Image src={uploadTranslationsEditor} alt="Upload Translations via Editor" />
+  3. Adjust the [Advanced Import Settings](#advanced-import-settings) as needed.
+  4. Click **Select File** and choose the file with translations from your device.
+</Steps>
+
+If you are in the [Multilingual (Grid)](/online-editor/#multilingual-mode-grid) mode of the Editor, click the drop-down arrow next to a target language’s column and select **Upload Translations**. <Image src={downloadUploadGrid} alt="Upload Translations from the Multilingual (Grid) mode" />
+
+<ReadMore>
+  Read more about [Online Editor](/online-editor/).
+</ReadMore>
+
+### Uploading Translations via Language Page
+
+<Steps>
+  1. Open your project and select a language.
+  2. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> next to the file you want to upload translations to.
+  3. Select **Upload Translations**. <Image src={uploadTranslationsLanguagePage} alt="Upload Translations via Language Page" />
+  4. Adjust the [Advanced Import Settings](#advanced-import-settings) as needed.
+  5. Click **Select File** and choose the file with translations from your device.
+</Steps>
+
+### Uploading XLIFF Translations
+
+Once you've finished translating an XLIFF file exported from the project, you can upload the completed translations back to Crowdin using the following steps:
+
+<Steps>
+  1. Open your project and select a language.
+  2. Click <Icon name="heroicons:arrows-up-down-solid" class="inline-icon" />.
+  3. Select **Upload XLIFF Translations**. <Image src={uploadTranslationsXliff} alt="Upload Translations in XLIFF" />
+  4. Adjust the [Advanced Import Settings](#advanced-import-settings) as needed.
+  5. Click **Select File** and choose the XLIFF file with translations from your device.
+</Steps>
+
+<QuestionAnswer title="My XLIFF file was translated offline. Now It contains finished translations, but when I try to upload it back to Crowdin, the translations are not displayed in the project. What might be the reason?">
+  According to the official documentation, `\<target>` elements in the XLIFF file contain the `state` attribute that indicates the current translation state for each string.
+
+  When you export XLIFF files from Crowdin for offline translation, each of the `\<target>` nodes will contain a `state` attribute with the respectful value. Below you can see the possible values:
+
+  * `needs-translation` – the segment needs translation.
+  * `translated` – the segment was translated.
+  * `final` – the segment was translated and approved.
+
+  Usually, offline CAT tools that support the XLIFF file format automatically change the state for each string on export.
+
+  Though, if your CAT tool doesn't change the `state` attribute for translated strings automatically or translations are done manually in the Notepad, it would be necessary to manually change the `state` attribute in your XLIFF file to the `translated` or `final` value to be sure that translations will be successfully uploaded to Crowdin.
+</QuestionAnswer>
+
+### Definições de Importação Avançada
+
+When uploading translations, you can adjust the following import options to control how the system handles the new content:
+
+* **Allow target translation to match source** – Enable this if the translation is intentionally the same as the source (e.g., for product names or code terms).
+* **Approve added translations** – Automatically approve the uploaded translations if you're confident in their accuracy.
+* **Translate hidden strings** – Include strings that are hidden from the Editor but still require translation (e.g., for system use or placeholders).
+
+<Aside title="Permissões">
+  Some of the import options may be available only to project members with manager permissions (or higher).
+</Aside>

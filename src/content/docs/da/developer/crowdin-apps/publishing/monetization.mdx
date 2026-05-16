@@ -1,0 +1,93 @@
+---
+title: Crowdin Apps-indtægtsgenerering
+description: Learn how to monetize your Crowdin Apps
+slug: developer/crowdin-apps-monetization
+sidebar:
+  order: 0
+---
+
+import { Image } from 'astro:assets';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import appMonetization from '!/developer/crowdin_apps_monetization.png';
+import appMonetizationEnterprise from '!/developer/crowdin_apps_monetization_enterprise.png';
+
+Alle Crowdin-apps kan benytte en af flg. betalingsmodeller:
+
+* **Payment via Crowdin** &ndash; Application users can subscribe to the app directly via Crowdin. Platformen tilbyder en nem betalingsmåde.
+* **Payment via own payment system** &ndash; Application users can subscribe directly via the app or other third-party services connected to the app. Udvikleren af Crowdin-appen skal selv forbinde og opsætte det foretrukne betalingssystem.
+* **Free usage of the Crowdin Apps** &ndash; Application users don't pay for the app usage.
+
+## Betaling via Crowdin
+
+Crowdin kan benyttes som betalingsbehandler for apps-abonnementshåndtering. To use payment via Crowdin, [Contact Support Team](https://crowdin.com/contacts), so we will create a subscription for your Crowdin App.
+
+Til implementering af denne betalingsbehandler skal et API-endepunkt anvendes til returnering af opdaterede oplysninger om app-abonnementet. Der bør også tilføjes en middleware til Crowdin-appen, der vil begrænse adgangen til appen for brugere uden abonnement.
+
+I middlewaren skal en API-anmodning til Crowdin foretages og — afhængigt af resultatet — en af flg. handlinger implementeres:
+
+* `200 OK` &ndash; the subscription is active. Crowdin-appen skal give adgang til funktionaliteten pr. den i svaret angivne dato. Denne dato bør lagres i appen for at reducere antallet af forespørgsler til dette API-endepunkt.
+* `402 Payment Required` &ndash; the subscription was not paid.
+  I dette tilfælde, begræns adgangen til app-funktionaliteten og giv brugeren en betalingsside-URL. Betalingsside-URL'en formidles i svaret.
+* `404 Bad Request` &ndash; the subscription was not found. Dette indikerer én af flere fejl: En bruger har fjernet en Crowdin-app fra organisationen, eller intet abonnement er defineret for appen. Begræns i så tilfælde adgangen til Crowdin-appen.
+
+### Forespørgsel
+
+To access the Crowdin App subscription API, the app must use the authorization method `crowdin_app` in the [App descriptor](/developer/crowdin-apps-app-descriptor/) and use the received Access Token in the Authorization header.
+
+```bash
+GET /api/v2/applications/{app-identifier}/subscription
+```
+
+**Headers**
+
+* Content-type: `application/json`
+* Authorization: `bearer \<access-token>`
+
+### Svar
+
+**Status code: `200`**
+
+```json
+{
+  "expires": "2022-12-19 12:00:00"
+}
+```
+
+**Status code: `402`**
+
+```json
+{
+  "subscribe_link": "https://crowdin.com/checkout?subscribe=..."
+}
+```
+
+**Status code: `400`**
+
+```json
+{
+  "message": "App-identifikator ikke fundet"
+}
+```
+
+## Køb af Crowdin App-abonnement via Crowdin
+
+I tilfælde af abonnementsoprettelse på en Crowdin-app, dirigeres brugeren til en betalingsside med app-abonnementsoplysningerne. Bemærk, at første faktureringsbeløb kan afvige fra app-abonnementsprisen. App-abonnementsprisen er forholdsmæssigt afpasset i løbet af en faktureringscyklus, og hvis en bruger f.eks. abonnerer på en app i starten af faktureringscyklussen, betales app-abonnementsprisen fuldt ud. Abonneres der på en app midt i en faktureringscyklus, faktureres brugeren kun halvdelen af appens abonnementspris.
+
+<Tabs syncKey="product">
+  <TabItem label="Crowdin Checkout page">
+    <Image src={appMonetization} alt="Crowdin Checkout page" />
+  </TabItem>
+  <TabItem label="Crowdin Enterprise Betalingsside">
+    <Image src={appMonetizationEnterprise} alt="Crowdin Enterprise Betalingsside" />
+  </TabItem>
+</Tabs>
+
+En gennemgang af det mulige scenarie ses herunder:
+
+Den samlede abonnementspris for en Crowdin-app udgør $30/md. Antag, at i dag er 1. dag i måneden, og næste faktureringscyklus starter d. 10. i indeværende måned, så når der abonneres på appen, vil en bruger skulle betale $10.
+
+```md
+$30/30-dage (faktureringscyklus)*10 dage (forholdsmæssig periode)= $10
+```
+
+I næste faktureringscyklus medregnes app-abonnementet fuldt ud i brugerens Crowdin-abonnement.

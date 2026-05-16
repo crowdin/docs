@@ -1,0 +1,448 @@
+---
+title: Crowdin MCP Server
+description: Manage your Crowdin projects using natural-language AI commands.
+slug: developer/crowdin-mcp-server
+---
+
+import { Steps, Aside, Tabs, TabItem, LinkCard } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+The Crowdin MCP (Model Context Protocol) Server enables AI agents to interact with your Crowdin account through natural-language commands, allowing you to automate translations, manage terminology, coordinate teams, and generate insights—all without ever leaving your chat interface.
+
+Think of the MCP Server as a universal adapter and interpreter. Your AI assistant (e.g., Crowdin Copilot, Claude, Cursor, or ChatGPT) speaks "human language", and the Crowdin API speaks a precise "technical language". The MCP server sits in the middle, translating your natural-language requests into the exact commands that Crowdin understands and then translating the responses back into a clear, readable answer.
+
+## Why Use the MCP Server?
+
+* **Speed & Efficiency:** Automate repetitive tasks like file uploads, status checks, and report generation.
+* **Contextual Intelligence:** AI agents gain an instant understanding of your projects, deadlines, team members, and workflows—no manual explanation is required.
+* **Seamless Workflow:** Manage translation tasks conversationally from within your favorite AI tool or IDE.
+
+## Prerequisites
+
+* A Crowdin account.
+* A [Personal Access Token](#authentication-tokens-and-scopes) from your account.
+* An MCP-compatible client (e.g., Crowdin Copilot, Claude, Cursor, or ChatGPT).
+
+## Setup and Configuration
+
+This section provides the details needed to connect your AI client to Crowdin.
+
+### Authentication: Tokens and Scopes
+
+To connect to your Crowdin account, the MCP Server uses a **Personal Access Token (PAT)**. This token is your secure key. When you create a token, you must grant it specific **scopes** (permissions) that define what actions it can perform. For the MCP Server to function correctly, the token you use must have the necessary scopes for the commands you want to give. For example, to create a project task, your token will need the **Tasks (Read and Write)** scope.
+
+<ReadMore>
+  Read more about [Creating a Personal Access Token (Crowdin)](/account-settings/#creating-a-personal-access-token) or [Creating a Personal Access Token (Crowdin Enterprise)](/enterprise/account-settings/#creating-a-personal-access-token).
+</ReadMore>
+
+### Endpoint Structure
+
+The Crowdin MCP Server provides two API versions. **V2 is recommended** for new integrations. It keeps the core MCP flow familiar while adding improved tool design, richer parameters, server-side filtering through headers, and MCP resources for faster context access.
+
+<Tabs syncKey="apiVersion">
+  <TabItem label="V2 (Recommended)">
+    Crowdin MCP endpoint:
+
+    ```
+    https://mcp.crowdin.com/v2/mcp
+    ```
+
+    Crowdin Enterprise MCP endpoint:
+
+    ```
+    https://{your-organization-domain}.mcp.crowdin.com/v2/mcp
+    ```
+  </TabItem>
+  <TabItem label="V1 (Deprecated)">
+    Crowdin MCP endpoint:
+
+    ```
+    https://mcp.crowdin.com/mcp
+    ```
+
+    Crowdin Enterprise MCP endpoint:
+
+    ```
+    https://{your-organization-domain}.mcp.crowdin.com/mcp
+    ```
+  </TabItem>
+</Tabs>
+
+Both versions can be configured to expose only the tools your agent needs. In V1, this filtering typically happens on the agent side. In V2, you can also apply filtering directly on the MCP side using headers, which makes setup faster and more convenient.
+
+### Available Tool Sets
+
+In V2, tool sets are organized by product area. Choose the tool sets that match your workflow.
+
+#### Core Localization and Content
+
+* **`source_files`** - Manage source files, branches, directories, and reviewed builds.
+* **`source_strings`** - Add, edit, upload, and organize source strings.
+* **`string_comments`** - Manage comments and discussion threads on strings and assets.
+* **`string_translations`** - Work with translations, approvals, votes, and corrections.
+* **`translations`** - Build, export, import, and validate project translations.
+* **`translation_status`** - Check translation progress and QA status across projects, branches, files, and languages.
+* **`languages`** - View supported languages and manage custom languages.
+* **`glossaries`** - Manage glossaries, terms, concepts, and concordance search.
+* **`tm`** - Manage translation memories and TM segments.
+* **`style_guides`** - Manage style guides for translation consistency.
+* **`screenshots`** - Upload and organize screenshots and tags for visual context.
+* **`labels`** - Organize content and screenshots with labels.
+
+#### Project Operations and Delivery
+
+* **`projects_groups`** - Manage projects, groups, and project-level settings.
+* **`tasks`** - Create, assign, comment on, and track project and organization tasks.
+* **`reports`** - Generate progress, cost, quality, activity, and performance reports.
+* **`distributions`** - Configure and release translation distributions.
+* **`bundles`** - Manage downloadable bundles and exports.
+* **`storage`** - Upload and manage temporary storage for files and imports.
+* **`webhooks`** - Manage project-level webhooks.
+* **`organization_webhooks`** - Manage organization-level webhooks.
+
+#### AI, Automation, and Integrations
+
+* **`ai`** - Work with AI prompts, providers, reports, and AI-assisted translation workflows.
+* **`applications`** - Manage app installations, sync jobs, and integration settings.
+* **`machine_translations`** - Configure machine translation providers and run MT translations.
+* **`notifications`** - Send notifications to users and roles.
+* **`external_qa_checks`** - Access external QA and custom spellchecker integrations. **(Crowdin Enterprise only.)**
+
+#### People and Organization Management
+
+* **`users`** - Manage users, project members, permissions, and contributions.
+* **`teams`** - Manage teams, memberships, and team-to-project permissions. **(Crowdin Enterprise only.)**
+* **`clients`** - View client accounts. **(Crowdin Enterprise only.)**
+* **`vendors`** - View vendor entities. **(Crowdin Enterprise only.)**
+* **`fields`** - Manage custom fields. **(Crowdin Enterprise only.)**
+* **`organization`** - View organization details and authentication settings. **(Crowdin Enterprise only.)**
+* **`workflows`** - View workflow steps, templates, and content assigned to a workflow step. **(Crowdin Enterprise only.)**
+* **`security_logs`** - Review user and organization security logs.
+
+<Aside>
+  For best performance, specify only the tool sets you need. If omitted, a default set of commonly used tools will be loaded. You can fine-tune which tools are available using the [configuration headers](#fine-tuning-with-headers) described below.
+</Aside>
+
+### Basic Configuration Example
+
+Here is a basic JSON configuration snippet for your client.
+
+<Tabs syncKey="product">
+  <TabItem label="Crowdin">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://mcp.crowdin.com/v2/mcp",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Crowdin Enterprise">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+### Fine-Tuning with Headers
+
+The V2 endpoint supports optional HTTP headers that make tool filtering more convenient. In V1, similar filtering is usually configured on the agent side after all tools are loaded. In V2, you can also apply filtering directly on the MCP side before the tool list is returned.
+
+| Header                 | Values                                                                                                                | Beschreibung                                                                                                                                                |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `crowdin-tool-sets`    | `all`, or comma-separated names (for example, `ai,reports,webhooks`; see [Available Tool Sets](#available-tool-sets)) | Controls which tool sets are loaded. By default, the server loads all available tool sets. Set a comma-separated list to limit tools to a focused workflow. |
+| `crowdin-read-only`    | `true` or `false`                                                                                                     | When set to `true`, only read-only tools (list and get operations) are exposed. Useful for safe exploration or read-only integrations.                      |
+| `crowdin-project-type` | `string-based` or `file-based`                                                                                        | Filters out tools that are not applicable to the specified project type, reducing noise for the AI agent.                                                   |
+| `crowdin-tool-filter`  | Comma-separated patterns (for example, `project*`, `list_*`)                                                          | Applies wildcard pattern matching to tool names, allowing you to include only a specific subset of tools.                                                   |
+
+**Example — read-only access for a string-based project:**
+
+<Tabs syncKey="product">
+  <TabItem label="Crowdin">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://mcp.crowdin.com/v2/mcp",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}",
+          "crowdin-read-only": "true",
+          "crowdin-project-type": "string-based"
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Crowdin Enterprise">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}",
+          "crowdin-read-only": "true",
+          "crowdin-project-type": "string-based"
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+**Example — limiting tool sets for a focused workflow:**
+
+By default, the server loads all available tool sets. If you want to focus the agent on a specific workflow, set `crowdin-tool-sets` explicitly.
+
+<Tabs syncKey="product">
+  <TabItem label="Crowdin">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://mcp.crowdin.com/v2/mcp",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}",
+          "crowdin-tool-sets": "source_files,source_strings,string_translations,translation_status,tasks,reports,webhooks"
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Crowdin Enterprise">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}",
+          "crowdin-tool-sets": "source_files,source_strings,string_translations,translation_status,tasks,reports,webhooks,teams,organization,workflows,security_logs"
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip">
+  Start with the tool sets required for your workflow, and add more as needed. Loading fewer tools helps the agent stay focused and improves accuracy.
+</Aside>
+
+### MCP Resources
+
+The V2 endpoint exposes **MCP resources**—read-only references that AI agents can access directly through the `crowdin://` URI scheme without calling individual tools. They provide a simple way to fetch context without relying on a long list of parameters or filters.
+
+Resources return only the data available to the current token. For example, `crowdin://projects` lists the projects accessible to the authenticated user and permitted by the token scope. Broad resources can return large result sets if the token has access to many items.
+
+Available resources:
+
+| Resource URI                                 | Beschreibung                                                     |
+| -------------------------------------------- | ---------------------------------------------------------------- |
+| `crowdin://projects`                         | List of all projects accessible to the authenticated user.       |
+| `crowdin://projects/{projectId}`             | Full details of a specific project.                              |
+| `crowdin://projects/{projectId}/progress`    | Translation progress per language for a project.                 |
+| `crowdin://projects/{projectId}/files`       | Source files in a project.                                       |
+| `crowdin://projects/{projectId}/branches`    | Version branches in a project.                                   |
+| `crowdin://projects/{projectId}/directories` | Directories in a project.                                        |
+| `crowdin://projects/{projectId}/strings`     | Source strings in a project.                                     |
+| `crowdin://projects/{projectId}/tasks`       | Tasks in a project.                                              |
+| `crowdin://projects/{projectId}/labels`      | Labels in a project.                                             |
+| `crowdin://projects/{projectId}/languages`   | Target languages configured for a project.                       |
+| `crowdin://tasks`                            | Tasks assigned to the authenticated user across all projects.    |
+| `crowdin://glossaries`                       | List of all glossaries.                                          |
+| `crowdin://glossaries/{glossaryId}`          | Full details of a specific glossary.                             |
+| `crowdin://glossaries/{glossaryId}/terms`    | Terms in a glossary.                                             |
+| `crowdin://glossaries/{glossaryId}/concepts` | Concepts in a glossary.                                          |
+| `crowdin://tms`                              | List of all translation memories.                                |
+| `crowdin://tms/{tmId}`                       | Full details of a specific translation memory.                   |
+| `crowdin://tms/{tmId}/segments`              | Segments in a translation memory.                                |
+| `crowdin://languages`                        | List of all languages supported by Crowdin.                      |
+| `crowdin://languages/{languageId}`           | Full details of a specific language.                             |
+| `crowdin://groups`                           | List of all groups. **(Crowdin Enterprise only.)**               |
+| `crowdin://groups/{groupId}`                 | Full details of a specific group. **(Crowdin Enterprise only.)** |
+
+<Aside>
+  Resources are available automatically when using the V2 endpoint. Your AI client may use them to gather context before executing commands, resulting in more accurate responses. Use more specific resource paths when you want to narrow the result set.
+</Aside>
+
+## Configuring Your AI Client
+
+This section guides you through connecting your preferred AI client to the Crowdin MCP Server. While the specific steps may vary slightly between clients, the core process involves providing your client with the server's URL and your Personal Access Token for authentication.
+
+### Compatible MCP Clients
+
+The Crowdin MCP Server is built on the Model Context Protocol, an open standard designed for AI interaction. This means that any AI client or development environment that allows for the configuration of custom tools or external contexts should be compatible.
+
+We have successfully tested the MCP Server with a variety of popular clients, including Crowdin Copilot, desktop applications like Claude Desktop, AI-native IDEs such as Cursor, and platforms like OpenAI (ChatGPT).
+
+<LinkCard title="Crowdin Copilot App" description="Use Crowdin Copilot with built-in Crowdin MCP V2 support—no manual MCP configuration required." href="https://store.crowdin.com/crowdin-copilot" target="_blank" />
+
+This list is not exhaustive, and we encourage you to try connecting the MCP Server with your own preferred AI tools.
+
+### General Configuration Steps
+
+If you use Crowdin Copilot, no manual MCP setup is required. The steps below apply to external MCP-compatible clients.
+
+1. **Get Your Personal Access Token (PAT):** Before you begin, ensure you have a PAT with the necessary scopes for your intended tasks, as detailed in the [Authentication](#authentication-tokens-and-scopes) section.
+2. **Locate Your Client's Settings:** Open your AI client and find the settings area for connecting to external tools or contexts.
+3. **Enter the Configuration Details:** In most clients, you will need to provide:
+   * The **endpoint URL** for the Crowdin MCP Server.
+   * An **Authorization header** containing your PAT.
+   * Optional **filtering headers** if you want to limit the available tool sets or enable read-only access.
+
+### Configuring MCP Client for Claude Desktop
+
+To set up the MCP client in Claude Desktop, follow these steps:
+
+<Steps>
+  1. Navigate to **Settings > Developer** in the Claude desktop application.
+
+  2. Click **Edit Config** to locate the `claude_desktop_config.json` file.
+
+  3. Open `claude_desktop_config.json` and enter the following configuration:
+
+     <Tabs syncKey="product">
+            <TabItem label="Crowdin">
+              ```json
+              {
+                "mcpServers": {
+                  "crowdin": {
+                    "command": "npx",
+                    "args": [
+                      "mcp-remote@latest",
+                      "https://mcp.crowdin.com/v2/mcp",
+                      "--header",
+                      "Authorization:${AUTH_TOKEN}"
+                    ],
+                    "env": {
+                      "AUTH_TOKEN": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+                    }
+                  }
+                }
+              }
+              ```
+            </TabItem>
+            <TabItem label="Crowdin Enterprise">
+              ```json
+              {
+                "mcpServers": {
+                  "crowdin": {
+                    "command": "npx",
+                    "args": [
+                      "mcp-remote@latest",
+                      "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+                      "--header",
+                      "Authorization:${AUTH_TOKEN}"
+                    ],
+                    "env": {
+                      "AUTH_TOKEN": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+                    }
+                  }
+                }
+              }
+              ```
+            </TabItem>
+     </Tabs>
+
+  4. Save the changes, and restart the Claude Desktop app.
+</Steps>
+
+## Making Your First Request
+
+Once your client is configured, you can test the connection with a simple task-focused prompt.
+
+Start a new chat with your AI assistant and type the following: `What tasks am I currently working on?`
+
+Before executing the request, the AI client will likely identify the required tool from the Crowdin MCP Server and ask for your permission to proceed. You will need to approve this confirmation step for the command to run. Many clients also offer ways to streamline this behavior for trusted sources.
+
+After you grant permission, the AI will respond by listing the tasks currently assigned to you. This confirms that your connection is working and that your client can access the expected Crowdin context.
+
+## Practical Workflows for Your Role
+
+The real power of the MCP server comes from chaining commands to complete real-world localization tasks. Here are some examples of how different roles can use it to streamline their work.
+
+### Project Manager
+
+1. **Check Progress:**
+   ```text wrap
+   What's the proofreading progress for the 'Q4 Mobile Release' project in German?
+   ```
+2. **Identify Bottleneck:** The AI responds that German proofreading is only 30% complete.
+3. **Take Action:**
+   ```text wrap
+   Create a task to proofread all unapproved strings in German for that project and assign it to 'John Doe'.
+   ```
+4. **Review Active Work:**
+   ```text wrap
+   Show all my tasks that are currently in progress and highlight any overdue items.
+   ```
+5. **Distribute Work Automatically:**
+   ```text wrap
+   In project 'Mobile App Q4', find untranslated content, create tasks for it, and distribute the work evenly among available translators.
+   ```
+
+### Developer / Translation Requestor
+
+1. **Add New Source Files:** When a new feature is ready, the developer adds the source text files to the localization project using Cursor.
+   ```text wrap
+   Add the file 'new_onboarding_feature.json' to the 'Mobile App Q4' project.
+   ```
+2. **Monitor Translation Progress:** As the deadline approaches, they check the translators' progress to ensure the project is on track.
+   ```text wrap
+   What is the translation progress for the 'Mobile App Q4' project?
+   ```
+3. **Publish Final Translations:** Once translations are complete and approved, the developer publishes them to their production environment using a pre-configured distribution.
+   ```text wrap
+   Create a new release for our 'Production CDN' distribution.
+   ```
+
+### Translator
+
+1. **Find Work:** A translator's first step is to find strings that are ready for them to work on.
+   ```text wrap
+   Show me all high-priority untranslated strings for French in the 'iOS App' project.
+   ```
+2. **Ensure Consistency:** To maintain quality, they check the glossary for correct terminology.
+   ```text wrap
+   What is the approved translation for the term 'workspace' in the French glossary?
+   ```
+3. **Request Context:** If a string is ambiguous, they request visual context for an accurate translation.
+   ```text wrap
+   For string ID 'xyz-789', show me its screenshot.
+   ```
+
+### Admin (Crowdin Enterprise only)
+
+1. **Audit Permissions:**
+   ```text wrap
+   Show me the organization members of the 'German Translation' team.
+   ```
+2. **Identify Need for Change:** The AI lists the members. The admin notices a user that has left the company.
+3. **Take Action:**
+   ```text wrap
+   Delete 'John Doe' from the organization.
+   ```
+4. **Review Inactive Accounts:**
+   ```text wrap
+   Show inactive users in the organization, list their team memberships and project access, and suggest which accounts should be deactivated.
+   ```
+
+## Best Practices
+
+* **Use the V2 Endpoint:** The V2 endpoint (`/v2/mcp`) provides smart tool loading, advanced filtering, and MCP resources that improve AI agent accuracy and performance. Use V2 for all new integrations.
+* **Load Only the Tool Sets You Need:** Start with the tool sets required for your workflow and add more only when needed. A smaller tool list helps the agent stay focused.
+* **Set Your Project Type:** If you know your project type, pass the `crowdin-project-type` header (`string-based` or `file-based`). This filters out irrelevant tools and helps the AI agent make better decisions.
+* **Use Read-Only Mode for Safe Exploration:** Set `crowdin-read-only: true` when onboarding new team members or testing integrations. This prevents accidental changes while still providing full read access.
+* **Be Specific in Your Prompts:** Reference project names and IDs rather than generic terms. For example, `List tasks for project ID 12345 in French` is better than `Show me my tasks.`
+* **Start with a Simple Query:** Begin with a safe prompt such as `What tasks am I currently working on?` to confirm that your client can access the expected Crowdin context.
+* **Manage Tokens Securely:** Treat your Personal Access Tokens like passwords and handle them with care.
+  * **Use Minimal Scopes:** When creating a token, grant only the permissions necessary for the tasks you intend to perform.
+  * **Store Securely:** Keep tokens in encrypted vaults or secure environment variables, not in shared configuration files.
+  * **Rotate Regularly:** For enhanced security, periodically revoke old tokens and create new ones.

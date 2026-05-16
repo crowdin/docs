@@ -1,0 +1,135 @@
+---
+title: Felter
+description: Set up custom properties to enhance your data management
+slug: enterprise/fields
+sidebar:
+  order: 4
+---
+
+import { Steps, Icon, Aside, CardGrid } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import fieldsDetails from '!/enterprise/organization-management/fields_details.png';
+import fieldsProjectLabels from '!/enterprise/organization-management/fields_project_labels.png';
+
+Felter er tilpassede egenskaber, som muliggør at forbedre arbejdsorganisation og datastyring i Crowdin Enterprise ved at tilføje yderligere nyttige oplysninger, links eller data til forskellige enheder, såsom relevante projekter, brugerkonti, opgaver mv.
+
+Felter tilbyder fleksibilitet og tilpasning, der passer til forskellige brugstilfælde, uanset om de markerer kritiske projekter, kategoriserer opgaver eller føjer kontekstuelle oplysninger til brugerkonti. Dette muliggør øget klarhed om arbejde, der foregår i en Crowdin Enterprise-organisation. Felter kan oprettes og håndteres enten via UI eller API.
+
+Felter oprettes også ofte af Crowdin-apps. Normalt er det bedst at bevare tilpassede egenskaber oprettet af Crowdin-apps, som de er.
+
+## Brugsstudier
+
+Felter kan bruge i mange scenarier. Her er nogle eksempler:
+
+* **Project Prioritization** – mark critical projects with a custom checkbox field, allowing easy identification and prioritization.
+* **Task Categorization** – use custom labels or the select lists to categorize tasks based on specific criteria or attributes.
+* **User Customization** – add fields to user accounts to store additional information or preferences.
+* **Crowdin Apps Integration** – fields may serve as storage for app-specific information, facilitating integration with third-party applications.
+
+## Terminologi
+
+* **Field** – a customizable data entry point, allowing users to input specific information.
+* **Entity** – an object to which fields can be added (e.g., Project, Task, User, File, or String).
+* **Location** – the area within the UI where the field will be displayed.
+
+## Tilladelser
+
+Felter kan kun oprettes og redigeres af organisationsejeren og adminis via enten UI eller API. Når de er oprettet, kan felter bruges af brugere med de relevante organisationsroller. En bruger der f.eks. kan oprette projekter, vil være i stand til at se og anvende et felt i dialogen Opret projekt eller på et hvilket som helst andet sted, der er tilgængeligt for feltenheden.
+
+## Opretter nye felter
+
+Følg disse trin for at oprette et nyt felt:
+
+<Steps>
+  1. Gå til **Organisationsindstillinger > Felter**.
+  2. Klik på **Nyt felt**.
+  3. Opsæt feltparametrene:
+     * *Name* – specify the field name that will appear in the UI.
+     * *Slug* – specify the unique field identifier to be used in API calls.
+     * *Description* – specify additional information that will be displayed as auxiliary text under the field.
+     * *Type* – select the [type of field](#field-types).
+     * *Entities* – select one or multiple [objects](#entities-and-locations) to which you want to apply the field.
+     * *Location* – select the specific [pages or modals](#entities-and-locations) where the field will be displayed.
+  4. Click **Save**. <Image src={fieldsDetails} alt="Field Details" class="width-xl" />
+     <Aside>
+             Locations marked with <Icon name="approve-check" class="inline-icon" /> icon in the *Editable* column provide a possibility for users to edit field values there.
+     </Aside>
+</Steps>
+
+## Håndtering af felter via API
+
+Fields can be created using API methods from the [Fields category](/developer/enterprise/api/v2/#tag/Fields).
+
+Når et felt er oprettet, kan det bruges med de præopsatte enheder med Patch og Get API-metoder:
+
+* [List Projects](/developer/enterprise/api/v2/#operation/api.projects.getMany)
+* [Edit Project](/developer/enterprise/api/v2/#operation/api.projects.patch)
+* [List Tasks](/developer/enterprise/api/v2/#operation/api.projects.tasks.getMany)
+* [Edit Task](/developer/enterprise/api/v2/#operation/api.projects.tasks.patch)
+* [List Users](/developer/enterprise/api/v2/#operation/api.users.getMany)
+* [Edit User](/developer/enterprise/api/v2/#operation/api.users.patch)
+* [List Files](/developer/enterprise/api/v2/#operation/api.projects.files.getMany)
+* [Edit File](/developer/enterprise/api/v2/#operation/api.projects.files.patch)
+* [List Strings](/developer/enterprise/api/v2/#operation/api.projects.strings.getMany)
+* [Edit String](/developer/enterprise/api/v2/#operation/api.projects.strings.patch)
+
+## Redigering af feltværdier
+
+You can edit field values in two ways: via the UI or API.
+
+### Redigering af feltværdier via UI
+
+Når oprettet, kan felter føjes til redigerbare steder i UI'en, så brugerne efter behov kan indtaste eller ændre data.
+
+### Redigering af feltværdier via API
+
+Når et felt er tildelt en enhed, kan dets værdi redigeres via API. For dette, tilføj et nyt parameter-`felt` til API-opkald, der understøtter felter. Parameteren 'felt' skal indeholde et objekt med nøglen som feltets slug og værdien som feltets værdi for den bestemte enhed (f. eks. `{"fieldSlug": 2}`).
+
+## Felttyper
+
+Crowdin Enterprise understøtter forskellige felttyper, der hver især opfylder forskellige dataindtastningskrav:
+
+* **Radio Buttons** – Presents a list of options with single selection capability. Under oprettelsen er det nødvendigt at opsætte en liste over muligheder. Hver mulighed har en værdi og en etiket. Værdien skal være unik. I visningstilstand, vises en valgt mulighed.
+* **Checkbox Field** – Accepts true/false values, often used for binary options. I visningstilstand, viser et ikon.
+* **Date Picker** – Allows users to select a date from a calendar widget. I visningstilstand, viser dato som en streng.
+* **Date & Time Picker** – Similar to Date Picker but also includes time selection. I visningstilstand, viser dato og tid som en streng.
+* **Number Field** – Accepts numeric input within specified ranges. Alternativt kan der tilføjes enheder til visning ved siden af det numeriske input.
+* **Labels** – Offers options for multiple selection. Hver mulighed har en værdi og etiket. Tillader brugere at oprette nye indstillinger. In view mode, displays selected options as chips.
+* **Select List (Single Selection)** – Offers options for single selection from predefined lists.
+* **Select List (Multiple Selections)** – Similar to Labels but doesn't allow users to create new options.
+* **Text Field (Plain text only)** – Provides a single-line text input field.
+* **Textarea Field (Markdown enabled)** – Offers a multi-line text input field, supporting Markdown formatting.
+* **URL Field** – a text field designed for inputting URLs.
+
+Hver felttype kan tilpasses efter behov til specifik brug i Crowdin Enterprise.
+
+## Enheder og lokationer
+
+Nedenfor ses listen over understøttede enheder og deres respektive placeringer, som felterne kan føjes til.
+
+* **Projekt**:
+  * Opret projekthandlingsdialog (redigerbar)
+  * Projekt hjem header
+  * Projektdetaljefane
+  * Offentlig projektside detaljefane
+  * Projektindstillinger (redigerbare)
+* **Opgaver**:
+  * Opgaveoprettelses-/redigeringsside (redigerbar)
+  * Opgavedetaljeside
+  * Task Board card
+* **Bruger**:
+  * Bruger-popover
+  * Brugerdetaljersidebjælke (Projektmedlemsside)
+  * Brugerredigeringshandlingsdialog (Brugerhåndteringsside) (redigerbar)
+* **Fil**:
+  * Fildetaljersidepanel
+  * Filindstillingshandlingsdialog
+* **Streng**:
+  * Strengdetaljrr (editor)
+  * Strengredigeringshandlingsdialog (fanen projektstrenge og editor) (redigerbar)
+
+## Felter i UI'en
+
+Når felterne er tildelt de nødvendige placeringer i Crowdins Enterprise UI'en (f. eks. Projekt), vil brugere om muligt kunne se og/eller interagere med dem.
+
+<Image src={fieldsProjectLabels} alt="Felter i UI'en" />

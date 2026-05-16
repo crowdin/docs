@@ -1,0 +1,185 @@
+---
+title: Quality Assurance Settings
+description: Configure QA checks to ensure the quality of translations
+slug: enterprise/project-settings/qa-checks
+sidebar:
+  order: 4
+  label: Quality Assurance
+---
+
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import qaChecksInEditor from '!/crowdin/project-management/settings/qa_checks_in_editor.png';
+import qaChecksSettings from '!/enterprise/project-management/settings/qa_checks_settings.png';
+import qaChecksAddToIgnoreList from '!/crowdin/project-management/settings/qa_checks_add_to_ignore_list.png';
+
+The main aim of quality assurance (QA) checks is to help you efficiently handle different language-specific aspects in translations and ensure they are formatted the same way as the source strings and will fit the UI just as well. Some typical QA check issues include missed commas, extra spaces, or typos.
+
+With QA checks, issues that should be fixed will be highlighted on the Proofread workflow step. QA checks help to detect some common mistakes easily and quickly. It's recommended to review and resolve all QA check issues before building your project and downloading translations.
+
+<Image src={qaChecksInEditor} alt="QA Checks in Editor" />
+
+<Aside type="note">
+  QA issue indicators may vary depending on the active [Editor mode and layout](/enterprise/online-editor/#editor-modes).
+</Aside>
+
+In the **Quality Assurance** section, you can manage the types of QA issues to be highlighted in the Editor during the translation process.
+
+## Configure QA Checks
+
+By default, QA checks are enabled. To select the needed QA checks in your project, follow these steps:
+
+<Steps>
+  1. Open your project and go to **Settings > Quality assurance**.
+  2. Select the QA check types according to your preferences.
+  3. For each selected QA check type, choose whether it should be possible to save translations with QA issues by selecting one of two options: **Error** and **Warning**.
+</Steps>
+
+**Warning** &ndash; translators are notified about QA issues with suggestions for fixes, but they can still save the translation using the **Save anyway** button.
+
+**Error** &ndash; translators are notified about QA issues with suggestions for fixes, and they cannot save the translation until all issues are resolved.
+
+<Image src={qaChecksSettings} alt="QA Checks Settings" class="width-2xl" />
+
+Use the **Consider as fixed** option to define how many approvals a translation must have before its QA issues are automatically treated as resolved. When a translation reaches the specified number of approvals, Crowdin Enterprise clears any flagged QA issues for that string.
+
+Once enabled, QA checks will work in the background and scan the translations for potential QA issues.
+
+<LinkCard title="Verificación de Seguridad de Calidad Personalizada" description="Learn how to create custom QA checks." href="/enterprise/custom-qa-checks/" />
+
+## Revalidate QA Checks
+
+Use the **Revalidate** button to re-run enabled QA checks for all project translations and update issue statuses. This is useful after modifying settings, AI prompts, terminology, or external QA checks.
+
+<Aside>
+  The **Revalidate** button is only available when at least one supported QA check category is active (**Consistent terminology**, **AI-powered check**, or **external QA checks**).
+</Aside>
+
+Once revalidation starts, the button is disabled and a **Cancel** button appears. When the process is complete, a confirmation notification is shown.
+
+## QA Check Parameters
+
+**Omissions** &ndash; strings that lack or have excessive translations.
+
+* Source is empty but the translation is not
+* Translation is empty but the source is not
+
+**Translation length limit** &ndash; translations that are longer than the limit of characters you set.
+
+<Aside type="tip">
+  To set character limits for specific strings, go to **Sources > Strings**. Double-click on the needed string and set the max. length. This means that translators will be notified that a translation for the particular string can't be longer than the specified limit. This is useful when the space for the given text is limited.
+</Aside>
+
+**Tags** &ndash; strings that use HTML might lack some opening or closing tags in translations.
+
+* Inconsistent tags in the source and translation
+* ID attributes consistency
+* CDATA tag consistency
+
+**Spacing** &ndash; multiple spaces in a row, missing spaces.
+
+* Spaces around special symbols
+* Start and end newline characters
+* Start and end spaces
+* Multiple spaces in succession
+* Non-breaking spaces
+
+**Variables** &ndash; placeholders used in a translation match placeholders used in the source string.
+
+* Common variables
+* Python, Java, .NET, C/C++, Ruby on Rails, Twig, PHP, Freemaker variable placeholders
+* Custom variables (per request)
+
+**Punctuation** &ndash; punctuation mistakes or differences in the punctuation marks.
+
+* Inconsistent punctuation in source and translation
+* Spacing before and after punctuation marks
+
+**Character case** &ndash; the lower or upper case that is used differently in source and translated strings.
+
+* Initial capitalization
+* Unexpected multiple capitalized characters in succession
+
+**Special characters** &ndash; new paragraphs, currency signs, and other special characters that are used differently in translated strings.
+
+* Bracket consistency
+* Markup language entities
+* Quotes and quote escapes
+
+**Open translation issues by project members** &ndash; shows reported translation issues on the Proofread workflow step.
+
+**Spelling mistakes** &ndash; underline misspelled words.
+
+<Aside type="caution" title="Limitations">
+  Currently available for specific languages only.
+  <details>
+    <Include file="spellcheck-supported-languages.mdx" />
+  </details>
+</Aside>
+
+**ICU Markup syntax check** &ndash; the correct usage of the ICU message syntax in translations.
+
+**Consistent terminology** &ndash; checks whether the source words are translated accordingly to the respective glossary terms.
+
+<Aside type="caution" title="Limitations">
+  Currently available for English, German, Spanish, French, Italian, Dutch, Norwegian, Norwegian Bokmal, Polish, Russian, Swedish, Ukrainian, Japanese, Korean, Chinese Simplified, and Turkish.
+</Aside>
+
+**Duplicate** &ndash; translations that duplicate already existing translations.
+
+**FTL Markup syntax check** &ndash; the correct usage of the FTL syntax in translations.
+
+**Android Markup syntax check** &ndash; the correct usage of the Android syntax in translations.
+
+**Numbers mismatch** &ndash; checks for inconsistencies or missing numbers between the source and translations.
+
+**AI-powered check** &ndash; uses AI to detect translation issues, improving accuracy and ensuring translations meet project-specific quality standards. Requires configuring an AI prompt with defined evaluation criteria.
+
+<ReadMore>
+  Read more about [Configuring AI-powered check](/enterprise/crowdin-ai/#setting-up-ai-qa-check).
+</ReadMore>
+
+**Outdated translation** &ndash; flags translations that may need to be revised after their corresponding source strings have been modified.
+
+## Spell Checker Ignore List
+
+If your project contains some uncommon words that are not recognized by the Spell checker, you can add them to the Ignore list to exclude them from being checked.
+
+This is useful for project-specific terminology, like brand names or proper nouns (e.g., `MyApp`), which you might expect not to be flagged as errors. Since the Spell checker and Glossary are separate features, adding terms to the Glossary does not automatically add them to the Spellcheck ignore list. Adding them here is the correct way to prevent them from being flagged.
+
+<Image src={qaChecksAddToIgnoreList} alt="QA Checks Add to Ignore list" />
+
+To review the words added to the Ignore list for the Spell checker, follow these steps:
+
+<Steps>
+  1. Open your project and go to **Settings > Quality assurance**.
+  2. Click **Ignore list** on the top right side.
+</Steps>
+
+In the opened window you can see the list of words added to the ignore list. You can filter or remove them from the list if necessary.
+
+## QA Issue Indicators
+
+When QA checks detect issues, visual indicators appear across the project interface to help you quickly spot and navigate to translation quality problems.
+
+### QA Issues Summary
+
+The project Dashboard and each language page display a summary button showing the total number of unresolved QA issues — **N QA issues for all languages** on the Dashboard, and **N QA issues for [Language]** on the language page.
+
+Clicking the button opens a panel with the following details:
+
+* The total number of unresolved QA issues.
+* The change delta in the format `+N/-N/+N`. Hover over it to see the breakdown: how many issues were created, resolved, and are in progress.
+* **Open in Editor** &ndash; opens the Editor filtered to strings with QA issues.
+* <Icon name="mdi:cog" class="inline-icon" /> &ndash; links directly to [**Settings > Quality Assurance**](#configure-qa-checks).
+
+### Per-Language Indicators
+
+Languages with unresolved QA issues are marked with a <Icon name="material-symbols:warning" class="inline-icon" /> indicator showing the number of issues on the project Dashboard. This is an informational indicator that shows at a glance which languages contain unresolved QA issues.
+
+### Per-File Indicators
+
+Files with unresolved QA issues are marked with a <Icon name="material-symbols:warning" class="inline-icon" /> indicator showing the number of issues on the language page. This is an informational indicator that shows at a glance which files contain unresolved QA issues.

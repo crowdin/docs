@@ -1,0 +1,381 @@
+---
+title: Projektopgaver
+description: Create and assign tasks for translating or proofreading content
+slug: enterprise/tasks
+sidebar:
+  order: 0
+---
+
+import { Steps, Aside, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import addNew from '!/enterprise/tasks/tasks_add_new.png';
+import details from '!/enterprise/tasks/tasks_details.png';
+import addNewSB from '!/enterprise/tasks/tasks_add_new_sb.png';
+import detailsSB from '!/enterprise/tasks/tasks_details_sb.png';
+import split from '!/enterprise/tasks/tasks_split_words.png';
+import newTemplate from '!/enterprise/tasks/tasks_new_template.png';
+import managingTemplates from '!/enterprise/tasks/tasks_managing_templates.png';
+import pendingSequentialTasks from '!/enterprise/tasks/tasks_pending_sequential_tasks.png';
+import createPendingProofreadingTask from '!/enterprise/tasks/tasks_create_pending_proofreading_task.png';
+import selectPrecedingTranslationTask from '!/enterprise/tasks/tasks_select_preceding_translation_task.png';
+import board from '!/enterprise/tasks/tasks_board.png';
+import edit from '!/enterprise/tasks/tasks_edit.png';
+import filter from '!/enterprise/tasks/tasks_filter.png';
+import move from '!/enterprise/tasks/tasks_move.png';
+import close from '!/enterprise/tasks/tasks_close.png';
+import pendingCrossReviewTasks from '!/enterprise/tasks/tasks_pending_cross_review_tasks.png'
+
+Create and assign tasks for translating or proofreading content to specific project members or vendors. You can set due dates, split words among assignees, receive notifications about task changes and updates, and discuss tasks with other project members in the comments.
+
+## Oprettelse af ny opgave
+
+To create a new task, follow these steps:
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Steps>
+      1. Open your project and select **Tasks** on the left sidebar.
+      2. Click <Icon name="mdi:plus" class="inline-icon" />**New task**. <Image src={addNew} alt="New Task" />
+      3. Opsæt opgaveparametrene:
+         * *Type* &ndash; select between *Translate by own translators*, *Proofread by own proofreaders*, *Translate by vendor*, and *Proofread by vendor*.
+         * *Workflow step* &ndash; select the necessary step from the project workflow.
+         * *[Create a pending proofreading task](#sequential-tasks)* (only for translation tasks) &ndash; creates a separate proofreading task that starts once the translation is completed.
+           * Type &ndash; select *Proofread by own proofreaders* or *Proofread by vendor*.
+           * *Workflow step* &ndash; select the workflow step for a pending proofreading task.
+         * *[Preceding task](#sequential-tasks)* (only for proofreading tasks) &ndash; link the task to a previously created translation task to inherit its scope and language settings.
+         * *Skip strings already included in other tasks* &ndash; skip strings that are already assigned to other tasks.
+         * *Rates template* (optional) – select the [template](/enterprise/project-reports/#rate-templates) to be used for calculating task costs. This template will be used by default for generating task reports and will be displayed in the task details for transparency, visible to the project owner and managers. Click <Icon name="mdi:plus" class="inline-icon" /> to add a new template, or click <Icon name="mdi:pencil" class="inline-icon" /> to modify the selected one.
+         * *[Create Cost Estimate Report](#task-cost-overview)* – automatically generate a Cost Estimate report after the task is created or edited.
+         * *[Create Translation Cost Report](#task-cost-overview)* – automatically generate a Translation Cost report when the task status is changed to **Done** or **Closed**.
+         * *String filters* &ndash; filter which strings should be included in the task:
+           * *Strings* &ndash; select whether to include *All ToDo strings on the selected step*, only those modified within a specific period, or only those with translations updated within a specific period (only for proofreading tasks).
+           * *Filter by labels* (optional) &ndash; select one or more labels to include only strings with the specified labels. Then, select the match rule:
+             * *All selected labels* &ndash; includes only strings that have all selected labels (AND logic).
+             * *Any selected label* &ndash; includes strings that have at least one of the selected labels (OR logic).
+           * *Exclude by labels* (optional) &ndash; select one or more labels to exclude strings with the specified labels. Then, select the match rule:
+             * *All selected labels* &ndash; excludes only strings that have all selected labels (AND logic).
+             * *Any selected label* &ndash; excludes strings that have at least one of the selected labels (OR logic).
+           * *Include pre-translated strings only* (only for proofreading tasks) &ndash; include only strings that were previously pre-translated.
+         * *Due Date* (optional) &ndash; set a deadline.
+         * *Files* &ndash; select files to include in the task.
+         * *Languages* &ndash; select target languages (a separate task will be created for each selected language). The *Words to do* column shows the total number of words added to the task.
+           * Click **Assign** to assign users to the task for each language separately.
+           * *(Optional)* Use a saved [template](#task-templates) to apply language and member assignment settings, or save the current configuration for future use.
+         * *Title* &ndash; specify the name of the task that will be visible to translators or proofreaders.
+         * *Description* (optional) &ndash; add any additional details that may be helpful.
+      4. Klik på **Opret**. <Image src={details} alt="Task Details" />
+    </Steps>
+  </TabItem>
+  <TabItem label="String-based project">
+    <Steps>
+      1. Open your project and select **Tasks** on the left sidebar.
+      2. Click <Icon name="mdi:plus" class="inline-icon" />**New task**. <Image src={addNewSB} alt="New Task" />
+      3. Opsæt opgaveparametrene:
+         * *Type* &ndash; select between *Translate by own translators*, *Proofread by own proofreaders*, *Translate by vendor*, and *Proofread by vendor*.
+         * *Workflow step* &ndash; select the necessary step from the project workflow.
+         * *[Create a pending proofreading task](#sequential-tasks)* (only for translation tasks) &ndash; creates a separate proofreading task that starts once the translation is completed.
+           * Type &ndash; select *Proofread by own proofreaders* or *Proofread by vendor*.
+           * *Workflow step* &ndash; select the workflow step for a pending proofreading task.
+         * *[Preceding task](#sequential-tasks)* (only for proofreading tasks) &ndash; link the task to a previously created translation task to inherit its scope and language settings.
+         * *Skip strings already included in other tasks* &ndash; skip strings that are already assigned to other tasks.
+         * *Rates template* (optional) – select the [template](/enterprise/project-reports/#rate-templates) to be used for calculating task costs. This template will be used by default for generating task reports and will be displayed in the task details for transparency, visible to the project owner and managers. Click <Icon name="mdi:plus" class="inline-icon" /> to add a new template, or click <Icon name="mdi:pencil" class="inline-icon" /> to modify the selected one.
+         * *[Create Cost Estimate Report](#task-cost-overview)* – automatically generate a Cost Estimate report after the task is created or edited.
+         * *[Create Translation Cost Report](#task-cost-overview)* – automatically generate a Translation Cost report when the task status is changed to **Done** or **Closed**.
+         * *String filters* &ndash; filter which strings should be included in the task:
+           * *Strings* &ndash; select whether to include *All ToDo strings on the selected step*, only those modified within a specific period, or only those with translations updated within a specific period (only for proofreading tasks).
+           * *Filter by labels* (optional) &ndash; select one or more labels to include only strings with the specified labels. Then, select the match rule:
+             * *All selected labels* &ndash; includes only strings that have all selected labels (AND logic).
+             * *Any selected label* &ndash; includes strings that have at least one of the selected labels (OR logic).
+           * *Exclude by labels* (optional) &ndash; select one or more labels to exclude strings with the specified labels. Then, select the match rule:
+             * *All selected labels* &ndash; excludes only strings that have all selected labels (AND logic).
+             * *Any selected label* &ndash; excludes strings that have at least one of the selected labels (OR logic).
+           * *Include pre-translated strings only* (only for proofreading tasks) &ndash; include only strings that were previously pre-translated.
+         * *Due Date* (optional) &ndash; set a deadline.
+         * *Branches* &ndash; select branches to include in the task.
+         * *Languages* &ndash; select target languages (a separate task will be created for each selected language). The *Words to do* column shows the total number of words added to the task.
+           * Click **Assign** to assign users to the task for each language separately.
+           * *(Optional)* Use a saved [template](#task-templates) to apply language and member assignment settings, or save the current configuration for future use.
+         * *Title* &ndash; specify the name of the task that will be visible to translators or proofreaders.
+         * *Description* (optional) &ndash; add any additional details that may be helpful.
+      4. Klik på **Opret**. <Image src={detailsSB} alt="Task Details" />
+    </Steps>
+  </TabItem>
+</Tabs>
+
+<Aside type="tip" title="Good to know">
+  * The Workflow step parameter is only applicable when creating a task for [projects with a workflow](/enterprise/creating-project/#projects-with-a-workflow).
+  * For the Proofread type tasks, all the strings, excluding the approved ones, will be added to the task.
+  * One task can be assigned to one project only.
+</Aside>
+
+<ReadMore>
+  Read more about [project types](/enterprise/creating-project/#project-types).
+</ReadMore>
+
+### Splitting Content
+
+Splitting content between several members allows you to speed up the translation or proofreading process.
+
+While in string-based and file-based projects this option is called differently (i.e., **Split strings** and **Split files**), the basic principle of its behavior remains the same.
+
+To split content between several members select **Split files** (in file-based project) or **Split strings** (in string-based project) in the **Assign users** dialog. Et omtrentligt antal ord kan angives til hver modtager.
+
+<Image src={split} alt="Filopdelinger" class="width-xl" />
+
+### Estimating and Tracking Task Costs
+
+If a [**Rates template**](/enterprise/project-reports/#rate-templates) is selected during task creation, the task view will include cost-related information, such as the selected rate scheme and any generated cost reports.
+
+<Aside title="Tilladelser">
+  Project members with manager permissions (or higher) can view the generated reports and exact calculated costs. For all other project roles, only the name of the selected **Rates template** is displayed.
+</Aside>
+
+#### Task Cost Overview
+
+After a report is generated, it becomes available in the [Archive](/enterprise/project-reports/#archive) section. The costs are also displayed directly on the task card in the **Board** section. Hover over <Icon name="material-symbols:payments" class="inline-icon" /> on a task card to view both the **Estimated cost** and **Actual cost**.
+
+Open the task to view the following cost-related information:
+
+* **Rates Template**: Displays the name of the applied template. Project managers can click the template name to open the **Edit rates template** dialog and view or modify its parameters (e.g., Base rates, Custom rates, Net Rate Schemes).
+* **Estimated cost**: If the **Create Cost Estimate Report** option was selected, this report is generated automatically after the task is created or updated. If the task scope changes (e.g., files or strings are modified), a new Cost Estimate report will be generated automatically to reflect the updated estimate.
+* **Actual cost**: If the **Create Translation Cost Report** option was selected, this report is generated automatically once the task is moved to the **Done** or **Closed** status.
+
+Once generated, both the estimated and actual cost sections will display the calculated cost based on the selected rates template, a clickable report name (e.g., Report #123) that links to the full report in the Archive section, and the report generation date. If a report has not been generated yet, a **Not generated yet** message will be displayed instead, along with a **Generate** option to quickly create it.
+
+#### Generating and Viewing Reports
+
+You can manually generate or regenerate reports for an existing task at any time. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> in the upper-right corner of the task view and select **Cost estimate** or **Translation cost**.
+
+To view a detailed breakdown, click the report name (e.g., Report #123) under the Estimated or Actual cost. The full report will open in a new browser tab. Within the opened report, click **Rate Schema** to review the specific rates applied during its generation.
+
+#### Resolving Rates Mismatch
+
+If the underlying rates or the assigned rate template are modified after a report has been generated, a **Rates Mismatch** label will appear next to the Estimated or Actual cost. This label indicates that the current template configuration differs from the one used to generate the report, meaning the displayed costs might be outdated.
+
+To resolve the mismatch and update the costs, click the report name and regenerate the report. The system will apply the latest rates, and the **Rates Mismatch** label will disappear.
+
+### Task Templates
+
+Use task templates to save the configuration of the **Languages** section, including target languages and member assignments. Templates help you quickly apply these configurations when creating new tasks, saving time and ensuring consistency.
+
+<Aside>
+  [Splitting content](#splitting-content) between members is configured separately and is **not** saved within templates.
+</Aside>
+
+#### Saving Templates
+
+To save the language and member assignment settings as a template, follow these steps:
+
+<Steps>
+  1. In the **Languages** section, click **Save as**.
+  2. Select **New template** from the drop-down menu.
+  3. In the dialog that appears, enter a name for your template.
+  4. Click **Save**.
+</Steps>
+
+Your template is now saved and available for future tasks.
+
+<Image src={newTemplate} alt="Saving a Task Template" />
+
+#### Applying Templates
+
+To apply a saved template to a new task, follow these steps:
+
+<Steps>
+  1. In the **Languages** section, click on the template name to apply it immediately.
+  2. Alternatively, click <Icon name="mdi:dots-vertical" class="inline-icon" /> next to the template name and select **Apply**.
+</Steps>
+
+#### Managing Templates
+
+To rename or delete a saved template, follow these steps:
+
+<Steps>
+  1. In the **Languages** section, click <Icon name="mdi:dots-vertical" class="inline-icon" /> next to the template name.
+  2. Select one of the following options:
+     * **Rename** – Enter a new name for your template.
+     * **Delete** – Permanently remove the template.
+</Steps>
+
+<Image src={managingTemplates} alt="Managing Task Templates" />
+
+## Projektopgaver
+
+In the **Tasks** section, you can view all the project tasks in the following two sections: **Board**, **All Tasks**.
+
+### Board
+
+In the **Board** section, tasks are organized into three columns: To Do, In Progress, and Done. This layout provides a clear view and visualization of the current status of all tasks. Within each column, tasks are further grouped by target languages. Each target language group can be collapsed to hide task cards or expanded to display them. This feature is particularly useful for decluttering the view and focusing on specific languages.
+
+Use the **Search** field to search for tasks by name or [filter tasks](#filtering-tasks) using various filter options. To view the task details, open it by clicking on the task name.
+
+<Image src={board} alt="Board" />
+
+### All Tasks
+
+The **All Tasks** section provides a list view of all project tasks. It is particularly useful for efficiently managing large volumes of tasks. From this view, you can select multiple tasks to perform bulk actions, such as changing assignees, updating statuses, or deleting tasks.
+
+Similar to the **Board** section, the **All Tasks** view also allows you to use the **Search** field and [filter](#filtering-tasks). Additionally, you can sort the task list in ascending or descending order using the available sort options (ID, Created at, Resolved at, Due Date).
+
+#### Generating Reports for Multiple Tasks
+
+From the **All Tasks** view, you can generate a **Cost Estimate** or **Translation Cost** report for one or more specific tasks. This allows you to quickly assess costs without having to manually select tasks on the report generation page.
+
+To generate a report for selected tasks, follow these steps:
+
+<Steps>
+  1. In the **All Tasks** view, select the desired tasks using the checkboxes. You can use filters to narrow down the list before selection.
+  2. Click <Icon name="mdi:dots-vertical" class="inline-icon" /> in the upper-right corner.
+  3. Select **Cost estimate** or **Translation cost** from the drop-down menu.
+</Steps>
+
+You will then be redirected to the corresponding report generation page with the selected tasks pre-filled, where you can configure and generate the report.
+
+### Opgaveredigering
+
+Følg disse trin for at ændre opgavedetaljerne:
+
+<Steps>
+  1. Open your project and select **Tasks** on the left sidebar.
+  2. In the **Board** or **All tasks** section, click <Icon name="mdi:dots-vertical" class="inline-icon" /> (or right-click) on the task you want to change and select **Edit**. <Image src={edit} alt="Editing Task" />
+  3. Make the necessary edits and click **Save**.
+</Steps>
+
+<QuestionAnswer title="How do the source file updates affect the existing translation and proofreading tasks?">
+  After the source file update, the list of source strings included in the task will be updated in the following way:
+
+  * Strenge fjernet fra kildefilen under opdateringen fjernes fra opgaven.
+  * The modified strings marked with the *Keep Translations* option will appear in the task with the new modified text.
+  * De nyligt tilføjede strenge påvirker på ingen måde den eksisterende opgave.
+
+  If the source file is restored to the revision containing the removed strings, they will reappear in the task.
+</QuestionAnswer>
+
+### Viewing Tasks Created Together
+
+When you create tasks for multiple languages at once, they are generated as a single batch. To easily find and navigate between all tasks from the same batch, you can use the **Tasks Created Together** option.
+
+To view tasks created together, follow these steps:
+
+<Steps>
+  1. Open any task from the batch.
+  2. Click <Icon name="mdi:dots-vertical" class="inline-icon" /> in the upper-right corner.
+  3. Select **Tasks Created Together**.
+</Steps>
+
+You will be redirected to the **All Tasks** section with a `batchId` filter (e.g., `batchId:123456`) automatically applied in the search field. This view will display only the tasks that were generated during that specific creation process.
+
+### Filtering Tasks
+
+By default, all project tasks are displayed in the **Tasks** section either in the **Board** or **All Tasks** sections. Opgaver kan om nødvendigt filtreres vha. de eksisterende filterindstillinger:
+
+* Target language: All languages or particular language.
+* Udpeget: Alle brugere eller bestemte brugere.
+* Oprettet af: Alle brugere eller bestemte brugere.
+* Due date: All, Overdue now, Custom range.
+* Created: All, Custom range.
+* Type: Alle typer, Oversæt med egne oversættere, Korrekturlæsning med egne korrekturlæsere, Oversæt via leverandør, Korrekturlæsning via leverandør.
+* Arbejdsgangstrin: Alle, Intet arbejdsgangstrin eller et bestemt arbejdsgangstrin.
+* Fil: Alle filer eller en bestemt fil eller mappe.
+* Status: Alle statusser, To Do, I gang, Udført, Lukket.
+
+<Image src={filter} alt="Filtering Tasks" />
+
+### Opgavestatusændring
+
+To change the task status in the **Board** section, select the task assigned to you and drag it to the column with the status you need.
+
+<Aside>
+  Only admins can change the task status for all the project tasks.
+</Aside>
+
+<Image src={move} alt="Opgavestatusændring" />
+
+To change the task status in the **All Tasks** section, select the needed task, click **Change status**, and select the new status.
+
+Alternatively, in either of the two sections, you can change the task status directly in the task itself using the **Status** drop-down menu and selecting needed statuses.
+
+### Opgavelukning
+
+To close the task when it's finished, move it to the **Done** column and click **Close Task**.
+
+<Image src={close} alt="Opgavelukning" class="width-sm" />
+
+To view the list of closed tasks, open the **All Tasks** section and use the filter **Status: Closed**.
+
+## Sekventielle opgaver
+
+Sekventielle opgaver strømliner håndteringen af oversættelses- og korrekturlæsningsprocesser på en struktureret, trinvis måde. Denne funktion er særlig nyttig til håndtering af indhold, der kræver oversættelse efterfulgt af korrekturlæsning, hvilket sikrer en jævn arbejdsgang.
+
+Once created, sequential tasks are represented on the Tasks Board, displaying both the translation task and its linked pending proofreading task.
+
+<Image src={pendingSequentialTasks} alt="Afventer Korrekturlæsning Sekventiel Opgave" />
+
+### Nøgletilgange
+
+Begrebet sekventielle opgaver er baseret på to primære tilgange:
+
+* **Creating a translation task with its associated pending proofreading task:**
+  * Start by creating a translation task and specifying the target languages and work scope.
+  * Select **Create a pending proofreading task** to generate the associated proofreading task. You can set separate due dates for the translation and proofreading tasks if needed.
+  <Image src={createPendingProofreadingTask} alt="Create a pending proofreading task" />
+  * Mens oversættere arbejder på oversættelsesopgaven, forbliver den tilknyttede korrekturlæsningsopgave afventende.
+  * When the translation task is completed, the status of the associated proofreading task changes from Pending to To Do. Proofreaders will then receive notifications that it's ready for review.
+* **Creating a proofreading task and linking it to a translation task:**
+  * Create a proofreading task and select the translation task you want to link it with from the **Preceding task** drop-down menu. You can link it to either a completed or an active translation task.
+  <Image src={selectPrecedingTranslationTask} alt="Select preceding translation task" />
+  * Sprog og arbejdsomfang arves automatisk fra den tilnyttede oversættelsesopgave.
+  * Korrekturlæsningsopgaven afventer, indtil den tilknyttede oversættelsesopgave er fuldført.
+  * As with the first approach, proofreaders receive notifications when the proofreading task is ready for review.
+
+### Understøttede opgavetyper
+
+Sekventielle opgaver er tilgængelige for flg. opgavetyper:
+
+* Oversættelse af egne oversættere
+* Korrekturlæsning af egne oversættere
+* Oversættelse af leverandør
+* Proofread by vendor
+
+### Sekventiel opgavehåndtering
+
+* Ved redigering af en afventende korrekturlæsningsopgave er ændringer begrænset til felter, som ikke påvirker omfanget afopgaven.
+* Afventende korrekturlæsningsopgaver kan om nødvendigt slettes. I så tilfælde bibehodes tilknyttede oversættelsesopgaver.
+* Sletning af en oversættelsesopgave med en tilknyttet sekventiel korrekturlæsningsopgave resulterer i samtidig sletning af begge opgaver.
+
+## Task-based Access Control
+
+When [Task-based access control](/enterprise/project-settings/privacy/#translations) is enabled, translators and proofreaders have read-only access to the Editor and can work with strings only through tasks assigned to them. On language pages, users see a notice that active access to strings is available only through assigned tasks. If they try to open content outside those tasks in the Editor, it will be available in read-only mode.
+
+In the **Tasks** section, users can still view task cards, but they can perform active actions (translating or proofreading) only within the tasks assigned to them. Regular language permissions are not used to grant translation or approval access while this option is enabled.
+
+This restriction applies to translators and proofreaders. Project members with language coordinator permissions or higher keep access according to their roles. For example, a translator with permission to work on French who is assigned to a task in German can work in the Editor only within the assigned German task, while having read-only access to French strings.
+
+## Task Cross-Review
+
+The **Task Cross-Review** feature helps ensure proper oversight in task workflows by requiring approval before contributors can start working. It’s especially beneficial for teams with internal approval processes, such as budget approvals, where tasks must be reviewed and approved by designated managers or the owner. By adding an extra layer of accountability, this feature ensures tasks don’t move forward without proper review.
+
+<Image src={pendingCrossReviewTasks} alt="Pending Cross-Review Task" />
+
+### How Task Cross-Review Works
+
+When **Task Cross-Review** is enabled:
+
+* During task creation, a notification informs the user that the task will require approval from eligible project members (selected managers or the owner) before assigned members can start working.
+
+* On the Board, tasks awaiting approval display an alert indicating they are pending review from selected managers or the owner, making them easy to identify.
+
+* In the task details view, an alert states, *"The task is currently pending review from selected managers or the owner,"* and the task is labeled with the status **For Approval**.
+
+Only selected managers or the owner can approve the task. The manager who created the task cannot approve it, but the owner can always approve their own tasks. Once approved, the task status changes to **<span style={{ whiteSpace: 'nowrap' }}>To Do</span>**, indicating that contributors can begin work.
+
+<ReadMore>
+  Read more about [configuring Task Cross-Review](/enterprise/project-settings/privacy/#configuring-task-cross-review).
+</ReadMore>
+
+## Se også
+
+<LinkCard title="Brugeropgaver" description="Learn how to view, filter, and manage tasks assigned to you." href="/enterprise/user-tasks/" />

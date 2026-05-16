@@ -1,0 +1,252 @@
+---
+title: Context Menu Module
+description: Create the item in the context menu where possible
+slug: developer/crowdin-apps-module-context-menu
+sidebar:
+  order: 19
+  label: Context Menu
+---
+
+This module allows creating custom items in Crowdin's context menus.
+
+Crowdin context menus:
+
+* Resources > TM > TM record
+* Resources > Glossary > Glossary record
+* Project home tab > Language record
+* Project > Content > Files > File record
+* Project > Content > Screenshots > Screenshot record
+* Project > Language page > File record
+
+Crowdin Enterprise context menus:
+
+* Workspace > TM > TM record
+* Workspace > Glossary > Glossary record
+* Project home page > Language record
+* Project > Content > Files > File record
+* Project > Content > Screenshots > Screenshot record
+* Project home page > Language page > File record
+
+A context menu item can open a specified app module with additional context related to the selected record or custom URL.
+There are the following types of actions:
+
+* Open a specified app module in a modal dialog (see [Modal module](#modal))
+* Redirect to a specified app module
+* Open a custom URL in a new tab
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+For Crowdin:
+
+* Only me (i.e., project owner)
+* Me, project managers and developers (if location: `language`, `screenshot`, `source_file`, `translated_file`)
+* All project members
+* Selected users
+
+For Crowdin Enterprise:
+
+* Only organization admins
+* Organization admins, project managers and developers (if location: `language`, `screenshot`, `source_file`, `translated_file`)
+* All users in the organization projects
+* Selected users
+
+## Structure
+
+### Modal
+
+Context menu item shows the specified module in the modal.
+
+```json title="manifest.json"
+{
+  "modules": {
+    "context-menu": [
+      {
+        "key": "context-menu-key",
+        "name": "Name of Context Menu Item",
+        "description": "Description of Context Menu Item",
+        "options": {
+          "location": "source_file",
+          "type": "modal",
+          "module": {
+            "modal": "modal-module-key"
+          },
+          "signaturePatterns": {
+            "fileName": ".*\.json",
+            "nodeType": [0, 1]
+          }
+        }
+      }
+    ],
+    "modal": [
+      {
+        "key": "modal-module-key",
+        "name": "New Modal",
+        "url": "/path/to/integration/module"
+      }
+    ]
+  }
+}
+```
+
+### Redirect
+
+Context menu item redirects to the specified module.
+
+```json title="manifest.json"
+{
+  "modules": {
+    "context-menu": [
+      {
+        "key": "context-menu-key",
+        "name": "Name of Context Menu Item",
+        "description": "Description of Context Menu Item",
+        "options": {
+          "location": "source_file",
+          "type": "redirect",
+          "module": {
+            "project-integrations": "integration-module-key"
+          },
+          "signaturePatterns": {
+            "fileName": ".*\.json",
+            "nodeType": [0, 1]
+          }
+        }
+      }
+    ],
+    "project-integrations": [
+      {
+        "key": "integration-module-key",
+        "name": "New Integration",
+        "logo": "/integration-logo.png",
+        "url": "/path/to/integration/module"
+      }
+    ]
+  }
+}
+```
+
+### New Tab
+
+Context menu item opens a new tab with the URL: `baseUrl/options.url`.
+
+```json title="manifest.json"
+{
+  "baseUrl": "https://app.example.com",
+  "modules": {
+    "context-menu": [
+      {
+        "key": "context-menu-key",
+        "name": "Name of Context Menu Item",
+        "description": "Description of Context Menu Item",
+        "options": {
+          "location": "source_file",
+          "type": "new_tab",
+          "url": "/example/path",
+          "signaturePatterns": {
+            "fileName": ".*\.json",
+            "nodeType": [0, 1]
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The human-readable name displayed in the context menu.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> A human-readable description of what the module does.<br />The description will be visible in the Crowdin UI.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">options.location</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Allowed values:</strong> <code>tm</code>, <code>glossary</code>, <code>style_guide</code>, <code>language</code>, <code>screenshot</code>, <code>source_file</code>, <code>translated_file</code></p>
+        <p><strong>Description:</strong> The location in UI where the context menu can be added.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.type</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Allowed values:</strong> <code>modal</code>, <code>new_tab</code>, <code>redirect</code></p>
+        <p><strong>Description:</strong> The type of action this module will perform.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Relative URL.</p>
+        <p>Use it only with <code>new_tab</code> type</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.module</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> Module definition.</p>
+        <p>Use it only with <code>modal</code> and <code>redirect</code> types</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>signaturePatterns</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> Contains criteria used to detect the type of file or node, specifying when the context menu item is shown.</p>
+        <p>Use it only when <code>options.location</code> is set to <code>source_file</code></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns.fileName</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Contains <code>fileName</code> regular expressions used to detect file type.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>signaturePatterns.nodeType</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Allowed values:</strong> <code>0</code> – folder, <code>1</code> – file, <code>2</code> – branch</p>
+        <p><strong>Description:</strong> Array of node types specifying when the context menu item appears.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>crowdin</code>, <code>crowdin-enterprise</code></p>
+        <p><strong>Description:</strong> Set of environments where a module could be installed.<br />
+        This parameter is needed for cross-product applications.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
