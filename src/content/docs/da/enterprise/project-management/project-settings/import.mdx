@@ -1,0 +1,136 @@
+---
+title: Import Settings
+description: Configure how placeholders, duplicates, and word counts are handled
+slug: enterprise/project-settings/import
+sidebar:
+  order: 10
+  label: Import
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import ReadMore from '~/components/ReadMore.astro';
+import assignCustomPlaceholder from '!/enterprise/project-management/settings/custom_placeholders_assign.png';
+
+In the **Import** section of the Project Settings, you can configure how Crowdin should handle placeholders, duplicate strings, and word counts in your project.
+
+## Kildestrenge
+
+Improve the translation consistency and streamline your workflow by unifying placeholders and handling duplicate strings.
+
+### Parameterunificering
+
+Enable this option to transform placeholders into a unified format within the Editor (e.g., displaying both Android `%s` and iOS `%@` as `[%s]`). This improves Translation Memory efficiency by making suggestions completely interchangeable across platforms.
+
+On export, placeholders are converted back to the original syntax. This feature applies only to Android XML, iOS strings, iOS XLIFF, and Apple Strings Catalog.
+
+### Dubletstrenge
+
+You can save time by translating all duplicates with the same translation and hiding these instances from translators. This can affect accuracy.
+
+Crowdin's localization process is based on translating source strings to the defined target languages. Kildestrenge uploades til systemet i lokaliseringsfiler. Each unique source string first uploaded or added (for CSV and other formats supporting [string editing](/enterprise/string-management/#string-editing)) in Crowdin is considered a master string. Alle andre strenge identiske med hovedstrengen, men uploadet/oprettet senere, betragtes som dubletstrenge.
+
+<Aside>
+  In [string-based](/enterprise/creating-project/#string-based-project) projects, duplicate strings are managed using the **Show within a version branch (regular detection)** option, which is enabled by default and cannot be changed.
+</Aside>
+
+#### Dubletstrenghåndtering
+
+If your project contains duplicated strings, you can choose how the system should treat them using the following options:
+
+* **Show** &ndash; translators will translate each instance (string) separately. Dubletstrenge skjules ikke.
+* **Show, but auto-translate them** &ndash; duplicate strings will be automatically translated but remain visible to translators. Når hovedstrengen er oversat, deles dens oversættelse automatisk med alle dubletter. Oversættere kan dog gennemgå og selv genoversætte hver dublet, om nødvendigt. Foretages en unik oversættelse af én bestemt dublet, tilsidesættes den spejlede oversættelse for denne streng alene, hvilket muliggør præcise kontekstspecifik oversættelse uden at påvirke øvrige dubletter. Fjernes en dublets unikke oversættelse, får den automatisk spejlet master-strengsoversættelsen.
+* **Show within a version branch (regular detection)** &ndash; duplicates will be hidden only between [version branches](/enterprise/version-management/).
+* **Show within a version branch (strict detection)** &ndash; duplicates will be hidden only between version branches.
+* **Hide (regular detection)** &ndash; all duplicates will share the same translation.
+* **Hide (strict detection)** &ndash; all duplicates will share the same translation.
+
+Regular duplicate detection &ndash; when comparing strings, Crowdin considers only source texts.
+
+Strict duplicate detection &ndash; when comparing strings, Crowdin considers both string identifiers (keys) and source texts.
+
+<Aside type="tip">
+  If your source files contain strings with apparent identifiers (keys), it's better to use a **strict** version of the Duplicate Strings options. In other cases, feel free to use a **regular** one.
+</Aside>
+
+#### Vis alle dubletter
+
+Ved valg af denne indstilling, vil alle dubletstrenge være synlige for oversættere. Hver dublet kræver separat oversættelse.
+
+💡 **Use case**: works perfectly for projects where the same words might have various meanings depending on the context.
+
+#### Vis, men auto-oversæt dubletter
+
+Ved valg af denne indstilling vises og auto-oversættes alle dubletstrenge. Når master-strengen er oversat, gør alle dubletterne automatiske brug af oversættelsen. Dette lader oversættere tjekke og genoversætte dubletstrenge, hvis nødvendigt.
+
+💡 **Use case**: works excellently if you want to save time but still require automatic translations to be reviewed.
+
+To better illustrate how the **Show, but auto-translate them** option works, consider the following five-string JSON file: two strings are unique, and three strings have identical source text.
+
+```json
+{
+    "hello": "Hej",
+    "welcome": "Velkommen!",
+    "save1": "Gem",
+    "save2": "Gem",
+    "save3": "Gem"
+}
+```
+
+Upon importing this file, the system marks the first of these identical strings (`"save1": "Save"`) as the master string with the "Master" marking, while the subsequent two identical strings (`"save2": "Save"` and `"save3": "Save"`) are labeled as duplicates of this master string with the "Duplicate" marking.
+
+Once you set the Duplicate strings option to **Show, but auto-translate them**, the system keeps all five strings visible to translators and for the master string and its two duplicates, automatic translation propagation is enabled. Det betyder, at master-strengoversættelser automatisk spejles til eksisterende dubletter.
+
+Overvej flg. scenarier:
+
+* *Master string is translated first* &ndash; the system immediately propagates the translation of the master string to its duplicates. Som et resultat vises samme oversættelse for alle tre identiske strenge (master-strengen og dens to dubletter). Oversættere kan dog gennemgå og efter behov genoversætte hver dublet. Foretages en unik oversættelse af én bestemt dublet, tilsidesættes den spejlede oversættelse for denne streng alene, hvilket muliggør præcise kontekstspecifik oversættelse uden at påvirke øvrige dubletter. Fjernes en dublets unikke oversættelse, får den automatisk spejlet master-strengsoversættelsen.
+
+* *One of the duplicates is translated first* &ndash; the system does not propagate the translation of the duplicate to the master string or the other duplicate. Derfor vises én dubletstreng med en oversættelse, mens master-strengen og eksisterende dubletter forbliver uoversatte.
+
+#### Vis i en versionsgren. Dubletter skjules kun mellem versionsgrene
+
+Når denne indstilling er valgt, vil kun master-strengene, som oprindeligt blev uploadet til systemet, være tilgængelige for oversættelse. Alle dubletstrenge får automatisk de oprindelige strenges oversættelser og skjules i alle versionsgrene. Denne indstilling er tilgængelig i to versioner: Regulær dubletdetektion og Striks dubletdetektion. If your source files contain strings with apparent identifiers (keys), it's better to use a *strict* version of this option. In other cases, feel free to use a *regular* one.
+
+Et par af ting at huske på:
+
+* Systemet tjekker altid stien til strengen i grenenes fulde udstrækning. For example, even if the strings are the same in different version branches (`branch1` and `branch2`), but their paths are different (branch1 - `/localization/android.xml` and branch2 - `/localization/apps/android.xml`), they won’t be recognized as duplicates.
+* Denne indstilling fungerer kun for strenge placeret i filer med samme format. For example, if there is the same string in `android.xml` and `ios.strings` files, it won’t be recognized as a duplicate.
+
+💡 **Use case**: works perfectly for continuous projects with various version branches. Lader oversættere arbejde med unikke strenge i separate grene.
+
+#### Skjul alle dubletter
+
+Når denne indstilling er valgt, spotter systemet dubletstrenge i alle filer. Kun de oprindeligt uploadede master-strenge er synlige og skal oversættes. Master-strengoversættelser spejles automatisk til de korresponderende skjulte dubletstrenge. Denne indstilling er tilgængelig i to versioner: Regulær dubletdetektion og Striks dubletdetektion. If your source files contain strings with apparent identifiers (keys), it's better to use a *strict* version of this option. In other cases, feel free to use a *regular* one.
+
+💡 **Use case**: works great for projects with narrow scopes where all duplicates share the same context.
+
+## Ordtælling
+
+Den foretrukne måde, hvorpå Crowdin Enterprise skal tælle ord i projektet, kan prædefineres. Konkret gælder det, hvorvidt HTML-tags skal tælles som almindelige ord eller ej. By default, Crowdin Enterprise considers HTML tags as regular words for most of the supported formats, excluding the following ones: HTML, Front Matter HTML, HAML, MD, Front Matter MD, XML, WEBXML, IDML, XLIFF, XLIFF 2.0, ADOC, DOCX, DITA.
+
+* **Auto (default)** &ndash; HTML tags will be counted as regular words or skipped depending on the source file format.
+* **Count tags** &ndash; all HTML tags will be counted as regular words.
+* **Skip tags** &ndash; all HTML tags won't be counted.
+
+<Aside>
+  When you change the word count option, only newly uploaded words will be counted according to the new settings. Det anbefales derfor at opsætte de foretrukne ordtællerindstillinger inden upload af kildefiler til projektet.
+</Aside>
+
+<ReadMore>
+  More information about Crowdin [Word Counter](/enterprise/word-counter/).
+</ReadMore>
+
+## Assign custom placeholder
+
+Følg disse trin for at tildele den oprettet tilpasset pladsholder til et projekt:
+
+<Steps>
+  1. Open your project and go to **Settings > Import**.
+  2. Click **Assign Custom placeholder**.
+  3. In the appeared dialog, select a placeholder from the **Placeholder** drop-down list and specify the desired order of placeholder execution (useful when you’d like to use multiple custom placeholders within one project), select whether you’d like your custom placeholders to be executed before the default placeholders, whether to allow your project participants to save translations without a placeholder, assign to all or specified formats.
+  4. Click **Save**. <Image src={assignCustomPlaceholder} alt="Assign Custom Placeholder" class="width-xl" />
+</Steps>
+
+<ReadMore>
+  Read more about [Custom Placeholders](/enterprise/custom-placeholders/).
+</ReadMore>

@@ -1,0 +1,424 @@
+---
+title: Crowdin AI
+description: Powerful AI capabilities to improve localization workflows
+slug: crowdin-ai
+sidebar:
+  order: 1
+---
+
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { Badge } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Image } from 'astro:assets';
+import configuringPromptBasic from '!/crowdin/translation-process/crowdin_ai_configuring_prompt_basic.png';
+import configuringPromptAdvanced from '!/crowdin/translation-process/crowdin_ai_configuring_prompt_advanced.png';
+import promptsList from '!/crowdin/translation-process/crowdin_ai_prompts_list.png';
+import configuringProvider from '!/crowdin/translation-process/crowdin_ai_configuring_provider.png';
+
+Crowdin integrates with top AI providers, including OpenAI, Google Gemini, Microsoft Azure OpenAI, and more, allowing you to leverage advanced AI-powered translations that consider additional context at different levels. These translations can be applied to your content with a few clicks using [pre-translation via AI](#pre-translation-via-ai). Additionally, AI in Crowdin can be used for [AI suggestions in the Editor](#using-ai-in-the-editor) and [AI QA checks](#ai-qa-check).
+
+You can expand your AI provider options by installing respective applications from the Crowdin [Store](https://store.crowdin.com/tags/ai).
+
+## Configuring AI
+
+Crowdin AI integration provides powerful capabilities for enhancing localization workflows. Configuring AI involves [setting up providers](#configuring-ai-providers) and [creating prompts](#configuring-ai-prompts).
+
+<Aside type="tip">
+  Click <Icon name="mdi:information" class="inline-icon" /> in the **Prompts** and **Providers** tabs to open the sidebar with configuration suggestions, such as available AI features, prompt requirements, and provider configuration tips.
+</Aside>
+
+### Configuring AI Prompts
+
+Prompt engineering is crucial for guiding AI in understanding context and providing accurate translations. Customizing prompts within Crowdin ensures that AI algorithms comprehend the nuances of your project, resulting in improved translation quality.
+
+* **Contextual Prompts** &ndash; customize prompts to provide contextual information, such as project-specific terminology, style preferences, and target audience considerations. For example, include instructions on translating technical terms consistently or maintaining brand tone across languages.
+* **Placeholder Utilization** &ndash; incorporate placeholders to dynamically insert context-specific information into prompts, enabling AI to generate translations aligned with project requirements.
+* **File-Level Context** &ndash; use file-level context to provide instructions and contextual insights, enhancing AI's understanding of content nuances. Include file descriptions, summaries, or references to glossaries and style guides.
+
+To configure AI prompts, follow these steps:
+
+<Steps>
+  1. Open your profile and select **AI** on the left sidebar.
+  2. In the **Prompts** tab, click <Icon name="mdi:plus" class="inline-icon" />**Add prompt**. If no prompts have been created yet, you can click **Create Default Prompts** to quickly set up pre-configured samples which can be customized to your personal preferences.
+  3. In the appeared dialog, set the prompt parameters:
+     * Select the prompt type (i.e., [Pre-translation & AI Suggestion](#pre-translation-via-ai), [QA check](#ai-qa-check), or Create custom type)
+     * Custom type name (Specific to the custom prompt type)
+     * Use this prompt as the default prompt for AI Suggestion in editor (Specific to Pre-translation & AI Suggestion prompt type)
+     * Title
+     * Model (this also includes the AI Provider)
+     * Advanced settings:
+       * Visibility &ndash; Select projects where a prompt can be used:
+         * All Projects &ndash; The prompt is available in all projects.
+         * Selected Projects &ndash; The prompt is available only in the projects you select. If no projects are selected, or if all assigned projects are later deleted, the prompt will not be available in any project.
+       * Auto-retry on QA issues &ndash; Allows automatically send an additional request to the AI if the received translation fails the QA checks.
+     * Prompt editor mode (i.e., Basic or Advanced)
+     * Additional context (Basic mode) &ndash; specify which data will be included in the prompt using the following fields:
+       <Aside>Context included by default: string context, string identifier (key), translation max. length.</Aside>
+       * Other languages translations &ndash; select specific language translations to be considered by AI as additional context or leave this field as is to use translations from all languages.
+       * Glossary terms &ndash; allows AI to consider domain glossary terms.
+       * TM suggestions &ndash; allows AI to consider TM suggestions.
+       * Style guides &ndash; allows AI to consider the rules, tone, and linguistic preferences defined in the style guides assigned to the project.
+       * Previous and next strings &ndash; allows AI to consider previous and next strings for additional context.
+       * File context &ndash; allows AI to consider a textual description of the file added in the [file settings](/file-management/#file-context) or in the [Editor](/online-editor/#file-context).
+       * AI-Generated File Context &ndash; automatically generate file context when it's missing. If the file context isn’t provided manually, AI will analyze the source content and generate a contextual summary. This summary is used both during pre-translation and as reference material in the Editor. <Aside type="caution">This option is only available in file-based projects and requires the File context option to be enabled.</Aside>
+       * Screenshots &ndash; allows AI to consider visual context from screenshots where the strings are tagged. This enhances accuracy and context awareness. <ReadMore>Read more about [Screenshots](/screenshots/).</ReadMore>
+       * Public project description &ndash; allows AI to consider the public project description.
+       * Snippets &ndash; select reusable content previously created in your Crowdin account's **AI > Snippets** to quickly insert standard text snippets into your prompt.
+       * Evaluation steps (Specific to the QA check prompt type) &ndash; define the criteria the AI uses to evaluate translations. You can customize, remove, or create new steps tailored to your quality requirements.
+       <Image src={configuringPromptBasic} alt="Configuring AI Prompt (Basic Mode)" />
+     * Advanced mode &ndash; click **Advanced mode** to compose your prompt with a higher degree of precision. Use the following placeholders to insert context: <Aside type="tip">Click on the placeholder to copy it for further pasting into the prompt field.</Aside>
+       * `%sourceLanguage%` &ndash; The source language of the project.
+       * `%targetLanguages%` &ndash; A list of all the project’s target languages.
+       * `%targetLanguage%` &ndash; The language the content is translated into.
+       * `%pluralForms%` &ndash; A list of plural forms for the target language.
+       * `%strings%` &ndash; A collection of strings for the current segment, including the string identifier (key), context, text, maximum length, and translations to other languages (if the translations placeholder is specified).
+       * `%translationUnits%` &ndash; A list of translation units (source and translation) for the AI to evaluate during QA checks.
+       * `%fileName%` &ndash; The file name of the current segment.
+       * `%fileContext%` &ndash; The file context of the current segment (provided via the file settings modal in the 'Files' tab).
+       * `%siblingsStrings%` &ndash; The previous and next segments in the file, allowing for contextual translation.
+       * `%filteredStrings%` &ndash; Strings that match the current filter in the Editor, provided to AI for improved evaluation accuracy and efficiency.
+       * `%projectName%` &ndash; Crowdin project name.
+       * `%projectPublicDescription%` &ndash; Project public description.
+       * `%assignedStyleGuides%` &ndash; The style guides assigned to the project.
+       * Snippets &ndash; insert reusable content previously defined in your Crowdin account's **AI > Snippets** by using the `%custom:snippetName%` format.
+       <Image src={configuringPromptAdvanced} alt="Configuring AI Prompt (Advanced Mode)" />
+     <Aside type="tip">
+             Use the **Reset to default** button to restore the original Crowdin default prompt content and placeholders. This is useful if you’d like to discard changes and start from scratch before saving.
+     </Aside>
+  4. Klik på **Opret**.
+</Steps>
+
+#### Creating Prompts in Project Settings
+
+You can also create prompts directly from a project’s **Settings > AI** section. Prompts created this way will have their visibility set only to that specific project by default.
+
+<ReadMore>
+  Read more about [AI Settings in a project](/project-settings/ai/).
+</ReadMore>
+
+### Managing AI Prompts
+
+Managing AI prompts in Crowdin involves various operations such as filtering and searching, editing, cloning, and deleting AI prompts. Fnd vejledninger til hver operation nedenfor.
+
+#### Viewing and Filtering AI Prompts
+
+Once you open the **AI** page, you can view and search for prompts in the **Prompts** tab.
+
+You can view the list of added prompts with the following details:
+
+* **Name** – The name of the prompt.
+* **Visibility** – Shows a counter of how many projects the prompt is available in with the list of projects (with clickable links).
+* **Type** – The prompt's type (e.g., Pre-translation & AI Suggestion, QA check, Custom type).
+* **Model** – The AI model used by the prompt. A status indicator next to the model name shows if the prompt is ready to use:
+  * A **green dot** indicates the prompt is configured correctly and ready for use.
+  * A **red dot** indicates an issue with the prompt's configuration (e.g., the selected provider is disabled). Hover over the model name to see the specific error message.
+* **Created** – The date the prompt was created.
+* **Created by** – The user who created the prompt.
+* **Last modified** – The date the prompt was last updated.
+* **Modified by** – The user who last modified the prompt.
+* **Last used by** – The user who last used the prompt.
+* **Last used** – The date the prompt was last used.
+* **Usage count** – The total number of times the prompt has been used.
+
+<Aside type="tip">
+  Some columns like **Created by**, **Last modified**, and **Usage count** are hidden by default. Click the column selector icon <Icon name="mdi:view-column" class="inline-icon" /> to choose which columns to display.
+</Aside>
+
+To find a specific prompt, use the **Search** field. To narrow down the list, click the **Filters** button, which allows you to filter by **Type**, **Created** date, **Created by** user, **Last modified** date, **Modified by** user, **Last used by** user, and **Last used** date.
+
+<Image src={promptsList} alt="Prompts List" />
+
+#### Editing AI Prompts
+
+If you need to adjust your already configured prompt, you can simply edit it.
+
+To edit AI prompts, follow these steps:
+
+<Steps>
+  1. Open your profile and select **AI** on the left sidebar.
+  2. In the **Prompts** tab, click <Icon name="mdi:dots-horizontal" class="inline-icon" /> toward the needed prompt and select **Edit**.
+  3. Modify the prompt as needed and click **Update** to save changes.
+</Steps>
+
+When editing a prompt, you'll find the **Prompt metadata** section. This information provides a clear audit trail for collaboration and troubleshooting. By tracking creation, modification, and usage data, you can understand which prompts are most effective, identify popular prompts for optimization, and manage costs more efficiently. The section contains the following read-only details:
+
+* **Created by** – The user who created the prompt.
+* **Created** – The date and time the prompt was created.
+* **Modified by** – The user who last modified the prompt.
+* **Last modified** – The date and time the prompt was last modified.
+* **Last used by** – The user who last used the prompt.
+* **Last used** – The date and time the prompt was last used.
+* **Usage count** – The total number of requests made to the AI using this prompt.
+
+Editing prompts allows you to update and improve them as needed to ensure they remain effective and aligned with your requirements. If you don't want to lose the current prompt configuration and are uncertain about the changes, consider [cloning](#cloning-ai-prompts) your prompt and experimenting with the copy.
+
+#### Cloning AI Prompts
+
+Cloning AI prompts allows you to experiment with and refine prompt configurations without altering the original. This feature is particularly useful for testing improved versions of prompts while preserving the initial setup.
+
+To clone AI prompts, follow these steps:
+
+<Steps>
+  1. Open your profile and select **AI** on the left sidebar.
+  2. In the **Prompts** tab, click <Icon name="mdi:dots-horizontal" class="inline-icon" /> toward the needed prompt and select **Clone**.
+  3. As a result, a copy of the prompt will appear in the prompt list.
+</Steps>
+
+You can then [edit](#editing-ai-prompts) the cloned prompt to experiment with different configurations. This allows you to safely test enhancements and optimize performance without risking the loss of the original prompt configuration.
+
+#### Deleting AI Prompts
+
+Deleting AI prompts is a straightforward process, but it should be done with caution to avoid losing valuable configurations. This action is useful when you no longer need a specific prompt or want to clean up unused prompts.
+
+To delete AI prompts, follow these steps:
+
+<Steps>
+  1. Open your profile and select **AI** on the left sidebar.
+  2. In the **Prompts** tab, click <Icon name="mdi:dots-horizontal" class="inline-icon" /> toward the needed prompt and select **Remove**.
+  3. Bekræft sletningen.
+</Steps>
+
+<Aside>
+  Be sure to review the prompt before deletion to ensure it is no longer needed, as this action is irreversible and deleted prompts cannot be restored.
+</Aside>
+
+### Configuring AI Providers
+
+Crowdin supports various AI providers, each offering unique models and features for translation tasks. By configuring providers, you can tailor AI functionality to suit your specific localization needs. Whether using managed by Crowdin services or integrating your own API keys, Crowdin enables seamless integration with AI services.
+
+In the **Providers** tab, you can view the list of providers with the following details:
+
+* **Name**
+* **Status**: Enabled, Disabled.
+* **Managed by Crowdin**: yes, no.
+* **Prompts count**: if there are one or more prompts configured with a particular provider, you'll see the actual number of prompts, otherwise you'll see the **Create** button that redirects to the prompt creation dialog.
+
+Crowdin AI providers are categorized into two types. System providers (e.g., OpenAI, Microsoft Azure OpenAI, Google Gemini) are built-in and available for immediate configuration. Additionally, you can expand your options by installing other AI providers from the Crowdin Store.
+
+Currently, Crowdin supports the following AI providers:
+
+* Crowdin AI <Badge text="System" variant="note" size="small" />
+* OpenAI <Badge text="System" variant="note" size="small" />
+* Microsoft Azure OpenAI <Badge text="System" variant="note" size="small" />
+* Google Gemini <Badge text="System" variant="note" size="small" />
+* Mistral AI <Badge text="System" variant="note" size="small" />
+* Anthropic <Badge text="System" variant="note" size="small" />
+* xAI <Badge text="System" variant="note" size="small" />
+* IBM Watsonx <Badge text="System" variant="note" size="small" />
+* DeepSeek <Badge text="System" variant="note" size="small" />
+* [Groq](https://store.crowdin.com/groq)
+* [Cloudflare Workers AI](https://store.crowdin.com/cloudflare-workers-ai)
+* [Fireworks AI](https://store.crowdin.com/fireworks-ai)
+* [Together AI](https://store.crowdin.com/together-ai)
+* [OpenRouter](https://store.crowdin.com/openrouter)
+* [Cohere](https://store.crowdin.com/cohere)
+* [Replicate](https://store.crowdin.com/replicate)
+* [Credal](https://store.crowdin.com/credal)
+* [AWS Bedrock](https://store.crowdin.com/aws-bedrock)
+* [Alibaba Cloud Model Studio](https://store.crowdin.com/alibaba-cloud-model-studio)
+* [Xiaomi MiMo](https://store.crowdin.com/xiaomi-mimo)
+
+New AI providers are added regularly.
+
+When configuring AI providers, you can choose from two possible options:
+
+* **Use your own API keys** &ndash; Crowdin recommends this option if data security is a concern and for enhanced privacy and ownership. This option requires an external registration for getting API keys/credentials from AI providers.
+* **Use Managed by Crowdin service** &ndash; simplified AI integration without the need to manage your own API keys. Allows you to leverage Crowdin's default settings and infrastructure to access AI capabilities in a convenient way. Ideal for straightforward, quick tasks. To start using AI providers managed by Crowdin, you just need to add funds to your balance.
+
+To configure an AI provider, follow these steps:
+
+<Steps>
+  1. Open your profile and select **AI** on the left sidebar.
+  2. In the **Providers** tab, click <Icon name="mdi:dots-horizontal" class="inline-icon" /> toward the needed provider and select **Edit**. Alternatively, just double-click on the needed provider.
+  3. Select **Enabled**.
+  4. Choose your credential type:
+     * To use the [Managed by Crowdin service](/crowdin-credits/), select **\{Provider} managed by Crowdin**. In this case, you'll need to [add funds to your account balance](#adding-funds-to-account-balance).
+     * To use your own account, select **Use my own API key** and enter the required credentials. For instructions on generating an API key, please refer to your AI provider's official documentation. Some AI providers may also require additional specific credentials. See the [Provider-Specific Credentials](#provider-specific-credentials) section below for details.
+  5. *(Optional)* Click **Advanced settings** to access additional options:
+     * **Override Base URL** &ndash; Allows you to direct AI provider requests to a custom or region-specific endpoint instead of the default URL. This is useful if you are using a proxy or consuming the AI from a third-party service that provides a custom endpoint. Otherwise, you can leave this field blank.
+       <Aside>
+                 * This option is not available when using the **Managed by Crowdin** service.
+                 * For Microsoft Azure OpenAI, Crowdin expects the default Azure URL structure. For example: `https://{baseUrl}/deployments/{deploymentName}/chat/completions`
+       </Aside>
+  6. Click **Update**.
+</Steps>
+
+<Image src={configuringProvider} alt="Configuring AI Provider" />
+
+#### Provider-Specific Credentials
+
+Some AI providers require additional information beyond a standard API key for authentication when you use your own credentials.
+
+##### Google Gemini
+
+When configuring Google Gemini, you will need to provide the following credentials:
+
+* **Project ID**: Your unique Google Cloud Project ID. You can find this on the dashboard of your Google Cloud Console.
+
+* **Region**: The region where your model is hosted. Ensure the model you plan to use is available in the selected region. You can find this on your Vertex AI dashboard. See the official Google Cloud documentation for a list of [available Gemini models and regions](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations).
+
+* **Service Account Key**: A JSON file used for authentication. To get this file:
+
+<Steps>
+  1. In your Google Cloud project, go to **IAM & Admin > Service Accounts**.
+  2. Create a new service account or select an existing one.
+  3. Grant it the **Vertex AI User** role (`roles/aiplatform.user`).
+  4. Go to the **Keys** tab for that service account, click **Add Key > Create new key**, select **JSON**, and click **Create**. The key will be downloaded automatically.
+  5. In Crowdin, click **Choose file** to upload this JSON key.
+</Steps>
+
+##### Microsoft Azure OpenAI
+
+When configuring Microsoft Azure OpenAI, you will need to provide the following credentials:
+
+* **Resource name**: The name of your Azure OpenAI service resource, which you can find in your main Azure portal.
+* **Deployment name**: The name you assigned to your deployment.
+* **API Version**: The API version required for your model. You can typically find the recommended version in the deployment's properties or in the code samples provided by Azure. For example: `2024-02-01`.
+
+##### IBM Watsonx
+
+When configuring IBM Watsonx, you will need to provide the following credentials:
+
+* **Project ID**: Your Watsonx.ai project ID. To find it, navigate to your project, go to the **Manage** tab, and copy the **Project ID** from the *General* section.
+* **Region**: The region where your Watsonx project is located. You can find this on your project dashboard. See the official IBM Cloud documentation for a list of [available regions for watsonx.ai](https://dataplatform.cloud.ibm.com/docs/content/wsj/getting-started/regional-datactr.html).
+
+### Disabling AI Providers
+
+If needed, you can disable any of the previously enabled providers at any time.
+
+To disable the AI provider, follow these steps:
+
+<Steps>
+  1. Open your profile and select **AI** on the left sidebar.
+  2. In the **Providers** tab, click <Icon name="mdi:dots-horizontal" class="inline-icon" /> toward the needed provider and select **Disable**. Alternatively, double-click on the needed provider and clear **Enabled** in the provider's settings.
+</Steps>
+
+### Adding Funds to Account Balance
+
+MT engines and AI models managed by Crowdin are separately paid services. To use them, you first need to add funds to your Crowdin account balance.
+
+<ReadMore>
+  Read more about [Adding Funds to Account Balance](/crowdin-credits/#adding-funds-to-account-balance).
+</ReadMore>
+
+### Snippets for AI Prompts
+
+Snippets are reusable pieces of information that help AI understand your project better. They provide context about your company, product, or specific requirements like brand voice and target audience. Managing this information as snippets saves time and helps generate better, more consistent translations.
+
+In the **Snippets** tab, you can view snippets with the following details:
+
+* **Name** – the unique identifier used to insert the snippet into prompts.
+* **Description** – a brief explanation of the snippet's purpose.
+* **Created at** – date the snippet was created.
+
+Use the **Search** field to quickly find specific snippets.
+
+#### Creating Snippets
+
+To create a new snippet, follow these steps:
+
+<Steps>
+  1. Click <Icon name="mdi:plus" class="inline-icon" />**Add Snippet** in the **Snippets** tab.
+  2. In the **Add Snippet** dialog, fill in the following fields:
+     * **Name** – A unique identifier for your snippet (e.g., `company-description` or `target-audience`).
+     * **Description** – A brief summary of the snippet's purpose for easy identification.
+     * **Content** – The actual text that will be inserted into prompts when the snippet is used.
+  3. Klik på **Opret**.
+</Steps>
+
+#### Using Snippets in Prompts
+
+Once created, snippets can be inserted into any AI prompt:
+
+* In **Basic mode**, select one or more snippets from the dropdown menu in the **Snippets** section.
+* In **Advanced mode**, insert a snippet using its placeholder format: `%custom:snippetName%`. For example, a snippet with the name `company-description` would be inserted as `%custom:company-description%`.
+
+#### Managing Existing Snippets
+
+To edit or delete a snippet, click <Icon name="mdi:dots-horizontal" class="inline-icon" /> in the *Actions* column on the desired snippet and select **Edit** or **Delete**. Alternatively, just double-click it to edit.
+
+### AI Settings for the Account
+
+To configure default AI settings for your Crowdin account, open your profile and go to **AI > Settings**. These global settings will be applied by default to all new projects but can be overridden for each project in its **Settings > AI** section.
+
+For each setting, you can either select an existing prompt from the drop-down menu or click <Icon name="mdi:plus" class="inline-icon" /> to create a new one. Clicking the plus icon will open the prompt creation dialog with the appropriate prompt type pre-selected.
+
+#### Præoversættelse
+
+Select a default prompt with the **Pre-translation & AI Suggestion** type. This prompt will be automatically selected when you run pre-translation via AI in any project, speeding up the configuration process. You can still choose a different prompt before running the pre-translation.
+
+#### Editor AI Suggestion
+
+Select a default prompt with the **Pre-translation & AI Suggestion** type for AI suggestions in the Editor. If no prompt is selected, AI suggestions will not be shown in the **Context & Translations** section.
+
+#### AI QA Check {#ai-qa-check-account-settings}
+
+Select the default **QA check** type prompt to be used for AI-powered quality assurance across all projects. If no account-wide prompt is configured, the AI-powered check will not be applied unless a prompt is selected in a specific project's Settings.
+
+<LinkCard title="AI Prompts in the Project Settings" description="Configure and manage AI Prompts for use in a project." href="/project-settings/ai/" />
+
+## Pre-translation via AI
+
+Pre-translation via AI allows you to use AI Models to pre-translate your content with high-quality, context-aware translations.
+
+<LinkCard title="Præoversættelse" description="Explore various pre-translation options to speed up your project localization." href="/pre-translation/" />
+
+<Aside type="tip">
+  You can also [configure an automatic AI Pre-translate](/project-settings/pre-translate/#ai-pre-translate) for new content in your project.
+</Aside>
+
+## Using AI in the Editor
+
+To use AI in the Editor, configure a prompt with the **Pre-translation & AI Suggestion** type and select it in **AI > Settings > Editor AI Suggestion**.
+
+Once configured, translators can use AI-powered translation suggestions in the **Context & Translations** section for each string.
+
+For advanced chat-based assistance in the Editor, use the Crowdin Copilot app:
+
+<LinkCard title="Crowdin Copilot App" description="Use the Crowdin Copilot Store app for context-aware AI chat and task automation in Crowdin." href="https://store.crowdin.com/crowdin-copilot" target="_blank" />
+
+## AI QA Check
+
+AI QA Check uses AI to automatically evaluate translations against defined quality standards. It helps translators quickly identify and resolve issues, ensuring accuracy, consistency, and compliance with project-specific requirements. AI QA Check complements and extends default QA Checks by providing comprehensive flexibility, reducing manual review efforts, and enhancing overall translation quality.
+
+### How AI QA Check Works
+
+When enabled, AI QA Check evaluates each submitted translation against a set of customizable evaluation criteria (Evaluation steps) defined in the configured QA Check prompt. Issues detected by the AI appear directly within the Editor as warnings, along with concise suggestions for corrections.
+
+Evaluation steps may include:
+
+* **Accuracy** – Ensuring no content is omitted, added, or incorrectly translated.
+* **Fluency** – Checking grammar, spelling, punctuation, and readability.
+* **Terminology** – Confirming consistent and correct use of project-specific terms.
+* **Style** – Verifying translations align with defined stylistic guidelines.
+* **Design** – Ensuring translations fit design constraints, including length and markup.
+* **Locale Convention** – Adapting formats for dates, currencies, addresses, and more.
+* **Cultural Adaptation (Verity)** – Localizing culture-specific references appropriately.
+* **General Issues** – Identifying other miscellaneous quality issues.
+
+For example, if a translation deviates from established glossary terms or fails to meet local formatting standards, the AI will highlight this and offer recommendations, guiding translators to achieve compliance and consistency.
+
+### Setting Up AI QA Check
+
+To use AI QA Check, create and configure a [QA Check prompt](#configuring-ai-prompts). Each QA Check prompt contains clearly defined evaluation steps the AI follows to detect translation issues. Unlike other AI prompts, the QA Check prompt includes a dedicated **Evaluation steps** section, allowing you to customize, edit, or expand upon predefined checks.
+
+You can also enhance the accuracy of the AI’s analysis by including various types of additional context relevant to your project's content.
+
+After configuration, you can assign a QA Check prompt as the default for all projects under your account or for individual projects.
+
+### Applying AI QA Check in Projects
+
+To enable AI QA Check in your projects, follow these steps:
+
+<Steps>
+  1. [Create and enable a QA Check prompt](#configuring-ai-prompts).
+  2. Set it as the default QA prompt in the project's **Settings > AI > Settings**.
+  3. Enable the **AI-powered check** in the project's **Settings > QA Checks**.
+</Steps>
+
+Once set, the AI continuously checks submitted translations, ensuring consistent compliance with your project's quality guidelines.
+
+## Se også
+
+<LinkCard title="How to Get the Most from the AI Translations" description="Discover how AI revolutionizes the localization process and workflow by enhancing translation accuracy through contextual understanding." href="https://crowdin.com/blog/2024/04/24/how-to-get-the-most-from-the-ai-translations" target="_blank" />

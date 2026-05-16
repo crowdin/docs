@@ -1,0 +1,306 @@
+---
+title: Notifikationer
+description: Get notified about the new events that happen in Crowdin
+slug: enterprise/account-notifications
+sidebar:
+  order: 0
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import { Icon } from 'astro-icon/components';
+import slackAuthorize from '!/crowdin/getting-started/account/slack_authorize.png';
+import slackCrowdinNotifications from '!/crowdin/getting-started/account/slack_crowdin_notifications.png';
+import customNotificationsSetUp from '!/enterprise/getting-started/account/custom_notifications_set_up.png';
+import customNotificationsPayload from '!/enterprise/getting-started/account/custom_notifications_custom_payload.png';
+
+Crowdin Enterprise offers several types of notifications to meet the different needs of users, such as the following:
+
+* *Project Updates*: Notify users of changes to the project, such as new content to translate or updates to existing content.
+* *Translation Activity*: Notify users of new translations, approvals, or comments on translations.
+* *Task Management*: These notifications inform users about new tasks, deadlines and task completions.
+* *Team Communication*: These alerts notify users of messages and discussions within the project.
+
+To see the notifications, click on the bell icon <Icon name="mdi:bell" class="inline-icon" /> in the top right corner of the page.
+
+<LinkCard title="Notification Settings" href="/enterprise/account-settings/#notifications" />
+
+## Slack-integration
+
+With updates sent directly to Slack, you'll instantly know what's happening in the Crowdin Enterprise projects you manage or contribute to. After integrating your Crowdin Enterprise account with Slack, select the notifications you'd like to receive, and the Crowdin bot will send them as direct messages.
+
+<Aside>
+  Slack integration for Crowdin Enterprise must be configured for each individual user who wants to receive notifications in Slack.
+</Aside>
+
+To receive Crowdin Enterprise notifications via Slack, follow these steps:
+
+<Steps>
+  1. Open your **Account Settings** and select **Notifications** on the left sidebar.
+  2. Select **Slack**, then click **Connect**.
+  3. Godkend forbindelsen med Crowdin fra Slack. <Image src={slackAuthorize} alt="Authorize Slack" class="width-lg" />
+  4. Go back to Crowdin and select the notifications you want to receive in Slack.
+</Steps>
+
+<ReadMore>
+  Read More about [Global Notification Settings](/enterprise/account-settings/#notifications).
+</ReadMore>
+
+You will receive the selected types of notifications as direct messages from the Crowdin bot.
+
+<Image src={slackCrowdinNotifications} alt="Crowdin Notifications in Slack" />
+
+You can disable notifications and disconnect Slack from Crowdin Enterprise anytime.
+
+## Tilpassede notifikationer
+
+Tilpassede notifikationer adviserer og assisterer med at indsamle oplysninger om nye begivenheder, som sker i Crowdin Enterprise. Når tilpassede notifikationer opsættes for den relevante konto, begynder Crowdin Enterprise at sende POST-anmodninger med data til den tilpassede notifikations-URL via HTTP.
+
+### Brugsstudier
+
+Tilpassede notifikationer kan opsættes for at opbygge integrationer med tjenesterne eller med en backend. F.eks.:
+
+* Opsæt tilpassede notifikationer for at sende notifikationer til det anvendte system.
+* Videresend oplysninger til tredjepartstjenester med specifikke forespørgselskrav (f.eks. indholdstype, headers, dataindhold).
+* Opret tilpassede integrationer med Crowdin Enterprise.
+
+### Configuring
+
+Følg disse trin for at opsætte tilpassede notifikationer i Crowdin Enterprise:
+
+<Steps>
+  1. Open your **Account Settings** and select **Notifications** on the left sidebar.
+  2. Click **Custom notifications** to start configuring your custom notifications.
+</Steps>
+
+Flg. oplysninger skal angives for at opsætte tilpassede notifikationer:
+
+* URL'en, hvortil callback skal sendes.
+* The content type for the POST request method (`multipart/form-data`, `application/json`, or `application/x-www-form-urlencoded`).
+
+Alternativt kan der føjes særlige headers til tilpassede notifikationer. De kan bruges til ekstra sikkerhed som en godkendelsesmetode og meget mere. Tilføjes f.eks. headers, kan det tilpassede notifikationsslutpunkt bekræfte dem og sikre, at oplysninger kommer fra Crowdin Enterprise.
+
+When configuring custom notifications, click **Test notification** to see how your application will react to that call. Once finished with the configuration, click **Save**.
+
+<Image src={customNotificationsSetUp} alt="Opsætning af tilpassede notifikationer" />
+
+Det kan, afhængigt af tilgangen til tilpasset notifikationsstyring, være nødvendigt at føje dedikerede Crowdin Enterprise IP-adresser til firewall'en for at tillade Crowdin Enterprise at åbne de præopsatte tilpassede notifikations-URL'er.
+
+<ReadMore>
+  Read more about [IP Addresses](/developer/ip-addresses/).
+</ReadMore>
+
+### Tilpassede payloads
+
+Tilpassede notifikationers dataindhold kan tilpasses for at tilføje og organisere elementerne jf. systemkrav. To get informative and user-friendly notifications, make sure to include the `{{notification-message}}` placeholder in your payload.
+
+<Image src={customNotificationsPayload} alt="Tilpasset payload" class="width-xl" />
+
+### Begivenhedstyper
+
+Once you configured custom notifications, you can select the event types you’d like to receive the notifications about:
+
+You can configure custom notifications for the following event types:
+
+<Include file="notification-types-enterprise.mdx" />
+
+### Manage Custom Notifications
+
+You can edit or delete custom notifications in the **Custom notifications** section of the **Notifications** page.
+
+### Configuring for Discord {#discord}
+
+To set up Custom Notifications from Crowdin Enterprise in Discord, follow the steps below.
+
+#### Creating Discord Account
+
+If you don't have a Discord account already, you will need to [create one](https://discord.com/register).
+
+<Aside>
+  You can configure custom notifications from Crowdin Enterprise only via the Discord desktop app or Discord web interface. Once configured, you'll be able to receive these notifications via Discord mobile apps as well.
+</Aside>
+
+Download and install the [Discord desktop app](https://discord.com/download). Alternatively, you may use the Discord web interface for further configurations.
+
+#### Creating Discord Webhook
+
+To receive notifications in Discord, you need to create a webhook. Once finished, copy the webhook URL. You'll need it for configurations on the Crowdin Enterprise side.
+
+<ReadMore>
+  Read more about [creating a Discord webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks).
+</ReadMore>
+
+#### Configuring Custom Notifications Channel {#custom-channel-discord}
+
+<Steps>
+  1. Go to **Account Settings > Notifications**.
+  2. Click **Custom notifications**.
+  3. In the appeared dialog, paste the Discord webhook URL in the **URL** field.
+  4. Select **application/json** for the **Content type**.
+  5. Paste the following payload in the **Payload** field:
+     ```json
+     {
+       "content": "{{notification-message}}"
+     }
+     ```
+  6. Click **Test notification** to receive a test message from Crowdin Enterprise to your Discord channel.
+  7. Once finished with the configuration, click **Save**.
+</Steps>
+
+### Configuring for Google Chat {#google-chat}
+
+To set up Custom Notifications from Crowdin Enterprise in Google Chat, follow the steps below.
+
+#### Creating Google Account
+
+If you already have a Google account, it gives you access to many Google products, including Google Chat. If you don't have a Google account, you will need to [create one](https://accounts.google.com/signup).
+
+Download and install the [Google Chat desktop app](https://chat.google.com/download/). Alternatively, you may use the Google Chat web interface for further configurations.
+
+#### Creating Google Chat Webhook
+
+To receive notifications in Google Chat, you need to create a webhook. Once finished, copy the webhook URL. You'll need it for configurations on the Crowdin Enterprise side.
+
+<ReadMore>
+  Read more about [creating a Google Chat webhook](https://developers.google.com/chat/how-tos/webhooks#step_1_register_the_incoming_webhook).
+</ReadMore>
+
+#### Configuring Custom Notifications Channel {#custom-channel-google-chat}
+
+<Steps>
+  1. Go to **Account Settings > Notifications**.
+  2. Click **Custom notifications**.
+  3. In the appeared dialog, paste the Google Chat webhook URL in the **URL** field.
+  4. Select **application/json** for the **Content type**.
+  5. Paste the following payload in the **Payload** field:
+     ```json
+     {
+       "text": "{{notification-message}}"
+     }
+     ```
+  6. Click **Test notification** to receive a test message from Crowdin Enterprise to your Google Chat channel.
+  7. Once finished with the configuration, click **Save**.
+</Steps>
+
+### Configuring for Microsoft Teams {#microsoft-teams}
+
+To set up Custom Notifications from Crowdin Enterprise in Microsoft Teams, follow the steps below.
+
+#### Creating Microsoft Teams Account
+
+If you don't have a Microsoft Teams account already, you will need to [create one](https://go.microsoft.com/fwlink/p/?linkid=2123761\&lm=deeplink\&lmsrc=NeutralHomePageWeb\&cmpid=FreemiumSignUpHero).
+
+Download and install the [Microsoft Teams desktop app](https://www.microsoft.com/en-us/microsoft-teams/download-app). Alternatively, you may use the Microsoft Teams web interface for further configurations.
+
+#### Creating Microsoft Teams Webhook
+
+To receive notifications in Microsoft Teams, you need to create a webhook. Once finished, copy the webhook URL. You'll need it for configurations on the Crowdin Enterprise side.
+
+<ReadMore>
+  Read more about [creating a Microsoft Teams webhook](https://docs.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook).
+</ReadMore>
+
+#### Configuring Custom Notifications Channel {#custom-channel-microsoft-teams}
+
+<Steps>
+  1. Go to **Account Settings > Notifications**.
+  2. Click **Custom notifications**.
+  3. In the appeared dialog, paste the Microsoft Teams webhook URL in the **URL** field.
+  4. Select **application/json** for the **Content type**.
+  5. Paste the following payload in the **Payload** field:
+     ```json
+     {
+       "text": "{{notification-message}}"
+     }
+     ```
+  6. Click **Test notification** to receive a test message from Crowdin Enterprise to your Microsoft Teams channel.
+  7. Once finished with the configuration, click **Save**.
+</Steps>
+
+#### Per-project notifications with the Microsoft Teams App
+
+Custom notifications allow you to receive your account-specific notifications from Crowdin Enterprise. If you'd like to receive notifications related to some specific project you manage in Crowdin Enterprise, feel free to use our [Microsoft Teams app](https://store.crowdin.com/teams).
+
+### Configuring for Telegram {#telegram}
+
+To set up Custom Notifications from Crowdin Enterprise in Telegram, follow the steps below.
+
+#### Oprettelse af en Telegram-konto
+
+Haves en Telegram-konto ikke, vil en sådan skulle oprettes via en mobil. Telegram bruger telefonnummeret som primær legitimationsoplysninger, også ifm. kontologin.
+
+So firstly, download and install the Telegram app using [Android](https://telegram.org/dl/android) or [iOS](https://telegram.org/dl/ios).
+Once signed up, you may use the [Telegram web interface](https://telegram.org/dl/webogram) with a PC or Mac to simplify further configurations, but this part is up to you.
+
+#### Oprettelse af en Telegram-bot
+
+For at modtage notifikationer i Telegram, skal en bot først oprettes. Efter oprettelse, forsynes man med en bots API-token. Husk at gemme dette, da det skal bruges senere.
+
+<ReadMore>
+  Read more about [creating a Telegram bot](https://core.telegram.org/bots#creating-a-new-bot).
+</ReadMore>
+
+#### Opsætning af Telegram-kanal
+
+The next step is to create a public Telegram channel which will be used to get notifications from Crowdin Enterprise. Later you'll be able to change the channel's privacy if needed.
+
+Følg disse trin for at oprette en Telegram-kanal:
+
+<Steps>
+  1. Åbn Telegram på enheden.
+  2. Click on the pen icon and select **New Channel**.
+  3. Name your channel in the **Channel name** field.
+  4. *(Optional)* Specify a channel description.
+  5. *(Optional)* Click on the camera icon to set a display picture for your channel.
+  6. Click **Next** in the top-right corner.
+  7. Select **Public** channel type.
+  8. Angiv et permanent link til kanalen. Dette link vil folk kunne bruge til at søge efter og tilmelde sig kanalen.
+  9. Click **Next** in the top-right corner.
+  10. *(Optional)* In this step, Telegram will ask you to add subscribers to your Telegram channel. Vælg de kontakter, som ønskes tilføjet, herunder den nyoprettede bot (sørg for at bot'en har Admin-tilladelser). Man kan vælge ikke at tilføje medlemmer pt., da dette kan gøres senere.
+  11. Click **Next** in the top-right corner to continue and create your channel on Telegram.
+</Steps>
+
+#### Configuring Custom Notifications Channel {#custom-channel-telegram}
+
+<Steps>
+  1. Go to **Account Settings > Notifications**.
+  2. Click **Custom notifications**.
+  3. In the appeared dialog, specify the **URL** in the following format: `https://api.telegram.org/bot{bot_API_token}/sendMessage`.
+  4. Select **application/json** for the **Content type**.
+  5. Paste the following payload in the **Payload** field:
+     ```json
+     {
+       "chat_id": "{public_chat_id}",
+       "text": "{{notification-message}}"
+     }
+     ```
+     where `{public_chat_id}` &ndash; Your public chat id you specified for your channel link during the Telegram channel configuration.
+  6. Click **Test notification** to receive a test message from Crowdin Enterprise to your Telegram channel.
+  7. Once finished with the configuration, click **Save**.
+</Steps>
+
+#### Skift af Telegram-kanaltype
+
+If you'd like to make your Telegram channel private and keep receiving notifications from Crowdin Enterprise, follow these steps:
+
+<Steps>
+  1. First of all you need to acquire your Telegram channel's original chat id by visiting: `https://api.telegram.org/bot{bot_API_token}/sendMessage?chat_id={public_chat_id}&text=Test`
+  2. Man får et svar i et JSON-format indeholdende ens Telegram-kanals oprindelige chat-id.
+  3. In Crowdin Enterprise, open your **Account Settings** and select **Notifications** on the left sidebar.
+  4. Click **Custom notifications**.
+  5. In the appeared dialog, modify the **URL** by replacing the chat id with the one received in the JSON response above.
+  6. Click **Save**.
+  7. Åbn kanalen i Telegram.
+  8. Click on your channel name and click **Edit**.
+  9. Click **Channel Type**.
+  10. Select **Private** and click **Done**.
+</Steps>
+
+<Aside>
+  Make sure to replace `{bot_API_token}` and `{public_chat_id}` with your actual Telegram bot API token and public chat id.
+</Aside>

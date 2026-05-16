@@ -1,0 +1,130 @@
+---
+title: ICU-meddelelsesyntaks
+description: Use ICU Message format to handle language-specific nuances
+slug: icu-message-syntax
+---
+
+import { Image } from 'astro:assets';
+import { Aside, LinkCard } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import icuEditor from '!/crowdin/online-editor/icu_editor.png';
+import icuSyntaxError from '!/crowdin/online-editor/icu_syntax_error.png';
+
+Crowdin supports ICU Message syntax, which is used to help express the subtleties of language-specific spelling, grammar, and formatting in translations.
+
+Strings formatted in the ICU Message syntax can have different types of replacements called **arguments**.
+Each argument is enclosed in single curly braces (e.g., `{variable}`) and refers to a value in the input data. Please note that using double curly braces (e.g., `{{variable}}`) is not supported and will cause syntax errors. Parametre af flg. typer understøttes i Crowdin: Nummer, dato, tid, vælg og flertal.
+
+### ICU Message-syntaks i Editor
+
+ICU syntax arguments are always highlighted in the [Editor](/online-editor/), so you know which part of the string shouldn’t be translated.
+Ændre placering af argumenter i oversættelsen for at følge målsprogets naturlige ordrækkefølge.
+Der er også en forhåndsvisningstilstand, der muliggør at se, hvordan oversættelsen vil blive vist i brugerfladen for at sikre, at alle de oversætbare elementer oversættes.
+
+<Image src={icuEditor} alt="ICU Message-syntaks i Redigeringsværktøjet" />
+
+<LinkCard title="The Ultimate Guide to ICU Message Format" description="This article will cover the ICU i18n and ICU message format basics, and how Crowdin handles it." href="https://crowdin.com/blog/2022/04/13/icu-guide" target="_blank" />
+
+## Flertalsform
+
+Plural type is used to handle plural category variations, as each language has its own set of plural categories (for example, English has "one" and "other", while Ukrainian has "one", "few", "many", and "other").
+
+```json
+You {itemCount, plural,
+    =0 {have no projects}
+    one {have # project}
+    other {have # projects}
+}.
+```
+
+Flg. korte tags benyttes til bestemmelse af flertalskategorierne:
+
+* nul
+* en (ental)
+* to (dobbelt)
+* få (paucal)
+* mange (også brugt til brøker, hvis de har en separat klasse)
+* andre (obligatorisk — generel flertalsform — også brugt, hvis sproget kun har én enkelt form)
+
+I Editor behøves der ikke manuelt tilføjes eller slettes flertalskategorier til de udførte oversættelser.
+Just click **Copy Source**, and the source string will be copied to the translation field with the number of plural categories right for the current target language.
+
+<ReadMore>
+  Read more about [Language Plural Rules](https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html).
+</ReadMore>
+
+### Nested Plurals
+
+In some cases, you may have a single string that contains multiple nouns that each need to be pluralized independently, for example, "You have X book(s) and Y pen(s)."
+
+ICU handles this by allowing you to nest plural arguments inside each other.
+
+```json
+{bookCount, plural,
+    one {You have # book and {penCount, plural,
+        one {# pen}
+        other {# pens}
+    }}
+    other {You have # books and {penCount, plural,
+        one {# pen}
+        other {# pens}
+    }}
+}
+```
+
+## Vælg Ordenstal
+
+The purpose of the select ordinal type is to choose output based on the ordinal pluralization rules (1st, 2nd, 3rd, etc.) of the current target language. Det er meget lig flertalstypen, bortset fra værdien er knyttet til en ordenstal-flertalskategori.
+
+```json
+Congrats! It's your {year, selectordinal,
+    one {#st}
+    two {#nd}
+    few {#rd}
+    other {#th}
+} subscription anniversary!
+```
+
+## Vælg
+
+Select type is used to choose an output based on a string variable. It is most commonly used to represent the right gender-based inflections in the message.
+
+```json
+{gender, select,
+    male {He uses}
+    female {She uses}
+    other {They use}
+} Crowdin.
+```
+
+This type is useful for any situation where the translation changes based on a specific keyword. Regardless of the use case, the ICU standard requires that you always include an `other` clause. This clause provides a necessary fallback in case the variable doesn't match any of the specified options.
+
+## Tal
+
+The purpose of the number type is to display different number values such as percentage,
+currency, and decimal numbers independently of the locale conventions for those.
+Dette muliggør justering af meddelelsesoutput til de talformater, som benyttes i forskellige lokaliseringer. [ICU Number Skeletons](https://unicode-org.github.io/icu/userguide/format_parse/numbers/skeletons.html) are also supported.
+
+```json wrap
+The app price is {price, number, ::currency/USD} with {discount, number, percent} discount.
+```
+
+## Dato, klokkeslæt
+
+Dato- og klokkeslættyper viser dato og klokkeslæt i overensstemmelse med de ønskede formater i de relevante lokaliseringer.
+Disse typer kan også have en visningsstil -&ndash; ekstra information om, hvordan værdien formateres.
+Flg. fire stilarter kan bruges: Korte, medium, lange og fulde.
+
+```json wrap
+Your meeting is scheduled for {dateValue, date, long} at {timeValue, time, short} AM.
+```
+
+## Syntaksfejl
+
+Syntaksfejldetektion reducerer forvirring væsentligt under oversættelse af strenge i ICU Message-syntaks,
+da platformen automatisk identificerer potentielle oversættelsesfejl.
+If a syntax error is found, you'll see a notice with a suggestion of what needs to be fixed.
+
+You can also use external tools to verify your ICU syntax, for example, the [Online ICU Message Editor](https://format-message.github.io/icu-message-format-for-translators/editor.html).
+
+<Image src={icuSyntaxError} alt="Syntaksfejl detekteret" />

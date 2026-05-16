@@ -1,0 +1,4539 @@
+---
+title: Apps Crowdin JS
+description: Utilize the Crowdin Apps JS library to interact with Crowdin
+slug: developer/crowdin-apps-js
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+The Crowdin Apps JS is a JavaScript library that enables communication between your app and the Crowdin UI. Since all Crowdin Apps run inside a sandboxed `\<iframe>`, they are isolated and cannot directly access the main Crowdin page's content or code.
+
+This library solves that problem by providing a secure cross-window messaging (`postMessage()`) bridge. After including the library, you will have access to a global **`AP`** (App Project) object. This object is your single entry point for calling methods (like `AP.getContext()`) and subscribing to events (like `AP.events.on()`).
+
+## Démarrage
+
+To use the `AP` object, you must include the `iframe.js` script in the `\<head>` of your app's HTML page.
+
+```html
+<script src="https://cdn.crowdin.com/apps/dist/iframe.js"></script>
+```
+
+<Aside type="caution">
+  Do not download and self-host the `iframe.js` file. It must be served from the <code class="whitespace-nowrap">https://cdn.crowdin.com/</code> domain to establish the cross-domain messaging bridge. The library will not function if you serve it from your own server or on a standalone web page.
+</Aside>
+
+## Global Actions
+
+Global actions are available in every context where your app can be loaded (e.g., in a modal, the project "Tools" tab, or the Editor sidebar). They are all called directly from the root `AP` object.
+
+### Context and Theming
+
+These methods allow your app to get essential information about its environment, such as the current project, user, and active UI theme.
+
+#### AP.getContext(callback) {#get-context}
+
+Retrieves a `ContextDataObject` containing key information about the environment where the app is currently running (e.g., project ID, user, and file data).
+
+<Aside>
+  The payload of this method is dynamic. Depending on the page where your app is loaded (e.g., Editor vs. Project Tools), it may contain a different set of properties.
+</Aside>
+
+**Example:**
+
+```js
+AP.getContext(function(contextData) {
+  if (contextData) {
+    console.log("Current project ID:", contextData.project_id);
+    if(contextData.editor) {
+      console.log("Current file name:", contextData.editor.fileData.name);
+    }
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> A callback function that handles the response. It receives one argument: the <code>ContextDataObject</code> or <code>null</code>.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+```json collapse={12-21,25-59,62-64}
+{
+  "project_id": 123,
+  "organization_id": 100001,
+  "editor": {
+    "mode": "translate",
+    "theme": "dark",
+    "source_language_id": "en",
+    "target_language_id": "fr",          // Present in "translate" and "proofread"
+    "target_language_ids": ["fr", "uk"], // Present only in "multilingual"
+    "active_target_language_id": "fr",   // The currently active target language in the Editor
+    "task_id": 327,                      // Present only if Task-based access control is enabled
+    "task": {
+      "id": 327,
+      "type": 2,
+      "status": 0,
+      "title": "New task",
+      "description": "Task description",
+      "created": "2025-01-01 10:30:00",
+      "to_language": "French",
+      "workflow_step_id": 0,
+      "workflow_step_title": "",
+      "language_id": "fr"
+    },
+    "file": 987,
+    "fileData": {
+      "id": "987",
+      "is_plain_text": true,
+      "type": "android",
+      "status": "1",
+      "parent_id": "0",
+      "node_type": "1",
+      "created": "2025-01-01 10:30:00",
+      "extension": "xml",
+      "priority": "1",
+      "name": "example_file.xml",
+      "upload_ready": 1,
+      "export_ready": 1,
+      "export_xliff_ready": 1,
+      "can_change": 1,
+      "plural_support": 1,
+      "excluded_languages": [],
+      "html_preview": 0,
+      "identifier_required": 1,
+      "total": 50,
+      "translated": 10,
+      "approved": 5,
+      "preTranslated": 0,
+      "translated_percent": 20,
+      "approved_percent": 10,
+      "progress": {
+          "total": 50,
+          "translated": 10,
+          "approved": 5,
+          "translated_percent": 20,
+          "approved_percent": 10,
+          "pre_translated": 0,
+          "file_id": 987,
+          "language_id": 2,
+          "translation_link": "/editor/project-name/987/en-fr"
+      }
+    },
+    "workflow_step": {
+      "id": 7777,
+      "title": "Translation",
+      "type": "Translate"
+    }
+  }
+}
+```
+
+##### Response Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>project_id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The unique numeric ID of the current project.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>organization_id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The unique numeric ID of the organization (Crowdin Enterprise only).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code> | <code>null</code></p>
+        <p><strong>Description:</strong> An object containing the Editor context. <code>null</code> if the app is not in
+        the Editor.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor.mode</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>translate</code>, <code>proofread</code>, <code>multilingual</code></p>
+        <p><strong>Description:</strong> The current mode of the Editor.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor.theme</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>light</code>, <code>dark</code>, <code>auto</code></p>
+        <p><strong>Description:</strong> The current UI theme of the Editor.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">editor.source_language_id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The ID of the source language (e.g., <code>"en"</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">editor.target_language_id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The ID of the current target language (e.g., <code>"fr"</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">editor.target_language_ids</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Description:</strong> An array of target language IDs. <Aside>This field replaces <code>editor.target_language_id</code> when <code>editor.mode</code> is set to <code>multilingual</code>.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">editor.active_target_language_id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The ID of the currently active target language in the Editor (e.g., <code>"fr"</code>). In <code>multilingual</code> mode, it updates dynamically based on cursor position.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">editor.task_id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The numeric ID of the current task. <Aside>This is only present if [Task-based access control](/project-settings/privacy-collaboration/#privacy) is enabled in the project settings.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">editor.task</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> A detailed object containing metadata for the current task (e.g., title, status, description). Only present alongside <code>editor.task_id</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor.file</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The numeric ID of the file currently open in the Editor.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor.fileData</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> A detailed object containing data about the open file. (This object is the same
+        as one returned in <code>AP.editor.getSelectedFiles</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor.fileData.id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The file ID (as a string).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor.fileData.name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The name of the file.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor.fileData.node_type</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The type of node (<code>"1"</code> for file, <code>"0"</code> for folder).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor.fileData.total</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> Total number of strings in the file.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor.fileData.progress</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> An object containing translation progress data for the current language.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">editor.fileData.progress.translation_link</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> A relative URL path to the file in the Editor.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor.workflow_step</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code> | <code>null</code></p>
+        <p><strong>Description:</strong> Crowdin Enterprise only. Details of the current workflow step.
+        <code>null</code> if no workflow is active.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor.workflow_step.id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The numeric ID of the workflow step.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">editor.workflow_step.title</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The display name of the workflow step.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor.workflow_step.type</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The type of the workflow step (e.g., <code>"Translate"</code>,
+        <code>"Proofread"</code>).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.getTheme(callback) {#get-theme}
+
+Retrieves the name of the currently active user interface (UI) theme.
+
+**Example:**
+
+```js
+AP.getTheme(function(themeName) {
+  console.log("Current theme:", themeName);
+  // e.g., 'light', 'dark', or 'auto'
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one argument: a <code>string</code> (the theme name).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+This method returns a plain **`string`**.
+
+```json
+"light"
+```
+
+##### Response Object Structure
+
+<p><strong>Type:</strong> <code>string</code></p>
+<p><strong>Allowed values:</strong> <code>light</code>, <code>dark</code>, <code>auto</code></p>
+
+#### AP.getCssVariables(callback)
+
+Retrieves an object containing all active Crowdin CSS variables. This allows your app to style its elements to match the user's UI theme for a seamless look and feel.
+
+**Example:**
+
+```js
+AP.getCssVariables(function(variables) {
+  if (variables) {
+    // Set our app's text color to match Crowdin's
+    document.body.style.color = variables['--crowdin-body-color'];
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one argument: an <code>object</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+```json
+{
+  "--crowdin-level-1-bg": "#f5f7f8",
+  "--crowdin-level-2-bg": "#ffffff",
+  "--crowdin-body-bg": "#f5f7f8",
+  "--crowdin-title-color": "rgba(38, 50, 56, 1)",
+  "--crowdin-body-color": "rgba(38, 50, 56, 0.87)",
+  "--crowdin-text-muted": "rgba(38, 50, 56, 0.54)",
+  "--crowdin-primary": "rgba(67, 160, 71, 1)",
+  "..." : "..."
+}
+```
+
+##### Response Object Structure
+
+Returns an object where each key is a CSS variable name (e.g., `"--crowdin-primary"`) and the value is its current computed value (e.g., `"rgba(67, 160, 71, 1)"`).
+
+#### AP.getJwtToken(callback) {#get-jwt-token}
+
+Retrieves the current user's authentication JWT token. This token can be used to make Crowdin API v2 requests on behalf of the user.
+
+**Example:**
+
+```js
+AP.getJwtToken(function(token) {
+  if (token) {
+    console.log("My JWT:", token);
+  } else {
+    console.log("Token is not available in this context.");
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one argument: a <code>string</code> (the JWT token) or <code>null</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+This method returns a plain **`string`** which is the JWT token, or **`null`**.
+
+```json
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw...SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+```
+
+### Viewport and Sizing
+
+This group of methods allows your app to get information about the size and position of its `iframe` and to request size changes.
+
+#### AP.getViewportSize(callback) {#get-viewport-size}
+
+Retrieves the current visible dimensions of the app's `iframe`. This is useful for knowing how much of your app is actually visible to the user as they scroll.
+
+**Example:**
+
+```js
+AP.getViewportSize(function(viewport) {
+  console.log("Visible iframe width:", viewport.width);
+  console.log("Visible iframe height:", viewport.height);
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one
+        <code>ViewportObject</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+```json
+{
+  "width": 800,
+  "height": 250
+}
+```
+
+##### Response Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>width</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The visible width of the iframe in pixels.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">height</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The visible height of the iframe in pixels, adjusted for the main Crowdin
+        header and scrolling.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.getWindowSize(callback) {#get-window-size}
+
+Retrieves the dimensions of the entire browser window (the `top` window), not just the app's `iframe`.
+
+<Aside>
+  This method is available only for Crowdin.
+</Aside>
+
+**Example:**
+
+```js
+AP.getWindowSize(function(windowSize) {
+  console.log("Browser window width:", windowSize.width);
+  console.log("Browser window height:", windowSize.height);
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one
+        <code>WindowSizeObject</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+```json
+{
+  "width": 1440,
+  "height": 900
+}
+```
+
+##### Response Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>width</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The total width of the browser window in pixels.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>height</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The total height of the browser window in pixels.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.getScrollPosition(callback) {#get-scroll-position}
+
+Retrieves the vertical scroll position of the app's `iframe` relative to the top of the main window's viewport.
+
+This returns `0` if the top of the app is visible. If the user scrolls the page down, the value will be a positive number indicating how many pixels of the app are scrolled out of view.
+
+**Example:**
+
+```js
+AP.getScrollPosition(function(scrollPosition) {
+  console.log("App is scrolled by:", scrollPosition, "pixels");
+  // Example output: 150
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one
+        <code>integer</code> argument.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+This method returns a plain **`integer`** representing the number of pixels.
+
+```json
+150
+```
+
+#### AP.resize(width, height) {#resize}
+
+Updates the dimensions of your app's `iframe`. This is the primary method for controlling the size of your app's view.
+
+<Aside>
+  If the requested size is larger than the maximum allowed width or height of the host panel, Crowdin will provide scrollbars to accommodate the overflow.
+</Aside>
+
+**Example:**
+
+```js
+// Request to resize the iframe to 400px wide and 500px tall
+AP.resize('400px', '500px');
+
+// You can also use percentages
+AP.resize('100%', '300px');
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>width</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The desired width (e.g., <code>500px</code>, <code>80%</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>height</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The desired height (e.g., <code>300px</code>, <code>100vh</code>).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.size() {#size}
+
+Retrieves the current dimensions of the app's `iframe`.
+
+**Example:**
+
+```js
+const currentSize = AP.size();
+console.log("Current width:", currentSize.w);
+console.log("Current height:", currentSize.h);
+```
+
+##### Response Payload Example
+
+```json
+{
+  "w": "100%",
+  "h": 926
+}
+
+```
+
+##### Response Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>w</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code> | <code>integer</code></p>
+        <p><strong>Description:</strong> The current width of the iframe (e.g., <code>"100%"</code> or
+        <code>800</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>h</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The current height of the iframe in pixels.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.registerIntersectionObserver(elementId, callback) {#register-intersection-observer}
+
+Registers an intersection observer for an element within your app's `iframe`. This allows you to detect when an element becomes visible or hidden as the user scrolls.
+
+<Aside>
+  This method only works in the Editor.
+</Aside>
+
+**Example:**
+
+```js
+// Assuming you have an element: <div id="my-element"></div>
+AP.registerIntersectionObserver('my-element', function(entry) {
+  if (entry.isIntersecting) {
+    console.log('Element is now visible!');
+  } else {
+    console.log('Element is hidden.');
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">elementId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The <code>id</code> of the DOM element you want to observe.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback that fires when the element's visibility changes. It receives an
+        <code>IntersectionObserverEntry</code> object.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Navigation
+
+These methods allow your app to control navigation within Crowdin, such as redirecting the user to a new page or closing the app's view.
+
+#### AP.redirect(path, queryParams) {#redirect}
+
+Redirects the user's entire browser window to a different page within Crowdin.
+
+<Aside>
+  Path structures differ between Crowdin and Crowdin Enterprise.
+</Aside>
+
+**Example (Crowdin):**
+
+```js
+// Redirects to the user's account settings
+AP.redirect('/settings#account');
+
+// Redirects to a project's Activity tab
+AP.redirect('/project/my-project/activity-stream');
+
+// Redirects to the Store with queryParams
+AP.redirect('/store/apps', {'a': 123});
+```
+
+**Example (Crowdin Enterprise):**
+
+```js
+// Redirects to the user's account settings
+AP.redirect('/u/user_settings');
+
+// Redirects to a project's Activity tab
+AP.redirect('/u/projects/15/activity');
+
+// Redirects to the Store with queryParams
+AP.redirect('u/marketplace/apps', {'a': 123});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>path</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The relative path within Crowdin to redirect to. This path is different for
+        Crowdin and Crowdin Enterprise.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">queryParams</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> An optional object of key-value pairs to be added as URL search parameters.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.closeAppModal() {#close-app-modal}
+
+Closes the modal window that the app is currently running in.
+
+**Example:**
+
+```js
+// Close the modal this app is running in
+AP.closeAppModal();
+```
+
+#### AP.closeNavbarExtension() {#close-navbar-extension}
+
+Closes the app's view when it is opened from the top navigation bar (the "navbar").
+
+<Aside>
+  This method is only available for Crowdin.
+</Aside>
+
+**Example:**
+
+```js
+// Close the app's panel
+AP.closeNavbarExtension();
+```
+
+### Form and Data
+
+These methods are used by apps that render custom forms or require schema-based data, such as custom workflow steps in Crowdin Enterprise.
+
+#### AP.getFormData(callback) {#get-form-data}
+
+Retrieves the current data from the app's form. This method is typically called by Crowdin when a user attempts to proceed from a custom app screen.
+
+**Example:**
+
+```js
+AP.getFormData(function(formData) {
+  if (formData) {
+    console.log("Current form data:", formData);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives the form data object
+        or <code>undefined</code>/<code>null</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+The payload is entirely dependent on the app's form data.
+
+```json
+{
+  "custom_field": "some-value",
+  "another_setting": true
+}
+```
+
+##### Response Object Structure
+
+The structure of this object is defined by your app.
+
+#### AP.formDataUpdated(detail) {#form-data-updated}
+
+Notifies Crowdin that the data in your app's form has changed.
+
+<Aside>
+  This method is only available for Crowdin Enterprise.
+</Aside>
+
+**Example:**
+
+```js
+// Call this inside your app when a form field changes
+const myFormData = { custom_field: "new-value" };
+AP.formDataUpdated(myFormData);
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>detail</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The object containing the new state of your form data.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.getRenderData(callback) {#get-render-data}
+
+Retrieves the initial data provided by Crowdin to render your app's UI. This is often used in custom workflow steps that require task-specific data.
+
+<Aside>
+  This method is only available for Crowdin Enterprise.
+</Aside>
+
+**Example:**
+
+```js
+AP.getRenderData(function(renderData) {
+  if (renderData) {
+    console.log("Initial data for rendering:", renderData);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives the render data
+        object or an empty object <code>{}</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+The payload is dynamic and depends on the app's context.
+
+```json
+{
+  "task_id": 123,
+  "file_ids": [10, 11, 12]
+}
+```
+
+##### Response Object Structure
+
+The structure of this object is dynamic and defined by the context in which the app is launched.
+
+#### AP.getSchema(callback) {#get-schema}
+
+Retrieves the form schema defined for the app. This is typically used by apps that render a UI based on a schema provided by Crowdin.
+
+<Aside>
+  This method is only available for Crowdin Enterprise.
+</Aside>
+
+**Example:**
+
+```js
+AP.getSchema(function(schema) {
+  if (schema) {
+    console.log("Form schema:", schema);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives the schema object or
+        <code>undefined</code>/<code>null</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+The payload is a form schema object, often in JSON Schema format.
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "custom_field": {
+      "type": "string",
+      "title": "Custom Field"
+    }
+  }
+}
+```
+
+##### Response Object Structure
+
+The structure of this object is dynamic and defined by the app's configuration.
+
+## Editor Actions
+
+These methods allow your app to get information from and perform actions in the Editor UI. They are available only when your app is loaded within the Crowdin Editor (e.g., in the side panel) and are all called via the `AP.editor` object.
+
+### Data Retrieval (Strings and Files)
+
+This group of methods allows your app to read information about the strings and files currently being viewed in the Editor, as well as change the file selection.
+
+#### AP.editor.getString(callback) {#get-string}
+
+Retrieves a data object for the currently active (highlighted) source string in the Editor.
+
+**Example:**
+
+```js
+AP.editor.getString(function(stringData) {
+  if (stringData) {
+    console.log("Active string ID:", stringData.id);
+  } else {
+    console.log("No string is currently active.");
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one
+        <code>StringDataObject</code> or <code>null</code> if no string is active.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+```json
+{
+  "id": 1568759,
+  "identifier": "welcome.key",
+  "text": "Welcome!",
+  "context": "Main screen welcome message",
+  "max_length": 0,
+  "file": {
+    "id": 15385,
+    "name": "google_play.xml"
+  }
+}
+```
+
+##### Response Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The unique numeric ID of the source string.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>identifier</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The key or identifier of the string (e.g., <code>"app.title"</code>). Can be
+        empty.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>text</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The full text of the source string.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>context</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code> | <code>null</code></p>
+        <p><strong>Description:</strong> The context associated with the string.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>max_length</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The maximum allowed length for the translation (<code>0</code> means no limit).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> An object containing information about the file this string belongs to.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The unique ID of the file.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The name of the file.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.getStringsList(callback) {#get-strings-list}
+
+Retrieves an array of data objects for all strings currently visible in the string list (respecting the current file, filter, and page).
+
+**Example:**
+
+```js
+AP.editor.getStringsList(function(strings) {
+  if (strings && strings.length > 0) {
+    console.log("Total strings in list:", strings.length);
+    console.log("First string:", strings[0]);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives an array of
+        <code>StringListObject</code> items.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+```json
+[
+  {
+    "id": 1569759,
+    "project_id": "844514",
+    "text": "Welcome!",
+    "key": "welcome",
+    "file_id": 15411
+  },
+  {
+    "id": 1569761,
+    "project_id": "844514",
+    "text": "Save as...",
+    "key": "save_as",
+    "file_id": 15411
+  }
+]
+```
+
+##### Response Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The unique numeric ID of the source string.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>project_id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The ID of the project this string belongs to.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>text</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The text of the source string.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The key or identifier of the string.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file_id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The unique ID of the file this string belongs to.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.getSelectedStrings(callback) {#get-selected-strings}
+
+Retrieves information about the strings currently selected (checked) by the user in the Editor list.
+
+<Aside>
+  This method is only available in Editor views that support multiple string selection (like Side-by-Side and Multilingual).
+</Aside>
+
+**Example:**
+
+```js
+AP.editor.getSelectedStrings(function(selectedData, selectedCount) {
+  if (selectedData === 'all') {
+    console.log(`All ${selectedCount} strings are selected.`);
+  } else {
+    console.log(`Selected ${selectedCount} individual strings:`, selectedData);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives two arguments (in this order):</p>
+          <ul>
+            <li><code>selectedData</code> (Array|String): An array of <code>SelectedStringObject</code> items OR the string <code>"all"</code>.</li>
+            <li><code>selectedCount</code> (Integer): The total number of selected strings.</li>
+          </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example (Specific strings selected)
+
+```json
+[
+  {
+    "string": {
+      "id": 1569759,
+      "identifier": "welcome",
+      "text": "Welcome!",
+      "context": "welcome",
+      "max_length": 0,
+      "file": {
+        "id": 15411,
+        "name": "crowdin_sample_android.xml"
+      }
+    },
+    "translations": {
+      "fr": []
+    }
+  },
+  {
+    "string": {
+      "id": 1569761,
+      "identifier": "save_as",
+      "text": "Save as...",
+      "context": "save_as",
+      "max_length": 0,
+      "file": {
+        "id": 15411,
+        "name": "crowdin_sample_android.xml"
+      }
+    },
+    "translations": {
+      "fr": [
+        {
+          "id": 690949,
+          "text": "Sauvegarder sous..."
+        }
+      ]
+    }
+  }
+]
+```
+
+##### Response Payload Example (All strings selected)
+
+If all strings in the project are selected, the first argument of the callback returns:
+
+```json
+"all"
+```
+
+##### Response Object Structure
+
+The following fields apply to the `SelectedStringObject` items returned when `selectedData` is an array:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>string</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> The source string object. See the structure from <code><a href="#get-string">AP.editor.getString</a></code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>translations</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> An object containing translations for the string, keyed by language ID.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">translations.[language_id]</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Description:</strong> An array of translation objects for the specified target language (e.g.,
+        <code>"fr"</code>). See <code><a href="#get-translations">AP.editor.getTranslations</a></code> for the
+        <code>TranslationObject</code> structure.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<Aside type="caution">
+  Always check the type of <code>selectedData</code>. If the user selects all strings, the method returns the string <code>"all"</code> instead of an array.
+</Aside>
+
+#### AP.editor.getSelectedFiles(callback) {#get-selected-files}
+
+Retrieves an array of data objects for all files that are currently selected (checked) in the file tree.
+
+**Example:**
+
+```js
+AP.editor.getSelectedFiles(function(files) {
+  if (files && files.length > 0) {
+    console.log("Selected files count:", files.length);
+    console.log("First selected file:", files[0].name);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives an array of
+        <code>FileObject</code> items.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+```json
+[
+  {
+    "id": "15411",
+    "is_plain_text": true,
+    "type": "android10",
+    "status": "1",
+    "parent_id": "0",
+    "node_type": "1",
+    "created": "2025-11-07 14:53:28",
+    "extension": "xml",
+    "priority": "1",
+    "name": "crowdin_sample_android.xml",
+    "upload_ready": 1,
+    "export_ready": 1,
+    "export_xliff_ready": 1,
+    "can_change": 1,
+    "plural_support": 1,
+    "excluded_languages": [],
+    "html_preview": false,
+    "identifier_required": 1,
+    "total": 45,
+    "translated": 0,
+    "approved": 0,
+    "preTranslated": 0,
+    "translated_percent": 0,
+    "approved_percent": 0
+  }
+]
+```
+
+##### Response Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The unique ID of the file.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The name of the file.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The file type identifier (e.g., <code>"android10"</code>,
+        <code>"html32"</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>node_type</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The type of node in the file tree (e.g., <code>"1"</code> for file,
+        <code>"0"</code> for folder).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>total</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The total number of strings in the file.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>translated</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The number of translated strings in the file (for the current language).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>approved</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The number of approved strings in the file (for the current language).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<Aside>
+  This object contains many other properties related to file status, priority, etc., as seen in the example.
+</Aside>
+
+#### AP.editor.isMultipleFilesSelected(callback) {#is-multiple-files-selected}
+
+Checks if more than one file is currently selected (checked) in the file tree.
+
+**Example:**
+
+```js
+AP.editor.isMultipleFilesSelected(function(isMultiple) {
+  if (isMultiple) {
+    console.log("Multiple files are selected.");
+  } else {
+    console.log("Only one file (or no files) is selected.");
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives a
+        <code>boolean</code> (<code>true</code> or <code>false</code>).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+This method returns a plain **`boolean`**.
+
+```json
+true
+```
+
+#### AP.editor.changeFile(fileId) {#change-file}
+
+Changes the Editor view to focus on a single, different file.
+
+**Example:**
+
+```js
+// Switch the Editor to show strings from file with ID 15409
+AP.editor.changeFile('15409');
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>fileId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code> | <code>integer</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The ID of the file you want to switch to.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.changeFiles(fileIds) {#change-files}
+
+Selects multiple files in the file tree. This is the programmatic equivalent of a user checking multiple file checkboxes.
+
+<Aside>
+  This method only works in Editor views that support multiple file selection (like Side-by-Side).
+</Aside>
+
+**Example:**
+
+```js
+// Select two specific files in the file list
+AP.editor.changeFiles(['15409', '15411']);
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>fileIds</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> An array of file IDs (as strings or integers) to select.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.getUnsavedSourceStrings(callback) {#get-unsaved-source-strings}
+
+Retrieves a list of source strings that have unsaved changes.
+
+<Aside>
+  This method is only available in the Multilingual Editor view.
+</Aside>
+
+**Example:**
+
+```js
+AP.editor.getUnsavedSourceStrings(function(unsavedStrings) {
+  if (unsavedStrings) {
+    console.log("Unsaved strings:", unsavedStrings);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function to handle the response. It receives an array of unsaved
+        string objects or <code>null</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Translation
+
+This group of methods allows you to read translation suggestions, as well as write or modify text in the Editor's translation area.
+
+#### AP.editor.getTranslations(callback) {#get-translations}
+
+Retrieves an array of all translations and suggestions (from users, TM, and MT) for the currently active source string.
+
+**Example:**
+
+```js
+AP.editor.getTranslations(function(translations) {
+  if (translations && translations.length > 0) {
+    console.log("Total translations/suggestions:", translations.length);
+    console.log("First translation author:", translations[0].author.login);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives an array of
+        <code>TranslationObject</code> items.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+```json
+[
+  {
+    "id": 690949,
+    "string_id": 1569689,
+    "text": "Translation text",
+    "target_language_id": "fr",
+    "votes_rating": 0,
+    "approved": false,
+    "author": {
+      "id": "12729493",
+      "login": "example_user",
+      "name": "Example User",
+      "avatar_url": "https://.../avatar.png"
+    },
+    "created_at": "2025-11-07T08:19:10-05:00"
+  }
+]
+```
+
+##### Response Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The unique numeric ID of the translation.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>string_id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The ID of the source string this translation belongs to.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>text</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The translation text.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">target_language_id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The ID of the language this translation is for (e.g., <code>"fr"</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>votes_rating</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The current vote score for this translation.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>approved</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Description:</strong> <code>true</code> if the translation is approved, otherwise <code>false</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>author</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> An object containing information about the user who authored the translation.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>author.id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The unique ID of the author.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>author.login</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The author's login name.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>created_at</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The ISO 8601 timestamp of when the translation was created.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.getTopTranslation(callback) {#get-top-translation}
+
+Retrieves a single `TranslationObject` for the "top" translation of the currently active string (e.g., the approved translation or the one with the most votes).
+
+**Example:**
+
+```js
+AP.editor.getTopTranslation(function(topTranslation) {
+  if (topTranslation) {
+    console.log("Top translation text:", topTranslation.text);
+  } else {
+    console.log("No translations exist for this string yet.");
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one
+        <code>TranslationObject</code> or <code>null</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+```json
+{
+  "id": 690949,
+  "string_id": 1569689,
+  "text": "This is the top translation.",
+  "target_language_id": "fr",
+  "votes_rating": 1,
+  "approved": true,
+  "author": {
+    "id": "12729493",
+    "login": "example_user"
+  },
+  "created_at": "2025-11-07T08:19:10-05:00"
+}
+```
+
+##### Response Object Structure
+
+This method returns a single `TranslationObject`. See the structure table for [`AP.editor.getTranslations`](#get-translations) for a full list of properties.
+
+#### AP.editor.setTranslation(text) {#set-translation}
+
+Sets or overwrites the text in the Editor's main translation text area for the active string.
+
+**Example:**
+
+```js
+// Set the translation text to "Hello world"
+AP.editor.setTranslation("Hello world");
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>text</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The text to insert into the translation area.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.appendTranslation(text) {#append-translation}
+
+Appends text to the end of the existing text in the Editor's translation text area.
+
+**Example:**
+
+```js
+// If the text area contains "Hello", this will change it to "Hello world"
+AP.editor.appendTranslation(" world");
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>text</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The text to append.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.clearTranslation() {#clear-translation}
+
+Clears all text from the Editor's translation text area for the active string.
+
+**Example:**
+
+```js
+AP.editor.clearTranslation();
+```
+
+#### AP.editor.setFocus() {#set-focus}
+
+Sets the browser's focus on the Editor's translation text area.
+
+**Example:**
+
+```js
+AP.editor.setFocus();
+```
+
+#### AP.editor.setUnsavedSuggestion(suggestion) {#set-unsaved-suggestion}
+
+Sets an "unsaved suggestion" for a specific string. This is used to programmatically add a translation without saving it, often used in the Multilingual view.
+
+**Example:**
+
+```js
+AP.editor.setUnsavedSuggestion({
+  id: 1569759,                   // The numeric or string ID of the phrase
+  text: 'My unsaved suggestion', // The translation text
+  languageId: 'fr',              // Target language code
+  pluralId: 1,                   // Optional: Specific plural form ID
+  translationId: 45678           // Optional: ID if editing an existing translation
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">suggestion</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> An object containing the suggestion details. See the <code>Input Object
+        Structure</code> below.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Input Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code> | <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The numeric or string ID of the source string (phrase).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>text</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The translation text.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>languageId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The ID of the target language (e.g., <code>"fr"</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>pluralId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code> | <code>null</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> The ID of the plural form (e.g., <code>1</code>), or <code>null</code> for
+        non-plural strings.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>translationId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> The ID of an existing translation if you are editing it.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.setUnsavedSuggestions(suggestions) {#set-unsaved-suggestions}
+
+Sets multiple "unsaved suggestions" at once.
+
+**Example:**
+
+```js
+AP.editor.setUnsavedSuggestions([
+  {
+    id: 1569759,
+    text: 'Suggestion 1',
+    languageId: 'fr',
+    pluralId: '1'
+  },
+  {
+    id: 1569761,
+    text: 'Suggestion 2',
+    languageId: 'fr',
+    pluralId: null
+  }
+]);
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">suggestions</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> An array of suggestion objects. See the <code>Input Object Structure</code>
+        from <code><a href="#set-unsaved-suggestion">setUnsavedSuggestion</a></code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.removeUnsavedSuggestions(suggestions) {#remove-unsaved-suggestions}
+
+Removes one or more "unsaved suggestions".
+
+**Example:**
+
+```js
+// Remove a specific unsaved suggestion
+AP.editor.removeUnsavedSuggestions([
+  {
+    id: 1569759,
+    text: 'Suggestion 1',
+    languageId: 'fr',
+    pluralId: '1'
+  }
+]);
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">suggestions</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> An array of suggestion objects to remove. The format is identical to <code><a href="#set-unsaved-suggestions">setUnsavedSuggestions</a></code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.applyUnsavedTranslations(method, data) {#apply-unsaved-translations}
+
+Applies (saves) all unsaved translations based on the provided method.
+
+**Example:**
+
+```js
+// Apply unsaved translations only for the selected strings
+AP.editor.applyUnsavedTranslations('selectedStrings', null);
+
+// Apply unsaved translations for a specific list of string IDs
+AP.editor.applyUnsavedTranslations('providedStrings', [1569759, 1569761]);
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">method</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The method to use for applying translations.</p>
+        <p><strong>Allowed values:</strong> <code>all</code> (all unsaved on the page), <code>selectedStrings</code>
+        (only for selected strings), <code>providedStrings</code> (for string IDs provided in the `data` parameter).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>data</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code> | <code>null</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> An array of numeric string IDs. This is only used when <code>method</code> is
+        set to <code>providedStrings</code>. Otherwise, pass <code>null</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Filter Management
+
+This group of methods allows your app to read and control the string filters used in the Editor, including basic filters, the Advanced Filter, and CroQL queries.
+
+#### AP.editor.getFiltersList(callback) {#get-filters-list}
+
+Retrieves a complete list of all available basic filters, including their names and numeric IDs.
+
+**Example:**
+
+```js
+AP.editor.getFiltersList(function(filters) {
+  console.log("Available filters:", filters);
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives an array of
+        <code>FilterObject</code> items.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+```json
+[
+  {
+    "name": "Show All",
+    "value": 3
+  },
+  {
+    "name": "Untranslated",
+    "value": 2
+  },
+  {
+    "name": "Not Approved",
+    "value": 5
+  },
+  {
+    "name": "Approved",
+    "value": 4
+  },
+  {
+    "name": "Machine Translations"
+  },
+  {
+    "name": "All",
+    "value": 10
+  },
+  {
+    "name": "All, Untranslated First",
+    "value": 0
+  }
+]
+```
+
+##### Response Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The display name of the filter (e.g., "Untranslated").</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">value</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The numeric ID of the filter. This value is used by
+        <code>AP.editor.setFilter</code>. Some items are section headers and do not have a <code>value</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.getFilter(callback) {#get-filter}
+
+Retrieves the numeric ID of the currently active basic filter (e.g., "Untranslated", "Approved").
+
+**Example:**
+
+```js
+AP.editor.getFilter(function(filterId) {
+  console.log("Current filter ID:", filterId);
+  // Example output: 0 (for "All, Untranslated First")
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one argument: an
+        <code>integer</code> (the filter ID).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+This method returns a plain **`integer`**.
+
+```json
+0
+```
+
+#### AP.editor.setFilter(filterNumber) {#set-filter}
+
+Applies a basic filter to the string list using its numeric ID.
+
+**Example:**
+
+```js
+// Filter the list to show only "Untranslated" strings (ID 2)
+AP.editor.setFilter(2);
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">filterNumber</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The numeric ID of the filter to apply. See <code><a href="#get-filters-list">AP.editor.getFiltersList</a></code> for all available IDs.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Common Filter IDs
+
+Here are some of the most common default filter IDs:
+
+* **0**: All, Untranslated First
+* **2**: Untranslated
+* **3**: Show All
+* **4**: Approved
+* **5**: Translated, Not Approved
+* **7**: With Comments
+* **10**: Translated by TM or MT
+* **12**: Advanced Filter
+* **30**: Translated by TM
+* **31**: Translated by MT
+
+<Aside type="caution">
+  This list may not be complete, as it does not include custom QA check filters or filters added by other apps. Use <code><a href="#get-filters-list">AP.editor.getFiltersList</a></code> to retrieve all filters available in the current context.
+</Aside>
+
+#### AP.editor.getCustomFilter(callback) {#get-custom-filter}
+
+Retrieves an object representing the current state of the "Advanced Filter".
+
+**Example:**
+
+```js
+AP.editor.getCustomFilter(function(customFilter) {
+  if (customFilter) {
+    console.log("Current advanced filter settings:", customFilter);
+    console.log("Filtering by translation status:", customFilter.translations);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one
+        <code>CustomFilterObject</code> or <code>null</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+```json
+{
+  "translations": "untranslated",
+  "labels": [123, 456],
+  "label_match_rule": "any",
+  "comments": "have_comments",
+  "croql_expression": "",
+  "ai_query": ""
+}
+```
+
+##### Response Object Structure
+
+The `CustomFilterObject` contains all fields available in the Editor's Advanced Filter dialog. Below are some key properties:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>translations</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>"translated"</code>, <code>"untranslated"</code>, <code>""</code></p>
+        <p><strong>Description:</strong> Filters strings based on their translation status.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>comments</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>"have_comments"</code>, <code>"no_comments"</code>, <code>""</code></p>
+        <p><strong>Description:</strong> Filters strings based on the presence of comments.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>labels</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Description:</strong> An array of label IDs to filter by.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>croql_expression</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> A custom CroQL expression for advanced filtering.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.setCustomFilter(customFilter) {#set-custom-filter}
+
+Applies an "Advanced Filter" to the string list by providing a filter object.
+
+**Example:**
+
+```js
+// Filter for untranslated strings with specific labels
+AP.editor.setCustomFilter({
+  translations: 'untranslated',
+  labels: [123, 456],
+  label_match_rule: 'any'
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">customFilter</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A <code>CustomFilterObject</code> containing the filter criteria. See <code><a href="#get-custom-filter">AP.editor.getCustomFilter</a></code> for the full list of available properties.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Full Payload Reference
+
+<details>
+  <summary>Click to view all available filter properties</summary>
+  ```js
+  {
+    added_from: '',
+    added_to: '',
+    updated_from: '',
+    updated_to: '',
+    translations: '', // 'translated', 'untranslated'
+    duplicates: '',
+    tm_and_mt: '',
+    pre_translation: '',
+    approvals: '',
+    comments: '', // 'have_comments', 'no_comments'
+    screenshots: '',
+    visibility: '',
+    qa_issues: '',
+    labels: [],
+    label_match_rule: 'any', // 'all', 'any'
+    exclude_labels: [],
+    exclude_label_match_rule: 'all',
+    string_type: '',
+    votes: '',
+    votes_count: null,
+    approvals_count_select: '',
+    approvals_count: null,
+    translated_by_user: '',
+    not_translated_by_user: '',
+    approved_by_user: '',
+    not_approved_by_user: '',
+    sort_method: 0,
+    sort_ascending: 1,
+    croql_expression: '',
+    ai_query: ''
+  }
+  ```
+</details>
+
+#### AP.editor.resetCustomFilter() {#reset-custom-filter}
+
+Resets the "Advanced Filter" to its default (empty) state.
+
+**Example:**
+
+```js
+AP.editor.resetCustomFilter();
+```
+
+#### AP.editor.getCroqlFilter(callback) {#get-croql-filter}
+
+Retrieves the currently active CroQL filter query as a string.
+
+**Example:**
+
+```js
+AP.editor.getCroqlFilter(function(croqlQuery) {
+  if (croqlQuery) {
+    console.log("Current CroQL query:", croqlQuery);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one
+        <code>string</code> (the CroQL query) or <code>null</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+This method returns a plain **`string`**.
+
+```json
+"text = "Welcome!""
+```
+
+#### AP.editor.setCroqlFilter(croql) {#set-croql-filter}
+
+Applies a CroQL filter to the string list.
+
+**Example:**
+
+```js
+// Filter strings where the text is "Welcome!"
+AP.editor.setCroqlFilter("text = 'Welcome!'");
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>croql</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A valid CroQL query string.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.resetCroqlFilter() {#reset-croql-filter}
+
+Resets the CroQL filter to its default (empty) state.
+
+**Example:**
+
+```js
+AP.editor.resetCroqlFilter();
+```
+
+### Editor State Management
+
+This group of methods allows you to read and control the Editor's state, such as the current view mode, page, selected language, or search query.
+
+#### AP.editor.getMode(callback) {#get-mode}
+
+Retrieves the name of the currently active Editor mode.
+
+**Example:**
+
+```js
+AP.editor.getMode(function(modeName) {
+  console.log("Current mode:", modeName);
+  // Example output: "translate"
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one argument: a
+        <code>string</code> (the mode name).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+This method returns a plain **`string`**.
+
+```json
+"translate"
+```
+
+##### Response Object Structure
+
+<p><strong>Type:</strong> <code>string</code></p>
+<p><strong>Allowed values:</strong> <code>translate</code>, <code>proofread</code>, <code>review</code>,
+<code>multilingual</code></p>
+
+#### AP.editor.setMode(modeName) {#set-mode}
+
+Switches the Editor to a different mode.
+
+**Example:**
+
+```js
+// Switch the Editor to Proofreading mode
+AP.editor.setMode('proofread');
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">modeName</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The name of the mode to switch to. Allowed values: <code>translate</code>,
+        <code>proofread</code>, <code>review</code>, <code>multilingual</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.getPage(callback) {#get-page}
+
+Retrieves the current page number of the string list.
+
+**Example:**
+
+```js
+AP.editor.getPage(function(pageNumber) {
+  console.log("Current page:", pageNumber);
+  // Example output: 1
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one argument: an
+        <code>integer</code> (the page number).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+This method returns a plain **`integer`**.
+
+```json
+1
+```
+
+#### AP.editor.setPage(pageNumber) {#set-page}
+
+Changes the string list to a specific page number.
+
+**Example:**
+
+```js
+// Go to the second page of strings
+AP.editor.setPage(2);
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>pageNumber</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The page number to navigate to.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.getProjectTargetLanguages(callback) {#get-project-target-languages}
+
+Retrieves a list of the project's target languages that are available to the current user in the Editor.
+
+**Example:**
+
+```js
+AP.editor.getProjectTargetLanguages(function(languages) {
+  if (languages && languages.length > 0) {
+    console.log("Available languages:", languages);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives an array of
+        <code>LanguageObject</code> items.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+```json
+[
+  {
+    "id": "2",
+    "name": "French",
+    "internal_code": "fr",
+    "code": "fr",
+    "preferred": false
+  },
+  {
+    "id": "3",
+    "name": "German",
+    "internal_code": "de",
+    "code": "de",
+    "preferred": true
+  }
+]
+```
+
+##### Response Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The unique ID of the language (e.g., <code>"2"</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The display name of the language (e.g., "French").</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>code</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The language code (e.g., <code>"fr"</code>).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.setTargetLanguage(languageIds, [callback]) {#set-target-language}
+
+Switches the Editor to a different target language in Side-by-Side and Comfortable modes or sets the active languages in Multilingual mode.
+
+<Aside>
+  This method requires the language `id` (e.g., <code>"11"</code>), not the language code (e.g., <code>"de"</code>). You can get the list of available IDs using <code><a href="#get-project-target-languages">getProjectTargetLanguages</a></code>.
+</Aside>
+
+**Example (Side-by-Side and Comfortable Modes):**
+
+```js
+// Switch the Editor to German (ID "11")
+AP.editor.setTargetLanguage('11');
+```
+
+**Example (Multilingual Mode):**
+
+```js
+// Set the active languages to German (ID "11") and French (ID "2")
+AP.editor.setTargetLanguage(['11', '2']);
+```
+
+##### Paramètres
+
+<table>
+    <tbody>
+        <tr>
+            <td><code class="whitespace-nowrap">languageIds</code></td>
+            <td>
+                <p><strong>Type:</strong> <code>string</code> | <code>array</code></p>
+                <p><strong>Required:</strong> Yes</p>
+                <p><strong>Description:</strong> The string ID (e.g., <code>"11"</code>) to set a single language, or an
+                array of string IDs (e.g., <code>["11", "2"]</code>) to set multiple languages in Multilingual mode.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>callback</code></td>
+            <td>
+                <p><strong>Type:</strong> <code>function</code></p>
+                <p><strong>Required:</strong> No</p>
+                <p><strong>Description:</strong> An optional callback that returns an error message if any requested
+                language IDs were not found.</p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+#### AP.editor.search(text, [options]) {#search}
+
+Performs a search in the Editor for the specified text.
+
+**Example:**
+
+```js
+// Perform a simple search for the word "Welcome"
+AP.editor.search("Welcome");
+
+// Perform a case-sensitive search
+AP.editor.search("Welcome", { caseSensitive: true, search_option: 1 });
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>text</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The text to search for.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> An object containing search options. See the <code>Input Object
+        Structure</code> below.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Input Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>searchStrict</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Description:</strong> If <code>true</code>, performs a strict search. Default is <code>false</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">searchFullMatch</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Description:</strong> If <code>true</code>, searches for a full match. Default is <code>false</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>caseSensitive</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Description:</strong> If <code>true</code>, the search is case-sensitive. Default is
+        <code>false</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>search_option</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> Defines the search scope. <code>0</code>: Everything, <code>1</code>: Strings,
+        <code>2</code>: Context, <code>3</code>: Translations, <code>4</code>: Identifier (Key).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Notifications
+
+This group of methods allows your app to display feedback messages (like notices, successes, or errors) to the user and manage notification badges on your app's icon.
+
+#### AP.editor.noticeMessage(message) {#notice-message}
+
+Displays a yellow "notice" message bar at the top of the Editor.
+
+**Example:**
+
+```js
+AP.editor.noticeMessage("This is a test notification.");
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>message</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The text to display in the message bar.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.successMessage(message) {#success-message}
+
+Displays a green "success" message bar at the top of the Editor.
+
+**Example:**
+
+```js
+AP.editor.successMessage("The operation was successful!");
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>message</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The text to display in the message bar.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.errorMessage(message) {#error-message}
+
+Displays a red "error" message bar at the top of the Editor.
+
+**Example:**
+
+```js
+AP.editor.errorMessage("An error occurred. Please try again.");
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>message</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The text to display in the message bar.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.setApplicationNotification(count) {#set-application-notification}
+
+Sets a blue notification badge with a number on your app's icon in the Editor's side panel.
+
+**Example:**
+
+```js
+AP.editor.setApplicationNotification(2);
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>count</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The number to display in the notification badge.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.clearApplicationNotification() {#clear-application-notification}
+
+Removes the notification badge from your app's icon.
+
+**Example:**
+
+```js
+AP.editor.clearApplicationNotification();
+```
+
+### Workflow Actions (Enterprise)
+
+This group of methods allows your app to read information about the project's workflow and control the user's state within that workflow.
+
+<Aside>
+  These methods are available only for Crowdin Enterprise in the Editor when a project workflow is configured.
+</Aside>
+
+#### AP.editor.getWorkflowSteps(callback) {#get-workflow-steps}
+
+Retrieves a list of all workflow steps available in the current project for the user.
+
+**Example:**
+
+```js
+AP.editor.getWorkflowSteps(function(steps) {
+  if (steps && steps.length > 0) {
+    console.log("Available workflow steps:", steps);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives an array of
+        <code>WorkflowStepObject</code> items or <code>undefined</code> if no workflow is configured.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+```json
+[
+  {
+    "id": 752,
+    "title": "Translation",
+    "type": "Translate",
+    "editor_mode": "translate",
+    "approving_available": true,
+    "source_language": {
+      "id": 52,
+      "name": "English",
+      "code": "en"
+    }
+  },
+  {
+    "id": 753,
+    "title": "Proofreading",
+    "type": "Proofread",
+    "editor_mode": "proofread",
+    "approving_available": true,
+    "source_language": {
+      "id": 52,
+      "name": "English",
+      "code": "en"
+    }
+  }
+]
+```
+
+##### Response Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The unique numeric ID of the workflow step.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>title</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The display name of the workflow step (e.g., "Translation").</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The type of step (e.g., "Translate", "Proofread").</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor_mode</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The corresponding Editor mode for this step.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>approving_available</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Description:</strong> <code>true</code> if translations can be approved at this step.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>source_language</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> An object containing details about the source language.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.getWorkflowStepStatusFilter(callback) {#get-workflow-step-status-filter}
+
+Retrieves the currently active filter for workflow step status at the current workflow step.
+
+<Aside>
+  In projects with a workflow, strings have three statuses: <i>ToDo</i>, <i>Pending</i>, and <i>Done</i>. This method retrieves the current filter for these statuses.
+</Aside>
+
+**Example:**
+
+```js
+AP.editor.getWorkflowStepStatusFilter(function(status) {
+  console.log("Current step status filter:", status);
+  // Example output: "ALL"
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one
+        <code>string</code> argument.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+This method returns a plain **`string`**.
+
+```json
+"ALL"
+```
+
+##### Response Object Structure
+
+<p><strong>Type:</strong> <code>string</code></p>
+<p><strong>Allowed values:</strong> <code>ALL</code>, <code>ToDo</code>, <code>Pending</code>, <code>Done</code></p>
+
+#### AP.editor.setWorkflowStep(stepId) {#set-workflow-step}
+
+Switches the Editor to a different workflow step.
+
+**Example:**
+
+```js
+// Switch the Editor to workflow step with ID 753
+AP.editor.setWorkflowStep(753);
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">stepId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The ID of the workflow step to switch to. See
+        <code>AP.editor.getWorkflowSteps</code> for available IDs.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.setWorkflowStepStatusFilter(status) {#set-workflow-step-status-filter}
+
+Sets the filter for workflow step status at the current workflow step.
+
+**Example:**
+
+```js
+// Filter to show only strings that are "DONE"
+AP.editor.setWorkflowStepStatusFilter('DONE');
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>status</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The status to filter by.</p>
+        <p><strong>Allowed values:</strong> <code>ALL</code>, <code>TODO</code>, <code>PENDING</code>, <code>DONE</code></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Text Selection Actions
+
+These methods allow your app to get the text currently selected by the user's cursor in the source string area or the translation text area.
+
+#### AP.editor.source.getSelectedText(callback) {#get-selected-source-text}
+
+Retrieves the text currently selected by the user's cursor within the source string area.
+
+**Example:**
+
+```js
+AP.editor.source.getSelectedText(function(selectedText) {
+  if (selectedText) {
+    console.log("User selected this source text:", selectedText);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one argument: a
+        <code>string</code> (the selected text) or <code>null</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+This method returns a plain **`string`** of the selected text, or `null` if no text is selected.
+
+```json
+"Selected source text"
+```
+
+#### AP.editor.textarea.getSelectedText(callback) {#get-selected-textarea-text}
+
+Retrieves the text currently selected by the user's cursor within the translation text area.
+
+**Example:**
+
+```js
+AP.editor.textarea.getSelectedText(function(selectedText) {
+  if (selectedText) {
+    console.log("User selected this translation text:", selectedText);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one argument: a
+        <code>string</code> (the selected text) or <code>null</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+This method returns a plain **`string`** of the selected text, or `null` if no text is selected.
+
+```json
+"My selected translation"
+```
+
+### Editor Customization
+
+This group of methods provides advanced integration points for customizing the Editor's native behavior, such as adding custom context menus, managing hotkeys, and applying custom styles.
+
+#### AP.editor.registerContextMenuAction(action, callback) {#register-context-menu-action}
+
+Registers a custom item in the Editor's context menu (the menu that appears on right-click).
+
+You must define the `action` object, and the `callback` will return the same object augmented with an `eventSubscriptionId`. You then use `AP.events.on` to listen for clicks on that ID.
+
+**Example:**
+
+```js
+// 1. Define and register the context menu item
+AP.editor.registerContextMenuAction({
+  type: 'textarea-context-menu',
+  name: 'My Custom Action'
+}, function(action) {
+
+  // 2. Listen for clicks on this specific item
+  AP.events.on(action.eventSubscriptionId, function() {
+    console.log(`'${action.name}' was clicked!`);
+    AP.editor.noticeMessage("Custom action triggered!");
+  });
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>action</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The configuration object for the action. See the <code>Input Object
+        Structure</code> below.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback that receives the action object back, now including an
+        <code>eventSubscriptionId</code> for event handling.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Input Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>type</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The type of context menu where the action will be displayed. Possible values:</p>
+        <ul>
+          <li><code>textarea-context-menu</code>: The context menu for the translation input area.</li>
+          <li><code>source-string-context-menu</code>: The context menu for a source string.</li>
+          <li><code>source-string-selected-text-context-menu</code>: The context menu for selected text within a source string.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The text label that will be displayed in the context menu.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">children</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> An optional array of child <code>ActionObject</code> items to create a nested submenu.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example (in Callback)
+
+The callback receives the `action` object back, augmented with an `eventSubscriptionId`.
+
+```json
+{
+  "type": "textarea-context-menu",
+  "name": "My Test Action",
+  "eventSubscriptionId": "context.menu.click:GGChNhE"
+}
+```
+
+##### Response Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">eventSubscriptionId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The unique ID for this menu item. Use this ID with <code>AP.events.on</code> to
+        listen for click events.</p>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2">
+<em>
+          <p>...plus all properties from the <code>Input Object Structure</code> you provided.</p>
+</em>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<Aside>
+  To register multiple, separate context menu items, call `AP.editor.registerContextMenuAction` for each item individually.
+</Aside>
+
+##### Additional Examples
+
+**Simple action for the source string context menu**
+
+```js
+AP.editor.registerContextMenuAction({
+  type: 'source-string-context-menu',
+  name: 'Run custom action'
+}, function(action) {
+  AP.events.on(action.eventSubscriptionId, () => {
+    // Run custom logic when clicked
+    console.log('Custom action triggered.');
+  });
+});
+```
+
+**Action with a submenu**
+
+```js
+AP.editor.registerContextMenuAction({
+  type: 'source-string-context-menu',
+  name: 'My Actions',
+  children: [
+    {
+      name: 'Explain selection'
+    },
+    {
+      name: 'Check grammar'
+    }
+  ]
+}, function(action) {
+  // Handle the child menu items
+  if (action.children) {
+    action.children.forEach((childAction) => {
+      AP.events.on(childAction.eventSubscriptionId, () => {
+        // Add the logic that should happen on click
+        console.log(`'${childAction.name}' was clicked.`);
+      });
+    });
+  }
+});
+```
+
+**Action for selected text in the translation area**
+
+```js
+AP.editor.registerContextMenuAction({
+  type: 'textarea-context-menu',
+  name: 'Log selected text'
+}, function(action) {
+  AP.events.on(action.eventSubscriptionId, () => {
+    // Get the selected text and process it
+    AP.editor.textarea.getSelectedText(function(text) {
+      if (text) {
+        console.log('Selected text:', text);
+      }
+    });
+  });
+});
+```
+
+#### AP.editor.getHotKeys(callback) {#get-hotkeys}
+
+Retrieves a string containing all hotkeys currently active in the Editor.
+
+**Example:**
+
+```js
+AP.editor.getHotKeys(function(hotkeys) {
+  console.log("Active hotkeys:", hotkeys);
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one argument: a
+        <code>string</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+This method returns a plain **`string`** with hotkeys separated by commas.
+
+```json
+"Command+Enter,Command+[,Command+],Control+Shift+C,..."
+```
+
+#### AP.editor.propagateHotKeyPress(hotKeyPressed) {#propagate-hotkey-press}
+
+Manually propagates a hotkey press from your app's `iframe` up to the main Editor. This is useful if your app captures a key event (like "Enter") that you also want the Editor to react to.
+
+**Example:**
+
+```js
+// Tell the Editor that the "Command+Enter" hotkey was pressed
+AP.editor.propagateHotKeyPress('Command+Enter');
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">hotKeyPressed</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The hotkey string that was pressed (e.g., <code>Command+Enter</code>).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.applyCustomThemeStyle(theme, callback) {#apply-custom-theme-style}
+
+Applies a custom theme configuration to the Editor's UI. This allows for deep customization of colors, backgrounds, and element highlights.
+
+**Example:**
+
+```js
+AP.editor.applyCustomThemeStyle({
+  themeMode: 'dark',                    // Context mode ('light' or 'dark')
+  primaryAccent: '#35a1ff',
+  base: {
+    baseBackground: '#16191d',
+    stringStatus: {
+      translated: '#74bb02',
+      approved: '#35a1ff'
+    },
+    highlights: {
+      placeholderColor: '#35a1ff',
+      placeholderBg: 'rgba(53, 161, 255, 0.1)',
+      tagColor: '#74bb02',
+      tagBg: 'rgba(116, 187, 2, 0.1)',
+      nonePrintableCharacterColor: '#3eb17f',
+      findAndReplaceHighlightBg: '#cc9a06',
+      specialLightColor: '#35a1ff',
+      specialLightBg: 'rgba(53, 161, 255, 0.05)'
+    }
+  },
+  accents: {
+    info: { accentColor: '#35a1ff' },
+    danger: { accentColor: '#ff4444' },
+    warning: { accentColor: '#cc9a06' },
+    success: { accentColor: '#74bb02' }
+  }
+}, (result) => {
+  if (result) {
+    console.error('Error applying theme:', result);
+  } else {
+    console.log('Theme applied successfully');
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>theme</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A <code>ThemeObject</code> containing the UI color and style configurations.
+        See the example above for the required structure.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives an error message
+        string if the application fails, or <code>null</code> on success.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.resetCustomThemeStyle() {#reset-custom-theme-style}
+
+Removes all custom CSS applied by `AP.editor.applyCustomThemeStyle`.
+
+**Example:**
+
+```js
+AP.editor.resetCustomThemeStyle();
+```
+
+### Editor Modal Actions
+
+These methods allow your app to open and close modal windows from within the Editor.
+
+#### AP.editor.openModal(options, [callback]) {#editor-open-modal}
+
+Opens one of your app's defined "modal" modules.
+
+<Aside>
+  This method can only open modal modules defined in your app's own <code>manifest.json</code> file.
+</Aside>
+
+**Example:**
+
+```js
+// Open a modal module
+AP.editor.openModal({
+  resource: 'my-modal-key',
+  size: 'medium'
+}, function(success) {
+  if (success) {
+    console.log("Modal opened successfully.");
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>options</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The configuration object for the modal. See the <code>Input Object
+        Structure</code> below.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> An optional callback function that receives a <code>boolean</code>
+        (<code>true</code>) on success.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Input Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>resource</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The <code>key</code> of the modal module (defined in your
+        <code>manifest.json</code>) to open.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>size</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> The size of the modal window.</p>
+        <p><strong>Allowed values:</strong> <code>small</code>, <code>medium</code>, <code>large</code>,
+        <code>xlarge</code>. Default is <code>medium</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>onClose</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> An optional callback function that will be executed when the modal is closed.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.closeModal() {#editor-close-modal}
+
+Closes the currently open modal, but only if it was opened by your app using `AP.editor.openModal`.
+
+**Example:**
+
+```js
+// Close the modal
+AP.editor.closeModal();
+```
+
+## Project Actions
+
+This group of methods allows your app to interact with the Crowdin project, such as navigating to different project pages or opening the Editor. They are all called via the `AP.project` object.
+
+<Aside>
+  These methods are only available for Crowdin.
+</Aside>
+
+#### AP.project.redirect(path, hardRedirect) {#project-redirect}
+
+Redirects the user to a different page within the current project.
+
+**Example:**
+
+```js
+// Redirects to the project's Activity tab
+AP.project.redirect('/activity-stream');
+
+// Forces a full-page reload to the project's root
+AP.project.redirect('/', true);
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>path</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The relative path within the project to redirect to (e.g., <code>/</code>,
+        <code>/translations</code>, <code>/activity-stream</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">hardRedirect</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> If set to <code>true</code>, forces a full browser page load. If
+        <code>false</code> (default), uses internal routing.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.project.openModal(modalName) {#project-open-modal}
+
+Opens a built-in Crowdin modal dialog.
+
+**Example:**
+
+```js
+// Open the "Pre-translation via MT" modal
+AP.project.openModal('mt-pre-translation');
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>modalName</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The name of the built-in modal to open.</p>
+        <p><strong>Allowed values:</strong> <code>mt-pre-translation</code>, <code>ai-pre-translation</code>,
+        <code>marketplace-store</code></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.project.openEditor(fileId, [view], [languageCode]) {#project-open-editor}
+
+Opens the Crowdin Editor for a specific file.
+
+**Example:**
+
+```js
+// Open a specific file in the default view
+AP.project.openEditor('15411');
+
+// Open a file in Multilingual mode for a specific language
+AP.project.openEditor('15411', 'multilingual', 'de');
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>fileId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code> | <code>integer</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The ID of the file to open.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>view</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> The Editor mode to open (e.g., <code>"multilingual"</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">languageCode</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> The language code (e.g., <code>"de"</code>) to open. If <code>view</code> is
+        <code>multilingual</code>, this can be a comma-separated list.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.project.previewTranslations(action) {#project-preview-translations}
+
+Navigates the user to the appropriate tab based on the project type (**Translations** for file-based projects or **Download** for string-based projects) and triggers a preview download (in CSV or XLSX format).
+
+**Example:**
+
+```js
+// Trigger a preview download in CSV format
+AP.project.previewTranslations('csv');
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>action</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The format of the preview to download.</p>
+        <p><strong>Allowed values:</strong> <code>csv</code>, <code>xlsx</code></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.project.getTabsConfiguration(callback) {#project-get-tabs-configuration}
+
+Retrieves the configuration object for project tabs, indicating which tabs are currently visible or hidden in the project context.
+
+**Example:**
+
+```js
+AP.project.getTabsConfiguration(function(config) {
+  if (config) {
+    console.log("Current tabs configuration:", config);
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives an
+        <code>array</code> of tab configuration objects.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+This method returns an **`array`** of objects.
+
+```json collapse={10-50}
+[
+  {
+    "identifier": "home",
+    "visible": true
+  },
+  {
+    "identifier": "sources",
+    "visible": true
+  },
+  {
+    "identifier": "translations",
+    "visible": true
+  },
+  {
+    "identifier": "screenshots",
+    "visible": true
+  },
+  {
+    "identifier": "tasks",
+    "visible": true
+  },
+  {
+    "identifier": "members",
+    "visible": true
+  },
+  {
+    "identifier": "integrations",
+    "visible": true
+  },
+  {
+    "identifier": "reports",
+    "visible": false
+  },
+  {
+    "identifier": "activity-stream",
+    "visible": true
+  },
+  {
+    "identifier": "discussions",
+    "visible": true
+  },
+  {
+    "identifier": "tools",
+    "visible": true
+  },
+  {
+    "identifier": "test_app¦test_app-project-menu",
+    "visible": true
+  },
+  {
+    "identifier": "settings",
+    "visible": true
+  }
+]
+```
+
+#### AP.project.saveTabsConfiguration(params, callback) {#project-save-tabs-configuration}
+
+Saves a new configuration for project tabs. This allows you to programmatically show or hide specific tabs within the project context.
+
+**Example:**
+
+```js collapse={10-49}
+const newConfig = [
+  {
+    "identifier": "home",
+    "visible": true
+  },
+  {
+    "identifier": "sources",
+    "visible": true
+  },
+  {
+    "identifier": "translations",
+    "visible": true
+  },
+  {
+    "identifier": "screenshots",
+    "visible": true
+  },
+  {
+    "identifier": "tasks",
+    "visible": false
+  },
+  {
+    "identifier": "members",
+    "visible": false
+  },
+  {
+    "identifier": "integrations",
+    "visible": true
+  },
+  {
+    "identifier": "reports",
+    "visible": false
+  },
+  {
+    "identifier": "activity-stream",
+    "visible": true
+  },
+  {
+    "identifier": "discussions",
+    "visible": true
+  },
+  {
+    "identifier": "tools",
+    "visible": true
+  },
+  {
+    "identifier": "test_app¦test_app-project-menu",
+    "visible": true
+  },
+  {
+    "identifier": "settings",
+    "visible": true
+  }
+];
+
+AP.project.saveTabsConfiguration({ tabs_configuration: newConfig }, function(success) {
+  if (success) {
+    console.log("Configuration saved successfully.");
+  }
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>params</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> An object containing the new configuration. See the <code>Input Object
+        Structure</code> below.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> An optional callback function that receives a <code>boolean</code>
+        (<code>true</code>) on success.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Input Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">tabs_configuration</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> An array of tab configuration objects. See <code><a href="#project-get-tabs-configuration">AP.project.getTabsConfiguration</a></code> for the structure of
+        individual tab objects.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Profile Actions
+
+This group of methods allows your app to interact with the user's account profile pages, outside of a project. They are all called via the `AP.profile` object.
+
+<Aside>
+  These methods are only available for Crowdin in the user's Profile sections (e.g., Profile Settings, TM, MT, My Tasks).
+</Aside>
+
+#### AP.profile.redirect(path) {#profile-redirect}
+
+Redirects the user to a different page within their "Profile" area.
+
+**Example:**
+
+```js
+// Redirects the user to their "Tasks" page
+AP.profile.redirect('/tasks');
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">path</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The relative path within the user's profile to redirect to (e.g.,
+        <code>/tasks</code>, <code>/managers</code>, <code>/glossaries</code>).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Modal Actions
+
+These methods are used to control modal windows (e.g., setting a size of a modal from within its own `iframe`).
+
+#### AP.modal.setSize(options) {#modal-set-size}
+
+Updates the dimensions and scroll behavior of the modal window your app is currently running in.
+
+<Aside>
+This method only works when your app is launched as a [modal module](/developer/crowdin-apps-module-modal/). It has no effect when called from other contexts, such as the Editor side panel or a project tab.
+</Aside>
+
+**Example:**
+
+```js
+// Update the modal size and scroll behavior
+AP.modal.setSize({
+  width: "600px",
+  height: "600px",
+  hideXScrolls: true,  // Optional, default: true
+  hideYScrolls: false  // Optional, default: false
+});
+
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">options</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> An object containing the size and scroll settings. See the <code>Input Object
+        Structure</code> below.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Input Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>width</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The desired width (e.g., <code>600px</code>, <code>80%</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>height</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The desired height (e.g., <code>500px</code>, <code>90vh</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>hideXScrolls</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> Whether to hide horizontal scrollbars. Default is <code>true</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>hideYScrolls</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> Whether to hide vertical scrollbars. Default is <code>false</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Event Handling
+
+These methods allow your app to listen and react to events happening within the Crowdin UI (e.g., when a user changes a string or saves a translation), as well as to trigger your own custom events. They are all called via the `AP.events` object.
+
+<ReadMore>
+  Read more about [Supported Events](#supported-events).
+</ReadMore>
+
+#### AP.events.on(eventName, callback) {#events-on}
+
+Subscribes a listener to an event. This is the primary method for listening to both Crowdin UI events (e.g., `string.change`) and custom internal events emitted by your app or the library.
+
+**Example:**
+
+```js
+// Listen for the 'string.change' event from Crowdin
+AP.events.on('string.change', function(stringData) {
+  console.log("User switched to string ID:", stringData.id);
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">eventName</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The name of the event to listen for (e.g., <code>string.change</code>).
+        See the <a href="#supported-events">Supported Events</a> section
+        for a full list.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The function to execute when the event fires. It receives a data
+        payload object specific to the event.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.events.once(eventName, callback) {#events-once}
+
+Subscribes a listener to an event, but the listener is automatically removed after it has been executed one time.
+
+**Example:**
+
+```js
+// Run this code only the next time a translation is added
+AP.events.once('translation.added', function(translation) {
+  console.log("A translation was added:", translation.text);
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>eventName</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The name of the event to listen for.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The function to execute one time when the event fires.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.events.off(eventName, callback) {#events-off}
+
+Removes a specific event listener that was previously registered with `AP.events.on` or `AP.events.once`.
+
+**Example:**
+
+```js
+const myListener = function(data) { console.log(data); };
+
+// Start listening
+AP.events.on('string.change', myListener);
+
+// Stop listening
+AP.events.off('string.change', myListener);
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>eventName</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The name of the event to unsubscribe from.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The <strong>exact same function object</strong> that was used to register the
+        listener.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.events.offAll(eventName) {#events-off-all}
+
+Removes all event listeners for a specific event.
+
+**Example:**
+
+```js
+// Stop all listeners for the 'string.change' event
+AP.events.offAll('string.change');
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>eventName</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The name of the event for which to remove all listeners.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.events.onAny(callback) {#events-on-any}
+
+Subscribes a listener that fires for *any* event. This is useful for debugging to see all events passing through the system.
+
+**Example:**
+
+```js
+AP.events.onAny(function(eventName, eventData) {
+  console.log("Event fired:", eventName, "with data:", eventData);
+});
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> A callback function that receives two arguments: the <code>eventName</code>
+        (string) and the <code>eventData</code> (object).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.events.offAny(callback) {#events-off-any}
+
+Removes a specific listener that was registered with `AP.events.onAny`.
+
+**Example:**
+
+```js
+const myDebugListener = function(eventName, eventData) { /* ... */ };
+AP.events.onAny(myDebugListener);
+
+// Later, to stop listening
+AP.events.offAny(myDebugListener);
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The <strong>exact same function object</strong> that was used to register the
+        listener.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.events.emit(eventName, [data]) {#events-emit}
+
+Fires a custom event within your app. Any listeners registered with `AP.events.on` will be triggered.
+
+**Example:**
+
+```js
+// Fire a custom event with some data
+AP.events.emit('my-custom-event', { status: 'updated' });
+```
+
+##### Paramètres
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>eventName</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The name of the custom event to fire.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>data</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>any</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> An optional data payload to send to the event listeners.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Supported Events
+
+Use these event names with the `AP.events.on()` method to listen for actions happening in the Crowdin UI.
+
+<Aside>
+  Most of these events are specific to the Editor context. Global events, such as <code>theme.changed</code>, can be listened to in any context where your app is running.
+</Aside>
+
+<table>
+  <colgroup>
+    <col width="30%" />
+    <col width="70%" />
+  </colgroup>
+  <thead>
+    <tr>
+      <th>Event</th>
+      <th>Details & Payload</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>string.change</code></td>
+      <td>
+        <p>Fires when a user switches from one source string to another.</p>
+        <p><strong>Payload:</strong> A <code>StringDataObject</code> (or <code>null</code> if no string is selected).
+        See <code><a href="#get-string">AP.editor.getString</a></code> for the object structure.</p>
+        <div>
+          ```json
+          {
+            "id": 1568759,
+            "text": "Welcome!",
+            "context": "Main screen"
+          }
+          ```
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td><code>string.selected</code></td>
+      <td>
+        <p>Fires when a user selects or deselects strings (using checkboxes in Side-by-Side view).</p>
+        <p><strong>Payload:</strong> An array of <code>SelectedStringObject</code> items. See <code><a href="#get-selected-strings">AP.editor.getSelectedStrings</a></code> for the object structure.</p>
+        <div>
+          ```json
+          [
+            {
+              "string": {
+                "id": 1569759,
+                "text": "Welcome!"
+              },
+              "translations": {
+                "fr": []
+              }
+            }
+          ]
+          ```
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td><code>textarea.edited</code></td>
+      <td>
+        <p>Fires when a user makes any change (types, deletes, pastes) in the translation text area.</p>
+        <p><strong>Payload:</strong> An object containing the string data, the <code>oldText</code>, and the
+        <code>newText</code>.</p>
+        <div>
+          ```json
+          {
+            "id": 1569759,
+            "text": "Welcome!",
+            "oldText": "Welcom",
+            "newText": "Welcome"
+          }
+          ```
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td><code>translation.added</code></td>
+      <td>
+        <p>Fires when a user saves a new translation.</p>
+        <p><strong>Payload:</strong> A <code>TranslationObject</code> for the newly saved translation. See <code><a href="#get-translations">AP.editor.getTranslations</a></code> for the object structure.</p>
+        <div>
+          ```json
+          {
+            "id": 690950,
+            "string_id": 1569759,
+            "text": "Bienvenue!",
+            "author": {
+              "id": "12729493",
+              "login": "example_user"
+            }
+          }
+          ```
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td><code>translation.deleted</code></td>
+      <td>
+        <p>Fires when a user deletes a translation.</p>
+        <p><strong>Payload:</strong> An object containing the <code>id</code> of the deleted translation and its
+        <code>string_id</code>.</p>
+        <div>
+          ```json
+          {
+            "id": 690950,
+            "string_id": 1569759
+          }
+          ```
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td><code>translation.restored</code></td>
+      <td>
+        <p>Fires when a user restores a deleted translation.</p>
+        <p><strong>Payload:</strong> The restored <code>TranslationObject</code>. See <code><a href="#get-translations">AP.editor.getTranslations</a></code> for the object structure.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>translation.vote</code></td>
+      <td>
+        <p>Fires when a user votes (up or down) for a translation.</p>
+        <p><strong>Payload:</strong> The updated <code>TranslationObject</code> with the new <code>votes_rating</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>translation.approve</code></td>
+      <td>
+        <p>Fires when a user approves a translation.</p>
+        <p><strong>Payload:</strong> The updated <code>TranslationObject</code>, now with <code>"approved": true</code>
+        and <code>approver</code> details.</p>
+        <div>
+          ```json
+          {
+            "id": 690950,
+            "string_id": 1569759,
+            "approved": true,
+            "approver": {
+              "id": "12729494",
+              "login": "proofreader"
+            }
+          }
+          ```
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td><code>translation.disapprove</code></td>
+      <td>
+        <p>Fires when a user removes an approval from a translation.</p>
+        <p><strong>Payload:</strong> The updated <code>TranslationObject</code>, now with <code>"approved":
+        false</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>language.change</code></td>
+      <td>
+        <p>Fires when the user changes the target language in the Editor.</p>
+        <p><strong>Payload:</strong> The full <code>ContextDataObject</code>. See <code><a href="#get-context">AP.getContext</a></code> for the object structure.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.change</code></td>
+      <td>
+        <p>Fires when the user switches to a different file in the Editor.</p>
+        <p><strong>Payload:</strong> The full <code>ContextDataObject</code>. See <code><a href="#get-context">AP.getContext</a></code> for the object structure.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>theme.changed</code></td>
+      <td>
+        <p>Fires when the user changes the UI theme.</p>
+        <p><strong>Payload:</strong> A <code>string</code> with the new theme name (e.g., <code>"light"</code>,
+        <code>"dark"</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>asset.source.preview</code></td>
+      <td>
+        <p>Fires when a source asset file is selected in the Editor (for asset-based projects).</p>
+        <p><strong>Payload:</strong> The <code>ContextDataObject</code>. See <code><a href="#get-context">AP.getContext</a></code> for the object structure.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">asset.suggestion.preview</code></td>
+      <td>
+        <p>Fires when a suggestion asset file is selected in the Editor (for asset-based projects).</p>
+        <p><strong>Payload:</strong> An object containing <code>editor</code> context and <code>suggestion</code> data.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>

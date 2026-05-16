@@ -1,0 +1,79 @@
+---
+title: Parser Configuration Settings
+description: Configure import and export behavior for supported file formats
+slug: enterprise/project-settings/parser-configuration
+sidebar:
+  order: 13
+  label: Fortolkeropsætning
+---
+
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import Include from '~/components/Include.astro';
+import { Image } from 'astro:assets';
+import ReadMore from '~/components/ReadMore.astro';
+import parsersConfiguration from '!/enterprise/project-management/settings/parser_configuration.png';
+
+Crowdin Enterprise benytter som standard et prædefineret sæt af import- og eksportparametre for hvert understøttet filformat.
+
+Fortolkeropsættelsesfunktionen muliggør at ændre standard import- og eksportadfærd prædefineret for filformater understøttet af Crowdin Enterprise. Fortolkeropsætning i et bestemt projekt anvendes kun på filer gemt i dette projekt.
+
+Fortolkeropsætningen kan angives for alle filer af et bestemt format eller enkeltfiler. Når fortolkeropsætningen gemmes for et filformat, kan kildefilerne uploades til det relevante projekt, og Crowdin Enterprise anvender så indstillinger i overensstemmelse hermed.
+
+Import- og eksportadfærd kan opsættes for flg. formater: Adobe FrameMaker, Adobe InDesign, AsciiDoc, DITA, Generic XML, HTML, Java Properties, MadCap Flare, Markdown, Media Wiki, Office-dokumenter, Simpel tekst.
+
+<Image src={parsersConfiguration} alt="Fortolkeropsætning" />
+
+<Aside type="caution">
+  Some parser settings may be unavailable in [string-based](/enterprise/creating-project/#string-based-project) projects.
+</Aside>
+
+## Fortolkeropsætningsparametre
+
+Visse parametre er fælles for alle formater, andre er formatspecifikke. I tabellen nedenforr fremgår de tilgængelige fortolkerparametre og formater, de kan opsættes til.
+
+<Include file="parser-configuration-parameters.mdx" />
+
+## Fortolkeropsætning for alle projektfiler i et specifikt format
+
+Følg disse trin for at indstille den foretrukne fortolkeropsætning for alle filer i et bestemt format:
+
+<Steps>
+  1. Open your project and go to **Settings > Parser configuration**.
+  2. Choose the needed file format and click Edit.
+  3. Indstil de foretrukne indstillinger.
+  4. Click **Save**.
+</Steps>
+
+To add a new file format, click **Add Apps** and install the required format.
+
+## Fortolkeropsætning for en enkelt fil
+
+I visse tilfælde kan det være nødvendigt at indstille fortolkeropsætningen til et bestemt filformat for kun én enkelt fil, ikke alle filerne. Følg disse trin for at indstille fortolkeropsætningen for én enkelt fil:
+
+<Steps>
+  1. Open your project and go to **Sources > Files**.
+  2. Dobbeltklik på en ønskede fil.
+  3. In the appeared dialog, switch to the **Parser configuration** tab.
+  4. Indstil de foretrukne indstillinger.
+  5. Click **Save**.
+</Steps>
+
+Når fortolkeropsætningen gemmes, genimporterer Crowdin Enterprise denne fil og anvende dens indstillinger.
+
+<ReadMore>
+  Read more about [file management](/enterprise/file-management/) in Crowdin Enterprise.
+</ReadMore>
+
+## Post-processing Files with Nested Content
+
+Sometimes, you might work with files that contain strings in a different format. A common example is a JSON file where some string values contain HTML content. The standard parser configuration isn't designed for these nested or cascading scenarios.
+
+To properly process such files, you need to implement a custom Crowdin App that uses the File Post-Import Processing Module. This method, sometimes referred to as cascade processing, allows your app to intercept imported strings and instruct Crowdin Enterprise to re-process specific ones using a different parser. For instance, you can tell Crowdin Enterprise to parse a string from a JSON file as HTML, ensuring that HTML tags are correctly handled and not exposed to translators as plain text.
+
+To handle files with nested content, you can install the Cascade Importer from the Crowdin Store or, for more custom scenarios, build your own.
+
+<CardGrid>
+  <LinkCard title="Cascade Importer App" description="Automatically detect and re-process strings with nested content. The recommended solution for most projects." href="https://store.crowdin.com/cascade-importer" />
+  <LinkCard title="Crowdin Apps Quick Start" description="A step-by-step guide for creating custom Crowdin apps. Covers environment setup and initial development." href="/developer/crowdin-apps-quick-start/" />
+  <LinkCard title="File Post-Import Processing Module" description="Technical documentation on how to build an app that can intercept and modify strings after the initial file import." href="/developer/crowdin-apps-module-file-post-import-processing/" />
+</CardGrid>

@@ -1,0 +1,145 @@
+---
+title: Custom Placeholders
+description: Configure the highlight of custom placeholders in the Editor
+slug: enterprise/custom-placeholders
+---
+
+import { Image } from 'astro:assets';
+import { Steps, LinkCard, CardGrid, Aside } from '@astrojs/starlight/components';
+import organizationSettingsMenuItem from '!/enterprise/organization-management/organization_settings_menu_item.png';
+import customPlaceholderExpression from '!/enterprise/organization-management/custom_placeholders_expression.png';
+
+Custom Placeholders are designed for cases when the source texts contain some less common placeholders that are not highlighted in the source strings (in the Editor) by default.
+
+## Configure Your Custom Placeholders
+
+You can manage Custom Placeholders in the **Organization Settings**.
+
+<Steps>
+  1. Click on your profile picture in the upper-right corner and select **Organization Settings**. <Image src={organizationSettingsMenuItem} alt="Organization Settings" />
+  2. Switch to the **Custom placeholders** section on the left sidebar and click **Add Placeholder**.
+  3. In the appeared dialog, specify a custom placeholder expression using the Expressions syntax elements and click **Create**. <Image src={customPlaceholderExpression} alt="Custom Placeholder Expression" class="width-xl" />
+</Steps>
+
+<LinkCard title="Assign Custom Placeholder to the Project" href="/enterprise/project-settings/import/#assign-custom-placeholder" />
+
+Once the custom placeholders are assigned to the project, project members will see them highlighted in the Editor during the translation process.
+
+## Understanding the Syntax: A Simple Example
+
+To configure your custom placeholder expression, you can use the elements from [the expression syntax table](/enterprise/expression-syntax-elements/).
+
+For example, if you’d like to highlight this `[[Placeholder1]]`, your expression might look like this:
+
+```
+start, then "[[", range "a,z,A,Z,0,9", limit "1,20", then "]]", end
+```
+
+To simplify things a bit, let's deconstruct the expression above.
+
+* `start` &ndash; indicates the beginning of the expression.
+* `then "[["` &ndash; means that your custom placeholder starts with two opening square brackets.
+* `range "a,z,A,Z,0,9"` &ndash; means that your custom placeholder might include characters ranging a-z and/or A-Z and/or 0-9.
+* `limit "1,20"` &ndash; means that the length of the placeholder is from 1 to 20 characters.
+* `then "]]"` &ndash; means that your custom placeholder ends with two closing square brackets.
+* `end` &ndash; indicates the end of the expression.
+
+<CardGrid>
+  <LinkCard title="Verbal Tester" description="Create, check and edit verbal expressions in Crowdin project with Verbal Tester application" href="https://store.crowdin.com/verbal-tester" target="_blank" />
+  <LinkCard title="Try Verbal Expressions GPT" description="Helps with Verbal Expressions development in Crowdin." href="https://chat.openai.com/g/g-NdFRRXHwm-crowdin-verbal-expressions-maker" target="_blank" />
+</CardGrid>
+
+## Custom Placeholder Expression Examples
+
+Below you can see a few examples of custom placeholder expression and how they will be highlighted in source strings in the Editor.
+
+<Aside>
+  All the examples below use the same argument delimiter `"`.
+</Aside>
+
+##### Custom placeholder enclosed in percent characters and curly brackets
+
+String example:
+
+```
+A test string with a custom %{placeholder}%
+```
+
+Expression:
+
+```graphql
+start, maybe "(", then "%", then "{", anything,  then "}", maybe ")", then "%", end
+```
+
+This expression deconstructed:
+
+* `maybe "("` &ndash; Allows the placeholder to optionally start with a `(`.
+* `then "%"` &ndash; Requires a `%` character.
+* `then "{"` &ndash; Requires a `{` character.
+* `anything` &ndash; Matches any character or sequence of characters inside the placeholder.
+* `then "}"` &ndash; Requires a `}` character.
+* `maybe ")"` &ndash; Allows the placeholder to optionally end with a `)`.
+* `then "%"` &ndash; Requires a `%` character.
+
+##### Custom placeholder enclosed in double square brackets
+
+String example:
+
+```
+A test string with a custom [[placeholder]]
+```
+
+Expression:
+
+```graphql
+start, then "[[", anythingbut "[[", then "]]", multiple, end
+```
+
+This expression deconstructed:
+
+* `then "[["` &ndash; Requires the placeholder to start with `[[`.
+* `anythingbut "[["` &ndash; Matches any character *except* the opening `[[` brackets.
+* `then "]]"` &ndash; Requires the placeholder to end with `]]`.
+* `multiple` &ndash; Allows the pattern (the content inside the brackets) to repeat.
+
+##### Custom placeholder
+
+String example:
+
+```
+A test string with a custom placeholder
+```
+
+Expression:
+
+```graphql
+start, then "placeholder", end
+```
+
+##### Custom placeholder enclosed in paragraph characters
+
+String example:
+
+```
+A test string with a custom §placeholder§
+```
+
+Expression:
+
+```graphql
+start, then "§", anything,  then "§", end
+```
+
+##### Long sentence that you might want to highlight as a single custom placeholder
+
+String example:
+
+```text wrap
+A test string with a Long sentence that you might want to highlight as a single custom placeholder
+```
+
+Expression:
+
+```graphql wrap
+start, then "Long sentence that you might want to highlight as a single custom placeholder", end
+```

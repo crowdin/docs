@@ -1,0 +1,238 @@
+---
+title: GitLab-integration
+description: Synchronize files between your GitLab repository and Crowdin
+slug: enterprise/gitlab-integration
+sidebar:
+  order: 2
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import setUpIntegrationDropdown from '!/enterprise/integrations/set_up_integration_dropdown.png';
+import authorization from '!/crowdin/integrations/gitlab_integration_authorization.png';
+import unconfigured from '!/enterprise/integrations/integration_unconfigured.png';
+import unconfiguredSb from '!/enterprise/integrations/integration_unconfigured_sb.png';
+import syncNow from '!/enterprise/integrations/integration_sync_now.png';
+
+GitLab-integrationen muliggør at synke filer mellem GitLab-repo'et og Crowdin Enterprise-projektet.
+
+<Aside>
+  You will need to [install the GitLab integration](https://store.crowdin.com/gitlab) in your Crowdin Enterprise organization before you can set it up and use it.
+</Aside>
+
+In file-based projects, there are two possible GitLab integration modes you can choose from:
+
+* **Source and translation files mode** &ndash; synchronize source and translation files between your GitLab repository and Crowdin Enterprise project.
+* **Målfil-pakketilstand** &ndash; generér og push oversættelsesfiler i det valgte format til GitLab-repo'et fra Crowdin Enterprise-projektet. I denne tilstand pusher integration oversættelsesfiler og synker ikke kilder fra repo'et. I tilfælde, hvor der udføres en kildetekstrevision i Crowdin Enterprise-projektet, og kildeteksten ønskes opdateret til repo'et, kan der tilføjes et kildesprog som målsprog, hvilket så pushes til repo'et sammen med oversættelserne.
+
+In string-based projects, GitLab integration exclusively operates in the **Target file bundles mode**.
+
+<ReadMore>
+  Read more about [project types](/enterprise/creating-project/#project-types).
+</ReadMore>
+
+All translated and approved files (or target file bundles) are automatically merged into the `l10n` branch of the GitLab repository.
+
+<Aside type="tip" title="Using GitLab CI/CD?">
+  An alternative to this integration is to use [Crowdin CLI](https://store.crowdin.com/gitlab-ci) in GitLab CI/CD pipelines to automate the localization process.
+</Aside>
+
+## Tilslutning af GitLab-konto
+
+<Steps>
+  1. Open your project and select **Integrations** on the left sidebar.
+  2. Click on **GitLab** in the Integrations list.
+  3. Click **Set Up Integration** and select **Source and translation files mode** or **Target file bundles mode** from the drop-down list to integrate via your GitLab account. <Image src={setUpIntegrationDropdown} alt="GitLab Integration Connecting GitLab" class="width-sm" />
+     <Aside>In string-based projects, GitLab integration exclusively operates in the **Target file bundles mode**.</Aside>
+  4. Then authorize the connection with Crowdin on the GitLab side: <Image src={authorization} alt="GitLab Integration Authorization" class="width-lg" />
+</Steps>
+
+Er det krævede repo privat, og er der begrænset eller ingen adgang hertil, bed repo-ejeren levere et adgangstoken.
+Klik bagefter på **Brug personligt adgangstoken**, indsæt tokenet i feltet *Token* og klik på **Opsæt Integration**.
+
+<Aside title="Tilladelser">
+  When setting up an integration with an access token, ensure that you have the Maintainer level permission to the necessary repo.
+</Aside>
+
+### Vælg depot
+
+Vælg i den viste dialog det relevante repo og grene, som skal oversættes.
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Image src={unconfigured} alt="GitLab Integration Unconfigured" />
+
+    It's recommended to switch Duplicate Strings to **Show within a version branch**, so identical strings will be hidden between branches. If your source files contain strings with apparent identifiers (keys), it's better to use a *strict* version of this option. In other cases, feel free to use a *regular* one.
+  </TabItem>
+  <TabItem label="String-based project">
+    <Image src={unconfiguredSb} alt="GitLab Integration Unconfigured" />
+  </TabItem>
+</Tabs>
+
+<CardGrid>
+  <LinkCard title="Dubletstrenge" href="/enterprise/project-settings/import/#duplicate-strings" />
+  <LinkCard title="Versionsstyring" href="/enterprise/version-management/" />
+</CardGrid>
+
+When working with GitLab integration in the **Target File Bundles Mode**, the integration will send the completed translations from your Crowdin Enterprise project without pulling sources from your repo. Når der vælges et repo og grene til oversættelss, angives ligeledes, hvor integrationen skal placere (put) de genererede pakker med oversættelser.
+
+<ReadMore>
+  Read more about [configuring target file bundles for VCS integration](/enterprise/bundles/#bundles-in-vcs-integrations).
+</ReadMore>
+
+When you work with private integrations (e.g., integrations with self-hosted VCS), you need to add dedicated Crowdin IP addresses to the allowlist to ensure that it operates properly while staying secure.
+
+<ReadMore>
+  Read more about [IP Addresses](/developer/ip-addresses/#integrations-and-applications).
+</ReadMore>
+
+### Tjenestegrene
+
+Når oversættelser er færdige, og sprogene er klar til idriftsættelse, sender Crowdin Enterprise en pull-anmodning med oversættelser til versionsstyringssystemet. For hver gren, der er under lokalisering, opretter Crowdin Enterprise en yderligere tjenestegren med oversættelser. We don't commit directly to the master branch so that you can verify translations first.
+
+By default, `l10n_` is added to the created service branch name. If necessary, you can easily change it.
+
+<Aside type="tip">
+  We recommend deleting the `l10n_` branch from your repository after merging the merge request to prevent potential conflicts. Crowdin Enterprise will automatically recreate the service branch when new translations are ready to be synced.
+</Aside>
+
+### Synkindstillinger
+
+Configure the synchronization settings according to your needs and preferences.
+
+<Aside type="caution" title="Limitations">
+  The *Import existing translations* and *Push Sources* options are only available for file-based projects.
+</Aside>
+
+#### Import Existing Translations
+
+For at importere eksisterende oversættelser fra det relevante repo, vælg én af flg. muligheder:
+
+* **One-time translation import after the branch is connected**
+* **Always import new translations from the repository**
+
+Som standard er den første indstilling sat til kun at importere oversættelser én gang. Ryd alternativt begge indstillinger, hvis ingen oversættelsesimport ønskes fra det relevante repo.
+
+<Aside type="tip">
+  We recommend importing existing translations from the repository only once during the integration setup. Afterward, treat Crowdin Enterprise as the source of truth and manage translations exclusively in Crowdin Enterprise to prevent overriding unapproved translations.
+</Aside>
+
+Click **Upload translations options** to access the following additional options:
+
+* **Allow target translation to match source**
+* **Approve added translations**
+
+#### Push Sources
+
+By default, sources are not pushed to the repo with translations. Although, if you perform a source text review in your Crowdin Enterprise project and would like to push the changes made to your source files on Crowdin Enterprise back to your repo, click **Edit**, select *Push Sources* in the integration settings, and click **Save**.
+
+#### Sync Schedule
+
+The synchronization is processed every hour automatically. If necessary, you can change the update interval in the integration settings. For at opsætte synktidsplanen – klik på **Redigér**, rul ned til *Synktidsplan*, angiv det ønskede interval og klik på **Gem**.
+
+There are cases when it's necessary to disable translations from being pushed to the repo temporarily. I så tilfælde, så klik på **Redigér**, ryd *Synktidsplan* i integrationsindstillingerne og klik på **Gem**. Når alt er klar til synk af oversættelser med repo'et, vælg *Synktidsplan* og klik på **Gem**.
+
+Uafhængigt af synkindstillingerne, synkes kildefilændringer i repo'et stadig med Crowdin Enterprise kontinuerligt.
+
+### Grene at auto-synke
+
+Når integration opsættes, vælges de eksisterende repo-grene, som skal føjes til Crowdin Enterprise-projektet. For automatisk at føje fremtidige grene fra GitLab til Crowdin Enterprise, opret et mønster for grennavnene i integrationsindstillingerne.
+
+For example, you add a pattern \**feature* in the GitLab integration settings. In this case, the future branches that contain this word at the end of the title will be added to the project.
+
+To add a pattern for branch names, follow these steps:
+
+<Steps>
+  1. Click **Edit** in the GitLab integration section.
+  2. Rul i den viste dialog ned til *Grene til automatisk synk*.
+  3. In the *Branches to Sync Automatically* field, use wildcard selectors such as `*`, `?`, `[set]`, `\` and others to identify the necessary branches.
+  4. Click **Save**.
+</Steps>
+
+### Default Configuration File Name
+
+\`crowdin.yml er standardfilnavnet brugt til automatisk synkede grene. For at ændre standardindstillingerne, klik på *Redigér*, angiv det ønskede navn i feltet *Standardopsætningsfilnavn* i integrationsindstillingerne og klik på **Gem**.
+
+Angives ikke et tilpasset opsætningsfilnavn til automatisk synkede grene, og finder integrationen ikke en opsætningsfil med standardnavnet 'crowdin.yml\` i roden af grenen, markeres disse grene i integrationsindstillingerne med et rødt ikon med et udråbstegn, der indikerer "Ikke klar. Tjek opsætningen".
+
+## Valg af indhold til synkning
+
+To make integration work, you need to specify which source files should be translated and how Crowdin Enterprise should structure translated files in your repository. For at få integrationen til at fungere i tilstanden Målfil-pakker, vælg de pakker, som skal pushes til det relevante repo.
+
+<Aside type="tip">
+  Optræder et rødt ikon med et udråbstegn ved siden af tjenestegrensnavnet, betyder det, at der ikke er valgt indhold til synkning.
+</Aside>
+
+Der er to måder at angive indhold til synkning på:
+
+* Onlineopsætning
+* Manuel opsætning ved oprettelse af en opsætningsfil
+
+### Onlineopsætning
+
+This procedure is the same for all integrations with version control systems (VCS).
+
+<ReadMore>
+  Check [Configuring VCS Integrations Online](/enterprise/configuring-vcs-integrations-online/) to get to know how to select content for synchronization online.
+</ReadMore>
+
+### Oprettelse af opsætningsfil
+
+The configuration file `crowdin.yml` should be stored in the GitLab repository along with each separate branch that you want to translate.
+
+Filen skal have samme struktur som krævet til CLI, dog bør projektlegitimationsoplysningerne af sikkerhedshensyn ikke gemmes i fil-headeren.
+
+<ReadMore>
+  Read more about [creating a configuration file](/developer/configuration-file/).
+</ReadMore>
+
+## Brug af flere repo'er i ét projekt
+
+Arbejdes med et multiplatformsprodukt med versioner til forskellige operativsystemer, kan flere repo'er, indeholdende kildefiler til hvert operativsystem, forbindes. In this case, localization resources (e.g., TMs, Glossaries) and translations could be used more efficiently, reducing the time needed for project localization.
+
+To add another repository, follow these steps:
+
+<Steps>
+  1. Open your project and select **Integrations** on the left sidebar.
+  2. Click on **GitLab** in the Integrations list.
+  3. Klik **Tilføj repo**.
+  4. Configure the integration with the new repository according to your needs and preferences.
+</Steps>
+
+## Kontrol af Synkroniseringsstatus
+
+Once the integration is set up, all related information is stored in **Integrations > GitLab**.
+
+Når integrationen er forbundet, kan indstillingerne kun opdateres af projektmedlemmet, der har opsat den. Alle projektlederer, undtagen personen, der opsatte integrationen, vil se knappen **Redigér** deaktiveret med flg. meddelelse, når markøren svæver over den: `Integration opsat af {Full Name} ({username})`.
+
+Som standard behandles synk automatisk hvert 60. minut. Ved behov for at synke straks, klik på **Synk nu**.
+
+<Image src={syncNow} alt="GitLab Integration Sync Now" />
+
+Alternatively, if you need to sync only one branch separately, click <Icon name="mdi:dots-vertical" class="inline-icon" /> on the needed branch and select **Sync branch**.
+
+## Upload af oversættelser fra repo
+
+Som standard uploades de i repo'er gemte oversættelser kun til Crowdin Enterprise under første synkning. To upload translations to Crowdin Enterprise manually, click <Icon name="mdi:dots-vertical" class="inline-icon" /> icon next to the **Sync Now** button, and click **Sync Translations to Crowdin Enterprise**. Integrationen uploader så eksisterende oversættelser til Crowdin Enterprise-projektet.
+
+<Aside type="caution" title="Limitations">
+  * The **Sync Translations to Crowdin Enterprise** option is available for file-based projects only.
+  * Use this feature with caution if translation is already in progress.<br />
+    Manually uploading translations from the repo may override unapproved translations currently in the project, similar to the [**Always import new translations from the repository**](#import-existing-translations) option.
+</Aside>
+
+## Q&A
+
+<QuestionAnswer title="How can I avoid unnecessary application builds triggered by commits from Crowdin Enterprise?">
+  Since VCS integrations in Crowdin Enterprise use API to commit files but not Git, each file is committed separately.
+
+  Her er et par anbefalinger, som kan hjælpe med at løse lign. situationer:
+
+  * Brug muligheden export_languages til at overspringe commits fra sprog, som endnu ikke er relevante. Read more about the [Export languages parameter](/developer/configuration-file/#export-languages).
+  * Use the `[ci skip]` tag in the commit messages to skip unnecessary builds. Read more about the [Commit Message parameter](/developer/configuration-file/#commit-message).
+  * Opsæt det foretrukne synkinterval via [Synktidsplan](#synchronization-settings) (f.eks. én hver 24. time).
+  * Squash commits, når en lokaliseringsgren flettes for at holde master-grenhistorikken ren og ryddelig.
+</QuestionAnswer>

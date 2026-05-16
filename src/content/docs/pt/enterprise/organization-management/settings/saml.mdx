@@ -1,0 +1,443 @@
+---
+title: SAML Single Sign-On
+description: Learn how to set up SAML SSO for your organization
+slug: enterprise/saml
+sidebar:
+  order: 2
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import authenticationMethod from '!/enterprise/organization-management/saml_authentication_method.png';
+import idpCredentials from '!/enterprise/organization-management/saml_idp_credentials.png';
+import serviceProviderCredentials from '!/enterprise/organization-management/saml_service_provider_credentials.png';
+import settingsAdvancedOptions from '!/enterprise/organization-management/saml_settings_advanced_options.png';
+
+SAML single sign-on (SSO) gives users access to Crowdin Enterprise through an identity provider (IDP) of your choice. The benefits of SAML authentication include:
+
+* **Standardization:** SAML is a standard format that allows seamless interoperability between systems, independent of implementation.
+* **Improved user experience:** Users can access Crowdin Enterprise using your organization's identity provider without additional authentication, allowing them to use only one set of login details.
+* **Increased security:** SAML is a security standard for logging into applications, which provides a single point of authentication, keeping user credentials within the firewall boundary.
+
+<Aside>
+  SAML single sign-on is available only for the Business [subscription plan](https://crowdin.com/pricing#enterprise-plans) on Crowdin Enterprise.
+</Aside>
+
+## Configure your identity provider
+
+To get started, you'll need to set up a connection (or connector) for Crowdin Enterprise with your IDP (for example, [Auth0](https://auth0.com/docs/protocols/saml/saml-idp-generic#2-configure-auth0-as-idp), [Google Workspace (SAML)](https://support.google.com/a/answer/6087519?hl=en), [Okta](https://developer.okta.com/docs/guides/saml-application-setup/overview/), and others).
+
+<CardGrid>
+  <LinkCard title="Configure SAML for Google Workspace" href="#google-workspace" />
+  <LinkCard title="Configure SAML for Microsoft Azure" href="#microsoft-azure" />
+  <LinkCard title="Configure SAML for Okta" href="#okta" />
+  <LinkCard title="Configure SAML for OneLogin" href="#onelogin" />
+  <LinkCard title="Configure SAML for Auth0" href="#auth0" />
+</CardGrid>
+
+## Set up SAML SSO for Crowdin Enterprise
+
+To configure the SAML SSO feature for your Crowdin Enterprise organization, follow these steps:
+
+<Steps>
+  1. Click on your profile picture in the upper-right corner and select **Organization Settings**.
+  2. Switch to the **Security** section on the left sidebar and click on **SAML**. <Image src={authenticationMethod} alt="SAML in Organization Settings Security section" />
+  3. In the [**Identity Provider Configuration**](#identity-provider-configuration) section, enter your IDP credentials and click **Save**. <Image src={idpCredentials} alt="Identity Provider Configuration" />
+  4. If your IDP requires Crowdin Enterprise service provider details before providing its own credentials, scroll down to copy the required values from the **Service Provider Details** section. Note that the **Settings** options and the advanced options in **Service Provider Details** are disabled until you save your IDP credentials in Step 3. <Image src={serviceProviderCredentials} alt="Service Provider Details" />
+  5. Configure the preferred options in the [**Settings**](#saml-settings) and [**Service Provider Details**](#service-provider-details) sections and click **Save**. <Image src={settingsAdvancedOptions} alt="SAML Settings" class="width-xl" />
+</Steps>
+
+Once configured, SAML becomes immediately available as an authentication option for your organization members.
+
+## Identity Provider Configuration
+
+The **Identity Provider Configuration** section is where you enter your IDP credentials to establish the SAML connection. Fill in the following fields and click **Save**:
+
+* **SSO URL** &ndash; the SAML 2.0 endpoint URL provided by your identity provider for authentication.
+* **Entity ID** &ndash; the unique identifier (Entity ID) for your identity provider.
+* **X.509 Certificate** &ndash; paste your entire X.509 public certificate from your identity provider, or drop a .pem file.
+* *(Optional)* **Single Logout (SLO) URL** &ndash; the SAML endpoint URL for logging out users. Leave empty if not supported by your identity provider. Required to enable the **Enable Single Logout (SLO)** option in the **Settings** section.
+
+After saving, the section switches to a read-only view of your saved credentials. The following additional certificate details derived from your X.509 certificate are also displayed:
+
+* **Certificate expiry** &ndash; the expiration date of the X.509 certificate provided by your IDP.
+* **Certificate issuer** &ndash; the organization or entity that issued the X.509 certificate.
+* **Fingerprint** &ndash; the unique hash fingerprint of the X.509 certificate, used to verify its authenticity.
+
+### Edit Identity Provider Credentials
+
+To update your IDP credentials (for example, to replace an expiring certificate), click **Edit** in the **Identity Provider Configuration** section, make the necessary changes, and click **Save**.
+
+#### Update an Expired Certificate
+
+X.509 certificates have a limited validity period — typically one to three years depending on your IDP configuration. Once a certificate expires, organization members will no longer be able to log in using SAML until the certificate is updated.
+
+<Steps>
+  1. Obtain the new X.509 certificate from your identity provider.
+  2. In Crowdin Enterprise **Organization Settings > Security > SAML**, click **Edit** in the **Identity Provider Configuration** section.
+  3. Replace the existing certificate with the new one in the **X.509 Certificate** field.
+  4. Click **Save**.
+</Steps>
+
+### Delete Identity Provider Credentials
+
+To remove your IDP credentials (for example, when switching to a different identity provider), click **Delete** in the **Identity Provider Configuration** section, then confirm by clicking **Delete** in the confirmation dialog.
+
+<Aside type="caution">
+  Deleting IDP credentials removes the entire SAML configuration. Organization members will no longer be able to use SAML to log in until the configuration is set up again.
+</Aside>
+
+## SAML Settings
+
+The **Settings** section provides options to fine-tune your SAML behavior. This section is available once your IDP credentials are saved in the **Identity Provider Configuration** section.
+
+* **Provider name** &ndash; the name of the SAML authentication method that will be displayed on your Crowdin Enterprise login page.
+* **Enforce SAML** &ndash; select whether organization members with emails on the domains configured in the **Email domains** field can use only SAML SSO to log in.
+* **Restrict members from changing their account email** &ndash; select whether you'd like to restrict members from changing their Crowdin Enterprise emails.
+* **Email domains** &ndash; email domains related to organization members that use SAML SSO to log in. Available only when **Enforce SAML** or **Restrict members from changing their account email** is enabled.
+* **Skip 2FA for SAML** &ndash; select whether users logging in via SAML SSO will bypass the organization's two-factor authentication requirement. Enable this option if your Identity Provider already handles 2FA.
+* **Update member accounts at each login** &ndash; select whether you'd like the configured account attributes to be synced from IDP at each login of the organization member. These attributes are synced from IDP during the account creation.
+  <Aside>
+      To use this option, make sure to configure [SAML Attributes](#mapping-saml-attributes) mapping beforehand.
+  </Aside>
+* **Enable Single Logout (SLO)** &ndash; select whether organization members should be logged out of IDP when logging out of your Crowdin Enterprise organization. To enable this option, add an SLO URL in the **Identity Provider Configuration** section.
+
+## Service Provider Details
+
+The **Service Provider Details** section provides Crowdin Enterprise credentials you need to enter in your IDP settings, as well as advanced configuration options. This section is visible at all times, but advanced options become available only after saving your IDP credentials in the **Identity Provider Configuration** section.
+
+The following read-only values can be copied and used when configuring your IDP:
+
+* **Service Provider Issuer** &ndash; unique identifier for your Crowdin Enterprise organization as a Service Provider.
+* **Reply URL (ACS)** &ndash; the endpoint where your identity provider sends SAML authentication responses.
+* **Service Provider Metadata URL** &ndash; the URL your identity provider can use to automatically configure the SAML connection.
+* **SSO Login URL** &ndash; the URL where users will be redirected to initiate SAML authentication.
+
+The following advanced options are available after your IDP credentials are saved:
+
+* **Service Provider Issuer** &ndash; globally unique name for a Crowdin Enterprise Service Provider. By default, it's your organization's SAML metadata URL. Customize this only if required by your IDP.
+* **Sign AuthRequest** &ndash; select whether to sign the authorization request sent to your IDP.
+
+The following options allow you to configure response signing and authentication behavior. At least one signing option (**Responses signed** or **Assertions signed**) is required:
+
+* **Responses signed** &ndash; indicates a requirement for the SAML responses received by Crowdin Enterprise to be signed.
+* **Assertions signed** &ndash; indicates a requirement for the SAML assertions received by Crowdin Enterprise to be signed.
+* **Sign SLO request** &ndash; indicates a requirement for the Single Logout (SLO) requests sent to your identity provider to be signed.
+* **Authentication Context** &ndash; specifies which authentication methods your identity provider should use. Leave empty to allow any method.
+
+## Mapping SAML Attributes
+
+You can map attributes in the IDP response to user attributes used in Crowdin Enterprise. See the available attributes in the following table.
+
+| Parâmetro   | Details                                                                                |
+| ----------- | -------------------------------------------------------------------------------------- |
+| `firstName` | **Type:** `string`<br />**Description:** The first name of the user stored on the IDP. |
+| `lastName`  | **Type:** `string`<br />**Description:** The last name of the user stored on the IDP.  |
+| `timeZone`  | **Type:** `string`<br />**Description:** The timezone of the user.                     |
+| `avatar`    | **Type:** `string`<br />**Description:** The absolute URL to user's profile picture.   |
+
+## What you get when SAML SSO is enabled
+
+Once SAML is configured, it becomes available as a login option on your Crowdin Enterprise login page. Users who log in via SAML will be authenticated through your IDP. If a user doesn't yet have an account in your organization, one will be created automatically during their first SAML login.
+
+Any users already logged in at the time of configuration will remain logged in.
+
+## Configuring SAML SSO for Google Workspace {#google-workspace}
+
+To set up Crowdin Enterprise SAML SSO in your Google Workspace, follow the steps below.
+
+#### Set up Crowdin Enterprise SAML app {#setup-google}
+
+<Steps>
+1. Open the Google Admin console using an administrator account.
+2. From the Admin console *Home* page, go to **Apps > SAML apps**.
+3. Click **Add**<Icon name="mdi:plus" class="inline-icon" /> at the bottom right.
+4. Click **Set up my own custom app**. The *Google IdP Information* window opens and the *SSO URL* and *Entity ID* fields automatically populate. <Aside>This is the information you'll need to specify in your Crowdin Enterprise *Organization Settings* > *Security* > *SAML*.</Aside>
+5. Copy the *SSO URL*, *Entity ID*, and download the certificate.
+6. In a separate browser tab or window, log in to your Crowdin Enterprise Organization, open *Organization Settings* > *Security* > *SAML*, and enter the information you copied in Step 5 in the **Identity Provider Configuration** section:<div className="mb-4" />
+   * Paste the *SSO URL* in the **SSO URL** field.
+   * Paste the *Entity ID* in the **Entity ID** field.
+   * Drag and drop your certificate file to the **X.509 Certificate** field.
+7. Click **Save** and return to the Google Admin console, then click **Next**.
+8. In the *Basic information* window, add an application name (for example *Crowdin Enterprise*) and optionally add a description.
+9. *(Optional)* Upload a PNG or GIF file to serve as an icon for your Crowdin Enterprise SSO app. The icon image should be 256 pixels square. You can find the Crowdin icon on the [Using the Crowdin Logo](/using-logo/) page.
+10. Click **Next**.
+11. In the *Service Provider Details* window, you need to enter an *ACS URL*, *Entity ID*, leave the *Start URL* empty, leave the *Signed Response* box cleared, and set the *Name ID Format* to *PERSISTENT*.
+12. Switch to your Crowdin Enterprise *Organization Settings* > *Security* > *SAML* where all the values for Step 11 can be found in the **Service Provider Details** section.
+13. In the *Service Provider Details* window in your Google Admin console, paste the **Reply URL (ACS)** in the *ACS URL* field, **Service Provider Issuer** in the *Entity ID* field, clear the *Responses signed* option, and click **Save**.
+14. Click **Next**.
+15. Click **Finish** on the *Attribute Mapping* page.
+16. In the *Setting up SSO for Crowdin Enterprise* window, click **OK**.
+</Steps>
+
+#### Enable Crowdin Enterprise SAML app {#enable-google}
+
+<Steps>
+  1. From the Admin console *Home* page, go to **Apps > SAML apps**.
+  2. Select your new Crowdin Enterprise SAML app.
+  3. At the top right of the gray box, click **Edit Service** <Icon name="mdi:pencil" class="inline-icon" />.
+  4. To turn service on or off for everyone in your organization, click **On for everyone** or **Off for everyone**, and then click **Save**.
+  5. To turn service on or off only for users in an organizational unit:
+     * On the left, select the organizational unit.
+     * Select **On** or **Off** and then click **Save**. Read more about the [organizational structure of Google Workspace](https://support.google.com/a/answer/4352075).
+  6. To turn service on for a set of users across or within organizational units, select an access group. For details, go to [turn on a service for a group](https://support.google.com/a/answer/9050643).
+  7. Ensure that the email addresses your users use to log in to the SAML app match the email addresses they use to log in to your Google domain.
+</Steps>
+
+<Aside>
+  Changes typically take effect in minutes, but can take up to 24 hours. For details, see [How changes propagate to Google services](https://support.google.com/a/answer/7514107).
+</Aside>
+
+#### Test SSO {#test-sso-google}
+
+<Steps>
+  1. Open the single sign-on URL for your new Crowdin Enterprise SAML app by clicking on the Crowdin Enterprise in the Google apps menu. Crowdin Enterprise could be found in the app list along with Google Drive, Gmail, and others. You should be automatically redirected to the Google login page.
+  2. Enter your login credentials. After your login credentials are authenticated, you're automatically redirected to Crowdin Enterprise.
+</Steps>
+
+## Configuring SAML SSO for Microsoft Azure {#microsoft-azure}
+
+To set up Crowdin Enterprise SAML SSO in your Microsoft Azure, follow the steps below.
+
+#### Add Confluence SAML SSO by Microsoft from the Gallery
+
+<Steps>
+  1. Open the [Azure portal](https://portal.azure.com/) using an administrator account.
+  2. On the left navigation panel, select the *Microsoft Entra ID* service.
+  3. Click on the *Manage* section and select *Enterprise applications* from the list. You'll be redirected to *Enterprise applications > All applications*.
+  4. To add a new application, click <Icon name="mdi:plus" class="inline-icon" /> New application.
+  5. In the *Search application* field, type **Confluence SAML SSO by Microsoft**.
+  6. Select **Confluence SAML SSO by Microsoft** from the results panel and then click **Create**. Wait a few seconds while the app is being added.
+</Steps>
+
+#### Configure Microsoft Entra ID SSO
+
+##### Configurations on the Azure Portal
+
+Follow these steps to set up Microsoft Entra ID SSO in the Azure portal:
+
+<Steps>
+  1. As soon as the application is added, you'll be redirected to its *Overview* page. On the **Confluence SAML SSO by Microsoft** application *Overview* page, find the *Manage* section and select *Single sign-on*.
+  2. On the *Select a single sign-on method* page, select **SAML**.
+  3. You are now on the *Set up single sign-on with SAML* page. The following configurations will be happening in the different sections of this page.
+</Steps>
+
+###### Basic SAML Configuration
+
+<Steps>
+  1. Click <Icon name="mdi:pencil" class="inline-icon" /> on the *Basic SAML Configuration* section.
+  2. Enter your Crowdin Enterprise service provider details here and click **Save**. You can find these values in the **Service Provider Details** section in your Crowdin Enterprise *Organization Settings* > *Security* > *SAML*.<div className="mb-4" />
+     * *Identifier (Entity ID)*: copy from **Service Provider Issuer**
+     * *Reply URL (Assertion Consumer Service URL)*: copy from **Reply URL (ACS)**
+     * *Sign on URL*: copy from **SSO Login URL**
+</Steps>
+
+###### Attributes & Claims
+
+<Steps>
+  1. Click <Icon name="mdi:pencil" class="inline-icon" /> on the *Attributes & Claims* section.
+  2. Click on the claim in the *Required claim* section.
+  3. On the *Manage claim* page, select **Persistent** for the *Name identifier format* and select **user.mail** for the *Source attribute*, click **Save**.
+</Steps>
+
+###### SAML Certificates
+
+<Steps>
+  1. Click <Icon name="mdi:pencil" class="inline-icon" /> on the *SAML Certificates* section.
+  2. Select **Sign SAML response and assertion** for the *Signing Option* and click **Save**.
+  3. Click **Download** toward the *Certificate (Base64)* from the *SAML Certificates* section.
+</Steps>
+
+###### Set up Confluence SAML SSO by Microsoft
+
+<Steps>
+  1. Go to the *Set up Confluence SAML SSO by Microsoft* section.
+  2. Copy the *Login URL*, *Microsoft Entra Identifier*, *Logout URL*.
+</Steps>
+
+##### Configurations in Crowdin Enterprise
+
+<Steps>
+  1. In a separate browser tab or window, log in to your Crowdin Enterprise Organization, open *Organization Settings* > *Security* > *SAML*, and enter the information you copied in the Azure portal in the **Identity Provider Configuration** section:
+     * Paste the *Login URL* in the **SSO URL** field.
+     * Paste the *Microsoft Entra Identifier* in the **Entity ID** field.
+     * Paste the *Logout URL* in the **Single Logout (SLO) URL** field.
+     * Drag and drop your certificate file to the **X.509 Certificate** field.
+  2. Click **Save**.
+</Steps>
+
+##### Authentication Method Settings
+
+Depending on the authentication method you use in the Azure portal, in some cases, it might be necessary to change the default value for the **Authentication Context** option in the **Service Provider Details** section in Crowdin Enterprise.
+
+To allow all possible authentication methods, leave the **Authentication Context** field empty (the default).
+
+#### Assign Users {#assign-users-azure}
+
+In this section, you'll enable users to use Azure single sign-on by granting access to your Crowdin Enterprise Organization.
+
+<Steps>
+  1. In the Azure portal, select Enterprise Applications, and then select All applications.
+  2. In the applications list, select **Confluence SAML SSO by Microsoft**.
+  3. In the app's overview page, find the *Manage* section, and select *Users and groups*.
+  4. Click **Add user/group**, then on the *Add Assignment* pane, click *None Selected* under *Users and groups*.
+  5. In the *Users and groups* dialog, select your own account from the *Users* list to be able to test the SAML SSO, then click the **Select** button at the bottom of the screen, then click **Assign**. In the same way, you'll be able to assign more users anytime.
+</Steps>
+
+#### Test SSO {#test-sso-azure}
+
+<Steps>
+  1. On the **Confluence SAML SSO by Microsoft** application *Overview* page, find the *Manage* section and select *Single sign-on*.
+  2. Scroll down to the *Test single sign-on with Confluence SAML SSO by Microsoft* section and click **Test**.
+  3. On the right-side pane, click **Sign in as current user**. After your login credentials are authenticated, you're automatically redirected to Crowdin Enterprise.
+</Steps>
+
+## Configuring SAML SSO for Okta {#okta}
+
+To set up Crowdin Enterprise SAML SSO in your Okta, follow the steps below.
+
+#### Set up Crowdin Enterprise SAML App {#setup-okta}
+
+<Steps>
+1. Open the Okta Dashboard using an administrator account.
+2. From the Dashboard page, go to **Applications**.
+3. Click **Add Application**.
+4. Click **Create New App**.
+5. In the *Create a New Application Integration* dialog, set *Platform* to *Web* and *Sign on method* to *SAML 2.0*, click **Create**.
+6. On the *Create SAML Integration* page, add an application name (for example *Crowdin Enterprise*) on the *General Settings* step.
+7. *(Optional)* Upload a PNG, JPG, or GIF file to serve as a logo for your Crowdin Enterprise SSO app. The image should have dimensions less than 1400x400px and be less than 100k in size. You can find the Crowdin icon on the [Using the Crowdin Logo](/using-logo/) page.
+8. Keep the *App visibility* options cleared, click **Next**.
+9. On the *Configure SAML* step > *SAML Settings* section, you need to enter *Single sign on URL*, *Audience URI (SP Entity ID)*, leave the *Default RelayState* empty, set the *Name ID Format* to *Persistent*, *Application username* to *Email*, click **Next**. You can find the required values in the **Service Provider Details** section in your Crowdin Enterprise *Organization Settings* > *Security* > *SAML*.<div className="mb-4" />
+   * *Single sign on URL*: copy from **Reply URL (ACS)**
+   * *Audience URI (SP Entity ID)*: copy from **Service Provider Issuer**
+10. On the *Feedback* step, select the **This is an internal app that we have created** option, click **Finish**.
+11. After you finished setting up the app on the Okta's side, you'll be redirected to the app's *Sign On* tab. In the *Settings* section, click **View SAML setup instructions**.
+12. In the new browser tab, you'll see the credentials that need to be specified in the **Identity Provider Configuration** section in your Crowdin Enterprise *Organization Settings* > *Security* > *SAML*.
+13. Copy the *Identity Provider Single Sign-On URL*, *Identity Provider Issuer*, and download the certificate.
+14. In a separate browser tab or window, log in to your Crowdin Enterprise Organization, open *Organization Settings* > *Security* > *SAML*, and enter the information you copied in Step 13 in the **Identity Provider Configuration** section:
+    * Paste the *Identity Provider Single Sign-On URL* in the **SSO URL** field.
+    * Paste the *Identity Provider Issuer* in the **Entity ID** field.
+    * Drag and drop your certificate file to the **X.509 Certificate** field.
+15. Click **Save**.
+</Steps>
+
+#### Assign Users {#assign-users-okta}
+
+In this section, you'll enable users to use Okta single sign-on by granting access to your Crowdin Enterprise Organization.
+
+<Steps>
+  1. Open your Okta Dashboard using an administrator account and go to **Applications**.
+  2. Click on your new Crowdin Enterprise SAML app.
+  3. Switch to the *Assignments* tab, click **Assign**, and select **Assign to Groups**.
+  4. In the *Assign Crowdin Enterprise to Groups* dialog, click **Assign** on **Everyone** to enable Crowdin Enterprise SAML app to all users in your organization, click **Done**. Alternatively, you can assign separate groups or individual users.
+</Steps>
+
+#### Test SSO {#test-sso-okta}
+
+<Steps>
+  1. On the Crowdin Enterprise [login page](https://accounts.crowdin.com/), select your organization and click **Log in**.
+  2. Click on **SAML**. You should be automatically redirected to the Okta login page.
+  3. Enter your login credentials. After your login credentials are authenticated, you're automatically redirected to Crowdin Enterprise.
+</Steps>
+
+## Configuring SAML SSO for OneLogin {#onelogin}
+
+To set up Crowdin Enterprise SAML SSO in your OneLogin, follow the steps below.
+
+#### Add OneLogin SAML Test (IdP) from the App Catalog
+
+<Steps>
+1. Open the OneLogin Admin Console using an administrator account.
+2. From the Admin Console page, go to *Applications*.
+3. To add a new application, click **Add App**.
+4. On the *Find Applications* page, type **OneLogin SAML Test (IdP)** in the search box.
+5. Select **OneLogin SAML Test (IdP)** from the search results list. Wait a few seconds while the app is being added.
+6. Update or rename the *Display Name* (for example to *Crowdin Enterprise*).
+7. *(Optional)* Replace default app icons with a PNG or SVG file for your Crowdin Enterprise SSO app. You can find the Crowdin icon on the [Using the Crowdin Logo](/using-logo/) page, click **Save**.
+8. You are now in the *Info* tab. Click the *Configuration* tab. Enter your Crowdin Enterprise service provider details here and click **Save** to proceed. You can find the required values in the **Service Provider Details** section in your Crowdin Enterprise *Organization Settings* > *Security* > *SAML*.<div className="mb-4" />
+   * *SAML Consumer URL*: copy from **Reply URL (ACS)**
+   * *SAML Audience*: copy from **Service Provider Issuer**
+   * *SAML Recipient*: copy from **Reply URL (ACS)**
+   * *SAML Single Logout URL*: `https://accounts.crowdin.com/saml2/{your-organization-name}/slo`
+   * *ACS URL Validator*: `^https:\/\/accounts\.crowdin\.com\/saml2\/{your-organization-name}\/acs$`
+     <Aside>Make sure to replace `{your-organization-name}` with your real Crowdin Enterprise organization name for the last two fields.</Aside>
+9. Navigate to the *SSO* tab in OneLogin and copy the *Issuer URL*, *SAML 2.0 Endpoint (HTTP)*, and X.509 Certificate. To copy the X.509 certificate, click **View Details**.
+10. In a separate browser tab or window, log in to your Crowdin Enterprise Organization, open *Organization Settings* > *Security* > *SAML*, and enter the information you copied in Step 9 in the **Identity Provider Configuration** section:
+    * Paste the *Issuer URL* in the **Entity ID** field.
+    * Paste the *SAML 2.0 Endpoint (HTTP)* in the **SSO URL** field.
+    * Paste the X.509 certificate in the **X.509 Certificate** field.
+11. Click **Save**.
+</Steps>
+
+#### Assign Users {#assign-users-onelogin}
+
+In this section, you'll grant users access to your new Crowdin Enterprise SAML SSO app.
+
+<Steps>
+  1. Open the OneLogin Admin Console using an administrator account.
+  2. From the Admin Console page, go to *Applications*.
+  3. Click on your new Crowdin Enterprise SAML SSO app.
+  4. Navigate to the *Access* tab and specify the roles that should have access to this app. If you don't have the necessary role you can add a new role via *Users* > *Roles* specifying access to the needed apps. You can assign users to a new role via *Users* page.
+</Steps>
+
+#### Test SSO {#test-sso-onelogin}
+
+<Steps>
+  1. On the Crowdin Enterprise [login page](https://accounts.crowdin.com/), select your organization and click **Log in**.
+  2. Click on **SAML**. You should be automatically redirected to the OneLogin login page.
+  3. Enter your login credentials. After your login credentials are authenticated, you're automatically redirected to Crowdin Enterprise.
+</Steps>
+
+## Configuring SAML SSO for Auth0 {#auth0}
+
+To set up Crowdin Enterprise SAML SSO in your Auth0, follow the steps below.
+
+#### Set up Crowdin Enterprise SAML App {#setup-auth0}
+
+<Steps>
+1. Open the Auth0 Management Dashboard using an administrator account.
+2. From the *Dashboard*, go to *Applications*.
+3. Click **+ CREATE APPLICATION** on the right.
+4. In the **Name** field, specify an application name (for example *Crowdin Enterprise*), select the **Regular Web Applications** application type, click **CREATE**.
+5. Go back to *Dashboard* > *Applications*.
+6. Find the row for the application you just created, and click on the Settings icon <Icon name="mdi:cog" class="inline-icon" /> to the right of the application name.
+7. *(Optional)* Specify the URL for your Crowdin Enterprise SSO app logo in the **Application Logo** field. You can find the Crowdin icon on the [Using the Crowdin Logo](/using-logo/) page.
+8. Switch to the **Addons** tab.
+9. Click on **SAML2 WEB APP**.
+10. In the appeared dialog, specify the **Application Callback URL**. You can find this value in the **Service Provider Details** section in your Crowdin Enterprise *Organization Settings* > *Security* > *SAML* — copy from **Reply URL (ACS)**.
+11. In the **Settings** paste the following snippet
+    ```json
+    {
+      "nameIdentifierProbes": [
+        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+      ]
+    }
+    ```
+    This way the **NameID** would be set to the user email address.
+12. Scroll down and click **ENABLE**.
+13. Scroll up and switch to the **Usage** tab.
+14. In the **Usage** tab, you'll see the credentials that need to be specified in the **Identity Provider Configuration** section in your Crowdin Enterprise *Organization Settings* > *Security* > *SAML*.
+15. Copy the *Issuer*, *Identity Provider Login URL*, and download the certificate.
+16. In a separate browser tab or window, log in to your Crowdin Enterprise Organization, open *Organization Settings* > *Security* > *SAML*, and enter the information you copied in Step 15 in the **Identity Provider Configuration** section:
+    * Paste the *Issuer* in the **Entity ID** field.
+    * Paste the *Identity Provider Login URL* in the **SSO URL** field.
+    * Drag and drop your certificate file to the **X.509 Certificate** field.
+17. Click **Save**.
+</Steps>
+
+#### Manage Access to Crowdin Enterprise SAML App
+
+By default, all users associated with a single Auth0 tenant are shared between the tenant's applications (and therefore have access to the applications).
+If necessary you can restrict some users' access to the application using [rules](https://auth0.com/docs/rules). See [this rule as an example](https://github.com/auth0/rules/blob/aeaf93bc058408e260192d0941a688963449d6be/src/rules/simple-user-whitelist-for-app.js).
+
+#### Test SSO {#test-sso-auth0}
+
+<Steps>
+  1. On the Crowdin Enterprise <a href="https://accounts.crowdin.com/" target="_blank">login page</a>, select your organization and click **Log in**.
+  2. Click on **SAML**. You should be automatically redirected to the Auth0 login page.
+  3. Enter your login credentials. After your login credentials are authenticated, you're automatically redirected to Crowdin Enterprise.
+</Steps>

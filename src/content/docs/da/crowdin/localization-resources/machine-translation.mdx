@@ -1,0 +1,226 @@
+---
+title: Machine Translation
+description: Learn how to configure machine translation engines in Crowdin
+slug: machine-translation
+---
+
+import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import machineTranslationSuggestions from '!/crowdin/localization-resources/mt_suggestions.png';
+import deeplGlossaryConfiguration from '!/crowdin/localization-resources/deepl_glossary_configuration.png';
+import automlCustomGlossaryConfiguration from '!/crowdin/localization-resources/automl_custom_glossary_configuration.png';
+
+Machine translation engines integrated with Crowdin provide translation suggestions from services like Google Translate and AutoML Translation, Microsoft Translate, and others.
+
+MT suggestions are displayed in the Editor’s TM and MT Suggestions section in the order of the engines' configuration dates. To prioritize a specific engine's suggestions, configure that engine first.
+
+Also, you can perform [Pre-Translation](/pre-translation/) using MT engines.
+
+<Image src={machineTranslationSuggestions} alt="Machine Translation suggestions in the Editor" />
+
+<LinkCard title="Add More Machine Translation Engines" description="Install more machine translation engines from the Crowdin Store." href="https://store.crowdin.com/tags/machine-translation" target="_blank" />
+
+By default, machine translations are enabled for each project, but it is required to configure the translation engines before the project members can use them. If you want to disable this option for specific projects, clear **Show machine translation suggestions** in [Project Settings](/project-settings/machine-translation/).
+
+### Opsætning af Maskinoversættelsesmotorer
+
+To configure the machine translation engines, follow these steps:
+
+<Steps>
+  1. Open your profile home page and select **MT** on the left sidebar.
+  2. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> next to the MT engine you want to configure and select **Edit**. Alternatively, just double-click on the needed MT engine.
+  3. Select **Enabled**.
+  4. Enter the credentials for the selected translation engine.
+  5. *(Optional)* In the **Advanced settings** section, you can configure the following options:
+     * Select the languages for which the MT engine should provide translations. Alternatively, leave empty to enable all languages.
+     * Select the projects in which you want to use the MT engine. Alternatively, leave empty to enable it for all projects.
+  6. Click **Update**.
+</Steps>
+
+<Aside type="caution">
+  Machine translation engines must be configured using the project owner's account.
+</Aside>
+
+### Microsoft Translator
+
+Go to [Windows Azure](https://portal.azure.com/#blade/HubsExtension/BrowseAll) to access your Microsoft Translator API subscription key. Translator Text-API'en tilbyder en gratis kvote på 2.000.000 oversatte tegn.
+
+<Aside>
+  If the *Resource Location* associated with your Microsoft Translator Text API key is other than *global*, please make sure to specify it along with other credentials while configuring the Microsoft Translator MT engine in your Crowdin account.
+</Aside>
+
+<LinkCard title="How to sign up for the Microsoft Translator Text API" href="https://docs.microsoft.com/en-us/azure/cognitive-services/translator/translator-text-how-to-signup" target="_blank" />
+
+### DeepL Translator
+
+DeepL API is accessible only with the DeepL API Free and Pro subscription plans ([For developers](https://www.deepl.com/pro.html#developer) tab). Navigate to the [DeepL Pro Account page](https://www.deepl.com/pro-account.html) to get a unique Authentication Key. Bemærk, at kun DeepL API-abonnementstypen leverer denne funktion.
+
+If you’re subscribed to a different subscription plan, you can switch to the DeepL API plan in your [personal account settings](https://www.deepl.com/pro-account.html). DeepL also provides a [simulator](https://www.deepl.com/docs-api/simulator) that allows you to check your Authentication Key in action.
+
+#### DeepL Glossary Configuration
+
+The DeepL Translator supports multilingual glossaries, allowing you to ensure consistent translation of your domain-specific terminology. In Crowdin, you can configure multiple glossaries and assign specific language pairs to each.
+
+To configure your DeepL glossaries, follow these steps:
+
+<Steps>
+  1. Select a glossary from the **Glossaries** drop-down menu. This list is automatically populated from your connected DeepL account.
+  2. From the **Glossary language pairs** drop-down menu, select one or more language pairs the chosen glossary should apply to.
+  3. *(Optional)* To configure another glossary, click <Icon name="mdi:plus" class="inline-icon" /> and repeat the steps above. To remove a glossary configuration, click <Icon name="mdi:minus" class="inline-icon" />.
+  4. Click **Update**.
+</Steps>
+
+<Image src={deeplGlossaryConfiguration} alt="DeepL Glossary Configuration" />
+
+<Aside type="tip" title="Mapping Language Variants">
+  Crowdin allows you to map different language variants. For example, if your glossary in DeepL uses a generic source language like "English," you can map it to a specific variant in your Crowdin project, such as "English, United States." This ensures the glossary is applied correctly even if your project’s source language is a specific dialect (e.g., English, Canada; Spanish, Mexico).
+</Aside>
+
+### ModernMT
+
+ModernMT Real time oversættelses-API er tilgængelig med Real time eller Human-in-the-loop abonnementstyper. Navigate to the [ModernMT Dashboard](https://www.modernmt.com/dashboard/) to get your License key. If you’re subscribed to a different subscription plan, you can switch to the Real time or Human-in-the-loop plan via the [Manage Plan](https://www.modernmt.com/dashboard/manage-plan) page.
+
+### Amazon Translate
+
+Den gratis version af Amazon Translate er tilgængelig i 12 måneder. Herefter betales pr. antal oversatte tegn. Crowdin uses Standard Text Translation type provided by Amazon Translate. Read more about [available Amazon Translate pricing options](https://aws.amazon.com/translate/pricing/).
+
+Read more about [obtaining your access key](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys) needed for Amazon Translate integration.
+
+To use your [Custom Terminology](https://docs.aws.amazon.com/translate/latest/dg/how-custom-terminology.html), follow these steps:
+
+<Steps>
+  1. Angiv AWS-regionen (f.eks. us-east-2).
+  2. Vælg Tilpasset Terminology i den respektive rullemenu.
+</Steps>
+
+<QuestionAnswer title="What are the minimal scopes for an IAM user required to set up Amazon Translate to be used in Crowdin?">
+  The minimal IAM scopes required depend on whether you're using terminologies or not:
+
+  **Without terminologies:**
+
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "translate:TranslateText",
+        "Resource": "*"
+      }
+    ]
+  }
+  ```
+
+  **With terminologies:**
+
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "translate:TranslateText",
+          "translate:GetTerminology",
+          "translate:ListTerminologies"
+        ],
+        "Resource": "*"
+      }
+    ]
+  }
+  ```
+
+  Alternatively, you can use the [AWS managed policy: TranslateReadOnly](https://docs.aws.amazon.com/translate/latest/dg/security-iam-awsmanpol.html#security-iam-awsmanpol-TranslateReadOnly), which provides the necessary read-only access to Amazon Translate.
+
+  <Aside>The `"Resource": "*"` allows access to all resources. For stricter security, consider limiting this to specific AWS regions or resources if applicable.</Aside>
+</QuestionAnswer>
+
+### Google Translate
+
+For brug af Google Translate kræves en Google Cloud-konto med en aktiv faktureringsprofil. Cloud Translation faktureres månedligt baseret på brug. [Learn more](https://cloud.google.com/translate/pricing).
+
+Følg disse trin for at få API-nøglen krævet for integrationen:
+
+<Steps>
+  1. Go to [Google Cloud Console](https://console.cloud.google.com/). Log ind på en eksisterende Google Cloud-konto, eller opret en ny.
+  2. Select an existing project or add a project using the **New Project**.
+  3. Go to [API & Services > Library](https://console.cloud.google.com/apis/library) and search for *Cloud Translation API*.
+  4. Click **Enable**.
+  5. Go to [API & Services > Credentials](https://console.cloud.google.com/apis/credentials/) and click **Create credentials > API key**.
+  6. Copy the API key and click **Close**.
+</Steps>
+
+### Google Cloud AutoML Translation
+
+Brug af AutoML Translation kærves en Google Cloud-konto med en aktiv faktureringsprofil. Google AutoML Translation-prissætning sker månedligt baseret på antal tegn sendt til oversættelse. [Learn more](https://cloud.google.com/translate/automl/pricing#translation_costs).
+
+Følg disse trin for at oprette tjenestekontonøglen samt indhente de til integrationen nødvendige legitimationsoplysninger:
+
+<Steps>
+  1. Go to [Google Cloud Console](https://console.cloud.google.com/). Log ind på en eksisterende Google Cloud-konto, eller opret en ny.
+  2. Select an existing project or add a project using the **New Project**.
+  3. Go to [API & Services > Library](https://console.cloud.google.com/apis/library) and search for *Cloud AutoML API*.
+  4. Click **Enable**.
+  5. Næste trin er at oprette et privat nøglepar til en tjenestekonto. Tjenestekontoen bruges af Crowdin. Programmer bruger tjenestekonti til at foretage godkendte API-kald.
+</Steps>
+
+Følg disse trin for at opsætte godkendelse og oprette den private nøgle:
+
+<Steps>
+  1. Go to [API & Services > Credentials](https://console.cloud.google.com/apis/credentials/).
+  2. Click **Create credentials > Service account**.
+  3. In the *Service account name* field, enter a name that describes what this service account will do.
+  4. Click **Create and continue**.
+  5. From the *Role list*, select *Project* > *Cloud Translation API Editor* and click **Continue**.
+  6. Click **Done**.
+  7. In the [API & Services > Credentials](https://console.cloud.google.com/apis/credentials/), click on the created service account.
+  8. Switch to the **Keys** tab.
+  9. Click **Add key > Create new key**.
+  10. Select **JSON** and click **Create**. En JSON-fil indeholdende din nøgle vil blive downloadet til din computer.
+</Steps>
+
+#### Google Cloud AutoML tilpasset ordlisteopsætning
+
+Den tilpassede Google Cloud AutoML-ordliste muliggør konsistent oversættelse af domænespecifik terminologi.
+
+Følg disse trin for at opsætte den tilpassede Google Cloud AutoML-ordliste:
+
+<Steps>
+  1. Open your profile home page and select **MT** on the left sidebar.
+  2. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> next to the **Google AutoML Translation** engine and select **Edit**.
+  3. Upload your JSON credentials.
+  4. Angiv Ressourceplacering (f.eks. us-central1).
+  5. Vælg den aktuelle ordliste i den relevante rullemenu.
+  6. (Valgfrit) Angiv en relevant Tilpasset model. If needed, configure language mapping between Custom Model and Crowdin languages.
+</Steps>
+
+<Image src={automlCustomGlossaryConfiguration} alt="Google Cloud AutoML tilpasset ordlisteopsætning" />
+
+## MT-motor ID'er
+
+Once you specify your MT engine credentials, the system automatically assigns a unique MT engine ID. Later on, you can use these IDs in API requests for pre-translation via machine engines.
+
+You can find the MT engine ID on the **Machine Translation** tab of your profile after opening the engine details.
+
+Alternatively, you can also [get your MT engine IDs via API](/developer/api/v2/#tag/Machine-Translation-Engines/operation/api.mts.getMany).
+
+## Clearing MT Engine Cache
+
+When MT engines are updated with new features or models, cached translations in Crowdin may no longer reflect the latest translation capabilities. To display updated translations in the Editor’s **TM and MT Suggestions** section, clear the MT engine cache. This can be especially useful if you've already viewed certain strings in the Editor, as Crowdin stores cached MT suggestions for those strings.
+
+To clear the cache for your configured MT engine, follow these steps:
+
+<Steps>
+  1. Open your profile home page and select **MT** on the left sidebar.
+  2. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> on the needed MT engine in the list.
+  3. Click **Clear cache**.
+</Steps>
+
+## Se også
+
+<CardGrid>
+  <LinkCard title="Præoversættelse" description="Speed up the translation process and ease the work of translators." href="/pre-translation/" />
+  <LinkCard title="Projektindstillinger" description="Configure machine translation settings for your project." href="/project-settings/machine-translation/" />
+</CardGrid>

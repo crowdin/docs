@@ -1,0 +1,166 @@
+---
+title: Opsæt VCS-integrationer Online
+description: Learn how to configure a DVCS integration online in Crowdin
+slug: configuring-vcs-integrations-online
+sidebar:
+  order: 5
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import configuringSpreadsheets from '!/crowdin/integrations/vcs_configuring_spreadsheets.png';
+import configuringXml from '!/crowdin/integrations/vcs_configuring_xml.png';
+import editIntegrationEditBranchBtn from '!/crowdin/integrations/vcs_edit_integration_edit_branch_btn.png';
+import filesList from '!/crowdin/integrations/vcs_files_list.png';
+import filesListFilter from '!/crowdin/integrations/vcs_files_list_filter.png';
+import ignoreFiles from '!/crowdin/integrations/vcs_ignore_files.png';
+import languageMapping from '!/crowdin/integrations/vcs_language_mapping.png';
+import languageMapping2 from '!/crowdin/integrations/vcs_language_mapping2.png';
+import loadConfiguration from '!/crowdin/integrations/vcs_load_configuration.png';
+
+To configure a version control system integration, specify the source files you'd like to translate and how Crowdin should structure the translated files in your repository.
+
+## Grenopsætning
+
+Once you've selected your repository and branch for translation, the next step is to configure the selected branch. Click <Icon name="mdi:pencil" class="inline-icon" /> to open the **Branch Configuration** dialog and start the configuration. In the **Branch Configuration** dialog, you can either load the existing configuration file stored in your repository or create a new configuration from scratch.
+
+<Image src={editIntegrationEditBranchBtn} alt="Edit Integration" class="width-2xl crowdin-modal" />
+
+If you want your VCS integration to work in the **Target File Bundles Mode**, you need to configure target file bundles for each branch you have selected for translation.
+
+<ReadMore>
+  Read more about [configuring target file bundles for VCS integration](/bundles/#bundles-in-vcs-integrations).
+</ReadMore>
+
+## Indlæsning af en Opsætning
+
+To load the existing configuration file stored in your repository, follow these steps:
+
+<Steps>
+  1. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> and select **Load configuration**.
+  2. Specify the name of the configuration file in your repository.
+  3. Click **Continue**. <Image src={loadConfiguration} alt="Load Configuration" class="width-2xl crowdin-modal" />
+</Steps>
+
+The configuration will be displayed in the **Branch Configuration** dialog. You can use it as is or modify it if necessary.
+
+## Oprettelse af en Opsætning
+
+To create a new configuration file to be used by the integration, specify the preferred name and click **Continue** in the **Branch Configuration** dialog.
+
+Then specify the source and translated file paths using the patterns and placeholders listed below. Via højre panel kan strukturen af de kildefiler, som uploades til oversættelse og strukturen af de oversatte filer baseret på de angivne stier, prævises.
+
+Once you've finished setting up the configuration for the selected branch and saved the changes, the configuration file will be saved in the root of the translation branch in your repository.
+
+### Mønstre
+
+You can use wildcard (`*`, `**`, `?`, `[set]`, `\`) patterns to specify which files should be uploaded for translation.
+
+<ReadMore>
+  Read more about [wildcard patterns](/developer/configuration-file/#general-configuration).
+</ReadMore>
+
+### Pladsholdere
+
+Use placeholders to specify where translated files will be placed and how they will be named:
+
+<Include file="placeholders.mdx" />
+
+## Avancerede Indstillinger
+
+The advanced settings provide more control over the integration's behavior. You can specify files to be excluded from translation, map custom language codes, and configure parsing options for structured file formats, such as spreadsheets and XML. This section also covers additional parameters that can be configured by manually editing the `crowdin.yml` file in your repository.
+
+### Ignorering af filer
+
+If you don't want some files to be translated, click **Add ignored pattern**, specify the pattern for those files, and Crowdin will not upload those files for translation.
+
+<Image src={ignoreFiles} alt="Ignorere filer eller mapper" class="width-2xl crowdin-modal" />
+
+### Sprogtilknytning
+
+If your project uses custom names for locale directories, you can use language mapping to map your own languages to be recognized by Crowdin.
+
+To add a language mapping, follow these steps:
+
+<Steps>
+  1. Click **Language Mapping**. <Image src={languageMapping} alt="Language mapping" class="width-2xl crowdin-modal" />
+  2. Vælg det relevante sprog og en variabel.
+  3. Angiv en tilpasset kode.
+  4. Click **Add Mapping** to add another custom code. <Image src={languageMapping2} alt="Language mapping" class="width-lg" />
+  5. Click **Save**.
+</Steps>
+
+### Opsætning af regneark
+
+You can specify the scheme of your spreadsheet file in the **Scheme** field. To create the scheme for your CSV or XLS/XLSX file, use the following constants:
+
+* `identifier` &ndash; column contains string identifiers.
+* `source_phrase` &ndash; column contains source strings.
+* `source_or_translation` &ndash; column contains source strings, but the same column will be filled with translations when the file is exported. If you upload existing translations, the values from this column will be used as translations.
+* `translation` &ndash; column contains translations.
+* `context` &ndash; column contains comments or context information for the source strings.
+* `max_length` &ndash; column contains max.length limit values for the string translations.
+* `labels` &ndash; column contains labels for the source strings.
+* `none` &ndash; column that will be skipped during import.
+
+**Scheme example**: `identifier,source_phrase,context,fr,de,it,uk` ([Language Codes](/developer/language-codes/)).
+
+If a spreadsheet contains the translations for several target languages, select **Multilingual file**. If you don't want to translate the text stored in the first row, select **Import first line as a header**.
+
+<Image src={configuringSpreadsheets} alt="Opsætning af regneark" class="width-2xl crowdin-modal" />
+
+### Opsætning af XML-filer
+
+You can configure the XML file import settings to specify how Crowdin should handle the XML files.
+
+<Image src={configuringXml} alt="Opsætning af XML-filer" class="width-2xl crowdin-modal" />
+
+| **Option**                | **Description**                                                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Translate Content**     | Vælg, for at oversætte tekster omkranset af tags.                                                                                                                  |
+| **Translate Attributes**  | Vælg, for at oversætte tag-attributter.                                                                                                                            |
+| **Content Segmentation**  | Select to split the XML source file's content into shorter text segments.                                                                                          |
+| **Translatable Elements** | This is an array of strings, where each item is the XPaths to the DOM element that should be imported. Sample path: `/path/to/node` or `/path/to/attribute[@attr]` |
+
+<Aside>
+  When Content segmentation is enabled, the translation upload is handled by an experimental machine learning technology.
+</Aside>
+
+### Yderligere parametre
+
+Flg. parametre kan ikke opsættes online:
+
+* `preserve_hierarchy` - preserves the directory structure in Crowdin
+* `dest` - allows you to specify a file name in Crowdin
+* `type` - allows you to specify a file type in Crowdin
+* `update_option` - keeps translations and keeps/removes approvals of changed strings during a file update
+* `commit_message` - additional commit message that can include Git tags
+* `export_languages` - export translations for the specified languages
+
+Once you save the online configuration, a `crowdin.yml` file is saved in the root of the configured branch in your repository. Denne fil kan redigeres manuelt for at tilføje ønskede parametre.
+
+<ReadMore>
+  Read more about the [configuration file](/developer/configuration-file/#configuration-file-for-vcs-integrations).
+</ReadMore>
+
+## Gemme opsætning
+
+<Steps>
+  1. Click **Save** to preview the created configuration. <Image src={filesListFilter} alt="Save configuration" class="width-2xl crowdin-modal" />
+  2. Click **Add File Filter** if you have multiple file groups with different configurations. <br />If several branches in the project have the same configuration, and you want the same filters to be applied to them, select **Apply filters to all translatable branches**.
+  3. Click **Save** to save the created configuration. <Image src={filesList} alt="Apply filters to all translatable branches" class="width-2xl crowdin-modal" />
+</Steps>
+
+Once the configuration is saved, the localizable files will start uploading to your Crowdin project.
+
+## Se også
+
+<CardGrid>
+  <LinkCard title="GitHub" href="/github-integration/" />
+  <LinkCard title="GitLab" href="/gitlab-integration/" />
+  <LinkCard title="Bitbucket" href="/bitbucket-integration/" />
+  <LinkCard title="Azure Repos" href="/azure-repos-integration/" />
+</CardGrid>
