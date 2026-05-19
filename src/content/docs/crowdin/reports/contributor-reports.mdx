@@ -10,12 +10,11 @@ import { Image } from 'astro:assets';
 import { Steps, Aside } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
 import translatorsProjectStatus from '!/crowdin/reports/reports_translators_project_overview.png';
-import translatorsDashboard from '!/crowdin/reports/reports_translators_dashboard.png';
 import costEstimateGenerating from '!/crowdin/reports/reports_translators_cost_estimate_generating.png';
 import addTmMatchType from '!/crowdin/reports/reports_cost_estimate_add_tm_match_type.png';
 import addCustomRates from '!/crowdin/reports/reports_add_custom_rates.png';
+import addCustomRatesMyContribution from '!/crowdin/reports/reports_my_contribution_add_custom_rates.png';
 import myContributionGenerating from '!/crowdin/reports/reports_my_contribution_generating.png';
-import addMtMatchType from '!/crowdin/reports/reports_add_mt_match_type.png';
 import topMembers from '!/crowdin/reports/reports_translators_top_members.png';
 import archiveViewing from '!/crowdin/reports/reports_translators_archive_viewing.png';
 
@@ -268,7 +267,8 @@ To generate the My Contribution report, follow these steps:
 
 <Steps>
   1. Select the preferred currency and the report unit (words, strings, characters without spaces, or characters with spaces).
-  1. Set your [rates](#rates-my-contribution) for translations and approvals.
+  1. Set your [rates](#rates-my-contribution).
+  1. *(Optional)* Configure the [Advanced settings](#advanced-settings-my-contribution).
   1. Use the available filter parameters to specify the report data you're interested in.
   1. Click **Generate**.
 </Steps>
@@ -285,53 +285,71 @@ To generate the My Contribution report, follow these steps:
 
 ### Rates {#rates-my-contribution}
 
-You can set the prices for Base rates (full translation, proofread) and configure Net Rate Schemes (percentage of the full translation rate paid for translation using TM suggestions, MT suggestions, and existing translations).
+You can set the prices for Base rates and configure Net Rate Schemes (percentage of the full translation rate paid for translation and proofreading based on **TM Match**, **MT Match**, **AI Match**, and **Other translations**).
 
 #### Base Rates {#base-rates-my-contribution}
 
-In the Base Rates section, you can set rates for the following types of work:
+In the Base Rates section, you can set the rate for the following type of work:
 
 * **Full translation** &ndash; for each translation you made.
   <Aside>If the string has multiple translations made by the same person, only one is counted. If the string has several translations made by different people, each is counted for a specific translator.</Aside>
-* **Proofread** &ndash; for each approved translation.
+
+#### Advanced Settings {#advanced-settings-my-contribution}
+
+Click **Advanced settings** to expand a section with additional configuration options for your report. All of these options are enabled by default and are recommended:
+
+* **Use category-based proofread rates:** Calculates proofreading costs by treating approvals as identical translations at the 100% match rate of the corresponding [Net Rate Scheme](#net-rate-schemes-my-contribution) category (TM, MT, AI, or Other). When disabled, all approvals use the flat **Proofread** base rate.
+* **Exclude approvals for edited translations:** Excludes approvals when the same user has made translations for the string. This helps ensure that your cost reporting is more accurate by avoiding the duplication of approval costs.
+* **Use Specific Categories for Pre-translations:** Assigns pre-translation matches to categories within the Net Rate Scheme according to their source (e.g., MT, AI), instead of the default **Other translations** category. This is useful because post-editing translations from MT engines or AI usually requires a different level of effort than post-editing translations from human translators, leading to a more precise measure of costs.
+
+<Aside>
+  The **Exclude approvals for edited translations** and **Use Specific Categories for Pre-translations** options will become selected by default and non-configurable starting from Jan 4, 2027.
+</Aside>
 
 #### Net Rate Schemes {#net-rate-schemes-my-contribution}
 
-In the Net Rate Schemes section, in addition to the base rates, you can set the percentage of the full translation rate to be paid for translations made using TM suggestions, MT suggestions, and other translations of various Match types.
+In the Net Rate Schemes section, you can set the percentage of the full translation rate to be paid for translations and their approvals based on various Match types.
 
-By default, you can configure the percentage of the full translation rate for the following match type categories:
+Because the **Use category-based proofread rates** option is enabled by default, the cost of proofreading depends on the translation's origin category (TM, MT, AI, or Other).
 
-**TM Match types:**
+Regardless of the translation's original match percentage, its approval is always calculated at the maximum match rate for that category.
 
-- **101 (perfect)** &ndash; for translations made using Perfect match TM suggestions (source strings are identical to TM suggestion by text and context).
-- **100** &ndash; for translations made using 100% match TM suggestions (source strings are identical to TM suggestion only by text).
+Here is how it works in practice:
 
-**MT Match types:**
+* **Partial matches:** If a translation was an 85% MT match, its approval is charged at the **100 / Approval** rate under the **MT Match** category.
+* **Translations from scratch (No match):** If a translation was made without any suggestions, its approval is charged at the **100 / Approval** rate under the **Other translations** category.
 
-- **100** &ndash; for translations made using 100% match MT suggestions (new suggested translations are identical to MT suggestion).
+By default, you can configure the percentage of the full translation rate for the following categories:
 
-**AI Match types:**
+**TM Match:**
 
-- **100** &ndash; for translations made using 100% match AI suggestions (new suggested translations are identical to AI suggestion).
+- **101 (perfect) / Approval** &ndash; for translations made using Perfect match TM suggestions (source strings are identical to the TM suggestion by text and context), and for their approvals.
+- **100 / Approval** &ndash; for translations made using 100% match TM suggestions (source strings are identical to the TM suggestion only by text), and for approvals of all TM matches of 100% or lower.
 
-**Other translations types:**
+**MT Match:**
 
-- **100** &ndash; for translations made using existing translations (new suggested translations are identical to the existing translations).
+- **100 / Approval** &ndash; for translations made using 100% match MT suggestions (the saved translation matches the MT suggestion exactly), and for all approvals within the MT category.
 
-If a string has a combination of TM and MT suggestions and existing translations, the new translation is counted at the lowest Net Rate Scheme value. For example, if a string has a 101% (perfect) TM match suggestion (10% of the full translation rate) and a 100% MT match suggestion (5% of the full translation rate), the new translation added to this string will be counted at a 5% of the full translation rate.
+**AI Match:**
 
-You can also add your own TM, MT, and Other translations match types, specifying the preferred percentage of text similarity and the percentage of the full translation rate to be paid for such a translation.
+- **100 / Approval** &ndash; for translations made using 100% match AI suggestions (the saved translation matches the AI suggestion exactly), and for all approvals within the AI category.
+
+**Other translations:**
+
+- **100 / Approval** &ndash; for translations made using existing translations from other users (the saved translation matches the existing translation exactly), and for approvals of translations made from scratch (No match) or using existing translations.
+
+If multiple scheme categories can be applied to a translation (e.g., a string has a combination of TM, MT, or AI suggestions, and existing translations from other users), the new translation is calculated at the lowest Net Rate Scheme value. For example, if a string has a 101% (perfect) TM match suggestion (10% of the full translation rate) and a 100% MT match suggestion (5% of the full translation rate), the new translation added to this string will be calculated at 5% of the full translation rate.
+
+You can also add custom match types for the TM, MT, AI, and Other translations categories, specifying the preferred percentage of text similarity and the percentage of the full translation rate to be paid for such a translation.
 
 To add your own match types, follow these steps:
 
 <Steps>
-  1. Click <Icon name="mdi:cog" class="inline-icon" /> in the Net Rate Schemes section.
-  1. Click on the appeared <Icon name="mdi:plus" class="inline-icon" /> button.
+  1. Click <Icon name="mdi:cog" class="inline-icon" /> in the header of the specific category section.
+  1. Click <Icon name="mdi:plus" class="inline-icon" /> at the bottom of the section.
   1. Specify the match range and the percentage of the full translation rate.
-  1. Click <Icon name="mdi:cog" class="inline-icon" /> to save the settings.
+  1. Click <Icon name="mdi:cog" class="inline-icon" /> again to save the settings.
 </Steps>
-
-<Image src={addMtMatchType} alt="Adding MT/Other Translation Match Type" />
 
 #### Adding Custom Rates {#custom-rates-my-contribution}
 
@@ -339,27 +357,52 @@ If you are multilingual and work with different languages, in addition to base r
 
 To select the languages for custom rates, click **Edit Languages** and select the ones you need. You can create as many custom rates as you need.
 
-<Image src={addCustomRates} alt="Adding Custom Rates" />
-
-### Using Additional My Contribution Options
-
-* **Exclude Approvals for Edited Translations:** select this option to exclude approvals when the same user has translated the string.
-
-* **Pre-Translated Strings Categorization Adjustment:** select this option to have repetitive translations of pre-translated strings categorized under TM or MT match rates, rather than the default Other suggestion match rates.
+<Image src={addCustomRatesMyContribution} alt="Adding Custom Rates" class="width-md" />
 
 ### Result Analysis {#result-analysis-my-contribution}
 
-When the report is generated, you will see the following amounts:
+When the My Contribution report is generated, it displays a comprehensive breakdown of your costs, savings, and work types.
 
-* **User Information** - profile picture, full name, and username.
-* **Total** - General cost for all contributions.
-* **Language Subtotals** - A breakdown of costs for each target language:
-  * **Savings** - The amount saved with leveraged matches from TM, MT, or AI.
-  * **Weighted Words / Strings / Characters / Characters with Spaces** – Shows the adjusted metric after applying repetitions and fuzzy matches, reflecting the actual translation effort.
-  * **Pre-translated Words / Strings / Characters / Characters with Spaces** - Shows how many units were pre-translated.
-* The table containing a further breakdown of work types (Translation & Post-editing and Proofreading) and match types (No Match, TM Match, MT Match, AI Match, Other translations Match).
+##### Cost Summary
 
-To download the My Contribution report, click **Export** and select the preferred export format (CSV, XLSX, or JSON).
+* **Total** &ndash; The final calculated translation and validation cost for your entire contribution.
+* **User Information** &ndash; Your profile picture, full name, username, and role in the project. Since this report reflects only your work, the summary displayed next to your profile matches the global total.
+* **Language Subtotals** &ndash; Below your user information, the report breaks down your contribution by each target language.
+* **Metrics** &ndash; At every level (global total, user total, and language subtotal), the following metrics are provided:
+  * **Translated & Post-edited** &ndash; The cost of translations.
+  * **Proofreading** &ndash; The cost of approvals.
+  * **Savings (TM, MT and AI)** &ndash; The financial amount saved by leveraging matches from TM, MT, or AI.
+  * **Weighted Words / Strings / Characters / Characters with Spaces** &ndash; The adjusted unit count after applying repetition and fuzzy match discount schemes, reflecting the actual translation effort.
+  * **Pre-translated Words / Strings / Characters / Characters with Spaces** &ndash; The total number of units that were already populated via pre-translation.
+
+##### Report Tables Breakdown
+
+Within each language section, the report generates a breakdown table containing the following columns:
+
+* **Match type** &ndash; The specific category and percentage range applied to the text.
+* **Contribution Words / Strings / Characters / Characters with Spaces** &ndash; The raw number of units handled within that specific row type.
+* **Weighted Words / Strings / Characters / Characters with Spaces** &ndash; The adjusted unit volume based on your Net Rate Scheme rules.
+* **Rate per unit** &ndash; The specific price paid per single unit for that match or approval type.
+* **Price** &ndash; The total cost for that row, calculated based on the unit count and assigned rate.
+
+##### Table Rows
+
+By default, with **Use category-based proofread rates** enabled, all translations and approvals are grouped together by their origin category. A separate proofreading table is not shown; instead, approvals appear as rows within the respective match blocks:
+
+* **No match** &ndash; Units translated from scratch with no leverage from TM, MT, or AI (calculated at the full translation rate).
+* **TM Match** &ndash; Units matched against the Translation Memory. This includes distinct rows for translations (e.g., `101% (Perfect match)`, `100%`, `99-85%`) and their respective approvals (e.g., `Approval 101% (Perfect match)`, `Approval 100%`).
+* **MT Match** &ndash; Units matched against Machine Translation engines. Includes rows for translations (e.g., `100%`, `99-94%`) and a dedicated `Approval` row for validations within this category.
+* **AI Match** &ndash; Units matched against AI suggestions. Includes rows for translations (e.g., `100%`, `99-94%`) and a dedicated `Approval` row for validations within this category.
+* **Other translations match** &ndash; Units matched against existing translations from other users. Includes rows for translations (e.g., `100%`, `99-94%`) and a dedicated `Approval` row for validations within this category.
+* **Total** &ndash; Summarizes all translated, weighted, and approved units for that specific section.
+
+<Aside>
+  When **Use category-based proofread rates** is disabled, the specific **Approval** rows under the TM, MT, AI, and Other translations blocks are removed. Instead, a single, standalone **Proofreading** row is added to the bottom of the table. All approved units across the entire language section are aggregated into this row and calculated at your flat base proofreading rate.
+</Aside>
+
+##### Export
+
+To download the My Contribution report for offline analysis or accounting, click **Export** and select your preferred format (**CSV**, **XLSX**, or **JSON**).
 
 If you want to regenerate the report with other rates, edit the rates and follow the procedure again.
 
@@ -394,7 +437,7 @@ To generate the **Time Spent** report, follow these steps:
 
 ### Rates {#rates-time-spent}
 
-You can set the hourly prices for your work. Unlike the **My Activity** report, the unit for the **Time Spent** report is fixed to **hour**.
+You can set the hourly prices for your work. Unlike the **My Contribution** report, the unit for the **Time Spent** report is fixed to **hour**.
 
 #### Base Rate {#base-rate-time-spent}
 
