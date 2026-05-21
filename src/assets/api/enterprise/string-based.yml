@@ -28491,6 +28491,14 @@ components:
             - term
             - description
             - partOfSpeech
+        exportType:
+          description: "Determines whether the export keeps every term of a matching concept (`concepts`, default)\n * or only the terms that match the active filters (`terms`)."
+          type: string
+          default: concepts
+          enum:
+            - concepts
+            - terms
+          example: terms
         text:
           type: string
           example: value
@@ -28510,6 +28518,7 @@ components:
           default: 'false'
           example: 'true'
         status:
+          description: '__Deprecated:__ use `statuses` instead. Cannot be combined with `statuses`.'
           type: string
           enum:
             - PREFERRED
@@ -28518,7 +28527,23 @@ components:
             - OBSOLETE
             - DRAFT
           example: DRAFT
+          deprecated: true
+        statuses:
+          description: 'Filter terms by one or more statuses.'
+          type: array
+          items:
+            type: string
+            enum:
+              - PREFERRED
+              - ADMITTED
+              - NOT_RECOMMENDED
+              - OBSOLETE
+              - DRAFT
+          example:
+            - PREFERRED
+            - ADMITTED
         partOfSpeech:
+          description: '__Deprecated:__ use `partsOfSpeech` instead. Cannot be combined with `partsOfSpeech`.'
           type: string
           enum:
             - NOUN
@@ -28538,7 +28563,34 @@ components:
             - SYM
             - X
           example: VERB
+          deprecated: true
+        partsOfSpeech:
+          description: 'Filter terms by one or more parts of speech.'
+          type: array
+          items:
+            type: string
+            enum:
+              - NOUN
+              - VERB
+              - ADJ
+              - PRON
+              - PROPN
+              - DET
+              - ADV
+              - ADP
+              - CCONJ
+              - SCONJ
+              - NUM
+              - INTJ
+              - AUX
+              - PRT
+              - SYM
+              - X
+          example:
+            - NOUN
+            - VERB
         type:
+          description: '__Deprecated:__ use `types` instead. Cannot be combined with `types`.'
           type: string
           enum:
             - FULL_FORM
@@ -28548,7 +28600,24 @@ components:
             - PHRASE
             - VARIANT
           example: ACRONYM
+          deprecated: true
+        types:
+          description: 'Filter terms by one or more types.'
+          type: array
+          items:
+            type: string
+            enum:
+              - FULL_FORM
+              - ACRONYM
+              - ABBREVIATION
+              - SHORT_FORM
+              - PHRASE
+              - VARIANT
+          example:
+            - ACRONYM
+            - ABBREVIATION
         gender:
+          description: '__Deprecated:__ use `genders` instead. Cannot be combined with `genders`.'
           type: string
           enum:
             - MASCULINE
@@ -28557,9 +28626,42 @@ components:
             - COMMON
             - OTHER
           example: OTHER
+          deprecated: true
+        genders:
+          description: 'Filter terms by one or more genders.'
+          type: array
+          items:
+            type: string
+            enum:
+              - MASCULINE
+              - FEMININE
+              - NEUTER
+              - COMMON
+              - OTHER
+          example:
+            - MASCULINE
+            - FEMININE
         authorId:
+          description: '__Deprecated:__ use `authorIds` instead. Cannot be combined with `authorIds`.'
           type: integer
           example: 12
+          deprecated: true
+        authorIds:
+          description: 'Filter terms by one or more authors. Up to 50 values.'
+          type: array
+          items:
+            type: integer
+          example:
+            - 12
+            - 34
+        languageIds:
+          description: 'Filter terms by one or more language IDs. Up to 50 values.'
+          type: array
+          items:
+            type: string
+          example:
+            - uk
+            - de
         dateFrom:
           description: 'Export date from in UTC, ISO 8601'
           type: string
@@ -29926,6 +30028,9 @@ components:
         androidCode:
           type: string
           example: es-rES
+        bcp47Code:
+          type: string
+          example: b+es+ES
         osxCode:
           type: string
           example: es.lproj
@@ -31025,13 +31130,40 @@ components:
           type: boolean
           default: false
         skipApprovedTranslations:
-          description: "Skip approved translations. Default is `false`\n\n__Note:__ Works only with TM pre-translation method"
+          description: 'Skip strings that already have approved translations. Default is `false`'
           type: boolean
           default: false
         translateUntranslatedOnly:
-          description: 'Applies pre-translation for untranslated strings only. Default is `true`'
+          description: "**Deprecated.** Use the `scope` parameter instead:\n- pass `scope: \"untranslated\"` to apply pre-translation to untranslated strings only (equivalent to the legacy `true`),\n- pass `scope: \"all\"` to apply pre-translation to both untranslated and translated strings (equivalent to the legacy `false`).\n\nKept for backward compatibility with existing API integrations. Cannot be used together with `scope` in the same request."
           type: boolean
           default: true
+          deprecated: true
+        scope:
+          description: "Which strings to apply pre-translation to. Default is `untranslated`. Available values:\n- 'untranslated' – strings without an existing translation (default)\n- 'translated' – strings that already have a translation (re-translation)\n- 'all' – both untranslated and translated strings\n\n__Note:__ Cannot be used together with the deprecated `translateUntranslatedOnly`."
+          type: string
+          default: untranslated
+          enum:
+            - untranslated
+            - translated
+            - all
+        translationModifiedBefore:
+          description: "Re-translates only if a string's current translation was modified prior to this date. Useful after modifying contextual resources like screenshots, style guides, or glossaries.\n\n__Note:__ Has effect when `scope` is `translated` or `all`."
+          type: string
+          format: date-time
+          example: '2026-01-01T00:00:00+00:00'
+          nullable: true
+        replaceTranslationsOption:
+          description: "Defines whether to replace existing translations with new pre-translations. Default is `none`. Available values:\n- 'none' – add the new translation alongside existing ones (default)\n- 'autoTranslated' – replace auto-generated translations (TM, MT, AI). Human translations are kept\n- 'all' – replace all existing translations\n\n__Note:__ Has effect when `scope` is `translated` or `all`."
+          type: string
+          default: none
+          enum:
+            - none
+            - autoTranslated
+            - all
+        resetApprovalStatus:
+          description: "Removes approval on existing translations when applying pre-translations. Default is `false`.\n\n__Note:__ Cannot be used together with `autoApproveOption`. Has effect when `scope` is `translated` or `all`."
+          type: boolean
+          default: false
         minimumMatchRatio:
           description: "Add translation when TM match is greater or equal to minimum match ratio. This argument will be ignored if `translateWithPerfectMatchOnly` is set.\n\n__Note:__ Works only with TM pre-translation method"
           type: integer
@@ -31124,13 +31256,40 @@ components:
           type: boolean
           default: false
         skipApprovedTranslations:
-          description: "Skip approved translations. Default is `false`\n\n__Note:__ Works only with TM pre-translation method"
+          description: 'Skip strings that already have approved translations. Default is `false`'
           type: boolean
           default: false
         translateUntranslatedOnly:
-          description: 'Applies pre-translation for untranslated strings only. Default is `true`'
+          description: "**Deprecated.** Use the `scope` parameter instead:\n- pass `scope: \"untranslated\"` to apply pre-translation to untranslated strings only (equivalent to the legacy `true`),\n- pass `scope: \"all\"` to apply pre-translation to both untranslated and translated strings (equivalent to the legacy `false`).\n\nKept for backward compatibility with existing API integrations. Cannot be used together with `scope` in the same request."
           type: boolean
           default: true
+          deprecated: true
+        scope:
+          description: "Which strings to apply pre-translation to. Default is `untranslated`. Available values:\n- 'untranslated' – strings without an existing translation (default)\n- 'translated' – strings that already have a translation (re-translation)\n- 'all' – both untranslated and translated strings\n\n__Note:__ Cannot be used together with the deprecated `translateUntranslatedOnly`."
+          type: string
+          default: untranslated
+          enum:
+            - untranslated
+            - translated
+            - all
+        translationModifiedBefore:
+          description: "Re-translates only if a string's current translation was modified prior to this date. Useful after modifying contextual resources like screenshots, style guides, or glossaries.\n\n__Note:__ Has effect when `scope` is `translated` or `all`."
+          type: string
+          format: date-time
+          example: '2026-01-01T00:00:00+00:00'
+          nullable: true
+        replaceTranslationsOption:
+          description: "Defines whether to replace existing translations with new pre-translations. Default is `none`. Available values:\n- 'none' – add the new translation alongside existing ones (default)\n- 'autoTranslated' – replace auto-generated translations (TM, MT, AI). Human translations are kept\n- 'all' – replace all existing translations\n\n__Note:__ Has effect when `scope` is `translated` or `all`."
+          type: string
+          default: none
+          enum:
+            - none
+            - autoTranslated
+            - all
+        resetApprovalStatus:
+          description: "Removes approval on existing translations when applying pre-translations. Default is `false`.\n\n__Note:__ Cannot be used together with `autoApproveOption`. Has effect when `scope` is `translated` or `all`."
+          type: boolean
+          default: false
         translateWithPerfectMatchOnly:
           description: "Applies pre-translation only for the strings with perfect match (source text and contextual information are identical)\n\n__Note:__ Works only with TM pre-translation method"
           type: boolean
@@ -31311,8 +31470,33 @@ components:
           type: boolean
           example: true
         translateUntranslatedOnly:
+          description: '**Deprecated.** Reflects the legacy value sent in the request (defaults to `true` when not provided). New integrations should rely on `scope` instead.'
           type: boolean
           example: true
+          deprecated: true
+        scope:
+          type: string
+          default: untranslated
+          enum:
+            - untranslated
+            - translated
+            - all
+          example: untranslated
+        translationModifiedBefore:
+          type: string
+          format: date-time
+          nullable: true
+        replaceTranslationsOption:
+          type: string
+          default: none
+          enum:
+            - none
+            - autoTranslated
+            - all
+          example: none
+        resetApprovalStatus:
+          type: boolean
+          example: false
         translateWithPerfectMatchOnly:
           type: boolean
           example: true
