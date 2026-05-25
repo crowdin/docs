@@ -18927,26 +18927,6 @@ components:
                   $ref: '#/components/schemas/ai.prompt.completion.resources.qa_check'
                 -
                   $ref: '#/components/schemas/ai.prompt.completion.resources.custom'
-    EnterpriseAiPromptCompletionCreateForm:
-      required:
-        - resources
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/AiPromptCompletionCreateForm'
-        -
-          properties:
-            resources:
-              description: 'AI prompt context resources'
-              oneOf:
-                -
-                  $ref: '#/components/schemas/ai.prompt.completion.resources.pre_translate'
-                -
-                  $ref: '#/components/schemas/ai.prompt.completion.resources.alignment'
-                -
-                  $ref: '#/components/schemas/ai.prompt.completion.resources.qa_check'
-                -
-                  $ref: '#/components/schemas/ai.prompt.completion.resources.custom'
     ai.prompt.completion.resources.overridePromptValues.common:
       properties:
         sourceLanguage:
@@ -18977,9 +18957,14 @@ components:
         projectName:
           type: string
           example: Crowdin
-        projectPublicDescription:
+        projectDescription:
           type: string
           example: 'Crowdin Translations. Official effort.'
+        projectPublicDescription:
+          description: 'Deprecated. Use `projectDescription` instead.'
+          type: string
+          example: 'Crowdin Translations. Official effort.'
+          deprecated: true
       type: object
     ai.prompt.completion.resources.overridePromptValues.pre_translate:
       type: object
@@ -19008,9 +18993,14 @@ components:
           description: "Example: `{\"pairs\":[{\"id\":\"c61f9e77-1d0d-469a-b1ad-8c25c2c7e05c\",\"source\":\"About...\",\"translation\":\"Про...\"},{\"id\":\"8e0cdbd9-60c0-4be8-b51e-1cd6bf890902\",\"source\":\"About Me\",\"translation\":\"Про мене\"},{\"id\":\"6dbed810-353b-400d-975e-53723ab448a5\",\"source\":\"Current Password\",\"translation\":\"Створити пароль\"}]}`\n\n__Note:__ The provided data should follow the structure shown. Each object in the array must include a 'source' and 'translation' field. Other fields such as 'id' are optional. You can also include custom properties as needed."
           type: string
           example: '{"pairs":[{"id":"c61f9e77-1d0d-469a-b1ad-8c25c2c7e05c","source":"About...","translation":"Про..."},{"id":"8e0cdbd9-60c0-4be8-b51e-1cd6bf890902","source":"About Me","translation":"Про мене"},{"id":"6dbed810-353b-400d-975e-53723ab448a5","source":"Current Password","translation":"Створити пароль"}]}'
-        projectPublicDescription:
+        projectDescription:
           type: string
           example: 'Crowdin Translations. Official effort.'
+        projectPublicDescription:
+          description: 'Deprecated. Use `projectDescription` instead.'
+          type: string
+          example: 'Crowdin Translations. Official effort.'
+          deprecated: true
       type: object
       additionalProperties:
         type: string
@@ -19041,9 +19031,14 @@ components:
         projectName:
           type: string
           example: Crowdin
-        projectPublicDescription:
+        projectDescription:
           type: string
           example: 'Crowdin Translations. Official effort.'
+        projectPublicDescription:
+          description: 'Deprecated. Use `projectDescription` instead.'
+          type: string
+          example: 'Crowdin Translations. Official effort.'
+          deprecated: true
       type: object
       additionalProperties:
         type: string
@@ -19205,36 +19200,6 @@ components:
                   $ref: '#/components/schemas/ai.prompt.config.crowdin_advanced_mode'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.external_mode'
-    EnterpriseAiPromptCreateForm:
-      required:
-        - name
-        - action
-        - config
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/AiPromptCreateForm'
-        -
-          properties:
-            action:
-              type: string
-              enum:
-                - pre_translate
-                - alignment
-                - qa_check
-            config:
-              description: 'AI prompt configuration'
-              oneOf:
-                -
-                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
-                -
-                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.alignment'
-                -
-                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.qa_check'
-                -
-                  $ref: '#/components/schemas/ai.prompt.config.enterprise_advanced_mode'
-                -
-                  $ref: '#/components/schemas/ai.prompt.config.external_mode'
     ai.prompt.config.basic_mode.pre_translate:
       title: 'Basic mode (pre-translate action)'
       required:
@@ -19295,8 +19260,13 @@ components:
           type: boolean
         screenshots:
           type: boolean
-        publicProjectDescription:
+        projectContext:
           type: boolean
+        publicProjectDescription:
+          description: 'Deprecated. Use field `projectContext` instead'
+          type: boolean
+          default: false
+          deprecated: true
         siblingsStrings:
           type: boolean
         retryOnQaIssues:
@@ -19336,8 +19306,13 @@ components:
           items:
             type: string
             example: '%custom:companyDescription%'
-        publicProjectDescription:
+        projectContext:
           type: boolean
+        publicProjectDescription:
+          description: 'Deprecated. Use field `projectContext` instead'
+          type: boolean
+          default: false
+          deprecated: true
       type: object
     ai.prompt.config.basic_mode.qa_check:
       title: 'Basic mode (QA check action)'
@@ -19374,8 +19349,13 @@ components:
           type: boolean
         screenshots:
           type: boolean
-        publicProjectDescription:
+        projectContext:
           type: boolean
+        publicProjectDescription:
+          description: 'Deprecated. Use field `projectContext` instead'
+          type: boolean
+          default: false
+          deprecated: true
       type: object
     ai.prompt.config.advanced_mode:
       title: 'Advanced mode'
@@ -19457,6 +19437,42 @@ components:
                   type: array
                   items: { type: string, example: uk }
               type: object
+    ai.prompt.config.basic_mode.enterprise.pre_translate:
+      title: 'Basic mode (pre-translate action)'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
+        -
+          properties:
+            organizationContext:
+              description: 'Include organization name and internal description into the prompt context.'
+              type: boolean
+              default: false
+    ai.prompt.config.basic_mode.enterprise.alignment:
+      title: 'Basic mode (alignment action)'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ai.prompt.config.basic_mode.alignment'
+        -
+          properties:
+            organizationContext:
+              description: 'Include organization name and internal description into the prompt context.'
+              type: boolean
+              default: false
+    ai.prompt.config.basic_mode.enterprise.qa_check:
+      title: 'Basic mode (QA check action)'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ai.prompt.config.basic_mode.qa_check'
+        -
+          properties:
+            organizationContext:
+              description: 'Include organization name and internal description into the prompt context.'
+              type: boolean
+              default: false
     ai.prompt.config.external_mode:
       title: 'External mode'
       required:
@@ -19659,11 +19675,11 @@ components:
               type: object
               oneOf:
                 -
-                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.enterprise.pre_translate'
                 -
-                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.alignment'
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.enterprise.alignment'
                 -
-                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.qa_check'
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.enterprise.qa_check'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.enterprise_advanced_mode'
                 -
@@ -29194,11 +29210,11 @@ components:
             - perfectMatchOnly
             - none
         duplicateTranslations:
-          description: 'Adds translations even if the same translation already exists. Default is `false`'
+          description: "Adds translations even if the same translation already exists. Default is `false`.\n\n__Note:__ Cannot be used when `replaceTranslationsOption` is `all` (replacing all translations already overrides duplicate handling)."
           type: boolean
           default: false
         skipApprovedTranslations:
-          description: 'Skip strings that already have approved translations. Default is `false`'
+          description: "Skip strings that already have approved translations. Default is `false`.\n\n__Note:__ Cannot be used together with `resetApprovalStatus`."
           type: boolean
           default: false
         translateUntranslatedOnly:
@@ -29215,13 +29231,13 @@ components:
             - translated
             - all
         translationModifiedBefore:
-          description: "Re-translates only if a string's current translation was modified prior to this date. Useful after modifying contextual resources like screenshots, style guides, or glossaries.\n\n__Note:__ Has effect when `scope` is `translated` or `all`."
+          description: "Re-translates only if a string's current translation was modified prior to this date. Useful after modifying contextual resources like screenshots, style guides, or glossaries.\n\n__Note:__ Requires `scope` to be `translated` or `all`. Cannot be used with `scope: \"untranslated\"` or `translateUntranslatedOnly: true`."
           type: string
           format: date-time
           example: '2026-01-01T00:00:00+00:00'
           nullable: true
         replaceTranslationsOption:
-          description: "Defines whether to replace existing translations with new pre-translations. Default is `none`. Available values:\n- 'none' – add the new translation alongside existing ones (default)\n- 'autoTranslated' – replace auto-generated translations (TM, MT, AI). Human translations are kept\n- 'all' – replace all existing translations\n\n__Note:__ Has effect when `scope` is `translated` or `all`."
+          description: "Defines whether to replace existing translations with new pre-translations. Default is `none`. Available values:\n- 'none' – add the new translation alongside existing ones (default)\n- 'autoTranslated' – replace auto-generated translations (TM, MT, AI). Human translations are kept\n- 'all' – replace all existing translations\n\n__Note:__ Values other than `none` require `scope` to be `translated` or `all` (cannot be combined with `scope: \"untranslated\"` or `translateUntranslatedOnly: true`)."
           type: string
           default: none
           enum:
@@ -29229,7 +29245,7 @@ components:
             - autoTranslated
             - all
         resetApprovalStatus:
-          description: "Removes approval on existing translations when applying pre-translations. Default is `false`.\n\n__Note:__ Cannot be used together with `autoApproveOption`. Has effect when `scope` is `translated` or `all`."
+          description: "Removes approval on existing translations when applying pre-translations. Default is `false`.\n\n__Note:__ Requires `scope` to be `translated` or `all`. Cannot be used together with `skipApprovedTranslations`, `autoApproveOption` (any value other than `none`), or when `replaceTranslationsOption` is `all` (replaced translations lose approval automatically). Cannot be used with `scope: \"untranslated\"` or `translateUntranslatedOnly: true`."
           type: boolean
           default: false
         translateWithPerfectMatchOnly:
