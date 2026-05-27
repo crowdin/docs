@@ -364,7 +364,7 @@ Clicking <Icon name="mdi:dots-vertical" class="inline-icon" /> in the upper-righ
 * **Remove My Approvals / All Approvals** &ndash; Remove the approvals for a translation, reverting its status to unapproved. (Available for proofreaders or higher.)
 * **Remove Translation** &ndash; Clear translations for the selected strings along with the associated TM records. Duplicate translations from master strings remain unaffected.
 * **Hide String / Make String Visible** &ndash; Toggle the visibility of a string for translators. Hidden strings are accessible only to project managers or higher.
-* **Pre-translate** &ndash; Initiate [pre-translation](#pre-translation-in-the-editor) directly in the Editor using Translation Memory (TM), Machine Translation (MT), or AI.
+* **Auto-Translate** &ndash; Initiate [auto-translation](#auto-translation-in-the-editor) directly in the Editor using Translation Memory (TM), Machine Translation (MT), or AI.
 * **Copy String URL** &ndash; Access a specific string using its unique link or share it with colleagues.
 * **Copy Source Skeleton** &ndash; Copy untranslatable elements to the translation section. This action can be applied to one or multiple selected strings. Useful when translating strings with ICU message syntax or HTML tags.
 * **Clear Selected Input** &ndash; Clear the translation field for the selected string.
@@ -777,7 +777,7 @@ Use translation and approval indicators to monitor the progress of the currently
 There are two types of indicators available in the Editor:
 
 * **Circular Progress Indicators** &ndash; Located in the upper-right corner of the toolbar, these show the percentage of translated and approved content for the file or folder you're working on.
-* **Detailed Progress Breakdown** &ndash; Hover over the file name in the top navigation path to view a popover with information on the total word count, number of translated, pre-translated, and approved words, along with the percentage completion for each. (If the **Horizontal Menu** is disabled, this breakdown is located in the **Main menu > File**).
+* **Detailed Progress Breakdown** &ndash; Hover over the file name in the top navigation path to view a popover with information on the total word count, number of translated, auto-translated, and approved words, along with the percentage completion for each. (If the **Horizontal Menu** is disabled, this breakdown is located in the **Main menu > File**).
 
 <Image src={translationProgressIndicators} alt="Translation Progress Indicators" />
 
@@ -868,59 +868,74 @@ To replace source texts, follow these steps:
   9. Select the source strings you want to replace and click **Replace Selected** to finish.
 </Steps>
 
-### Pre-translation in the Editor
+### Auto-Translation in the Editor
 
-The **Pre-translation** feature in the Editor allows you to apply translations to multiple strings directly within the Editor using AI, Translation Memory (TM), or Machine Translation (MT). This feature is available to project members with language coordinator permissions or higher.
+The **Auto-Translation** feature allows you to apply translations to multiple strings directly within the Editor using AI, Translation Memory (TM), or Machine Translation (MT). It gives you granular control over the process: you can use the Advanced Filter to isolate specific strings, visually review your selection, and run auto-translation specifically for that batch.
 
-To apply pre-translation in the Editor, follow these steps:
+To apply auto-translation in the Editor, follow these steps:
 
 <Steps>
-  1. You can open the pre-translation dialog in the Editor in two ways:
-      * **Main menu** – go to **Edit** in the main menu and select **Pre-translate**.
-      * **String menu** (available in **Side-by-Side** and **Multilingual** modes) – click <Icon name="mdi:dots-vertical" class="inline-icon" /> in the upper-right and select **Pre-translate**.
-  2. In the **Pre-translate strings** dialog, configure the following pre-translation parameters:
-     * **Pre-translation via** – select your preferred pre-translation method. Options include: **AI**, **Translation memory**, or **Machine translation**.
-     * **AI prompt** (Specific to pre-translation via AI) – select the prompt that will guide the AI model’s behavior.
-     * **Translation Engine** (Specific to pre-translation via Machine translation) – select the machine translation engine to use.
-     * **Scope** – select which strings to apply pre-translation to:
+  1. You can open the auto-translate dialog in the Editor in two ways:
+      * **Main menu** – go to **Edit** in the main menu and select **Auto-Translate**.
+      * **String menu** (available in **Side-by-Side** and **Multilingual** modes) – click <Icon name="mdi:dots-vertical" class="inline-icon" /> in the upper-right and select **Auto-Translate**.
+  2. In the **Auto-Translate strings** dialog, configure the following parameters:
+     * **Auto-Translation via** – select your preferred method (**AI**, **Translation memory**, or **Machine translation**).
+     * **AI prompt** (Specific to auto-translation via AI) – select the prompt that will guide the AI model’s behavior.
+     * **Custom instruction (optional)** (Specific to auto-translation via AI) – add any additional context or specific instructions to guide the AI. Your input will be included alongside the selected prompt.
+     * **Translation Engine** (Specific to auto-translation via Machine translation) – select the machine translation engine to use.
+     * **Scope** – select the range of strings to apply auto-translation to:
         * **Selected strings** (Specific to **Side-by-Side** and **Multilingual** modes) – applies only to strings manually selected in the Editor.
         * **Filtered strings** – applies to all strings matching the current filter.
         * **File** – applies to the currently opened file.
         * **All files** – applies to all strings across all files in the project, regardless of the file currently open in the Editor.
-     * **Minimum match ratio** (Specific to pre-translation via Translation memory) – select either **100%** or **Perfect** as the minimum similarity required for TM matches.
+     * **Strings to process** – select **Untranslated strings**, **Translated strings (Re-translation)**, or both.
+        <Aside>
+          The following re-translation settings will only appear if the **Translated strings (Re-translation)** option is selected.
+        </Aside>
+     * **When a translation already exists for this string** – choose how to handle existing translations:
+        * **Add translation alongside existing ones** (default)
+        * **Replace auto-generated translations (Keep human translations)**
+        * **Replace all existing translations**
+     * **Skip approved strings** – prevents overwriting strings that already have approved translations.
+     * **Allow duplicate translations** – adds translations even if they duplicate existing ones. Useful when comparing AI prompts or MT engines in the [Auto-Translation accuracy](/enterprise/project-reports/#auto-translation-accuracy) report.
+     * **Reset approval status so proofreaders can re-review** – removes the approval status from any replaced translations, ensuring they can be reviewed and validated again.
+        <Aside title="Settings Dependencies">
+          Certain selections will automatically disable other options:
+          * **Replace all existing translations** disables the **Allow duplicate translations** and **Reset approval status so proofreaders can re-review** options.
+          * **Skip approved strings** disables the **Reset approval status so proofreaders can re-review** option.
+        </Aside>
+     * **Minimum match ratio** (Specific to auto-translation via Translation memory) – select either **100%** or **Perfect** as the minimum similarity required for TM matches.
         <ReadMore>
           Read more about [TM Match Types](/enterprise/translation-memory/#tm-match-calculation).
         </ReadMore>
-  3. Expand the **Advanced settings** section to finetune the pre-translation process with the following options:
-      * **Translate from** – select the language to use as the source for pre-translation. By default, it's preselected to the project’s source language, but you can choose any other project language. This provides greater flexibility and may improve translation quality by allowing you to use a more suitable existing translation (e.g., an adapted English version instead of the original Japanese) or translate directly between related languages (e.g., Spanish to Portuguese).
+  3. Expand the **Advanced settings** section to finetune the auto-translation process:
+      * **Translate from** – select the language to use as the source for auto-translation. By default, it's preselected to the project’s source language, but you can choose any other project language. This provides greater flexibility and may improve translation quality by allowing you to use a more suitable existing translation (e.g., an adapted English version instead of the original Japanese) or translate directly between related languages (e.g., Spanish to Portuguese).
         <Aside>
-          For pre-translation via AI, the project's original source text is also included as context to ensure higher accuracy.
+          For auto-translation via AI, the project's original source text is also included as context to ensure higher accuracy.
         </Aside>
-      * **Skip approved translations** (Specific to pre-translation via Translation memory) – prevents overwriting strings that already have approved translations.
-      * **Apply for untranslated strings only** – when selected, pre-translation will only be applied to strings that don’t have any translations.
-      * **Allow duplicate translations** – adds translations even if they duplicate existing ones. Useful when comparing AI prompts or MT engines in the [Pre-translation Accuracy](/enterprise/project-reports/#pre-translation-accuracy) report, as it ensures that all translations are registered as new and included in accuracy calculations.
-        <Aside>
-          **Apply for untranslated strings only** and **Allow duplicate translations** are mutually exclusive. Only one of them can be selected at a time.
-        </Aside>
-      * **Approve added translations** (Specific to pre-translation via Translation memory) – allows you to auto-approve translations added through pre-translation. Options include:
+      * **Approve added translations** (Specific to auto-translation via Translation memory) – allows you to auto-approve translations added through auto-translation. Options include:
         * **With perfect match** – approve only those with a 101% match.
         * **With perfect match (approved previously)** – approve perfect matches only if they were already approved before.
         * **All (skip auto-substituted translations)** – approve everything except translations improved by auto-substitution.
         * **All** – approve all added translations.
-  4. Click **Pre-translate**.
+  4. Click **Auto-Translate**.
 </Steps>
 
-In Side-by-side and Comfortable modes, pre-translation is applied to the single language currently selected in the Editor. In Multilingual mode, translations are applied across all selected languages, as this mode allows working with multiple languages simultaneously.
+In Side-by-side and Comfortable modes, auto-translation is applied to the single language currently selected in the Editor. In Multilingual mode, translations are applied across all selected languages, as this mode allows working with multiple languages simultaneously.
 
 <ReadMore>
   Read more about [Multilingual mode](#multilingual-mode).
 </ReadMore>
 
-Use the **Queue** button in the bottom-left corner of the **Pre-translate strings** dialog to track and manage all triggered pre-translation instances.
+Use the **Queue** button in the bottom-left corner of the **Auto-Translate strings** dialog to track and manage all triggered auto-translation instances.
 
 <ReadMore>
-  Read more about [Pre-translation Queue](/enterprise/pre-translation/#pre-translation-queue).
+  Read more about [Auto-Translation Queue](/enterprise/auto-translation/#auto-translation-queue).
 </ReadMore>
+
+<Aside title="Permissions">
+  The Auto-Translation feature in the Editor is available to project members with language coordinator permissions or higher.
+</Aside>
 
 ### Advanced Filter
 
@@ -940,8 +955,8 @@ The filter dialog contains the following parameters, which you can combine to na
 * **Translations** – Filter by translation status. Options include *Untranslated*, *Partially Translated (Plurals)*, *Translated*, *Same as Source String*, and *Modified Source Strings*.
 * **Duplicates** – Filter strings based on their duplicate status. Options include *Master Strings*, *Duplicates Only*, *Duplicates with Shared Translations*, and *Duplicates with Own Translations*. <Aside>This option only appears if your project contains duplicate strings.</Aside>
 * **Approvals** – Filter strings by their approval status. Options include *Translated, Not Approved*, *Partially Approved (Plurals)*, *Approved*, and *Have Translations After Approval*.
-* **TM, MT and AI** – Filter strings based on their translation origin. Options include *Translated by MT*, *Translated by TM*, *Translated by AI*, or *Translated by TM or MT or AI*.
-* **Pre-translation** – Filter strings based on whether pre-translation was applied. Options include *Used* or *Not Used*.
+* **Engine** – Filter strings based on their translation origin. Options include *Machine Translation (MT)*, *Translation Memory (TM)*, *AI*, or *Any Engine*.
+* **Translation Method** – Filter strings based on whether auto-translation was applied. Options include *Auto-Translation* or *Manual*.
 * **Comments** – Filter strings by comments or issues. Options include *Do Not Have Comments*, *Have Comments*, *Unresolved Issues*, *General Question Issues*, *Current Translation Is Wrong Issues*, *Lack of Contextual Information Issues*, or *Mistake in Source String Issues*.
 * **Screenshots** – Filter strings that are *With Screenshots* or *Without Screenshots*.
 * **Visibility** – Filter strings by their visibility to translators: *Visible* or *Hidden*.
