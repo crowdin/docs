@@ -32,6 +32,8 @@ if (process.env.VERCEL_ENV === 'production' && process.env.VERCEL_PROJECT_PRODUC
   site = 'https://support.crowdin.com';
 }
 
+const localizedLocales = new Set(Object.keys(starlightLocales).filter((locale) => locale !== 'root'));
+
 // https://astro.build/config
 const config = defineConfig({
   site: site,
@@ -156,19 +158,32 @@ const config = defineConfig({
           }
         }),
         starlightLinksValidator({
-          exclude: [
-            '/developer/api/v2/**',
-            '/developer/api/v2/string-based/**',
-            '/developer/enterprise/api/v2/**',
-            '/developer/enterprise/api/v2/string-based/**',
-            '/*/developer/api/v2/**',
-            '/*/developer/api/v2/string-based/**',
-            '/*/developer/enterprise/api/v2/**',
-            '/*/developer/enterprise/api/v2/string-based/**',
-            '/*/introduction/**',
-            '/*/enterprise/introduction/**',
-            '/*/developer/crowdin-apps-about/**',
-          ],
+          exclude: ({ link, slug }) => {
+            const linkPath = link.split('#')[0].split('?')[0];
+            const normalizedSlug = slug.replace(/^\//, '');
+            const pageLocale = normalizedSlug.split('/')[0];
+            const isLocalizedPage = localizedLocales.has(pageLocale);
+
+            // Exclude API documentation links.
+            const isExcludedPath = (
+              linkPath.startsWith('/developer/api/v2/') ||
+              linkPath.startsWith('/developer/api/v2/string-based/') ||
+              linkPath.startsWith('/developer/enterprise/api/v2/') ||
+              linkPath.startsWith('/developer/enterprise/api/v2/string-based/') ||
+              /^\/[^/]+\/developer\/api\/v2\//.test(linkPath) ||
+              /^\/[^/]+\/developer\/api\/v2\/string-based\//.test(linkPath) ||
+              /^\/[^/]+\/developer\/enterprise\/api\/v2\//.test(linkPath) ||
+              /^\/[^/]+\/developer\/enterprise\/api\/v2\/string-based\//.test(linkPath) ||
+              /^\/[^/]+\/introduction\//.test(linkPath) ||
+              /^\/[^/]+\/enterprise\/introduction\//.test(linkPath) ||
+              /^\/[^/]+\/developer\/crowdin-apps-about\//.test(linkPath)
+            );
+
+            // Validate hashes only for source locale pages.
+            const isLocalizedHashLink = isLocalizedPage && link.includes('#');
+
+            return isExcludedPath || isLocalizedHashLink;
+          },
         }),
         starlightHeadingBadges(),
         // https://delucis.github.io/starlight-llms-txt/
