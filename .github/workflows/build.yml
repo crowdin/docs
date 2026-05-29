@@ -9,26 +9,56 @@ on:
       - main
 
 jobs:
-    build:
-      runs-on: ubuntu-latest
-      concurrency:
-        group: ${{ github.workflow }}-${{ github.ref }}
-        cancel-in-progress: true
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
 
-      steps:
+    steps:
       - uses: actions/checkout@v6
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-            node-version: 22
-            cache: 'npm'
+          node-version: 22
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
 
       - name: Build
+        id: build
         run: npm run build
+
+      - name: Comment link validation issues on PR
+        if: |
+          always() &&
+          github.event_name == 'pull_request' &&
+          steps.build.outputs.link_validation_failed == 'true'
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: starlight-links-validator
+          message: |
+            ## Starlight links validator found issues
+            
+            The docs build reported link validation issues.
+            
+            - Check the **job summary** table in this run for file/link details.
+            - Run URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Remove stale link validation comment
+        if: |
+          always() &&
+          github.event_name == 'pull_request' &&
+          steps.build.outputs.link_validation_failed != 'true'
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: starlight-links-validator
+          delete: true
 
       - name: Build API Docs styles
         run: npm run build:api
