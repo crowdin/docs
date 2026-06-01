@@ -4,6 +4,12 @@ This repository contains the website code and Markdown articles for [Crowdin Doc
 
 If you would like to contribute to the documentation, please read the [Contribution Guidelines](CONTRIBUTING.md).
 
+## Translations
+
+This project uses [Crowdin](https://crowdin.com) to manage translations.
+
+[![Translations Sync](https://github.com/crowdin/docs/actions/workflows/crowdin-download.yml/badge.svg)](https://github.com/crowdin/docs/actions/workflows/crowdin-download.yml)
+
 ## Getting Started
 
 Clone the repository and install the dependencies:
