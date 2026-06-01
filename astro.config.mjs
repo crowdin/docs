@@ -243,6 +243,7 @@ const config = defineConfig({
         heroicons: ['arrows-up-down-solid'],
         'material-symbols': [
           'open-in-new',
+          'table-rows-outline',
           'table-chart',
           'terminal',
           'format-ink-highlighter',
@@ -256,6 +257,7 @@ const config = defineConfig({
           'groups',
           'reply',
           'payments',
+          'square-outline-rounded',
           'undo',
           'split-scene-left-outline',
           'download'
