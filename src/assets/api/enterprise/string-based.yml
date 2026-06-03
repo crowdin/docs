@@ -19527,6 +19527,354 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/AuthGuardModule'
+    AdvisorInsightPatch:
+      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      type: array
+      items:
+        $ref: '#/components/schemas/AdvisorInsightOperation'
+    AdvisorInsightOperation:
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+            - test
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - /isDismissed
+      type: object
+      discriminator:
+        propertyName: op
+        mapping:
+          replace: '#/components/schemas/AdvisorInsightOperationReplace'
+          test: '#/components/schemas/AdvisorInsightOperationTest'
+    AdvisorInsightOperationReplace:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AdvisorInsightOperation'
+        -
+          properties:
+            value:
+              oneOf:
+                -
+                  type: boolean
+    AdvisorInsightOperationTest:
+      description: 'A JSON Patch `Test` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.6)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AdvisorInsightOperation'
+        -
+          properties:
+            value:
+              oneOf:
+                -
+                  type: boolean
+    AdvisorAppInsightForm:
+      required:
+        - outcome
+        - checkedAt
+      properties:
+        outcome:
+          description: "Result of the app's check. `flagged` — issue detected; `clear` — on target; `not_applicable` — inspector does not apply to this project."
+          type: string
+          enum:
+            - flagged
+            - clear
+            - not_applicable
+        checkedAt:
+          description: 'Date when the app performed this check (ISO 8601)'
+          type: string
+          format: date-time
+          example: '2026-05-21T14:30:00+00:00'
+        metrics:
+          description: 'Structured metrics produced by the app for this insight.'
+          type: array
+          items:
+            $ref: '#/components/schemas/AdvisorInsightMetric'
+          maxItems: 100
+        recommendations:
+          description: 'Actionable recommendations the app wants to surface for this insight.'
+          type: array
+          items:
+            $ref: '#/components/schemas/AdvisorInsightRecommendation'
+          maxItems: 20
+        payload:
+          description: 'Free-form data the app wants to keep attached to this insight. Stored as-is — the backend does not interpret its contents.'
+          type: object
+          additionalProperties: true
+      type: object
+    AdvisorCheckCollectionForm:
+      properties:
+        category:
+          description: 'Optional category to scope the check to. Mutually exclusive with `inspectors`.'
+          type: string
+          example: context
+        inspectors:
+          description: 'Optional list of inspectors to re-check. Mutually exclusive with `category`.'
+          type: array
+          items:
+            required:
+              - key
+            properties:
+              key:
+                type: string
+                example: string_context_relevance
+              options:
+                description: 'Per-inspector options. Currently only `string_context_relevance` supports AI options.'
+                properties:
+                  mode: { type: string, enum: [auto, all], example: auto }
+                  promptId: { type: integer, example: 42 }
+                type: object
+                nullable: true
+            type: object
+      type: object
+    AdvisorCheckResource:
+      description: 'Advisor Check Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AdvisorCheck'
+    AdvisorInsightCollectionResource:
+      description: 'Advisor Insights Collection'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/AdvisorInsightResource'
+            pagination:
+              $ref: '#/components/schemas/AdvancedPagination'
+    AdvisorInsightResource:
+      description: 'Advisor Insight Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AdvisorInsight'
+    AdvisorCheckAttributes:
+      description: 'Exactly one of `category` or `inspectors` may be present; absence of both means an all-inspector check.'
+      properties:
+        category:
+          description: 'Present only when the check was scoped to a category.'
+          type: string
+          example: context
+          nullable: true
+        inspectors:
+          description: 'Present only when the check was scoped to a list of inspectors.'
+          type: array
+          items:
+            properties:
+              key:
+                type: string
+                example: string_context_relevance
+            type: object
+          nullable: true
+      type: object
+    AdvisorCheck:
+      title: 'Advisor Check'
+      properties:
+        identifier:
+          type: string
+          example: 550e8400-e29b-41d4-a716-446655440000
+        status:
+          description: 'Status of the underlying job. Inherits the `JobDto` status taxonomy (e.g., `created`, `in_progress`, `done`, `failed`). Distinct from the Advisor Insight `status` field, which tracks per-insight freshness.'
+          type: string
+          example: created
+        progress:
+          description: 'in percentages'
+          type: integer
+          example: 0
+        attributes:
+          $ref: '#/components/schemas/AdvisorCheckAttributes'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-04-16T12:00:00+00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-04-16T12:00:00+00:00'
+        startedAt:
+          type: string
+          format: date-time
+          example: null
+          nullable: true
+        finishedAt:
+          type: string
+          format: date-time
+          example: null
+          nullable: true
+      type: object
+    AdvisorInsight:
+      title: 'Advisor Insight'
+      properties:
+        id:
+          type: integer
+          example: 10
+        inspectorKey:
+          type: string
+          example: string_context_relevance
+        category:
+          description: 'Category of the inspector. `null` if the inspector is no longer registered (e.g. originating app uninstalled).'
+          type: string
+          example: context
+          nullable: true
+        isDismissed:
+          type: boolean
+          example: false
+        status:
+          type: string
+          enum:
+            - pending
+            - checking
+            - outdated
+            - done
+          example: done
+        outcome:
+          description: 'Outcome of the latest check. `flagged` — issue detected; `clear` — on target; `not_applicable` — inspector does not apply to this project; `null` — not yet checked.'
+          type: string
+          enum:
+            - flagged
+            - clear
+            - not_applicable
+          example: flagged
+          nullable: true
+        severity:
+          description: 'Severity of the inspector. `null` if the inspector is no longer registered.'
+          type: string
+          enum:
+            - high
+            - medium
+            - low
+          example: high
+          nullable: true
+        refreshPolicy:
+          description: 'How often the inspector re-runs. `hourly` — at most once per hour; `daily` — at most once per day. Both are event-driven. `null` if the inspector is no longer registered.'
+          type: string
+          enum:
+            - hourly
+            - daily
+          example: hourly
+          nullable: true
+        metrics:
+          description: "Structured metrics emitted by the inspector. Use each metric's `key` to map values to your own labels and formatting."
+          type: array
+          items:
+            $ref: '#/components/schemas/AdvisorInsightMetric'
+          nullable: true
+        recommendations:
+          description: "Actionable recommendations selected by the backend. Use each recommendation's `id` to map to your own copy and target URL."
+          type: array
+          items:
+            $ref: '#/components/schemas/AdvisorInsightRecommendation'
+          nullable: true
+        checkedAt:
+          description: 'Date when the last check was performed (ISO 8601)'
+          type: string
+          format: date-time
+          example: '2026-04-06T10:30:00+00:00'
+          nullable: true
+        lastAiRun:
+          oneOf:
+            -
+              $ref: '#/components/schemas/AdvisorAiRunDescriptor'
+          nullable: true
+        payload:
+          description: 'Data attached to this insight by the originating `advisor-inspector` app on its latest update. Returned exactly as the app submitted it.'
+          type: object
+          nullable: true
+          additionalProperties: true
+      type: object
+    AdvisorInsightMetric:
+      title: 'Advisor Insight Metric'
+      properties:
+        key:
+          type: string
+          example: quality_score
+        value:
+          type: number
+          example: 12
+        unit:
+          type: string
+          enum:
+            - percent
+            - count
+          example: percent
+        threshold:
+          type: number
+          example: 50
+          nullable: true
+        tone:
+          type: string
+          enum:
+            - default
+            - success
+            - danger
+          example: danger
+      type: object
+    AdvisorInsightRecommendation:
+      title: 'Advisor Insight Recommendation'
+      properties:
+        id:
+          type: string
+          example: run_ai_context_validation
+        primary:
+          type: boolean
+          example: true
+        params:
+          description: "Parameters provided alongside the recommendation (e.g., `projectId`). Typically used to construct the recommendation's target URL."
+          type: object
+      type: object
+    AdvisorAiRunDescriptor:
+      title: 'Advisor AI Run Descriptor'
+      description: 'Describes the most recent AI validation run for an insight.'
+      properties:
+        mode:
+          type: string
+          enum:
+            - auto
+            - all
+          example: auto
+        promptId:
+          type: integer
+          example: 42
+        at:
+          type: string
+          format: date-time
+          example: '2026-04-06T10:30:00+00:00'
+      type: object
     AiCustomPlaceholderPatchForm:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -22107,6 +22455,7 @@ components:
             - /editorSuggestionAiPromptId
             - /alignmentActionAiPromptId
             - /qaCheckActionAiPromptId
+            - /contextReviewAiPromptId
       type: object
       discriminator:
         propertyName: op
@@ -22167,6 +22516,10 @@ components:
         qaCheckActionAiPromptId:
           type: integer
           example: 8
+          nullable: true
+        contextReviewAiPromptId:
+          type: integer
+          example: 11
           nullable: true
       type: object
     AiTranslateForm:
@@ -22390,6 +22743,45 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/ApplicationInstallationResponseModel'
+    AdvisorInspectorModule:
+      title: 'Advisor Inspector Module'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Module'
+        -
+          properties:
+            identifier:
+              type: string
+              example: example-application
+            scopes:
+              type: object
+            iframe:
+              type: object
+            severity:
+              type: string
+              enum:
+                - high
+                - medium
+                - low
+            category:
+              type: string
+              enum:
+                - context
+            refreshPolicy:
+              type: string
+              enum:
+                - hourly
+                - daily
+            title:
+              type: string
+            summary:
+              description: 'Short one-line summary shown on the inspector card chrome below the title.'
+              type: string
+              nullable: true
+            recheckUrl:
+              type: string
+              nullable: true
     AiPromptProviderModule:
       title: 'AI Prompt Provider Module'
       type: object
@@ -32026,6 +32418,7 @@ components:
             - /editorSuggestionAiPromptId
             - /alignmentActionAiPromptId
             - /qaCheckActionAiPromptId
+            - /contextReviewAiPromptId
             - /savingsReportSettingsTemplateId
             - /templateId
             - /steps
@@ -32721,6 +33114,10 @@ components:
           description: 'AI Prompt ID to be used as prompt for QA check action'
           type: integer
           example: 8
+        contextReviewAiPromptId:
+          description: 'AI Prompt ID to be used as prompt for Advisor string context review'
+          type: integer
+          example: 11
         defaultTmId:
           description: 'Translation Memory ID. If omitted new translation memory will be created. Get via [List TMs](#operation/api.tms.getMany)'
           type: integer
@@ -34208,6 +34605,10 @@ components:
               type: integer
               example: 8
               nullable: true
+            contextReviewAiPromptId:
+              type: integer
+              example: 11
+              nullable: true
             inContext:
               type: boolean
               example: true
@@ -35079,6 +35480,10 @@ components:
         qaCheckActionAiPromptId:
           type: integer
           example: 8
+          nullable: true
+        contextReviewAiPromptId:
+          type: integer
+          example: 11
           nullable: true
       type: object
     SystemStringsExporterSettings:
