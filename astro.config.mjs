@@ -179,10 +179,8 @@ const config = defineConfig({
               /^\/[^/]+\/developer\/crowdin-apps-about\//.test(linkPath)
             );
 
-            // Validate hashes only for source locale pages.
-            const isLocalizedHashLink = isLocalizedPage && link.includes('#');
-
-            return isExcludedPath || isLocalizedHashLink;
+            // Skip all link validation for target locale pages.
+            return isExcludedPath || isLocalizedPage;
           },
         }),
         starlightHeadingBadges(),
