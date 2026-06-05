@@ -20,6 +20,282 @@ servers:
       host:
         default: api.crowdin.com
 paths:
+  '/projects/{projectId}/applications/{applicationIdentifier}/modules/{moduleKey}/advisors/insights':
+    put:
+      tags:
+        - Advisor
+      summary: 'Create or Update Application Advisor Insight'
+      description: "**Required scopes:** `project.advisor` (Read and Write).\n\nCalled by an installed application's `advisor-inspector` module to publish the result of its own check against a string. Subsequent calls for the same string overwrite the previous insight from this module."
+      operationId: api.projects.applications.modules.advisors.insights.put
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          name: applicationIdentifier
+          in: path
+          required: true
+          schema:
+            type: string
+        -
+          name: moduleKey
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdvisorAppInsightForm'
+      responses:
+        '200':
+          description: 'Advisor insight updated'
+        '201':
+          description: 'Advisor insight created'
+        '400':
+          description: 'Invalid Request'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or app module not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/advisors/checks':
+    post:
+      tags:
+        - Advisor
+      summary: 'Create Advisor Check'
+      description: "**Required scopes:** `project.advisor` (Read and Write).\n\nTriggers an asynchronous re-check of advisor inspectors for the project. At most one of `category` or `inspectors` may be present; if neither is supplied, every inspector is re-checked. Supplying `category` re-checks all inspectors in that category. Supplying `inspectors` re-checks only the listed inspectors; pass `options` on an entry to opt into AI validation for that inspector. Returns a job-progress descriptor — distinct from PATCH `/insights/{insightId}` (user-facing Insight mutation) and PUT `/applications/.../insight` (app-pushed upsert)."
+      operationId: api.projects.advisors.checks.post
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdvisorCheckCollectionForm'
+      responses:
+        '202':
+          description: 'Advisor check job created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvisorCheckResource'
+        '400':
+          description: 'Invalid Request Body'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '409':
+          description: 'Another advisor check is in progress for this project'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
+  '/projects/{projectId}/advisors/checks/{checkId}':
+    get:
+      tags:
+        - Advisor
+      summary: 'Get Advisor Check Status'
+      description: "**Required scopes:** `project.advisor` (Read only).\n\nReturns the status of an advisor check job"
+      operationId: api.projects.advisors.checks.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          name: checkId
+          in: path
+          description: 'Advisor Check Identifier, consists of 36 characters'
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 'Advisor check status'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvisorCheckResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or check with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/advisors/insights':
+    get:
+      tags:
+        - Advisor
+      summary: 'List Advisor Insights'
+      description: '**Required scopes:** `project.advisor` (Read only).'
+      operationId: api.projects.advisors.insights.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+        -
+          name: isDismissed
+          in: query
+          description: 'Filter insights by dismissal flag. Omit to return both dismissed and active insights.'
+          schema:
+            type: integer
+            enum:
+              - 0
+              - 1
+        -
+          name: status
+          in: query
+          description: 'Filter insights by status (comma-separated)'
+          schema:
+            type: string
+            example: 'pending,checking,outdated,done'
+        -
+          name: outcome
+          in: query
+          description: 'Filter insights by outcome (comma-separated). `flagged` — issue detected; `clear` — on target; `not_applicable` — does not apply. Omit to return all checked insights (never-checked ones are excluded).'
+          schema:
+            type: string
+            example: 'flagged,clear'
+      responses:
+        '200':
+          description: 'Advisor insights list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvisorInsightCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/advisors/insights/{insightId}':
+    patch:
+      tags:
+        - Advisor
+      summary: 'Edit Advisor Insight'
+      description: "**Required scopes:** `project.advisor` (Read and Write).\n\nUser-facing mutation of a single Advisor Insight row. Currently only `/isDismissed` is patchable (dismiss ↔ reactivate). For dispatching a fresh check, see POST `/advisors/checks`. For app-pushed insight updates, see PUT `/applications/.../insight`."
+      operationId: api.projects.advisors.insights.patch
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          name: insightId
+          in: path
+          description: 'Insight Identifier'
+          required: true
+          schema:
+            type: integer
+            example: 10
+      requestBody:
+        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdvisorInsightPatch'
+      responses:
+        '200':
+          description: 'Advisor insight was successfully updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvisorInsightResource'
+        '400':
+          description: 'Invalid Request Body'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or insight with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
   /ai/settings/custom-placeholders:
     get:
       tags:
@@ -9531,7 +9807,7 @@ paths:
           $ref: '#/components/parameters/ProjectId'
       responses:
         '200':
-          description: "Project data\n     * Translators and proofreaders – receive the response `Project Info` (all the project data, that's visible to all the project members within the ui)\n     * Project owners, organization admins, managers and developers – receive the response `Project Settings` (all the basic project info plus extended details, including project settings, resources, QA checks, and more)"
+          description: "Project data\n * Translators and proofreaders – receive the response `Project Info` (all the project data, that's visible to all the project members within the ui)\n * Project owners, organization admins, managers and developers – receive the response `Project Settings` (all the basic project info plus extended details, including project settings, resources, QA checks, and more)"
           content:
             application/json:
               schema:
@@ -21849,6 +22125,20 @@ components:
             - success
             - danger
           example: danger
+        source:
+          description: 'What produced the metric. Omitted for metrics recorded before sources were tracked.'
+          type: string
+          enum:
+            - deterministic
+            - ai
+            - app
+          example: deterministic
+        checkedAt:
+          description: "Date when the metric was measured (ISO 8601). Omitted for metrics measured at the insight's top-level `checkedAt`."
+          type: string
+          format: date-time
+          example: '2026-04-06T10:30:00+00:00'
+          nullable: true
       type: object
     AdvisorInsightRecommendation:
       title: 'Advisor Insight Recommendation'
@@ -34733,7 +35023,7 @@ components:
             - remove
             - test
         path:
-          description: "Where `languageId` is one of project's languages and `mappingKey` is one of language-based export pattern fields.\n     * <p>Also `vendorId` and `mtEngineId` can't be used with `steps` in same request</p> <p>A JSON Pointer as defined by <a href=\"https://tools.ietf.org/html/rfc6901\" target=\"_blank\">RFC 6901</a></p>"
+          description: 'Where `languageId` is one of project''s languages and `mappingKey` is one of language-based export pattern fields. <p>Also `vendorId` and `mtEngineId` can''t be used with `steps` in same request</p> <p>A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a></p>'
           type: string
           format: json-pointer
           enum:
@@ -34893,7 +35183,7 @@ components:
       items:
         $ref: '#/components/schemas/FileFormatSettingsOperation'
     FileFormatSettingsOperation:
-      description: "A JSON Patch operation as defined by [RFC\n     *     6902](https://tools.ietf.org/html/rfc6902#section-4)"
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
       required:
         - op
         - path
@@ -34918,7 +35208,7 @@ components:
           replace: '#/components/schemas/FileFormatSettingsOperationReplace'
           test: '#/components/schemas/FileFormatSettingsOperationTest'
     FileFormatSettingsOperationReplace:
-      description: "A JSON Patch `Replace` operation as defined by [RFC\n     *     6902](https://tools.ietf.org/html/rfc6902#section-4.3)"
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -34935,7 +35225,7 @@ components:
                   type: array
                   items: { type: string }
     FileFormatSettingsOperationTest:
-      description: "A JSON Patch `Replace` operation as defined by [RFC\n     *     6902](https://tools.ietf.org/html/rfc6902#section-4.3)"
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -34954,7 +35244,7 @@ components:
       items:
         $ref: '#/components/schemas/ProjectPlaceholderOperation'
     ProjectPlaceholderOperation:
-      description: "A JSON Patch operation as defined by [RFC\n     *     6902](https://tools.ietf.org/html/rfc6902#section-4)"
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
       required:
         - op
         - path
@@ -34966,7 +35256,7 @@ components:
             - replace
             - test
         path:
-          description: "A JSON Pointer as defined by <a href=\"https://tools.ietf.org/html/rfc6901\"\n     *        target=\"_blank\">RFC 6901</a>"
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
           type: string
           format: json-pointer
           enum:
@@ -34981,7 +35271,7 @@ components:
           replace: '#/components/schemas/ProjectPlaceholderOperationReplace'
           test: '#/components/schemas/ProjectPlaceholderOperationTest'
     ProjectPlaceholderOperationReplace:
-      description: "A JSON Patch `Replace` operation as defined by [RFC\n     *     6902](https://tools.ietf.org/html/rfc6902#section-4.3)"
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -34998,7 +35288,7 @@ components:
                   type: array
                   items: { type: string }
     ProjectPlaceholderOperationTest:
-      description: "A JSON Patch `Replace` operation as defined by [RFC\n     *     6902](https://tools.ietf.org/html/rfc6902#section-4.3)"
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -35017,7 +35307,7 @@ components:
       items:
         $ref: '#/components/schemas/SystemStringsExporterSettingsOperation'
     SystemStringsExporterSettingsOperation:
-      description: "A JSON Patch operation as defined by [RFC\n     *     6902](https://tools.ietf.org/html/rfc6902#section-4)"
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
       required:
         - op
         - path
@@ -35042,7 +35332,7 @@ components:
           replace: '#/components/schemas/SystemStringsExporterSettingsOperationReplace'
           test: '#/components/schemas/SystemStringsExporterSettingsOperationTest'
     SystemStringsExporterSettingsOperationReplace:
-      description: "A JSON Patch `Replace` operation as defined by [RFC\n     *     6902](https://tools.ietf.org/html/rfc6902#section-4.3)"
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -35059,7 +35349,7 @@ components:
                   type: array
                   items: { type: string }
     SystemStringsExporterSettingsOperationTest:
-      description: "A JSON Patch `Replace` operation as defined by [RFC\n     *     6902](https://tools.ietf.org/html/rfc6902#section-4.3)"
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
         - value
       type: object
@@ -35626,7 +35916,7 @@ components:
         -
           properties:
             escapeQuotes:
-              description: "Values available:\n - 0 - Do not escape single quote\n - 1 - Escape single quote by another single quote\n - 2 - Escape single quote by a backslash\n - 3 - Escape single quote by another single quote only in strings containing variables (`{0}`)"
+              description: "Values available:\n * 0 - Do not escape single quote\n * 1 - Escape single quote by another single quote\n * 2 - Escape single quote by a backslash\n * 3 - Escape single quote by another single quote only in strings containing variables (`{0}`)"
               type: integer
               default: 1
               enum:
@@ -35635,7 +35925,7 @@ components:
                 - 2
                 - 3
             escapeSpecialCharacters:
-              description: "Defines whether any special characters (=, :, ! and #) should be escaped by backslash in exported translations. You can add escape_special_characters per-file option.\n\nAcceptable values are: 0, 1. Default is 0.\n - 0 - Do not escape special characters\n - 1 - Escape special characters by a backslash"
+              description: "Defines whether any special characters (=, :, ! and #) should be escaped by backslash in exported translations. You can add escape_special_characters per-file option.\n\nAcceptable values are: 0, 1. Default is 0.\n * 0 - Do not escape special characters\n * 1 - Escape special characters by a backslash"
               type: integer
               default: 1
               enum:
@@ -35655,7 +35945,7 @@ components:
         -
           properties:
             exportQuotes:
-              description: "Acceptable values are: 'single', 'double'. Default is 'single'.\n - 'single' - Output will be enclosed in single quotes\n - 'double' - Output will be enclosed in double quotes"
+              description: "Acceptable values are: 'single', 'double'. Default is 'single'.\n * 'single' - Output will be enclosed in single quotes\n * 'double' - Output will be enclosed in double quotes"
               type: string
               enum:
                 - single
@@ -35672,7 +35962,7 @@ components:
           type: boolean
           default: true
         translatableElements:
-          description: "This is an array of strings, where each item is the XPaths to DOM element that should be imported.\n\nSupported XPath patterns:\n- `/path/to/node` — Absolute path to a specific node\n- `/path/to/attribute[@attr]` — Absolute path to an attribute\n- `//node` — All nodes with the specified name\n- `//[@attr]` — All elements with the specified attribute\n- `nodeone/nodetwo` — Relative path\n- `/nodeone//nodetwo` — Mixed absolute and descendant path\n- `//node[@attr]` — All nodes with the specified name and attribute"
+          description: "This is an array of strings, where each item is the XPaths to DOM element that should be imported.\n\nSupported XPath patterns:\n * `/path/to/node` — Absolute path to a specific node\n * `/path/to/attribute[@attr]` — Absolute path to an attribute\n * `//node` — All nodes with the specified name\n * `//[@attr]` — All elements with the specified attribute\n * `nodeone/nodetwo` — Relative path\n * `/nodeone//nodetwo` — Mixed absolute and descendant path\n * `//node[@attr]` — All nodes with the specified name and attribute"
           type: array
           items:
             type: string
@@ -35877,7 +36167,7 @@ components:
           default: null
           nullable: true
         type:
-          description: "Values available:\n - 'mdx_v1' — MDX (v1)\n * - 'mdx_v2' - MDX (v2)"
+          description: "Values available:\n * 'mdx_v1' — MDX (v1)\n * 'mdx_v2' - MDX (v2)"
           type: string
           default: mdx_v2
           enum:
@@ -36113,7 +36403,7 @@ components:
           x-doc-sections:
             - file-based
         type:
-          description: "Values available:\n *            'i18next_json' — i18next (*.json)\n *            'nestjs_i18n' - NestJS i18n"
+          description: "Values available:\n * 'i18next_json' — i18next (*.json)\n * 'nestjs_i18n' - NestJS i18n"
           type: string
           enum:
             - i18next_json
@@ -36602,7 +36892,7 @@ components:
           type: object
       type: object
     EnterpriseFileBasedProjectResource:
-      title: 'Project Settings Resource'
+      title: 'Project Settings'
       description: 'Project Resource'
       type: object
       allOf:
@@ -37256,7 +37546,7 @@ components:
         -
           properties:
             escapeQuotes:
-              description: "Values available:\n- 0 - Do not escape single quote\n- 1 - Escape single quote by another single quote\n- 2 - Escape single quote by a backslash\n- 3 - Escape single quote by another single quote only in strings containing variables (`{0}`)"
+              description: "Values available:\n * 0 - Do not escape single quote\n * 1 - Escape single quote by another single quote\n * 2 - Escape single quote by a backslash\n * 3 - Escape single quote by another single quote only in strings containing variables (`{0}`)"
               type: integer
               default: 1
               enum:
@@ -37265,7 +37555,7 @@ components:
                 - 2
                 - 3
             escapeSpecialCharacters:
-              description: "Defines whether any special characters (=, :, ! and #) should be escaped by backslash in exported translations. You can add escape_special_characters per-file option.\nAcceptable values are: 0, 1. Default is 0.\n- 0 - Do not escape special characters\n- 1 - Escape special characters by a backslash"
+              description: "Defines whether any special characters (=, :, ! and #) should be escaped by backslash in exported translations. You can add escape_special_characters per-file option.\nAcceptable values are: 0, 1. Default is 0.\n * 0 - Do not escape special characters\n * 1 - Escape special characters by a backslash"
               type: integer
               default: 1
               enum:
@@ -37285,7 +37575,7 @@ components:
         -
           properties:
             exportQuotes:
-              description: "Acceptable values are: 'single', 'double'. Default is 'single'.\n- 'single' - Output will be enclosed in single quotes\n- 'double' - Output will be enclosed in double quotes"
+              description: "Acceptable values are: 'single', 'double'. Default is 'single'.\n * 'single' - Output will be enclosed in single quotes\n * 'double' - Output will be enclosed in double quotes"
               type: string
               enum:
                 - single
@@ -37302,7 +37592,7 @@ components:
           type: boolean
           default: true
         translatableElements:
-          description: "This is an array of strings, where each item is the XPaths to DOM element that should be imported.\n\nSupported XPath patterns:\n- `/path/to/node` — Absolute path to a specific node\n- `/path/to/attribute[@attr]` — Absolute path to an attribute\n- `//node` — All nodes with the specified name\n- `//[@attr]` — All elements with the specified attribute\n- `nodeone/nodetwo` — Relative path\n- `/nodeone//nodetwo` — Mixed absolute and descendant path\n- `//node[@attr]` — All nodes with the specified name and attribute"
+          description: "This is an array of strings, where each item is the XPaths to DOM element that should be imported.\n\nSupported XPath patterns:\n * `/path/to/node` — Absolute path to a specific node\n * `/path/to/attribute[@attr]` — Absolute path to an attribute\n * `//node` — All nodes with the specified name\n * `//[@attr]` — All elements with the specified attribute\n * `nodeone/nodetwo` — Relative path\n * `/nodeone//nodetwo` — Mixed absolute and descendant path\n * `//node[@attr]` — All nodes with the specified name and attribute"
           type: array
           items:
             type: string
@@ -37499,7 +37789,7 @@ components:
           type: boolean
           default: false
         type:
-          description: "Values available:\n- 'mdx_v1' — MDX (v1)\n- 'mdx_v2' - MDX (v2)"
+          description: "Values available:\n * 'mdx_v1' — MDX (v1)\n * 'mdx_v2' - MDX (v2)"
           type: string
           default: mdx_v1
           enum:
@@ -37746,7 +38036,7 @@ components:
           x-doc-sections:
             - file-based
         type:
-          description: "Values available:\n     *            'i18next_json' — i18next (*.json)\n     *            'nestjs_i18n' - NestJS i18n"
+          description: "Values available:\n * 'i18next_json' — i18next (*.json)\n * 'nestjs_i18n' - NestJS i18n"
           type: string
           enum:
             - i18next_json
@@ -46868,6 +47158,8 @@ components:
             - /splitFiles
             - /splitContent
             - /fileIds
+            - /directoryIds
+            - /branchIds
             - /stringIds
             - /assignees
             - /assignedTeams
@@ -47238,25 +47530,38 @@ components:
       type: object
       oneOf:
         -
-          $ref: '#/components/schemas/EnterpriseTaskBySourceIds'
+          $ref: '#/components/schemas/EnterpriseTaskBySourceIdsForm'
         -
           $ref: '#/components/schemas/EnterpriseTaskByStringIds'
-    EnterpriseTaskBySourceIds:
-      title: 'Create By File Ids Form'
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/EnterpriseTaskBySourceIdsForm'
       x-doc-sections:
         - file-based
     EnterpriseTaskBySourceIdsForm:
+      title: 'Create By Source Ids Form'
       required:
         - title
         - languageId
-        - fileIds
-        - branchIds
-        - stringIds
       properties:
+        fileIds:
+          description: "Task File Identifiers. Get via [List Files](#operation/api.projects.files.getMany)\n\n__Note:__ One of fields `fileIds`, `directoryIds` or `branchIds` is required. They cannot be provided simultaneously"
+          type: array
+          items:
+            type: integer
+          x-doc-sections:
+            - file-based
+        directoryIds:
+          description: "Directory Identifiers. Get via [List Directories](#operation/api.projects.directories.getMany)\n\n__Note:__ One of fields `fileIds`, `directoryIds` or `branchIds` is required. They cannot be provided simultaneously"
+          type: array
+          items:
+            type: integer
+          x-doc-sections:
+            - file-based
+        branchIds:
+          description: "Branch Identifiers. Get via [List Branches](#operation/api.projects.branches.getMany)\n\n__Note:__ One of fields `fileIds`, `directoryIds` or `branchIds` is required. They cannot be provided simultaneously"
+          type: array
+          items:
+            type: integer
+          x-doc-sections:
+            - file-based
         type:
           description: "Task type:\n * 0 - translate\n * 1 - proofread\n\n__Note:__ One of fields `type` or `workflowStepId` is required. Both cannot be provided simultaneously"
           type: integer
@@ -47274,13 +47579,6 @@ components:
           description: 'Task Language Identifier. Get via [Project Target Languages](#operation/api.projects.get)'
           type: string
           example: fr
-        fileIds:
-          description: 'Task File Identifiers. Get via [List Files](#operation/api.projects.files.getMany)'
-          type: array
-          items:
-            type: integer
-          x-doc-sections:
-            - file-based
         labelIds:
           description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
           type: array
@@ -47413,10 +47711,13 @@ components:
       required:
         - title
         - languageId
-        - fileIds
-        - branchIds
         - stringIds
       properties:
+        stringIds:
+          description: 'Task String Identifiers. Get via [List Strings](#operation/api.projects.strings.getMany)'
+          type: array
+          items:
+            type: integer
         type:
           description: "Task type:\n * 0 - translate\n * 1 - proofread\n\n__Note:__ One of fields `type` or `workflowStepId` is required. Both cannot be provided simultaneously"
           type: integer
@@ -47434,11 +47735,6 @@ components:
           description: 'Task Language Identifier. Get via [Project Target Languages](#operation/api.projects.get)'
           type: string
           example: fr
-        stringIds:
-          description: 'Task String Identifiers. Get via [List Strings](#operation/api.projects.strings.getMany)'
-          type: array
-          items:
-            type: integer
         status:
           description: 'Task status'
           type: integer
@@ -47543,27 +47839,40 @@ components:
       type: object
       oneOf:
         -
-          $ref: '#/components/schemas/EnterpriseVendorTaskBySourceIds'
+          $ref: '#/components/schemas/EnterpriseVendorTaskBySourceIdsForm'
         -
           $ref: '#/components/schemas/EnterpriseVendorTaskByStringIds'
-    EnterpriseVendorTaskBySourceIds:
-      title: 'Create By File Ids Form'
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/EnterpriseVendorTaskBySourceIdsForm'
       x-doc-sections:
         - file-based
     EnterpriseVendorTaskBySourceIdsForm:
+      title: 'Create By Source Ids Form'
       required:
         - workflowStepId
         - title
         - languageId
-        - fileIds
-        - branchIds
-        - stringIds
         - type
       properties:
+        fileIds:
+          description: "Task File Identifiers. Get via [List Files](#operation/api.projects.files.getMany)\n\n__Note:__ One of fields `fileIds`, `directoryIds` or `branchIds` is required. They cannot be provided simultaneously"
+          type: array
+          items:
+            type: integer
+          x-doc-sections:
+            - file-based
+        directoryIds:
+          description: "Directory Identifiers. Get via [List Directories](#operation/api.projects.directories.getMany)\n\n__Note:__ One of fields `fileIds`, `directoryIds` or `branchIds` is required. They cannot be provided simultaneously"
+          type: array
+          items:
+            type: integer
+          x-doc-sections:
+            - file-based
+        branchIds:
+          description: "Branch Identifiers. Get via [List Branches](#operation/api.projects.branches.getMany)\n\n__Note:__ One of fields `fileIds`, `directoryIds` or `branchIds` is required. They cannot be provided simultaneously"
+          type: array
+          items:
+            type: integer
+          x-doc-sections:
+            - file-based
         workflowStepId:
           description: 'Task workflow step id with type `Translate by Vendor` or `Proofread by Vendor`'
           type: integer
@@ -47575,13 +47884,6 @@ components:
           description: 'Task Language Identifier. Get via [Project Target Languages](#operation/api.projects.get)'
           type: string
           example: fr
-        fileIds:
-          description: 'Task File Identifiers. Get via [List Files](#operation/api.projects.files.getMany)'
-          type: array
-          items:
-            type: integer
-          x-doc-sections:
-            - file-based
         labelIds:
           description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
           type: array
@@ -47676,11 +47978,14 @@ components:
         - workflowStepId
         - title
         - languageId
-        - fileIds
-        - branchIds
         - stringIds
         - type
       properties:
+        stringIds:
+          description: 'Task String Identifiers. Get via [List Strings](#operation/api.projects.strings.getMany)'
+          type: array
+          items:
+            type: integer
         workflowStepId:
           description: 'Task workflow step id with type `Translate by Vendor` or `Proofread by Vendor`'
           type: integer
@@ -47692,11 +47997,6 @@ components:
           description: 'Task Language Identifier. Get via [Project Target Languages](#operation/api.projects.get)'
           type: string
           example: fr
-        stringIds:
-          description: 'Task String Identifiers. Get via [List Strings](#operation/api.projects.strings.getMany)'
-          type: array
-          items:
-            type: integer
         labelIds:
           description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
           type: array
