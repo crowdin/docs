@@ -1,10 +1,12 @@
 import { defineCollection, z } from 'astro:content';
 import { docsLoader, i18nLoader } from '@astrojs/starlight/loaders';
 import { docsSchema, i18nSchema } from '@astrojs/starlight/schema';
+import { starlightLocales } from '../utils/i18n.ts';
+import { getBaseDocId, localizeDocId } from '../utils/docsSlug.ts';
 
 export const collections = {
   docs: defineCollection({
-    loader: docsLoader(),
+    loader: customDocsLoader(),
     schema: docsSchema({
       extend: z.object({
         hideHeader: z.boolean().optional(),
@@ -48,3 +50,26 @@ export const collections = {
     }),
   }),
 };
+
+const localizedLocales = Object.keys(starlightLocales).filter(locale => locale !== 'root');
+
+/*
+  Crowdin returns translations keeping the source page's frontmatter `slug` (no
+  locale prefix). Starlight routes by content id, so a `tr/` file whose id lacks the
+  `tr/` prefix is served at the root path and collides with the same-slug English page.
+  We override `generateId` to re-apply the prefix before the id becomes the store key.
+*/
+function customDocsLoader() {
+  return docsLoader({
+    generateId: ({ entry, data }) => {
+      const baseId = getBaseDocId(entry, data.slug);
+      const id = localizeDocId(entry, baseId, localizedLocales);
+
+      if (id !== baseId) {
+        console.warn(`[custom-docs-loader] Re-prefixed locale slug for ${entry}: '${baseId}' -> '${id}'`);
+      }
+
+      return id;
+    },
+  });
+}
