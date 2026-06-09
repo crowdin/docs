@@ -1,8 +1,7 @@
 import { defineCollection, z } from 'astro:content';
 import { docsLoader, i18nLoader } from '@astrojs/starlight/loaders';
 import { docsSchema, i18nSchema } from '@astrojs/starlight/schema';
-import { starlightLocales } from '../utils/i18n.ts';
-import { getBaseDocId, localizeDocId } from '../utils/docsSlug.ts';
+import { starlightLocales, getBaseDocId, localizeDocId } from '../utils/i18n.ts';
 
 export const collections = {
   docs: defineCollection({

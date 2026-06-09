@@ -1,3 +1,5 @@
+import { slug as githubSlug } from 'github-slugger';
+
 import en from '../content/i18n/en.json';
 import de from '../content/i18n/de.json';
 import da from '../content/i18n/da.json';
@@ -33,4 +35,43 @@ export function sidebarLabel(key: SidebarTranslationKey) {
       'zh-CN': zh.sidebar[key],
     },
   };
+}
+
+/*
+  In content-layer collections the entry `id` *is* Starlight's routing slug (there is no top-level `slug`).
+  The glob loader builds that id from the frontmatter `slug` when present, dropping the locale folder prefix for pages
+  shipped untranslated from the CMS - these helpers restore it. `entry` is the file path relative to src/content/docs (e.g. `tr/foo.md`).
+  Astro's default path-based id: github-slug each segment, join with `/`, strip a trailing `/index`. Mirrors `getContentEntryIdAndSlug`
+*/
+export function slugFromPath(filePath: string): string {
+  const withoutExt = filePath.replace(/\.[^/.]+$/, '');
+  return withoutExt
+    .split('/')
+    .map(segment => githubSlug(segment))
+    .join('/')
+    .replace(/\/index$/, '');
+}
+
+export function getBaseDocId(entry: string, frontmatterSlug?: unknown): string {
+  return frontmatterSlug
+    ? String(frontmatterSlug).replace(/^\/+/, '')
+    : slugFromPath(entry);
+}
+
+export function localizeDocId(
+  entry: string,
+  id: string,
+  localizedLocales: readonly string[],
+): string {
+  const localeSegment = entry.split('/')[0];
+
+  if (
+    localizedLocales.includes(localeSegment) &&
+    id !== localeSegment &&
+    !id.startsWith(`${localeSegment}/`)
+  ) {
+    return `${localeSegment}/${id}`;
+  }
+
+  return id;
 }
