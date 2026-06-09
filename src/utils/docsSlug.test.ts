@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { slugFromPath, getBaseDocId, localizeDocId } from './docsSlug';
+import { starlightLocales } from './i18n';
 
-const LOCALES = ['de', 'da', 'fr', 'pt', 'es', 'tr'];
+const LOCALES = Object.keys(starlightLocales).filter(locale => locale !== 'root');
 
 describe('slugFromPath', () => {
   it('strips the file extension', () => {
