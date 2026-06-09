@@ -2,9 +2,9 @@ import en from '../content/i18n/en.json';
 import de from '../content/i18n/de.json';
 import da from '../content/i18n/da.json';
 import fr from '../content/i18n/fr.json';
-import pt from '../content/i18n/pt.json';
-import es from '../content/i18n/es.json';
-import tr from '../content/i18n/tr.json';
+import pt from '../content/i18n/pt-PT.json';
+import es from '../content/i18n/es-ES.json';
+import tr from '../content/i18n/tr-TR.json';
 
 export const starlightLocales = {
   root: { label: 'English',  lang: 'en' },
@@ -25,9 +25,9 @@ export function sidebarLabel(key: SidebarTranslationKey) {
       'de': de.sidebar[key],
       'da': da.sidebar[key],
       'fr': fr.sidebar[key],
-      'pt': pt.sidebar[key],
-      'es': es.sidebar[key],
-      'tr': tr.sidebar[key],
+      'pt-PT': pt.sidebar[key],
+      'es-ES': es.sidebar[key],
+      'tr-TR': tr.sidebar[key],
     },
   };
 }
