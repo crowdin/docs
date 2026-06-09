@@ -169,8 +169,21 @@ You can use `npm run watch:api` to watch for changes in the API documentation du
 
 ## Adding a new language
 
-1. Add the language to `export_languages` in [`src/content/crowdin.yml`](src/content/crowdin.yml) and sync so Crowdin writes translated MDX and UI JSON (paths come from the `files` section). Add ignore rules for the new language in the `files` section.
+Each locale has two identifiers that are easy to confuse:
 
-2. In [`src/utils/i18n.ts`](src/utils/i18n.ts), add the locale to `starlightLocales` (same key as the translated docs folder; see [Starlight i18n](https://starlight.astro.build/guides/i18n/)), import the new JSON from [`src/content/i18n/`](src/content/i18n/), and wire it into `sidebarLabel`’s `translations`.
+- **Crowdin language code** — what Crowdin uses to export translations (e.g. `zh-CN`, `pt-PT`, `tr`). See the [Crowdin language codes](https://crowdin.com/page/language-codes).
+- **Folder / URL segment** — the short locale key used in content paths (`/docs/zh/…`) and the published URL. We keep it short, dropping the region where it's unambiguous (`zh-CN` → `zh`, `pt-PT` → `pt`).
 
-New keys in English [`en.json`](src/content/i18n/en.json) need matching entries in [`src/content/config.ts`](src/content/config.ts).
+The steps below use Chinese Simplified (`zh-CN` → `zh`) as a worked example:
+
+1. **[`src/content/crowdin.yml`](src/content/crowdin.yml)** — add the Crowdin code to `export_languages` (`zh-CN`), map it to the folder name under `languages_mapping` (`zh-CN: zh`), and add ignore rules for the folder to **both** the `/docs` and `/includes` `files` blocks (`/docs/zh/**/*.mdx`, `/includes/zh/**/*.mdx`). Then sync so Crowdin writes the translated MDX and the UI strings JSON (paths come from the `files` section).
+
+2. **[`src/content/i18n/<folder>.json`](src/content/i18n/)** — the sync above creates this UI-strings file (e.g. `zh.json`), mirroring [`en.json`](src/content/i18n/en.json). Make sure it exists before the next step (the import will fail otherwise).
+
+3. **[`src/utils/i18n.ts`](src/utils/i18n.ts)** — import the new JSON, then add the locale to `starlightLocales` keyed by the **folder name**, with the native `label` and the full BCP-47 `lang` (e.g. `'zh': { label: '简体中文', lang: 'zh-CN' }`; see [Starlight i18n](https://starlight.astro.build/guides/i18n/)), and wire it into `sidebarLabel`’s `translations`.
+
+`starlightLocales` is the single source of truth: the language switcher, locale routing, fallback handling, and tests all derive from it, so no further wiring is needed. Do **not** add per-locale routes to [`vercel.json`](vercel.json).
+
+> **Note!**
+>
+> New UI string keys added to English [`en.json`](src/content/i18n/en.json) also need a matching entry in the i18n schema in [`src/content/config.ts`](src/content/config.ts).

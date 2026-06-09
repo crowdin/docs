@@ -5,6 +5,7 @@ import fr from '../content/i18n/fr.json';
 import pt from '../content/i18n/pt-PT.json';
 import es from '../content/i18n/es-ES.json';
 import tr from '../content/i18n/tr-TR.json';
+import zh from '../content/i18n/zh-CN.json';
 
 export const starlightLocales = {
   root: { label: 'English',  lang: 'en' },
@@ -14,6 +15,7 @@ export const starlightLocales = {
   'pt': { label: 'Português (Portugal)', lang: 'pt-PT' },
   'es': { label: 'Español', lang: 'es-ES' },
   'tr': { label: 'Türkçe', lang: 'tr-TR' },
+  'zh': { label: '简体中文', lang: 'zh-CN' },
 } as const;
 
 export type SidebarTranslationKey = keyof typeof en.sidebar;
@@ -28,6 +30,7 @@ export function sidebarLabel(key: SidebarTranslationKey) {
       'pt-PT': pt.sidebar[key],
       'es-ES': es.sidebar[key],
       'tr-TR': tr.sidebar[key],
+      'zh-CN': zh.sidebar[key],
     },
   };
 }
