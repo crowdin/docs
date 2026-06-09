@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { slugFromPath, getBaseDocId, localizeDocId } from './docsSlug';
-import { starlightLocales } from './i18n';
+import { slugFromPath, getBaseDocId, localizeDocId, starlightLocales } from './i18n';
 
 const LOCALES = Object.keys(starlightLocales).filter(locale => locale !== 'root');
 
