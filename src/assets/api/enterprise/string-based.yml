@@ -22163,6 +22163,14 @@ components:
         apiKey:
           description: 'Api key'
           type: string
+        baseUrl:
+          description: 'Override the provider API base URL (e.g. a self-hosted proxy or third-party gateway)'
+          type: string
+        headers:
+          description: "Custom HTTP headers sent with every request to the provider. Authorization headers are managed by the provider and can't be overridden."
+          type: object
+          additionalProperties:
+            type: string
       type: object
     ai.provider.credentials.azure_open_ai:
       title: 'Azure OpenAI'
@@ -22184,6 +22192,14 @@ components:
         apiVersion:
           description: 'Api version'
           type: string
+        baseUrl:
+          description: 'Override the provider API base URL (e.g. a self-hosted proxy or third-party gateway)'
+          type: string
+        headers:
+          description: "Custom HTTP headers sent with every request to the provider. Authorization headers are managed by the provider and can't be overridden."
+          type: object
+          additionalProperties:
+            type: string
       type: object
     ai.provider.credentials.google_gemini:
       title: 'Google Gemini (Vertex AI)'
@@ -22201,6 +22217,14 @@ components:
         serviceAccountKey:
           description: 'Service account key'
           type: object
+        baseUrl:
+          description: 'Override the provider API base URL (e.g. a self-hosted proxy or third-party gateway)'
+          type: string
+        headers:
+          description: "Custom HTTP headers sent with every request to the provider. Authorization headers are managed by the provider and can't be overridden."
+          type: object
+          additionalProperties:
+            type: string
       type: object
     ai.provider.credentials.google_gemini_ai_studio:
       title: 'Google Gemini (AI Studio)'
@@ -22210,6 +22234,14 @@ components:
         apiKey:
           description: 'API key from Google AI Studio'
           type: string
+        baseUrl:
+          description: 'Override the provider API base URL (e.g. a self-hosted proxy or third-party gateway)'
+          type: string
+        headers:
+          description: "Custom HTTP headers sent with every request to the provider. Authorization headers are managed by the provider and can't be overridden."
+          type: object
+          additionalProperties:
+            type: string
       type: object
     ai.provider.credentials.mistral_ai:
       title: 'Mistral AI'
@@ -22219,6 +22251,14 @@ components:
         apiKey:
           description: 'Api key'
           type: string
+        baseUrl:
+          description: 'Override the provider API base URL (e.g. a self-hosted proxy or third-party gateway)'
+          type: string
+        headers:
+          description: "Custom HTTP headers sent with every request to the provider. Authorization headers are managed by the provider and can't be overridden."
+          type: object
+          additionalProperties:
+            type: string
       type: object
     ai.provider.credentials.anthropic:
       title: Anthropic
@@ -22228,6 +22268,14 @@ components:
         apiKey:
           description: 'Api key'
           type: string
+        baseUrl:
+          description: 'Override the provider API base URL (e.g. a self-hosted proxy or third-party gateway)'
+          type: string
+        headers:
+          description: "Custom HTTP headers sent with every request to the provider. Authorization headers are managed by the provider and can't be overridden."
+          type: object
+          additionalProperties:
+            type: string
       type: object
     ai.provider.credentials.x_ai:
       title: xAi
@@ -22237,6 +22285,14 @@ components:
         apiKey:
           description: 'Api key'
           type: string
+        baseUrl:
+          description: 'Override the provider API base URL (e.g. a self-hosted proxy or third-party gateway)'
+          type: string
+        headers:
+          description: "Custom HTTP headers sent with every request to the provider. Authorization headers are managed by the provider and can't be overridden."
+          type: object
+          additionalProperties:
+            type: string
       type: object
     ai.provider.credentials.deepseek:
       title: DeepSeek
@@ -22246,6 +22302,14 @@ components:
         apiKey:
           description: 'API key'
           type: string
+        baseUrl:
+          description: 'Override the provider API base URL (e.g. a self-hosted proxy or third-party gateway)'
+          type: string
+        headers:
+          description: "Custom HTTP headers sent with every request to the provider. Authorization headers are managed by the provider and can't be overridden."
+          type: object
+          additionalProperties:
+            type: string
       type: object
     ai.provider.credentials.watsonx:
       title: 'IBM Watsonx'
@@ -22263,6 +22327,14 @@ components:
         region:
           description: Region
           type: string
+        baseUrl:
+          description: 'Override the provider API base URL (e.g. a self-hosted proxy or third-party gateway)'
+          type: string
+        headers:
+          description: "Custom HTTP headers sent with every request to the provider. Authorization headers are managed by the provider and can't be overridden."
+          type: object
+          additionalProperties:
+            type: string
       type: object
     ai.provider.credentials.custom_ai:
       title: 'Custom AI'
@@ -22812,7 +22884,7 @@ components:
           example: 11
           nullable: true
       type: object
-    AiTranslateForm:
+    AiTranslateFormBase:
       required:
         - strings
         - targetLanguageId
@@ -22852,18 +22924,6 @@ components:
           items:
             type: integer
             example: 654
-        aiPromptId:
-          description: "Pre-Translation Prompt Identifier. Get via [List Prompts](#operation/api.ai.prompts.getMany)\n\n__Note:__ Can't be used with `aiProviderId` or `aiModelId` in same request"
-          type: integer
-          example: 789
-        aiProviderId:
-          description: "AI Provider Identifier. Get via [List AI Providers](#operation/api.ai.providers.getMany)\n\n__Note:__ Must be used together with `aiModelId`. Can't be used with `aiPromptId` in same request"
-          type: integer
-          example: 12
-        aiModelId:
-          description: "AI Model ID. Get via [List AI Provider Models](#operation/api.ai.providers.models.getMany)\n\n__Note:__ Must be used together with `aiProviderId`. Can't be used with `aiPromptId` in same request"
-          type: string
-          example: gpt-4.1
         instructions:
           description: 'Custom instructions for translation'
           type: array
@@ -22879,6 +22939,43 @@ components:
             example: 123
           maxItems: 10
       type: object
+    AiTranslateByPromptForm:
+      required:
+        - aiPromptId
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AiTranslateFormBase'
+        -
+          properties:
+            aiPromptId:
+              description: "Pre-Translation Prompt Identifier. Get via [List Prompts](#operation/api.ai.prompts.getMany)\n\n__Note:__ Can't be used with `aiProviderId` or `aiModelId` in same request"
+              type: integer
+              example: 789
+    AiTranslateByProviderModelForm:
+      required:
+        - aiProviderId
+        - aiModelId
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AiTranslateFormBase'
+        -
+          properties:
+            aiProviderId:
+              description: "AI Provider Identifier. Get via [List AI Providers](#operation/api.ai.providers.getMany)\n\n__Note:__ Must be used together with `aiModelId`. Can't be used with `aiPromptId` in same request"
+              type: integer
+              example: 12
+            aiModelId:
+              description: "AI Model ID. Get via [List AI Provider Models](#operation/api.ai.providers.models.getMany)\n\n__Note:__ Must be used together with `aiProviderId`. Can't be used with `aiPromptId` in same request"
+              type: string
+              example: gpt-4.1
+    AiTranslateForm:
+      oneOf:
+        -
+          $ref: '#/components/schemas/AiTranslateByPromptForm'
+        -
+          $ref: '#/components/schemas/AiTranslateByProviderModelForm'
     AiTranslateResource:
       type: object
       allOf:
