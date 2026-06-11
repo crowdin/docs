@@ -1,0 +1,459 @@
+---
+title: Crowdin AI
+description: 强大的 AI 功能，提升本地化工作流程效率
+slug: enterprise/crowdin-ai
+sidebar:
+  order: 1
+---
+
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { Badge } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Image } from 'astro:assets';
+import configuringPromptBasic from '!/enterprise/translation-process/crowdin_ai_configuring_prompt_basic.png';
+import configuringPromptAdvanced from '!/enterprise/translation-process/crowdin_ai_configuring_prompt_advanced.png';
+import promptsList from '!/enterprise/translation-process/crowdin_ai_prompts_list.png';
+import configuringProvider from '!/enterprise/translation-process/crowdin_ai_configuring_provider.png';
+
+Crowdin 企业版与顶级 AI 提供商集成，包括 OpenAI、Google Gemini、Microsoft Azure OpenAI 等，使您能够利用考虑不同级别的额外背景的高级 AI 翻译。 只需点击几下，使用[通过 AI 自动翻译](#auto-translation-via-ai)即可将这些译文应用到您的内容中。 此外，Crowdin Enterprise 中的 AI 还可用于[编辑器中的 AI 建议](#using-ai-in-the-editor)和 [AI QA 检查](#ai-qa-check)。
+
+您可以通过从 Crowdin [商店](https://store.crowdin.com/tags/ai)安装相应的应用程序来扩展您的 AI 提供商选项。
+
+## 配置 AI
+
+Crowdin AI 集成为增强本地化工作流提供了强大的功能。 配置 AI 涉及[设置提供商](#configuring-ai-providers)和[创建提示词](#configuring-ai-prompts)。
+
+<Aside type="tip">
+  单击**提示词**和**提供商**选项卡中的 <Icon name="mdi:information" class="inline-icon" />，即可打开包含配置建议的侧边栏，例如可用的 AI 功能、提示词要求和提供商配置提示。
+</Aside>
+
+### 配置 AI 提示词
+
+提示工程（Prompt Engineering）对于引导 AI 理解语境并提供准确的译文至关重要。 Crowdin 企业版中的自定义提示词可确保 AI 算法理解项目的细微差别，从而提高翻译质量。
+
+* **语境提示词** &ndash; 自定义提示词以提供语境信息，例如项目特定的术语、风格偏好和目标受众考虑因素。 例如，包括关于一致地翻译技术术语或在各语言中保持品牌基调的说明。
+* **占位符利用** &ndash; 结合占位符将特定于语境的信息动态插入提示词中，使 AI 能够生成符合项目要求的译文。
+* **文件级语境** &ndash; 使用文件级语境提供说明和语境见解，增强 AI 对内容细微差别的理解。 包括文件描述、摘要或术语库以及风格指南的引用。
+
+要配置 AI 提示词，请按照以下步骤操作：
+
+<Steps>
+  1. 打开您组织的**工作区**并在左侧边栏中选择 **AI**。
+  2. 在 **提示词** 选项卡中，单击 **新建提示词**。 或者，您可以单击 **尝试一个示例** 继续创建提示词示例。 Crowdin 允许您快速设置预配置的提示词，这些提示词从创建之日起即可有效执行。 虽然这些示例最初设计为运行良好，但您可以根据个人喜好对其进行自定义。
+  3. 在出现的对话框中，设置提示词参数：
+     * 选择提示词类型（即[自动翻译 & AI 建议](#auto-translation-via-ai)、[对齐](#ai-alignment)、[QA 检查](#ai-qa-check)或创建自定义类型）
+     * 自定义类型名称（特定于自定义提示词类型）
+     * 将此提示词用作编辑器中 AI 建议的默认提示词（特定于自动翻译与 AI 建议提示词类型）
+     * 标题
+     * 模型（包括 AI 提供商）
+     * 高级设置：
+       * 可见性 &ndash; 选择可使用提示词的项目：
+         * 所有项目 &ndash; 该提示词在所有项目中均可用。
+         * 选定项目 &ndash; 该提示词仅在您选择的项目中可用。 如果未选择任何项目，或所有已分配的项目后来被删除，则该提示词将在任何项目中均不可用。
+       * QA 问题自动重试 &ndash; 如果收到的译文未通过 QA 检查，允许自动向 AI 发送额外请求。
+     * 提示词编辑器模式（即基本模式或高级模式）
+     * 附加语境（基本模式）&ndash; 使用以下字段指定将包含在提示词中的数据：
+       <Aside>默认包含的语境：字符串语境、字符串标识符（键）、译文最大长度。</Aside>
+       * 其他语言译文 &ndash; 选择特定语言的译文供 AI 视为附加语境，或留空此字段以使用所有语言的译文。
+       * 术语库术语 &ndash; 允许 AI 考虑领域术语库术语。
+       * 翻译记忆译文 &ndash; 允许 AI 考虑翻译记忆译文。
+       * 风格指南 &ndash; 允许 AI 考虑项目中分配的风格指南中定义的规则、语气和语言偏好。
+       * 前后字符串 &ndash; 允许 AI 考虑前后字符串以获取附加语境。
+       * 文件语境 &ndash; 允许 AI 考虑在[文件设置](/zh/enterprise/file-management/#file-context)或[编辑器](/zh/enterprise/online-editor/#file-context)中为文件添加的文字描述。
+       * AI 生成的文件语境 &ndash; 在缺少文件语境时自动生成。 如果未手动提供文件语境，AI 将分析源内容并生成语境摘要。 此摘要在自动翻译期间和编辑器中均作为参考资料使用。 <Aside type="caution">此选项仅在基于文件的项目中可用，并且需要启用“文件语境”选项。</Aside>
+       * 截图 &ndash; 允许 AI 考虑标记了字符串的截图中的视觉语境。 这提高了准确性和语境感知能力。 <ReadMore>详细了解[屏幕截图](/zh/enterprise/screenshots/)。</ReadMore>
+       * 公开项目描述 &ndash; 允许 AI 考虑公开项目描述。
+       * 代码片段 &ndash; 选择组织 **AI > 代码片段** 中预先创建的可复用内容，以快速将标准文本代码片段插入提示词。
+       * 评估步骤（特定于 QA 检查提示词类型）&ndash; 定义 AI 用于评估译文的标准。 您可以自定义、删除或创建符合您质量要求的新步骤。
+       <Image src={configuringPromptBasic} alt="配置 AI 提示词（基本模式）" />
+     * 高级模式 &ndash; 单击**高级模式**，以更高精度编写您的提示词。 使用以下占位符插入语境：<Aside type="tip">单击占位符可将其复制，然后粘贴到提示词字段中。</Aside>
+       * `%sourceLanguage%` &ndash; 项目的源语言。
+       * `%targetLanguages%` &ndash; 项目所有目标语言的列表。
+       * `%targetLanguage%` &ndash; 内容翻译成的目标语言。
+       * `%pluralForms%` &ndash; 目标语言的复数形式列表。
+       * `%json%` &ndash; 当前句段的字符串集合，包括字符串标识符（键）、语境、文本、最大长度以及其他语言译文（如果指定了翻译占位符）。
+       * `%translationUnits%` &ndash; AI 在 QA 检查期间评估的翻译单元列表（源文本和译文）。
+       * `%fileName%` &ndash; 当前句段的文件名。
+       * `%fileContext%` &ndash; 当前句段的文件语境（通过"文件"部分中的文件设置模态框提供）。
+       * `%siblingsStrings%` &ndash; 文件中的前后句段，用于提供语境翻译参考。
+       * `%filteredStrings%` &ndash; 编辑器中符合当前筛选条件的字符串，提供给 AI 以提高评估准确性和效率。
+       * `%projectName%` &ndash; Crowdin 企业版项目名称。
+       * `%projectPublicDescription%` &ndash; 项目公开描述。
+       * `%assignedStyleGuides%` &ndash; 分配给项目的风格指南。
+       * 代码片段 &ndash; 使用 `%custom:snippetName%` 格式，插入组织 **AI > 代码片段** 中预先定义的可复用内容。
+       <Image src={configuringPromptAdvanced} alt="配置 AI 提示词（高级模式）" />
+     <Aside type="tip">
+             使用**重置为默认值**按钮可恢复 Crowdin Enterprise 原始默认提示词内容和占位符。 如果您希望在保存前放弃更改并从头开始，此功能非常有用。
+     </Aside>
+  4. 单击 **创建**。
+</Steps>
+
+#### 在项目设置中创建提示词
+
+您也可以直接从项目的**设置 > AI** 部分创建提示词。 以这种方式创建的提示词默认情况下仅对该特定项目可见。
+
+<ReadMore>
+  详细了解[项目中的 AI 设置](/zh/project-settings/ai/)。
+</ReadMore>
+
+### 管理 AI 提示词
+
+在 Crowdin Enterprise 中管理 AI 提示词涉及各种操作，例如筛选与搜索、编辑、克隆以及删除 AI 提示词。 下面您可以找到每个操作的说明。
+
+#### 查看与筛选 AI 提示词
+
+打开 **AI** 页面后，您可以在 **提示词** 选项卡中查看和搜索提示词。
+
+您可以查看已添加提示词的列表，其中包含以下详细信息：
+
+* **名称** – 提示词的名称。
+* **可见性** – 显示该提示词在多少个项目中可用的计数器，以及项目列表（带有可点击的链接）。
+* **类型** – 提示词的类型（例如，自动翻译 & AI 建议、对齐、QA 检查、自定义类型）。
+* **模型** – 提示词使用的 AI 模型。 模型名称旁边的状态指示器显示提示词是否可以使用：
+  * **绿色圆点**表示提示词配置正确，可以使用。
+  * **红色圆点**表示提示词配置存在问题（例如，所选提供商已被禁用）。 将鼠标悬停在模型名称上可查看具体错误信息。
+* **创建时间** – 提示词的创建日期。
+* **创建者** – 创建该提示词的用户。
+* **修改时间** – 提示词的最后更新日期。
+* **修改者** – 最后修改该提示词的用户。
+* **最后使用时间** – 提示词的最后使用日期。
+* **最后使用者** – 最后使用该提示词的用户。
+* **使用次数** – 该提示词被使用的总次数。
+
+<Aside type="tip">
+  某些列（如 **创建者**、**修改时间**和**使用次数**）默认处于隐藏状态。 单击列选择器图标 <Icon name="material-symbols:table-chart" class="inline-icon" /> 以选择要显示的列。
+</Aside>
+
+要查找特定提示词，请使用**搜索**字段。 要缩小列表范围，请单击**筛选**按钮，可按**类型**、**创建者**用户、**创建时间**日期、**修改者**用户、**修改时间**日期、**最后使用者**用户和**最后使用时间**日期进行筛选。
+
+<Image src={promptsList} alt="提示词列表" />
+
+#### 编辑 AI 提示词
+
+如果您需要调整已配置的提示词，只需对其进行编辑即可。
+
+要编辑 AI 提示词，请按照以下步骤操作：
+
+<Steps>
+  1. 打开您组织的**工作区**并在左侧边栏中选择 **AI**。
+  2. 在**提示词**选项卡中，单击所需提示词的 <Icon name="mdi:dots-vertical" class="inline-icon" /> 并选择**编辑**。
+  3. 根据需要修改提示词，然后单击 **更新** 以保存更改。
+</Steps>
+
+编辑提示词时，您会看到**提示词元数据**部分。 此信息为协作和故障排查提供了清晰的审计跟踪。 通过跟踪创建、修改和使用数据，您可以了解哪些提示词最有效，识别热门提示词以进行优化，并更高效地管理成本。 该部分包含以下只读详情：
+
+* **创建者** – 创建该提示词的用户。
+* **创建时间** – 提示词的创建日期和时间。
+* **修改者** – 最后修改该提示词的用户。
+* **修改时间** – 提示词的最后修改日期和时间。
+* **最后使用者** – 最后使用该提示词的用户。
+* **最后使用时间** – 提示词的最后使用日期和时间。
+* **使用次数** – 使用此提示词向 AI 发出请求的总次数。
+
+编辑提示词允许您根据需要更新和改进它们，以确保它们保持有效并符合您的要求。 如果您不想丢失当前的提示词配置，但又不确定所做的更改，请考虑 [克隆](#cloning-ai-prompts) 您的提示词并使用副本进行实验。
+
+#### 克隆 AI 提示词
+
+克隆 AI 提示词允许您尝试和改进提示词配置而不更改原始提示词。此功能对于在保留初始设置的同时测试改进版本的提示词特别有用。 此功能对于在保留初始设置的同时测试提示词的改进版本特别有用。
+
+要克隆 AI 提示词，请按照以下步骤操作：
+
+<Steps>
+  1. 打开您组织的**工作区**并在左侧边栏中选择 **AI**。
+  2. 在**提示词**选项卡中，单击所需提示词的 <Icon name="mdi:dots-vertical" class="inline-icon" /> 并选择**克隆**。
+  3. 因此，提示词的副本将出现在提示词列表中。
+</Steps>
+
+然后，您可以 [编辑](#editing-ai-prompts) 克隆的提示词以尝试不同的配置。 这样您就可以安全地测试增强功能并优化性能，而不会冒丢失原始提示词配置的风险。
+
+#### 删除 AI 提示词
+
+删除 AI 提示词是一个简单的过程，但应谨慎操作以避免丢失宝贵的配置。 当您不再需要特定提示词或想要清理未使用的提示词时，此操作很有用。
+
+要删除 AI 提示词，请按照以下步骤操作：
+
+<Steps>
+  1. 打开您组织的**工作区**并在左侧边栏中选择 **AI**。
+  2. 在**提示词**选项卡中，单击所需提示词的 <Icon name="mdi:dots-vertical" class="inline-icon" /> 并选择**移除**。
+  3. 确认删除。
+</Steps>
+
+<Aside>
+  删除之前请务必检查提示词以确保不再需要它，因为此操作不可逆，并且已删除的提示词无法恢复。
+</Aside>
+
+### 配置 AI 提供商
+
+Crowdin 企业版支持各种 AI 提供商，每种提供商都为翻译任务提供独特的模型和功能。 通过配置提供商，您可以定制 AI 功能以满足您的特定本地化需求。 无论是使用由 Crowdin 管理的服务还是集成您自己的 API 密钥，Crowdin 企业版都能实现与 AI 服务的无缝集成。
+
+在 **提供商** 选项卡中，您可以查看提供商列表，其中包含以下详细信息：
+
+* **名称**
+* **状态**：已启用、已禁用。
+* **由 Crowdin 托管**：是、否。
+* **提示词**：如果使用特定提供商配置了一个或多个提示词，您将看到实际的提示词数量，否则您将看到重定向到提示词创建对话框的**创建**按钮。
+
+Crowdin AI 提供商分为两种类型。 系统提供商（例如 OpenAI、Microsoft Azure OpenAI、Google Gemini）为内置提供商，可立即进行配置。 此外，您还可以通过从 Crowdin 商店安装其他 AI 提供商来扩展您的选项。
+
+目前，Crowdin 企业版支持以下 AI 提供商：
+
+* Crowdin AI <Badge text="System" variant="note" size="small" />
+* OpenAI <Badge text="System" variant="note" size="small" />
+* Microsoft Azure OpenAI <Badge text="System" variant="note" size="small" />
+* Google Gemini <Badge text="System" variant="note" size="small" />
+* Mistral AI <Badge text="System" variant="note" size="small" />
+* Anthropic <Badge text="System" variant="note" size="small" />
+* xAI <Badge text="System" variant="note" size="small" />
+* IBM Watsonx <Badge text="System" variant="note" size="small" />
+* DeepSeek <Badge text="System" variant="note" size="small" />
+* [Groq](https://store.crowdin.com/groq)
+* [Cloudflare Workers AI](https://store.crowdin.com/cloudflare-workers-ai)
+* [Fireworks AI](https://store.crowdin.com/fireworks-ai)
+* [Together AI](https://store.crowdin.com/together-ai)
+* [OpenRouter](https://store.crowdin.com/openrouter)
+* [Cohere](https://store.crowdin.com/cohere)
+* [Replicate](https://store.crowdin.com/replicate)
+* [Credal](https://store.crowdin.com/credal)
+* [AWS Bedrock](https://store.crowdin.com/aws-bedrock)
+* [Alibaba Cloud Model Studio](https://store.crowdin.com/alibaba-cloud-model-studio)
+* [Xiaomi MiMo](https://store.crowdin.com/xiaomi-mimo)
+* [NVIDIA NIM](https://store.crowdin.com/ndivia-nim-ai-models)
+
+新的 AI 提供商会定期添加。
+
+配置 AI 提供商时，您可以从两个选项中进行选择：
+
+* **使用您自己的 API 密钥** &ndash; 如果担心数据安全并希望增强隐私和所有权，Crowdin 建议使用此选项。 此选项需要外部注册才能从 AI 提供商处获取 API 密钥/凭证。
+* **使用由 Crowdin 托管的服务** &ndash; 简化 AI 集成，无需管理您自己的 API 密钥。 允许您利用 Crowdin 的默认设置和基础设置以便捷的方式访问 AI 功能。 非常适合简单且快速的任务。 要开始使用由 Crowdin 托管的 AI 提供商，您只需向余额中添加资金。
+
+要配置 AI 提供商，请按照以下步骤操作：
+
+<Steps>
+  1. 打开您组织的**工作区**并在左侧边栏中选择 **AI**。
+  2. 在**提供商**选项卡中，单击所需提供商的 <Icon name="mdi:dots-vertical" class="inline-icon" /> 并选择**编辑**。 或者，只需单击所需的提供商。
+  3. 选择**已启用**。
+  4. 选择您的凭据类型：
+     * 要使用 [Crowdin 托管服务](/zh/enterprise/crowdin-credits/)，请选择 **\{Provider} managed by Crowdin**。 在这种情况下，您需要[向账户余额中添加资金](#adding-funds-to-account-balance)。
+     * 要使用您自己的账户，请选择**使用我自己的 API 密钥**并输入所需凭据。 有关生成 API 密钥的说明，请参阅您的 AI 提供商的官方文档。 某些 AI 提供商可能还需要额外的特定凭据。 详情请参阅下方的[提供商特定凭据](#provider-specific-credentials)部分。
+  5. *（可选）* 单击**高级设置**以访问其他选项：
+     * **覆盖基础 URL** &ndash; 允许您将 AI 提供商请求定向到自定义或特定区域的端点，而非默认 URL。 如果您正在使用代理或从提供自定义端点的第三方服务使用 AI，此功能非常有用。 否则，您可以将此字段留空。
+       <Aside>
+                 * 使用**由 Crowdin 托管**服务时，此选项不可用。
+                 * 对于 Microsoft Azure OpenAI，Crowdin Enterprise 需要使用默认的 Azure URL 结构。 例如：`https://{baseUrl}/deployments/{deploymentName}/chat/completions`
+       </Aside>
+  6. 单击**更新**。
+</Steps>
+
+<Image src={configuringProvider} alt="配置 AI 提供商" />
+
+#### 提供商特定凭据
+
+当您使用自己的凭据时，某些 AI 提供商在身份验证时除标准 API 密钥外还需要额外信息。
+
+##### Google Gemini
+
+配置 Google Gemini 时，您需要提供以下凭据：
+
+* **项目 ID**：您唯一的 Google Cloud 项目 ID。 您可以在 Google Cloud Console 的控制台中找到此 ID。
+
+* **区域**：您的模型所在的区域。 请确保您计划使用的模型在所选区域中可用。 您可以在 Vertex AI 控制台中找到此信息。 请参阅 Google Cloud 官方文档，获取[可用 Gemini 模型和区域](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations)列表。
+
+* **服务账号密钥**：用于身份验证的 JSON 文件。 获取此文件的方法：
+
+<Steps>
+  1. 在您的 Google Cloud 项目中，前往 **IAM 与管理员 > 服务账号**。
+  2. 创建新服务账号或选择现有服务账号。
+  3. 为其授予 **Vertex AI 用户**角色（`roles/aiplatform.user`）。
+  4. 前往该服务账号的**密钥**选项卡，单击**添加密钥 > 创建新密钥**，选择 **JSON**，然后单击**创建**。 密钥将自动下载。
+  5. 在 Crowdin 中，单击**选择文件**上传此 JSON 密钥。
+</Steps>
+
+##### Microsoft Azure OpenAI
+
+配置 Microsoft Azure OpenAI 时，您需要提供以下凭据：
+
+* **资源名称**：您的 Azure OpenAI 服务资源名称，可在 Azure 主门户中找到。
+* **部署名称**：您为部署指定的名称。
+* **API 版本**：您的模型所需的 API 版本。 通常可以在部署的属性中或 Azure 提供的代码示例中找到推荐版本。 例如：`2024-02-01`。
+
+##### IBM Watsonx
+
+配置 IBM Watsonx 时，您需要提供以下凭据：
+
+* **项目 ID**：您的 Watsonx.ai 项目 ID。 要找到它，请导航到您的项目，前往**管理**选项卡，然后从*常规*部分复制**项目 ID**。
+* **区域**：您的 Watsonx 项目所在的区域。 您可以在项目控制台中找到此信息。 请参阅 IBM Cloud 官方文档，获取 [watsonx.ai 可用区域](https://dataplatform.cloud.ibm.com/docs/content/wsj/getting-started/regional-datactr.html)列表。
+
+### 禁用 AI 提供商
+
+如果需要，您可以随时禁用任何之前启用的提供商。
+
+要禁用 AI 提供商，请按照以下步骤操作：
+
+<Steps>
+  1. 打开您组织的**工作区**并在左侧边栏中选择 **AI**。
+  2. 在**提供商**选项卡中，单击所需提供商的 <Icon name="mdi:dots-vertical" class="inline-icon" /> 并选择**禁用**。 或者，单击所需的提供商，然后清除提供商设置中的 **已启用**。
+</Steps>
+
+### 向账户余额添加资金
+
+Crowdin 管理的机器翻译引擎和 AI 模型是单独付费的服务。 要使用它们，您首先需要向您的 Crowdin Enterprise 账户余额充值。
+
+<ReadMore>
+  详细了解[向账户余额充值](/zh/enterprise/crowdin-credits/#向账户余额充值)。
+</ReadMore>
+
+### AI 提示词的代码片段
+
+代码片段是可复用的信息片段，帮助 AI 更好地理解您的项目。 它们提供有关您的公司、产品或特定要求（如品牌声音和目标受众）的语境信息。 将这些信息作为代码片段进行管理可节省时间，并有助于生成更好、更一致的译文。
+
+在**代码片段**选项卡中，您可以查看代码片段及以下详细信息：
+
+* **名称** – 用于将代码片段插入提示词的唯一标识符。
+* **描述** – 对代码片段用途的简要说明。
+* **创建时间** – 代码片段的创建日期。
+
+使用**搜索**字段快速查找特定代码片段。
+
+#### 创建代码片段
+
+要创建新代码片段，请按以下步骤操作：
+
+<Steps>
+  1. 在**代码片段**选项卡中，单击 <Icon name="mdi:plus" class="inline-icon" />**添加代码片段**。
+  2. 在**添加代码片段**对话框中，填写以下字段：
+     * **占位符** – 代码片段的唯一标识符（例如，`company-description` 或 `target-audience`）。
+     * **描述** – 对代码片段用途的简要说明，便于识别。
+     * **值** – 使用代码片段时将插入到提示词中的实际文本。
+  3. 单击 **创建**。
+</Steps>
+
+#### 在提示词中使用代码片段
+
+创建代码片段后，可将其插入任何 AI 提示词中：
+
+* 在**基本模式**下，从**代码片段**部分的下拉菜单中选择一个或多个代码片段。
+* 在**高级模式**下，使用占位符格式插入代码片段：`%custom:snippetName%`。 例如，名称为 `company-description` 的代码片段将以 `%custom:company-description%` 的形式插入。
+
+#### 管理现有代码片段
+
+要编辑或删除代码片段，请单击所需代码片段上的 <Icon name="mdi:dots-horizontal" class="inline-icon" /> 并选择**编辑**或**删除**。 或者，直接单击它即可编辑。
+
+### 组织的 AI 设置
+
+要为您的 Crowdin Enterprise 组织配置默认 AI 设置，请打开组织的**工作区**并前往 **AI > 设置**。 这些全局设置将默认应用于所有新项目，但可在每个项目的**设置 > AI** 部分中进行覆盖。
+
+对于每项设置，您可以从下拉菜单中选择现有提示词，或单击 <Icon name="mdi:plus" class="inline-icon" /> 创建新提示词。 单击加号图标将打开提示词创建对话框，并预先选择适当的提示词类型。
+
+#### 自动翻译
+
+选择**自动翻译与 AI 建议**类型的默认提示词。 当您在任何项目中运行通过 AI 自动翻译时，将自动选择此提示词，从而加快配置过程。 您仍可以在运行自动翻译之前选择不同的提示词。
+
+#### 编辑器 AI 建议
+
+为编辑器中的 AI 建议选择**自动翻译与 AI 建议**类型的默认提示词。 如果未选择任何提示词，**语境与译文**部分将不会显示 AI 建议。
+
+#### AI 对齐 {#ai-alignment-organization-settings}
+
+启用后，[AI 对齐](#ai-alignment)会根据项目中的翻译自动生成双语草稿术语，为人工翻译人员和 AI 提供额外语境。 此功能可在无需额外输入的情况下提高翻译准确性和一致性。
+
+#### AI QA 检查 {#ai-qa-check-organization-settings}
+
+选择默认的 **QA 检查**类型提示词，用于您 Crowdin Enterprise 组织中所有项目的 AI 驱动质量保证。 如果未配置组织级提示词，则除非在特定项目的设置中选择了提示词，否则将不应用 AI 驱动的检查。
+
+<LinkCard title="项目设置中的 AI 提示词" description="配置和管理用于项目的 AI 提示词。" href="/zh/enterprise/project-settings/ai/" />
+
+## 通过 AI 自动翻译
+
+通过 AI 自动翻译允许您使用 AI 模型以高质量、语境感知的译文自动翻译您的内容。
+
+<LinkCard title="自动翻译" description="探索各种自动翻译选项，加速您的项目本地化进程。" href="/enterprise/auto-translation/" />
+
+<Aside type="tip">
+  您还可以为项目中的新内容[配置 AI 自动翻译工作流步骤](/zh/enterprise/workflows/)。
+</Aside>
+
+## 在编辑器中使用 AI
+
+要在编辑器中使用 AI，请配置**自动翻译与 AI 建议**类型的提示词，并在 **AI > 设置 > 编辑器 AI 建议**中选择它。
+
+配置完成后，译者可以在每个字符串的**语境与译文**部分使用 AI 驱动的翻译建议。
+
+如需在编辑器中使用基于聊天的高级辅助功能，请使用 Crowdin Copilot 应用：
+
+<LinkCard title="Crowdin Copilot 应用" description="使用 Crowdin Copilot 商店应用，在 Crowdin 中实现语境感知 AI 聊天和任务自动化。" href="https://store.crowdin.com/crowdin-copilot" target="_blank" />
+
+## AI 对齐
+
+AI 对齐使用 AI 分析人工翻译，根据重复出现的术语模式自动生成词汇表术语草稿。 这些术语为翻译人员和 AI 提供了有价值的语境，有助于在所有项目翻译中保持术语一致性。 请注意，AI 对齐仅分析用户在编辑器中提交的翻译或上传到项目的翻译；自动翻译不在考虑范围之内。
+
+<Aside>
+  AI 对齐仅适用于 Crowdin Enterprise 的商业版[订阅计划](https://crowdin.com/pricing#enterprise-plans)。
+</Aside>
+
+### AI 对齐的工作原理
+
+当翻译人员提交翻译时，AI 对齐会分析所用术语，以识别并建议草稿词汇表术语。 此过程涉及审查翻译中反复出现的、代表项目核心术语的词语和短语。 AI 对齐随后以简化形式（例如，`location` 而非 `locations`）生成词汇表记录，为项目创建统一的术语集。
+
+例如，在一个源字符串为 `Remove this location` 的项目中，AI 最初建议的翻译可能是 `Видалити це місце`。 然而，人工翻译人员选择了 `Видалити цю локацію`，始终将 `локація` 用于 `location`。 基于此选择，AI 对齐创建了一个将 `location` 与 `локація` 配对的草稿词汇表术语。
+
+此后，当另一个源字符串 `Add location` 被翻译时，AI 会与该词汇表术语对齐并建议 `Додати локацію`，从而确保一致性。 这将在编辑器中 AI 建议的 AI 提示词设置为考虑词汇表术语时发生。
+
+此外，当人工翻译人员遇到包含 `location` 的源字符串时，他们将看到词汇表术语 `location` 及其翻译 `локація`。 这有助于翻译人员使用首选术语，提高项目整体的一致性。
+
+如果现有术语与 AI 建议的翻译不同，AI 对齐将向当前记录添加草稿术语，允许项目经理审查并确认首选术语。 此方法可确保新术语不会覆盖已建立的词汇表记录或与之冲突。
+
+### 设置 AI 对齐
+
+要使用 AI 对齐，请[配置**对齐**类型的提示词](#configuring-ai-prompts)，并将其[应用](/zh/enterprise/project-settings/ai/#assigning-project-specific-prompts)到所需项目。 此提示词类型使 AI 对齐能够在翻译人员添加翻译建议时处理并生成草稿词汇表术语。
+
+在高级模式下，项目经理可以进一步自定义从翻译生成词汇表术语的具体标准。 这包括筛选术语，仅起草与特定领域相关的术语，或调整容差级别以减少不相关的建议。 此类自定义使 AI 对齐能够专注于项目的核心术语。
+
+例如，管理员可以将 AI 对齐设置为仅为行业特定术语创建术语草稿，确保仅包含相关记录。
+
+配置完成后，AI 对齐生成的所有草稿术语都将以草稿状态显示在词汇表中，允许管理员在这些术语成为活跃词汇表的一部分之前进行审查和确认。 此审查步骤可确保对项目中术语一致性和准确性的控制。
+
+## AI QA 检查
+
+AI QA 检查使用 AI 自动评估译文是否符合已定义的质量标准。 它帮助译者快速识别和解决问题，确保准确性、一致性以及符合项目特定要求。 AI QA 检查通过提供全面的灵活性、减少人工审查工作并提高整体翻译质量，对其他 QA 方法（即默认 QA 检查、自定义 QA 检查和外部 QA 检查）进行补充和扩展。
+
+### AI QA 检查的工作原理
+
+启用后，AI QA 检查会根据已配置的 QA 检查提示词中定义的一组可自定义评估标准（评估步骤）对每条提交的译文进行评估。 AI 检测到的问题会直接在编辑器中以警告形式显示，并附有简明的修改建议。
+
+评估步骤可能包括：
+
+* **准确性** – 确保没有内容被遗漏、添加或错误翻译。
+* **流畅性** – 检查语法、拼写、标点和可读性。
+* **术语** – 确认项目特定术语的使用一致且正确。
+* **风格** – 验证译文是否符合既定的风格指南。
+* **设计** – 确保译文符合设计约束，包括长度和标记。
+* **语言区域规范** – 调整日期、货币、地址等格式。
+* **文化适应（Verity）** – 适当本地化特定文化的表达方式。
+* **常规问题** – 识别其他杂项质量问题。
+
+例如，如果译文偏离了既定术语表中的术语，或未能满足本地格式标准，AI 将对此进行高亮显示并提供建议，引导译者实现合规性和一致性。
+
+### 设置 AI QA 检查
+
+要使用 AI QA 检查，请创建并配置一个 [QA 检查提示词](#configuring-ai-prompts)。 每个 QA 检查提示词都包含 AI 遵循的明确定义的评估步骤，用于检测译文问题。 与其他 AI 提示词不同，QA 检查提示词包含专用的**评估步骤**部分，允许您自定义、编辑或扩展预定义的检查项。
+
+您还可以通过包含与项目内容相关的各种类型的附加语境来提高 AI 分析的准确性。
+
+配置完成后，您可以将 QA 检查提示词指定为整个组织或单个项目的默认提示词。
+
+### 在项目中应用 AI QA 检查
+
+要在您的项目中启用 AI QA 检查，请按以下步骤操作：
+
+<Steps>
+  1. [创建并启用 QA 检查提示词](#configuring-ai-prompts)。
+  2. 在项目的**设置 > AI > 设置**中将其设为默认 QA 提示词。
+  3. 在项目的**设置 > QA 检查**中启用 **AI 驱动检查**。
+</Steps>
+
+设置完成后，AI 将持续检查提交的译文，确保始终符合项目的质量指南。
+
+## 另请参阅
+
+<LinkCard title="如何充分利用 AI 译文" description="了解 AI 如何通过语境理解提升翻译准确性，从而革新本地化流程和工作流程。" href="https://crowdin.com/blog/2024/04/24/how-to-get-the-most-from-the-ai-translations" target="_blank" />

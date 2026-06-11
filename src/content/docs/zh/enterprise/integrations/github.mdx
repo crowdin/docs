@@ -1,0 +1,246 @@
+---
+title: GitHub 集成
+description: 在您的 GitHub 仓库和 Crowdin 之间同步文件
+slug: zh-CN/enterprise/github-integration
+sidebar:
+  order: 1
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import setUpIntegrationDropdown from '!/enterprise/integrations/set_up_integration_dropdown.png';
+import authorization from '!/crowdin/integrations/github_integration_authorization.png';
+import unconfigured from '!/enterprise/integrations/integration_unconfigured.png';
+import unconfiguredSb from '!/enterprise/integrations/integration_unconfigured_sb.png';
+import syncNow from '!/enterprise/integrations/integration_sync_now.png';
+
+GitHub 集成允许您在 GitHub 仓库和 Crowdin 企业版项目之间同步文件。
+
+<Aside>
+  在设置和使用 GitHub 集成之前，您需要先在您的 Crowdin 企业版组织中[安装 GitHub 集成](https://store.crowdin.com/github)。
+</Aside>
+
+在基于文件的项目中，有两种可能的 GitHub 集成模式供您选择：
+
+* **原文和译文模式** &ndash; 在 GitHub 仓库和 Crowdin 项目之间同步原文件和译文文件。
+* **目标文件包模式** &ndash; 以所选格式从 Crowdin 企业版项目生成翻译文件并将其推送到您的 GitHub 仓库。 在此模式下，集成会推送翻译文件，但不会同步仓库中的源。 如果您在 Crowdin 企业版项目中执行源文本审阅并希望将更新的源文本添加到您的仓库中，您可以将源语言添加为目标语言，该语言将与翻译一起推送到您的仓库中。
+
+在基于字符串的项目中，GitHub 集成仅限于**目标文件包模式**运作。
+
+<ReadMore>
+  详细了解[项目类型](/zh/enterprise/creating-project/#项目类型)。
+</ReadMore>
+
+所有已翻译和已审批的文件（或目标文件包）会自动合并到 GitHub 仓库的 `l10n` 分支中。
+
+<Aside type="tip" title="试试 GitHub Action！">
+  使用此集成的替代方法是官方的 [Crowdin Github Action](https://github.com/marketplace/actions/crowdin-action)，它允许您更灵活地配置工作流并完全控制安全性和对仓库的访问，因为您不需要在第三方服务中授权 GitHub 账户。
+</Aside>
+
+## 连接 GitHub 账户
+
+<Steps>
+  1. 打开您的项目，然后在左侧边栏中选择**集成**。
+  2. 在集成列表中单击 **GitHub**。
+  3. 单击**设置集成**，然后从下拉列表中选择**原文和译文模式**或**目标文件包模式**，以通过您的 GitHub 账户进行集成。 <Image src={setUpIntegrationDropdown} alt="Set Up Integration button with options" class="width-sm" />
+     <Aside>在基于字符串的项目中，GitHub 集成仅限于**目标文件包模式**运作。</Aside>
+  4. 然后在 GitHub 端授权与 Crowdin 的连接：<Image src={authorization} alt="GitHub Integration Authorization" class="width-sm" />
+</Steps>
+
+如果您需要的仓库是私有的，且您对其访问权限有限或没有访问权限，请联系仓库所有者为您提供
+[访问令牌](https://help.github.com/articles/creating-an-access-token-for-command-line-use/#creating-a-token)。 然后，单击**使用个人访问令牌**，将令牌填入*令牌*字段，再单击**设置集成**。
+
+<Aside title="权限">
+  使用访问令牌设置集成时，请确保您对所需仓库拥有管理员级别的权限。
+</Aside>
+
+### 选择仓库
+
+在出现的对话框中，选择您的仓库和需要翻译的分支。
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Image src={unconfigured} alt="未配置 GitHub 集成" />
+
+    建议将重复字符串切换为**在版本分支内显示**，这样相同的字符串将被隐藏在分支之间。 如果您的源文件包含具有明显标识符（键）的字符串，最好使用此选项的*严格*版本。 在其他情况下，请随意使用*常规*版本。
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Image src={unconfiguredSb} alt="未配置 GitHub 集成" />
+  </TabItem>
+</Tabs>
+
+<CardGrid>
+  <LinkCard title="重复的字符串" href="/zh/enterprise/project-settings/import/#重复字符串" />
+  <LinkCard title="版本管理" href="/zh/enterprise/version-management/" />
+</CardGrid>
+
+在**目标文件包模式**下使用 GitHub 集成时，集成将从您的 Crowdin 企业版项目发送已完成的译文，而无需从您的仓库中提取源文件。 因此，在选择应翻译的仓库和分支时，您可以指定集成应将生成的带有翻译的包放在何处。
+
+<ReadMore>
+  详细了解[为 VCS 集成配置目标文件包](/zh/enterprise/bundles/#vcs集成中的文件包)。
+</ReadMore>
+
+当您使用私有集成（例如，与自托管 VCS 集成）时，您需要将专用的 Crowdin IP 地址添加到白名单中，以确保其正常运行并保持安全。
+
+<ReadMore>
+  详细了解 [IP 地址](/zh/developer/ip-addresses/#集成与应用程序)。
+</ReadMore>
+
+### 服务分支
+
+当翻译完成并且您的语言准备好上线时，Crowdin 企业版会将带有翻译的拉取请求发送到您的版本控制系统。 对于每个进行本地化的分支，Crowdin 企业版都会创建一个带有翻译的附加服务分支。 我们不会直接提交到主分支，以便您可以先验证译文。
+
+默认情况下，`l10n_` 会添加到所创建的服务分支名称中。 如有必要，可以轻松更改它。
+
+<Aside type="tip">
+  我们建议在合并拉取请求后从您的仓库中删除 `l10n_` 分支，以防止潜在的冲突。 当新翻译准备好同步时，Crowdin Enterprise 将自动重新创建服务分支。
+</Aside>
+
+### 同步配置
+
+根据您的需求和偏好配置同步设置。
+
+<Aside type="caution" title="限制">
+  *导入现有译文*和*推送源文件*选项仅适用于基于文件的项目。
+</Aside>
+
+#### 导入现有译文
+
+要从仓库导入现有翻译，请选择以下选项之一：
+
+* **分支连接后一次性导入译文**
+* **始终从仓库导入新译文**
+
+默认情况下，选择第一个选项仅导入翻译一次。 或者，如果您不想从仓库导入翻译，则可以清除这两个选项。
+
+<Aside type="tip">
+  我们建议在集成设置期间仅从仓库导入一次现有译文。 之后，以 Crowdin Enterprise 作为可信来源，并在 Crowdin Enterprise 中专门管理翻译，以防止覆盖未经审批的翻译。
+</Aside>
+
+单击**上传译文选项**以访问以下附加选项：
+
+* **允许目标译文与源文件相同**
+* **审批已添加的译文**
+
+#### 推送源文件
+
+默认情况下，源文件不会随译文一起推送到仓库。 不过，如果您在 Crowdin Enterprise 项目中执行源文本审查，并希望将对 Crowdin Enterprise 上的源文件所做的更改推送回您的仓库，请单击**编辑**，在集成设置中选择*推送源*，然后单击**保存**。
+
+#### 同步计划
+
+同步每小时自动进行一次。 如有必要，您可以在集成设置中更改更新间隔。 要配置同步计划，请单击**编辑**，向下滚动到*同步计划*，设置首选间隔，然后单击**保存**。
+
+在某些情况下，有必要暂时禁止将译文推送到仓库。 在这种情况下，单击**编辑**，清除集成设置中的*同步计划*，然后单击**保存**。 准备好将译文与仓库同步时，选择*同步计划*，然后单击**保存**。
+
+不依赖于同步设置，源文件在仓库上的更改仍然会持续与 Crowdin 企业版同步。
+
+### 自动同步分支
+
+设置集成时，您可以选择要添加到 Crowdin 企业版项目的现有仓库分支。 要自动将未来的分支从 GitHub 添加到 Crowdin 企业版，请在集成设置中为分支名称创建模式。
+
+例如，您在 GitHub 集成设置中添加 \**feature* 模式。 在这种情况下，标题末尾包含该词的未来分支将被添加到项目中。
+
+要添加分支名称的模式，请按照以下步骤操作：
+
+<Steps>
+  1. 在 GitHub 集成部分单击 **编辑**。
+  2. 在出现的对话框中，向下滚动到*要自动同步的分支*。
+  3. 在*要自动同步的分支*字段中，使用通配符选择器（例如 `*`、`?`、`[set]`、`\` 等）来标识必要的分支。
+  4. 点击**保存**。
+</Steps>
+
+### 默认配置文件名称
+
+`crowdin.yml` 是用于自动同步分支的默认文件名。 要更改默认设置，请单击**编辑**，在集成设置的*默认配置文件名*字段中指定首选名称，然后单击**保存**。
+
+如果您没有为自动同步的分支指定自定义配置文件名，并且集成在分支的根目录中找不到默认名称为 `crowdin.yml` 的配置文件，则这些分支将在集成设置中用红色图标标记，并带有感叹号，显示“未准备好。 检查配置”。
+
+## 选择要同步的内容
+
+为使集成正常工作，您需要指定应翻译哪些源文件以及 Crowdin Enterprise 应如何在您的仓库中构建翻译文件。 要使集成在目标文件包模式下正常工作，您需要选择要推送到存储库的所需包。
+
+<Aside type="tip">
+  如果您在服务分支名称旁看到带有感叹号的红色图标，则说明您尚未选择要同步的内容。
+</Aside>
+
+有两种方式可以指定要同步的内容：
+
+* 在线配置
+* 通过创建配置文件手动配置
+
+### 在线配置
+
+此过程对所有版本控制系统 (VCS) 集成都相同。
+
+<ReadMore>
+  查看[在线配置 VCS 集成](/zh/enterprise/configuring-vcs-integrations-online/)，了解如何在线选择同步内容。
+</ReadMore>
+
+### 创建配置文件
+
+配置文件 `crowdin.yml` 应与您想要翻译的每个独立分支一起存储在 GitHub 仓库中。
+
+它应该具有与 CLI 所需的相同结构，但出于安全原因，项目的凭据不应存储在文件头中。
+
+<ReadMore>
+  详细了解[创建配置文件](/zh/developer/configuration-file/)。
+</ReadMore>
+
+## 在一个项目中使用多个仓库
+
+如果您正在使用具有适用于不同操作系统版本的多平台产品，则可能需要连接包含每个操作系统源文件的多个仓库。 在这种情况下，本地化资源（例如翻译记忆库、术语库）和译文可以得到更有效的利用，从而减少项目本地化所需的时间。
+
+要添加另一个仓库，请按照以下步骤操作：
+
+<Steps>
+  1. 打开您的项目，然后在左侧边栏中选择**集成**。
+  2. 在集成列表中单击 **GitHub**。
+  3. 单击**添加仓库**。
+  4. 根据您的需求和偏好配置与新仓库的集成。
+</Steps>
+
+## 检查同步状态
+
+集成设置完成后，所有相关信息都存储在**集成 > GitHub** 中。
+
+集成连接后，只有配置集成的项目成员才能更新设置。 除配置集成的人员外，所有项目管理员都将看到**编辑**按钮被禁用，并在鼠标悬停时显示以下消息：`集成由 {Full Name} ({username}) 配置`。
+
+默认情况下，每小时自动进行一次同步。 如果您需要立即启动同步，请单击**立即同步**。
+
+<Image src={syncNow} alt="GitHub 立即同步" />
+
+或者，如果您只需要单独同步一个分支，请单击所需分支上的 <Icon name="mdi:dots-vertical" class="inline-icon" /> 并选择**同步分支**。
+
+## 从仓库中上传译文
+
+默认情况下，存储在仓库中的翻译仅在第一次同步时上传到 Crowdin 企业版。 要手动将翻译上传到 Crowdin Enterprise，请单击**立即同步**按钮旁边的 <Icon name="mdi:dots-vertical" class="inline-icon" /> 图标，然后单击**将翻译同步到 Crowdin Enterprise**。 该集成会将现有翻译上传至您的 Crowdin 企业版项目。
+
+<Aside type="caution" title="限制">
+  * **将翻译同步到 Crowdin Enterprise** 选项仅适用于基于文件的项目。
+  * 如果翻译已在进行中，请谨慎使用此功能。<br />
+    从仓库手动上传译文可能会覆盖项目中当前未经审批的译文，与[**始终从仓库导入新译文**](#导入现有译文)选项类似。
+</Aside>
+
+## 问答
+
+<QuestionAnswer title="如果我的仓库加入了 GitHub 组织，我该怎么办？">
+  要继续在 Crowdin 企业版中使用 GitHub 集成，请按照以下步骤操作：
+
+  1. 在您的 GitHub 账户中前往[已授权的 OAuth 应用](https://github.com/settings/applications)。
+  2. 在列表中找到 **Crowdin** OAuth App 并撤销其访问权限。
+  3. 使用上文所述的指引再次在您的 Crowdin 企业项目中设置 GitHub 集成。
+</QuestionAnswer>
+
+<QuestionAnswer title="如何避免因 Crowdin Enterprise 的提交触发不必要的应用程序构建？">
+  由于 Crowdin Enterprise 中的 VCS 集成使用 API 而非 Git 来提交文件，因此每个文件都是单独提交的。
+
+  以下是一些可能有助于解决类似情况的建议：
+
+  * 使用 `export_languages` 选项跳过您暂时不感兴趣的语言的提交。 详细了解[导出语言参数](/zh/developer/configuration-file/#导出语言)。
+  * By default, the `[ci skip]` tag is added to the commit message to skip unnecessary builds. 详细了解[提交消息参数](/zh/developer/configuration-file/#提交消息)。
+  * 使用[同步计划](#同步设置)配置首选同步间隔（例如，设置每 24 小时同步一次）。
+  * 合并本地化分支时压缩提交以保持主分支历史记录干净整洁。
+</QuestionAnswer>

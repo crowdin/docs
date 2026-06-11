@@ -1,0 +1,324 @@
+---
+title: In-Context
+description: 在实时环境中直接翻译您的 Web 应用程序
+slug: developer/in-context-localization
+sidebar:
+  order: 0
+---
+
+import { Steps, Aside, LinkCard, Tabs, TabItem, Code, LinkButton } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { YouTube } from 'astro-embed';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import ReadMore from '~/components/ReadMore.astro';
+import { Image } from 'astro:assets';
+import strings from '!/developer/in_context_strings.png';
+import tab from '!/developer/in_context_tab.png';
+import tabE from '!/developer/in_context_tab_e.png';
+import login from '!/developer/in_context_login.png';
+import loginClose from '!/developer/in_context_login_close.png';
+import addScreenshot from '!/developer/in_context_add_screenshot.png';
+import replaceScreenshot from '!/developer/in_context_replace_screenshot.png';
+import editStringsContextCode from '/src/assets/code/in-context/edit_strings_context.html?raw';
+
+Crowdin In-Context 借助单行 Javascript 代码片段和伪语言包运行。 它会根据上传到项目的本地化文件创建伪语言包，该包随后将作为附加本地化语言集成到您的应用程序中。
+
+## 快速演示
+
+<YouTube id="ktfw7UsW3qw" />
+
+In-Context 本地化与您的 Crowdin 项目相关联，项目中存储了可翻译的文件。 使用语境内编辑器的译文被添加到您的项目中，其方式与直接在编辑器中翻译一样。
+
+此工具提供了一个可编辑文本的应用程序视图，因此翻译过程可以实时查看。 即使应用程序的动态部分和包含占位符的字符串也可以这样翻译。
+
+<div>
+  <LinkButton href="https://demo.crowdin.com/" icon="external" target="_blank">查看实际效果</LinkButton>
+  <LinkButton href="https://crowdin.com/demo-request" variant="secondary" icon="right-arrow" target="_blank">获取个性化演示</LinkButton>
+</div>
+
+集成的伪语言包含特殊标识符，而非原始文本。 因此，当您将应用程序切换到该语言时，所有标签都会转换为特殊标识符。 Javascript 会搜索这些标识符，并将其替换为可编辑的标签。 这样，您 Web 应用的 In-Context 页面外观与您的应用程序完全相同，唯一的区别是可翻译的字符串将变为可编辑状态。
+
+<Image src={strings} alt="In-Context 视图" />
+
+翻译直接在应用程序中进行，无需打开编辑器。 将显示简化版 Crowdin 编辑器，并提供所有功能（翻译记忆、机器翻译、批准/投票选项、评论、术语）。 因此，由于译员可以在真实环境中预览翻译内容，翻译和审校工作变得更加轻松。
+
+## 集成
+
+将 Crowdin In-Context 与您的应用程序集成有两种常见方式：
+
+* **Staging 或翻译环境**
+  如果您不打算邀请最终用户协助翻译，也不考虑在生产应用中使用“翻译模式”，那么将 Crowdin In-Context 集成到 staging 或专用翻译应用环境中将是一个不错的解决方案。
+
+* **生产环境**
+  Crowdin In-Context 不需要对您的应用程序进行任何代码更改，因此您甚至可以在生产环境中使用它。 您可以自行决定如何启用它，以及哪部分用户将使用它。 最常见的用例如下：
+  * 您可以创建一个镜像网站，它是您应用程序的完整副本，但使用不同的 URL（例如，将 `crowdin.com` 替换为 `translate.crowdin.com`），译员将在其中进行翻译，就像在您的实际应用程序中一样。
+  * 您还可以将 In-Context 添加为附加语言。 这样，当译员打开您的应用程序时，他们将从列表中选择这种附加语言，从而为他们打开 In-Context。
+
+请按照 Crowdin 项目中的集成设置指南来设置 In-Context。 该指南可在您的项目中找到，位于 **工具 > In-Context** 下。
+
+<Tabs syncKey="product">
+  <TabItem label="Crowdin">
+    <Image src={tab} alt="Crowdin 中的 In-Context 选项卡" />
+  </TabItem>
+  <TabItem label="Crowdin 企业版">
+    <Image src={tabE} alt="Enterprise 中的 In-Context 选项卡" />
+  </TabItem>
+</Tabs>
+
+<Aside>
+  如果您使用 CSP，请确保在策略中添加以下规则：用于加载 In-Context 资源文件，以及用于向 <code>&lt;organization_domain&gt;.crowdin.com</code> 发出 CORS 请求。
+</Aside>
+
+集成成功设置并刷新应用程序后，您应该会看到邀请对话框和 Crowdin 登录框。
+
+<Image src={login} alt="登录窗口" />
+
+### 将字符串 URL 添加到上下文
+
+在为您的网站集成 In-Context 时，您可以添加一个可选脚本，该脚本可以收集网站上使用的每个字符串的 URL，并将其添加到[上下文部分](/zh/online-editor/#请求上下文)。
+
+这样，译员可以单击特定字符串的 URL，跳转到使用该字符串的网站页面，从而获取准确翻译所需的额外上下文。
+
+要将字符串 URL 添加到上下文，请按照以下步骤操作：
+
+<Steps>
+  1. 复制以下 JavaScript 代码片段，并将其粘贴到每个包含可本地化文本的页面的 `head` 部分中，紧跟在主要 In-Context JavaScript 代码片段（可在您的 Crowdin 项目的**工具**选项卡中找到）之后。 <Code code={editStringsContextCode} lang="html" />
+     完成后，您希望通过 In-Context 翻译的每个网站页面都应包含两个 JavaScript 代码片段：
+     * 启动 In-Context 功能的主要 JavaScript 代码片段。
+     * 收集源字符串上下文并向其添加 URL 的附加 JavaScript 代码片段。
+  2. 添加 JavaScript 代码片段后，您应打开每个集成了 In-Context 的网站页面。 这将允许附加 JavaScript 代码片段收集字符串 URL 并将其添加到您的 Crowdin 项目中。
+</Steps>
+
+当您在网站中添加新页面时，请将相关源文件上传到您的 Crowdin 项目。 然后，重复上述步骤，为新页面中的字符串收集并添加 URL。
+
+如果某个网站页面的 URL 发生更改，请在 In-Context 中打开该页面，以刷新最初收集的字符串 URL。
+
+## 可选参数
+
+您可以将这些参数添加到配置代码片段中的 `_jipt` 数组中。
+
+### 文本预加载
+
+```js
+_jipt.push(['preload_texts', true]);
+```
+
+通过预加载所有源字符串，加快 In-Context 工具中动态内容的显示速度。
+对于大型项目（5000+ 字符串），此功能将自动禁用。 可接受的值：`true`、`false`。
+
+### 翻译按钮总是可见
+
+```js
+_jipt.push(['touch_optimized', true]);
+```
+
+此选项在触摸屏上默认启用，使每个可翻译字符串旁边的翻译按钮始终可见，而不是仅在悬停时显示。 可接受的值：`true`、`false`。
+
+### 提交前回调
+
+```js
+_jipt.push(['before_commit', function(source, translation, context, language_code) {
+  return status_obj;
+}]);
+```
+
+提交译文前验证建议译文的函数。
+
+<table>
+  <tbody>
+    <tr><td colSpan="2"><b>参数</b></td></tr>
+    <tr><td>source</td><td>源文本</td></tr>
+    <tr><td>translation</td><td>译文文本</td></tr>
+    <tr><td>context</td><td>源字符串上下文</td></tr>
+    <tr><td>language_code</td><td>目标语言代码（<a href="/zh/developer/language-codes/">语言代码</a>）</td></tr>
+    <tr><td colSpan="2"><b>返回值</b></td></tr>
+    <tr>
+      <td>status_obj</td>
+      <td>对象。 <code>status_obj.status</code> 的值可能为 <code>"ok"</code>、<code>"error"</code> 或 <code>"corrected"</code>。
+      如果出现错误，<code>status_obj.message</code> 包含错误描述。
+      当状态为 <code>corrected</code> 时，<code>status_obj.correction</code> 包含已更正的译文</td>
+    </tr>
+  </tbody>
+</table>
+
+### 插入 DOM 前回调
+
+```js
+_jipt.push(['before_dom_insert', function(text, node, attribute) {
+  return 'text';
+}]);
+```
+
+在字符串插入 DOM 之前对其进行转换的函数。
+
+<table>
+  <tbody>
+    <tr><td colspan="2"><b>参数</b></td></tr>
+    <tr><td>text</td><td>待插入的字符串</td></tr>
+    <tr><td>node <br /><span class="text-muted">可选</span></td><td>必须插入文本的 DOM 元素。 如果文本没有目标元素（浏览器弹出框中的文本），则可以省略此参数</td></tr>
+    <tr><td>attribute <br /><span class="text-muted">可选</span></td><td>DOM 元素的属性（如果文本是某个属性的一部分）</td></tr>
+    <tr><td colspan="2"><b>返回值</b></td></tr>
+    <tr><td>text</td><td>待插入的字符串</td></tr>
+    <tr><td>false</td><td>如果函数返回 <i>false</i>，则不会更新 DOM</td></tr>
+  </tbody>
+</table>
+
+### 关闭 In-Context 覆盖层回调
+
+```js
+_jipt.push(['escape', function() {
+  window.location.href = "http://app_domain.com";
+}]);
+```
+
+如果已定义，用户可以在不想翻译时关闭 In-Context 覆盖层。 请在您的端实现此功能。 根据 In-Context 集成方式，它必须更改应用程序的语言，或从翻译环境重定向到生产应用程序。
+
+<Image src={loginClose} alt="关闭登录窗口" />
+
+### 启动类型
+
+```js
+_jipt.push(['start_type', 'manual']);
+```
+
+定义 In-Context 的初始化方式。 可接受的值：
+
+* **`default`** – In-Context 在脚本加载后自动启动。
+* **`manual`** – In-Context 仅在您调用 [`window.jipt.start()`](#启动和停止方法) 时启动。
+
+如果您需要更精细的控制，请使用 `manual`。 例如，在单页应用中，您希望根据用户操作来打开或关闭 In-Context。
+
+### 仅标记可见字符串
+
+```js
+_jipt.push(['tag_only_visible_phrases', true]);
+```
+
+当设置为 `true` 时，此参数确保截图标记功能仅处理当前在用户视口中可见的字符串。 这非常适合动态界面，例如使用模态框或对话框覆盖页面其他内容的单页应用程序。 启用此选项可防止隐藏字符串被标记，从而生成更清晰的截图，并为译员提供更准确的上下文。 可接受的值：`true`、`false`。
+
+### 仅捕获可见区域
+
+```js
+_jipt.push(['screenshot_visible_area_only', true]);
+```
+
+当设置为 `true` 时，In-Context 仅捕获用户视口中当前可见的页面部分，而不是对整个页面进行截图。 这对于较长的页面或动态界面非常有用，在这些情况下，您希望截图能够准确反映译员在屏幕上看到的内容。 可接受的值：`true`、`false`。
+
+## 可选函数
+
+您可以在全局 `window.jipt` 对象上调用各种函数，以实时管理或自定义 In-Context。
+
+### 启动和停止方法
+
+```js
+window.jipt.start();
+```
+
+为当前页面手动激活 In-Context。 如果您将 `start_type` 设置为 `manual`，或者希望在停止后重新激活 In-Context，请使用此方法。
+
+```js
+window.jipt.stop();
+```
+
+停止 In-Context 覆盖层。 所有交互式翻译元素都将被移除，直到您再次调用 `start()`。
+
+**使用示例：单页应用程序**
+
+在单页应用程序中，您可能会在用户更改语言时打开或关闭 In-Context：
+
+```js
+const handleLanguageChange = (event) => {
+  const language = event.target.value;
+  setSelectedLanguage(language);
+
+  if (language === inContextLanguage) {
+    window.jipt.start();
+  } else {
+    window.jipt.stop();
+  }
+};
+```
+
+在上述代码片段中，每当用户选择 In-Context 伪语言时，都会触发 In-Context。 当用户选择任何其他语言时，In-Context 将停止。
+
+## 通过 In-Context 管理截图
+
+借助 Crowdin In-Context，您可以在浏览 Web 应用程序页面时直接管理其截图。 此功能帮助您为译员提供最新的视觉上下文，确保字符串标记保持准确和相关。
+
+通过 In-Context 拍摄的截图会自动上传到您的 Crowdin 项目。 页面上所有可见的字符串都会自动标记，从而简化翻译团队的上下文管理工作。
+
+<Aside title="权限">
+  此功能适用于具有管理员权限（或更高权限）的项目成员。
+</Aside>
+
+<ReadMore>
+  阅读更多关于[截图](/zh/screenshots/)的内容。
+</ReadMore>
+
+<LinkCard title="自动化截图管理" description="了解如何自动化截图的创建和更新。" href="/zh/developer/automating-screenshot-management/" />
+
+### 通过 In-Context 添加截图
+
+您可以在使用 In-Context 时对网站的任意页面进行截图，并将其上传到您的 Crowdin 项目。 Crowdin 将自动标记截图中页面上显示的所有字符串。
+
+要通过 In-Context 添加截图，请按照以下步骤操作：
+
+<Steps>
+  1. 打开已启用 In-Context 的网站页面。
+  2. 在 Crowdin In-Context 对话框中，切换到 <Icon name="mdi:camera-plus-outline" class="inline-icon" />**截图**选项卡。
+  3. 在**名称**字段中，检查根据页面标题自动建议的截图名称。 如有需要，请对其进行编辑。 如果之前未为此页面添加截图，**替换现有截图**下拉菜单将显示*此名称没有截图*。
+  4. 单击**添加截图**。
+</Steps>
+
+<Image src={addScreenshot} alt="添加截图" />
+
+Crowdin 将把截图上传到您的项目，并自动标记页面上显示的所有字符串。
+
+### 通过 In-Context 更新截图
+
+您可以直接从 In-Context 手动更新 Crowdin 项目中的现有截图。 这有助于在您的网页更新了新内容或布局更改后，保持截图和字符串标记的最新状态。
+
+若要通过 In-Context 更新现有截图，请按照以下步骤操作：
+
+<Steps>
+  1. 打开已启用 In-Context 的网站更新页面。
+  2. 在 Crowdin In-Context 对话框中，切换到 <Icon name="mdi:camera-plus-outline" class="inline-icon" />**截图**选项卡。
+  3. 在**名称**字段中，检查根据页面标题自动建议的截图名称。
+  4. 在**替换现有截图**下拉菜单中，选择您要替换的截图。 您还可以查看现有截图的添加时间和日期，以确认您要替换的是正确的截图。
+  5. 单击**替换截图**。
+</Steps>
+
+<Image src={replaceScreenshot} alt="替换截图" />
+
+Crowdin 将用新截图替换项目中的旧截图，并自动标记页面上显示的所有字符串。
+
+## 故障排除与常见问题
+
+<QuestionAnswer title="错误：Crowdin In-Context 无法识别可翻译文本（无可翻译内容）">
+  如果 Crowdin 项目中的某些字符串已更新，但这些文本在您的网站上不存在，则可能会出现此错误。 在这种情况下，请在**工具 > In-Context** 中从您的项目下载最新版本的伪语言，并更新网站上的伪语言。
+</QuestionAnswer>
+
+<QuestionAnswer title="我可以将 In-Context 与 React 应用程序一起使用吗？">
+  In-Context 与技术无关。 用户可以按照常规说明进行配置，只需使用 `script` 标签即可。
+</QuestionAnswer>
+
+<QuestionAnswer title="如果多个包组成生产环境中的一个应用程序，我可以使用 In-Context 吗？">
+  涉及多少个包和代码库并不重要。 您可以在一个 Crowdin 项目中连接多个代码库。 如果它们与同一个 Web 应用程序相关，应该可以无缝运行。
+</QuestionAnswer>
+
+<QuestionAnswer title="In-Context 只能在一个 Crowdin 项目中使用的限制">
+  只要网站页面上显示的文本来自一个 Crowdin 项目，In-Context 就能正常处理它们。 关键点在于，您网站上的文本必须在常规 DOM 中，而不是在 Shadow DOM 中。
+</QuestionAnswer>
+
+<QuestionAnswer title="从 Shadow DOM 中提取 In-Context 字符串的能力">
+  这在技术上是不可能的。 Shadow DOM 对我们的脚本不可见。 它只能由创建 Shadow DOM 的代码来操作。
+</QuestionAnswer>
+
+<QuestionAnswer title="配置使源文件更新自动添加到伪语言包中，然后再添加到网站上的能力">
+  这可以通过 Crowdin API 来实现。 使用[获取项目](/zh/developer/api/v2/#operation/api.projects.get) API 方法提取 `inContextPseudoLanguage` 对象，该对象包含伪语言的语言代码。 使用此语言代码，您可以单独构建伪语言，下载它，并将其集成到您的网站中。 所有其他方法都是常规的——上传/更新文件，使用[获取项目](/zh/developer/api/v2/#operation/api.projects.get) API 方法获取目标语言列表，然后构建目标语言。 或者，您也可以一次构建并下载整个 Crowdin 项目存档，其中将包含伪语言。
+</QuestionAnswer>
+
+<QuestionAnswer title="网站上最近添加的新源字符串显示为 `unrecognized text`">
+  如果 Crowdin 项目中的字符串已被删除，或源文件中的字符串键已更改，但相同的字符串仍存在于集成到网站的伪语言中，则网站上会显示"无法识别的文本"标签。
+  要解决此问题，您只需再次更新 Crowdin 项目中的源文件，下载伪语言，并在网站上更新它。
+</QuestionAnswer>

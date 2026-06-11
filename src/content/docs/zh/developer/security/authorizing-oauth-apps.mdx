@@ -1,0 +1,276 @@
+---
+title: 授权 OAuth 应用程序
+description: 了解如何让组织成员授权您的 OAuth 应用程序
+slug: developer/authorizing-oauth-apps
+sidebar:
+  order: 2
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+您可以让组织成员授权您的 OAuth 应用程序。
+
+当您构建 OAuth 应用程序时，请实现下面描述的 Web 应用程序流程以获取授权码，然后将其交换为令牌。
+
+## 请求认证码
+
+您应该使用以下 GET 参数将用户重定向到 `/oauth/authorize` 端点：
+
+```bash
+https://accounts.crowdin.com/oauth/authorize
+```
+
+这将要求用户根据 `REQUESTED_SCOPES` 中指定的范围批准应用访问其账户，然后重定向回您在创建应用时提供的 `REDIRECT_URI`。
+
+<Aside type="tip">
+  为增强安全性，我们强烈建议使用代码交换证明密钥 (PKCE) 扩展，以实现更安全的令牌交换。
+</Aside>
+
+### 参数 {#request-authorization-code-parameters}
+
+<table>
+  <thead>
+  <tr>
+    <th>名称</th>
+    <th>值</th>
+    <th>描述</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>client_id</code></td>
+    <td>string</td>
+    <td><strong>必填。</strong> 注册应用程序时，您将收到该应用程序的客户端 ID。</td>
+  </tr>
+  <tr>
+    <td><code>redirect_uri</code></td>
+    <td>string</td>
+    <td><strong>必填。</strong> 用户获得授权后被发送到的应用程序中的 URL。</td>
+  </tr>
+  <tr>
+    <td><code>response_type:</code><code>code</code></td>
+    <td>string</td>
+    <td><strong>必填。</strong> 该参数用于 OAuth 应用程序的流程规范。</td>
+  </tr>
+  <tr>
+    <td><code>scope</code></td>
+    <td>string</td>
+    <td><strong>必填。</strong> 从可用作用域列表中选择您的应用所需的访问权限。 您可以添加多个以空格分隔的[权限范围](/zh/developer/understanding-scopes/)（无需使用引号）。</td>
+  </tr>
+  <tr>
+    <td><code>state</code></td>
+    <td>string</td>
+    <td><strong>强烈建议。</strong> 不可猜测的随机字符串。 使用它来提供额外的保护，抵御跨站请求伪造攻击。</td>
+  </tr>
+  <tr>
+    <td><code>code_challenge</code></td>
+    <td>string</td>
+    <td><strong>强烈建议。</strong> <code>code_verifier</code> 的 Base64-URL 编码 SHA-256 哈希值。 用于通过 PKCE 保护授权流程。 如果提供了 <code>code_challenge_method</code>，则为必填项。 详细了解 [PKCE RFC](https://datatracker.ietf.org/doc/html/rfc7636)。</td>
+  </tr>
+    <tr>
+    <td><code class="whitespace-nowrap">code_challenge_method</code></td>
+    <td>string</td>
+    <td><strong>强烈建议。</strong> 用于派生 <code>code_challenge</code> 的方法。 Crowdin 支持 <code>S256</code> 和 <code>plain</code>。 如果提供了 <code>code_challenge</code>，则为必填项。</td>
+    </tr>
+  </tbody>
+</table>
+
+将创建以下授权 URL：
+
+```bash wrap
+https://accounts.crowdin.com/oauth/authorize?client_id=m50YenPpqac8u5D4dnK&redirect_uri=https://impact-mobile.com/auth/crowdin&response_type=code&scope=project+tm&state=d131dd02c5e6eec4
+```
+
+授权成功后，用户将被重定向回您的网站：
+
+```bash wrap
+https://impact-mobile.com/auth/crowdin/?code=def50200df1fbb5ebac05f9288850d9e...0835bd3cf42&state=d131dd02c5e6eec4
+```
+
+如果授权被拒绝，用户将被重定向到您的网站并出现错误：
+
+```bash wrap
+https://impact-mobile.com/auth/crowdin/?error=access_denied&state=d131dd02c5e6eec4
+```
+
+## Crowdin 将重定向用户到您的站点
+
+如果用户授权该应用程序，Crowdin 会重定向回您的站点，您可以用收到的代码交换访问令牌：
+
+```bash
+POST https://accounts.crowdin.com/oauth/token
+```
+
+### 参数 {#redirect-parameters}
+
+<table>
+  <thead>
+  <tr>
+    <th>名称</th>
+    <th>值</th>
+    <th>描述</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>grant_type:</code> <code>authorization_code</code></td>
+    <td>string</td>
+    <td><strong>必填。</strong> 该参数用于 OAuth 应用程序的流程规范。</td>
+  </tr>
+  <tr>
+    <td><code>client_id</code></td>
+    <td>string</td>
+    <td><strong>必填。</strong> 注册应用程序时，您将收到该应用程序的客户端 ID。</td>
+  </tr>
+  <tr>
+    <td><code>client_secret</code></td>
+    <td>string</td>
+    <td><strong>必填。</strong> 当您注册该应用程序时，您会收到其客户端密钥。 如果您使用 PKCE（即提供 <code>code_verifier</code>），则不需要此参数。</td>
+  </tr>
+  <tr>
+    <td><code>redirect_uri</code></td>
+    <td>string</td>
+    <td><strong>必填。</strong> 用户获得授权后被发送到的应用程序中的 URL。 </td>
+  </tr>
+  <tr>
+    <td><code>code</code></td>
+    <td>string</td>
+    <td><strong>必填。</strong> 从回调查询字符串接收的代码。 </td>
+  </tr>
+  <tr>
+    <td><code>code_verifier</code></td>
+    <td>string</td>
+    <td><strong>强烈建议。</strong> 用于生成 <code>code_challenge</code> 的原始随机字符串。 如果在初始授权请求中发送了 <code>code_challenge</code>，则为必填项。</td>
+  </tr>
+  </tbody>
+</table>
+
+例如，curl 中的请求采用以下形式：
+
+```bash
+curl -X POST \
+  https://accounts.crowdin.com/oauth/token \
+  -H "content-type: application/json" \
+  -d "{
+      \"grant_type\":\"authorization_code\",
+      \"client_id\":\"m50YenPpqac8u5D4dnK\",
+      \"client_secret\":\"yz35kYtjox...YE9Am\",
+      \"redirect_uri\":\"https://impact-mobile.com/auth/crowdin\",
+      \"code\":\"def50200df1fbb5ebac05f9288850d9e...0835bd3cf42\"
+  }"
+```
+
+### 响应 {#redirect-response}
+
+默认情况下，响应采用以下形式：
+
+```json
+{
+  "access_token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJS...lag1e_Zk4EdJ5diYfz0",
+  "token_type":"bearer",
+  "expires_in": 7200,
+  "refresh_token": "b213c684ccaa7db1217e946e6ad...fff7ae"
+}
+```
+
+## 使用返回的访问令牌进行 API 请求
+
+访问令牌现在允许您以已授权用户的身份向 Crowdin API 发送请求。
+
+例如，在 curl 中您可以设置以下授权标头：
+
+```bash wrap
+curl -H "Authorization: Bearer ACCESS_TOKEN" https://api.crowdin.com/api/v2/projects
+```
+
+Crowdin Enterprise：
+
+```bash wrap
+curl -H "Authorization: Bearer ACCESS_TOKEN" https://<organization_domain>.api.crowdin.com/api/v2/projects
+```
+
+<Aside>
+  要获取 Crowdin Enterprise 的 `organization_domain`，请根据 JWT 规范解析访问令牌，并从中提取所需的 `organization_domain`。
+</Aside>
+
+<ReadMore>
+  详细了解 [JWT 令牌结构](/zh/developer/crowdin-apps-security/)。
+</ReadMore>
+
+## 刷新令牌
+
+用户授权应用程序后收到的访问令牌具有过期时间。 访问令牌将在响应中定义的秒数后过期。
+
+要刷新令牌而不需要用户重定向，请向授权服务器发送带有以下主体参数的 POST 请求：
+
+```bash
+POST https://accounts.crowdin.com/oauth/token
+```
+
+### 参数 {#refresh-token-parameters}
+
+<table>
+  <thead>
+  <tr>
+    <th>名称</th>
+    <th>值</th>
+    <th>描述</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>grant_type:</code> <code>refresh_token</code></td>
+    <td>string</td>
+    <td><strong>必填。</strong> 该参数用于 OAuth 应用程序的流程规范。</td>
+  </tr>
+  <tr>
+    <td><code>client_id</code></td>
+    <td>string</td>
+    <td><strong>必填。</strong> 注册应用程序时，您将收到该应用程序的客户端 ID。</td>
+  </tr>
+  <tr>
+    <td><code>client_secret</code></td>
+    <td>string</td>
+    <td><strong>必填。</strong> 注册应用程序时，您将收到该应用程序的客户端密钥。</td>
+  </tr>
+  <tr>
+    <td><code>refresh_token</code></td>
+    <td>string</td>
+    <td><strong>必填。</strong> 从上次授权响应收到的刷新令牌。</td>
+  </tr>
+  </tbody>
+</table>
+
+例如，curl 中的请求采用以下形式：
+
+```bash
+curl -X POST \
+  https://accounts.crowdin.com/oauth/token \
+  -H "content-type: application/json" \
+  -d "{
+      \"grant_type\":\"refresh_token\",
+      \"client_id\":\"m50YenPpqac8u5D4dnK\",
+      \"client_secret\":\"yz35kYtjox...YE9Am\",
+      \"refresh_token\":\"b213c684ccaa7db1217e946e6ad...fff7ae\"
+  }"
+```
+
+### 响应 {#refresh-token-response}
+
+默认情况下，响应采用以下形式：
+
+```json
+{
+  "access_token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJS...ZjFkMWI4OWFlIiwiaWF",
+  "token_type":"bearer",
+  "expires_in": 7200,
+  "refresh_token": "ea506ea4c37aa152f0a91ed2482...4a0c567"
+}
+```
+
+## 重定向 URL
+
+当您在 Crowdin 上创建 OAuth 应用程序时，您可以注册一个或多个重定向 URL。
+
+出于安全原因，如果该 URL 未包含在应用程序信息中，则授权后您将无法将用户重定向到此 URL。

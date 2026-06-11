@@ -1,0 +1,442 @@
+---
+title: 应用程序描述符
+description: 了解如何定义应用描述符
+slug: developer/crowdin-apps-app-descriptor
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+应用描述符是 Crowdin 应用的重要构建模块之一。 应用描述符是一个 JSON 文件（例如 `manifest.json`），其中包含应用的基本信息，以及应用希望使用或扩展的模块。
+
+它描述了应用的工作方式、将使用的资源等。
+
+<Aside type="tip" title="有意开发 Crowdin 应用？">
+  查看我们的 [Crowdin Apps SDK](https://crowdin.github.io/app-project-module/)，只需几行代码即可创建应用。
+</Aside>
+
+## 应用描述符结构
+
+应用描述符是一个具有以下结构的 JSON 对象：
+
+```json title="manifest.json"
+{
+  "identifier": "your-application-identifier",
+  "name": "Your Application",
+  "description": "Application description",
+  "logo": "/assets/logos/app-logo.png",
+  "baseUrl": "http://example.com",
+  "authentication": {
+    "type": "crowdin_app",
+    "clientId": "your-client-id"
+  },
+  "events": {
+    "installed": "/hooks/installed"
+  },
+  "scopes": [
+    "project"
+  ],
+  "modules": {
+    "project-integrations": [
+      {
+        "key": "your-module-key",
+        "name": "Module Name",
+        "description": "Module description",
+        "logo": "/assets/logos/module-logo.png",
+        "url": "/page/integration",
+        "environments": [
+          "crowdin", "crowdin-enterprise"
+        ]
+      }
+    ]
+  }
+}
+```
+
+<table>
+  <colgroup>
+    <col width="20%" />
+    <col width="80%" />
+  </colgroup>
+  <thead>
+    <tr>
+      <th>属性</th>
+      <th>描述</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>identifier</code></td>
+    <td>
+      <div><strong>类型：</strong> <code>string</code>（<code>^[a-z0-9-._]+$</code>）</div>
+      <p><strong>必填：</strong> 是</p>
+      <p><strong>描述：</strong> 用于标识应用的唯一键。 此标识符的长度必须 &lt;= 255 个字符。</p>
+      <Aside type="caution">请勿在应用标识符中使用大写字母。</Aside>
+    </td>
+  </tr>
+  <tr>
+    <td><code>name</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>必填：</strong> 是</p>
+      <p><strong>描述：</strong> 应用的可读名称。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>baseUrl</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code>（<code>uri</code>）</p>
+      <p><strong>必填：</strong> 是</p>
+      <p><strong>描述：</strong> 远程应用的基础 URL，用于与应用实例之间的所有通信。<br />
+      应用安装到工作区后，在不先卸载应用的情况下无法更改应用的 baseUrl。</p>
+      <p><strong>重要提示：</strong> 在将应用公开之前，请谨慎选择您的 baseUrl。<br />
+      baseUrl 必须以 <code>https://</code> 开头，以确保我们的云实例与您的应用之间的所有数据均以安全方式传输。</p>
+      <Aside>
+        每个应用必须具有唯一的 `baseUrl`。 如果您希望从同一主机提供多个应用，请考虑在 `baseUrl` 中添加路径前缀。
+      </Aside>
+    </td>
+  </tr>
+  <tr>
+    <td><code>authentication</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>Authentication</code></p>
+      <p><strong>必填：</strong> 是</p>
+      <p><strong>描述：</strong> 指定在主机应用程序与 Crowdin 应用之间签署请求时使用的身份验证类型。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>description</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 应用功能的可读说明。<br />
+      该描述将在 Crowdin 界面中显示。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>logo</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code>（<code>relativeUri</code>）</p>
+      <p><strong>描述：</strong> 相对于应用基础 URL 的图片 URL，将在 Crowdin 界面中显示。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>events</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>Events</code></p>
+      <p><strong>描述：</strong> 允许应用注册应用事件通知。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>scopes</code></td>
+    <td>
+      <p><strong>类型：</strong> [<code>string</code>, … ]</p>
+      <p><strong>描述：</strong> 此应用请求的[权限范围](/zh-hans/developer/understanding-scopes/)集合。</p>
+      <div>
+        ```json
+        "scopes": [
+          "project",
+          "tm"
+        ]
+        ```
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code>modules</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>object</code></p>
+      <p><strong>描述：</strong> 此应用提供的模块列表。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>environments</code></td>
+    <td>
+      <p><strong>类型：</strong> [<code>string</code>, … ]</p>
+      <p><strong>允许值：</strong> <code>crowdin</code>、<code>crowdin-enterprise</code></p>
+      <p><strong>描述：</strong> 可安装模块的环境集合。</p>
+      <div>
+        ```json
+        "environments": [
+          "crowdin-enterprise"
+        ]
+        ```
+      </div>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+## 身份验证
+
+指定在主机应用程序向 Crowdin 应用发送请求时使用的身份验证类型。 Crowdin 应用支持两种身份验证类型：
+
+* 使用 OAuth 应用（`crowdin_app` 值）
+* 不使用 OAuth 应用（`none` 值）
+
+如果您的 Crowdin 应用随时需要访问 Crowdin API，建议使用 `crowdin_app`，否则可以随意使用 `none`。 身份验证类型 `none` 与 `crowdin_app` 一样可以访问 Crowdin API，但仅限于在用户端执行 Crowdin 应用时，例如当 iframe 打开时。
+
+示例：
+
+```json title="manifest.json"
+{
+  "authentication": {
+    "type": "crowdin_app",
+    "clientId": "your-client-id"
+  }
+}
+```
+
+<table>
+  <thead>
+    <tr>
+      <th>属性</th>
+      <th>描述</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>type</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>默认值：</strong> <code>none</code></p>
+      <p><strong>允许值：</strong> <code>none</code>、<code>crowdin_app</code></p>
+      <p><strong>描述：</strong> 要使用的身份验证类型。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>clientId</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 通过 <code>crowdin_app</code> 类型进行授权的 OAuth 客户端 ID。</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+## 模块
+
+模块是应用扩展 Crowdin 并与其交互的方式。 使用模块，您的应用可以执行以下操作：
+
+* 扩展 Crowdin 界面。
+* 创建与外部服务的集成。
+* 添加对新自定义文件格式的支持。
+* 自定义受支持文件格式的处理方式。
+
+<ReadMore>
+  了解更多关于 [UI 模块](/zh-hans/developer/crowdin-apps-modules-ui/)和[文件处理模块](/zh-hans/developer/crowdin-apps-modules-file-processing/)的信息。
+</ReadMore>
+
+## 事件
+
+允许应用为工作区中发生的事件注册回调。 当事件触发时，将向为该事件注册的相应 URL 发送 POST 请求。 已安装回调是应用安装过程的重要组成部分，而其余事件本质上是 webhook。 此对象中的每个属性都是相对于应用基础 URL 的 URL。
+
+示例：
+
+```json title="manifest.json"
+{
+  "events": {
+    "installed": "/hook/installed",
+    "uninstall": "/hook/uninstall"
+  }
+}
+```
+
+<table>
+  <thead>
+    <tr>
+      <th>属性</th>
+      <th>描述</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>installed</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 用户在 Crowdin 中安装应用后发送给应用的事件。</p>
+      <p>如果使用 <code>crowdin_app</code>，则此事件为必填项。 了解更多关于[身份验证](#身份验证)的信息。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>uninstall</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 在从 Crowdin 卸载应用之前发送给应用的事件。</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### 已安装事件载荷
+
+已安装事件在用户于 Crowdin 中安装应用时从 Crowdin 发送到远程应用。 已安装事件包含有关安装了 Crowdin 应用的 Crowdin 工作区或个人资料的信息、有关应用本身的信息，以及用于获取 API 令牌的凭据。
+
+<ReadMore>
+  了解更多关于[已安装事件流程](/zh-hans/developer/crowdin-apps-installation/#已安装事件通信流程)的信息。
+</ReadMore>
+
+载荷示例：
+
+```json
+{
+  "appId": "your-application-identifier",
+  "appSecret": "dbfg....asdffgg",
+  "clientId": "your-client-id",
+  "userId": 1,
+  "organizationId": 1,
+  "domain": null,
+  "baseUrl": "https://crowdin.com"
+}
+```
+
+```json
+{
+  "appId": "your-application-identifier",
+  "appSecret": "dbfg....asdffgg",
+  "clientId": "your-client-id",
+  "userId": 1,
+  "organizationId": 1,
+  "domain": "{domain}",
+  "baseUrl": "https://{domain}.crowdin.com"
+}
+```
+
+参数：
+
+<table>
+  <colgroup>
+    <col width="20%" />
+    <col width="80%" />
+  </colgroup>
+  <thead>
+    <tr>
+      <th>属性</th>
+      <th>描述</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>appId</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 在应用描述符文件中声明的应用标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>appSecret</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 用于授权您的 Crowdin 应用的唯一密钥。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>clientId</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 在应用描述符文件中声明的 OAuth 客户端标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>userId</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 在 Crowdin Enterprise 中安装应用的用户的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>organizationId</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 安装了该应用的组织的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>domain</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 安装了该应用的 Crowdin Enterprise 组织的名称。 对于 Crowdin，domain 值始终为 null</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>baseUrl</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 安装了该应用的 Crowdin Enterprise 组织的 `baseUrl`。 对于 Crowdin，`baseUrl` 值始终为 `https://crowdin.com`</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### 卸载事件载荷
+
+卸载事件在用户从 Crowdin Enterprise 卸载应用时从 Crowdin Enterprise 发送到远程 Crowdin 应用。 卸载事件与安装事件一样，包含有关安装了 Crowdin 应用的 Crowdin 工作区或账户的信息，以及有关应用本身的信息。 收到卸载事件后，需要查找并删除与移除该应用的 Crowdin 工作区或账户相关的所有数据。
+
+载荷示例：
+
+```json
+{
+  "appId": "your-application-identifier",
+  "clientId": "your-client-id",
+  "organizationId": 1,
+  "domain": null,
+  "baseUrl": "https://crowdin.com"
+}
+```
+
+```json
+{
+  "appId": "your-application-identifier",
+  "clientId": "your-client-id",
+  "organizationId": 1,
+  "domain": "{domain}",
+  "baseUrl": "https://{domain}.crowdin.com"
+}
+```
+
+参数：
+
+<table>
+  <thead>
+    <tr>
+      <th>属性</th>
+      <th>描述</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>appId</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 在应用描述符文件中声明的应用标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>clientId</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 在应用描述符文件中声明的 OAuth 客户端标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>organizationId</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 卸载了该应用的组织的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>domain</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 卸载了该应用的 Crowdin Enterprise 组织的名称。 对于 Crowdin，domain 值始终为 null</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>baseUrl</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 卸载了该应用的 Crowdin Enterprise 组织的 baseUrl。 对于 Crowdin，`baseUrl` 值始终为 `https://crowdin.com`</p>
+    </td>
+  </tr>
+  </tbody>
+</table>

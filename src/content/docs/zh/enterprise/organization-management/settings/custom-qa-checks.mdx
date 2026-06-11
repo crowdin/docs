@@ -1,0 +1,232 @@
+---
+title: 自定义品质保证检查
+description: 配置自定义 QA 检查以确保高质量翻译
+slug: enterprise/custom-qa-checks
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import organizationSettingsMenuItem from '!/enterprise/organization-management/organization_settings_menu_item.png';
+import createCustomQAChecks from '!/enterprise/organization-management/custom_qa_checks_create.png';
+
+除了每个项目中内置的 QA 检查外，您还可以在组织级别配置两种额外类型的 QA 检查：[自定义 QA 检查](#custom-qa-checks)和[外部 QA 检查](#external-qa-checks)。
+
+* **自定义 QA 检查**是轻量级且同步的。 它们使用简化的 JavaScript 语法，在无法访问网络请求的沙盒环境中执行。 这些检查非常适合验证简单的特定语言规则，例如占位符格式、标点符号、空格或正则表达式。
+* **外部 QA 检查**更高级且是异步的。 它们以 [Crowdin Apps](/developer/crowdin-apps-about/) 的形式实现，可以执行复杂逻辑、发起网络请求，并与外部服务集成（例如，AI 驱动的 QA、风格指南验证或渲染译文以测量大小）。 当您需要超出自定义 QA 检查限制的更大灵活性时，请使用它们。
+
+两种类型的检查均在**组织设置 > 自定义 QA 检查**中管理，但它们的工作方式和最适用场景有所不同。
+
+## 自定义品质保证检查
+
+自定义 QA 检查有助于高效处理标点符号、数字和正则表达式等特定语言方面，以确保所有语言的 QA 检查结果更准确和高质量翻译。 通过自定义 QA 检查，您可以准确检测出您想要的错误。 它可以帮助客户避免文本错误，帮助翻译员更熟练地翻译内容。
+
+### 创建和添加自定义品质保证检查
+
+您可以在**组织设置**中管理自定义 QA 检查。 向您的组织添加新自定义 QA 检查有两种方式：从头创建您自己的检查，或从 [Crowdin 商店](https://store.crowdin.com/types/qa-check)添加。
+
+<Steps>
+  1. 单击右上角的个人资料照片，然后选择 **组织设置**。 <Image src={organizationSettingsMenuItem} alt="打开组织设置" />
+  2. 切换到左侧边栏中的**自定义 QA 检查**部分，然后单击**创建**。
+  3. 在必填字段中提供自定义品质保证检查的详细信息：
+     * *名称* – 为您的自定义 QA 检查提供一个清晰的名称，以便翻译员了解需要更正的内容。
+     * *描述* – 解释自定义 QA 检查验证或更正的内容。
+     * *（可选）* *在所有项目中启用* - 如果您希望在组织的所有项目中启用自定义 QA 检查，请选择此选项。
+     * *代码片段* – 提供使 QA 检查工作的基于 JavaScript 的[代码片段](#code-snippet)。 它包含一个 `crowdin` 对象和几个属性。
+  4. 单击 **创建**。 <Image src={createCustomQAChecks} alt="创建自定义 QA 检查" />
+</Steps>
+
+或者，要从 [Crowdin 商店](https://store.crowdin.com/types/qa-check)添加现有的自定义 QA 检查，请按照以下步骤操作：
+
+<Steps>
+  1. 前往**组织设置 > 自定义 QA 检查**。
+  2. 单击**从商店添加**。
+  3. 单击所需自定义 QA 检查旁边的 <Icon name="mdi:plus" class="inline-icon" />。
+  4. 单击 **创建**。
+</Steps>
+
+### 代码片段
+
+自定义 QA 检查使用基于 JavaScript 的代码片段。 这些片段适用于具备基本 JavaScript 知识、希望为翻译创建自动验证规则的用户。
+
+每个自定义 QA 检查通过评估一个 `crowdin` 对象来工作，该对象包含当前正在检查的翻译的上下文和内容。 您的片段应分析翻译并返回其是否通过检查或需要修复。
+
+<Aside type="tip">
+  在将代码片段添加到 Crowdin Enterprise 之前，请使用 [Crowdin 脚本编辑器](https://crowdin.github.io/crowdin-script-editor/)编写、测试和验证您的代码片段。
+</Aside>
+
+#### 参数
+
+代码片段包含一个 `crowdin` 对象和一些属性。 要创建代码片段，请使用此对象模板作为输入结构：
+
+```text
+object crowdin {
+ object file {
+   string name,
+   string fullName,
+   string branch,
+   string type
+ }
+ string sourceLanguage,
+ string targetLanguage,
+ object context {
+   string context,
+   ?int maxLength,
+   ?string pluralForm,
+   ?string identifier
+ },
+ string contentType,
+ string source,
+ string translation
+}
+```
+
+#### 请求示例
+
+请求对象中使用了以下键：
+
+| 属性<div class="w-48" /> | 描述                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ |
+| `file.name`            | 源文件名称                                                                                                  |
+| `file.fullName`        | 项目中源文件的完整路径（如果有则不包括分支）                                                                                 |
+| `file.branch`          | 源文件所在的分支名称                                                                                             |
+| `file.type`            | 源文件类型                                                                                                  |
+| `sourceLanguage`       | 项目源语言的 [Crowdin 代码](/developer/language-codes/)                                                        |
+| `targetLanguage`       | 项目目标语言的 [Crowdin 代码](/developer/language-codes/)                                                       |
+| `source`               | 源文本                                                                                                    |
+| `translation`          | 已翻译字符串                                                                                                 |
+| `context.context`      | 源文本语境                                                                                                  |
+| `context.maxLength`    | 已翻译字符串的最大长度                                                                                            |
+| `context.pluralForm`   | PluralForm 指示当前正在翻译的复数形式                                                                               |
+| `context.identifier`   | 源字符串标识符（键）                                                                                             |
+| `contentType`          | 字符串可包含以下 3 种类型之一：`text/plain`、`application/vnd.crowdin.text+plural`、`application/vnd.crowdin.text+icu` |
+
+以下是自定义 QA 检查代码片段请求示例：
+
+```json
+{
+   "file": {
+     "name": "strings.json",
+     "fullName": "backend/strings.json",
+     "branch": "master",
+     "type": "json"
+   },
+   "sourceLanguage": "en",
+   "targetLanguage": "de",
+   "context": {
+     "context": "backend.string.example.plain",
+     "maxLength": 10,
+     "pluralForm": "one",
+     "identifier": "6a1821e6499ebae94de4b880fd93b985"
+   },
+   "contentType": "application/vnd.crowdin.text+plural",
+   "source": '{"one":"Password", "other":"Passwords"}',
+   "translation": "das Passwort "
+}
+```
+
+#### 响应
+
+运行代码片段后，它应返回一个响应，说明自定义 QA 检查是否已成功通过或失败。
+
+##### QA 检查通过示例
+
+```json
+{
+  "success": true
+}
+```
+
+##### QA 检查失败示例
+
+```json
+{
+  "success": false,
+  "message": "The sentence starts with a space. Please remove 1 space at the beginning of the translation.",
+  "fixes": [
+    {
+      "from_pos": 0,
+      "to_pos": 1,
+      "replacement": ""
+    }
+  ]
+}
+```
+
+`message` 解释了翻译员应修复的内容。
+`fixes` 数组提供了在 Crowdin 编辑器中自动修复翻译的说明。
+
+* `from_pos` – `translation` 字符串中替换开始的字符位置。
+* `to_pos` – 结束字符位置。
+* `replacement` – 应替换 `from_pos` 和 `to_pos` 之间字符的文本。
+
+##### 修复示例
+
+```json
+{
+  "from_pos": 0,
+  "to_pos": 1,
+  "replacement": ""
+}
+```
+
+<Aside type="tip">
+  尽可能包含 `fixes` 属性。 这使翻译员能够单击一次即可应用修复，从而提高工作效率。
+</Aside>
+
+### 限制
+
+自定义 QA 检查代码片段具有以下限制：
+
+* 代码在完全沙盒化的环境中运行。 浏览器上下文和 Node.js 上下文均不可用。
+* 标准 JavaScript 对象（如 `Date`、`Math` 等）不可用。
+* 执行时间限制为 **100 毫秒**。 如果您的代码运行时间超过此限制，QA 检查将被终止。 请简化您的逻辑并使用 [Crowdin 脚本编辑器](https://crowdin.github.io/crowdin-script-editor/)进行测试。
+
+**最佳实践：**
+
+* 保持代码轻量级以避免执行超时。
+* 使用正则表达式进行高效的模式匹配。
+* 包含 `fixes` 以加快翻译员的审核流程。
+
+## 外部 QA 检查
+
+外部 QA 检查是扩展内置 QA 功能的 Crowdin Apps。 这些检查以异步方式运行，非常适合需要网络请求、外部集成或高级逻辑的更复杂使用场景。
+
+**用例：**
+
+* 使用 AI 对照您的风格指南验证翻译。
+* 执行服务器端渲染以使用自定义字体测量文本尺寸。
+* 与第三方服务集成以验证敏感内容。
+
+外部 QA 检查独立于 Crowdin 的同步检查运行，并通过作为独立服务运行提供更大的灵活性。
+
+### 安装和配置外部 QA 检查
+
+您可以从 [Crowdin 商店](https://store.crowdin.com/types/qa-check)添加外部 QA 检查，或通过 [Crowdin 开发者门户](/developer/crowdin-apps-module-external-qa-check/)开发您自己的应用。
+
+要安装和配置外部 QA 检查：
+
+<Steps>
+  1. 前往**组织设置 > 自定义 QA 检查**。
+  2. 滚动到**外部 QA 检查**部分。
+  3. 单击**从商店添加**。
+  4. 在 Crowdin 商店中，找到您要添加的外部 QA 检查应用，然后单击**安装**。
+  5. 安装后，配置应用设置（如需要）。 每个应用可能根据其功能具有不同的配置步骤。
+  6. 单击**提交**以保存配置。
+</Steps>
+
+<LinkCard title="Censor Guard QA" description="使用此应用验证您的翻译是否符合审查要求。" href="https://store.crowdin.com/censor-guard-qa" target="_blank" />
+
+## 在项目中启用自定义和外部 QA 检查
+
+添加后，自定义 QA 检查和外部 QA 检查将与 Crowdin 内置 QA 检查一起显示在您项目的**设置 > 品质保证**中。 您可以根据项目需求启用或禁用它们。
+
+<Steps>
+  1. 打开您的项目并前往**设置 > 品质保证**。
+  2. 选择所需的 QA 检查（自定义和外部）。
+</Steps>
+
+<ReadMore>
+  阅读更多关于[品质保证设置](/zh/enterprise/project-settings/qa-checks/)的信息。
+</ReadMore>

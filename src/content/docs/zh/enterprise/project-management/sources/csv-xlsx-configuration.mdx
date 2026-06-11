@@ -1,0 +1,154 @@
+---
+title: CSV / XLSX 文件配置
+description: 在导入内容之前配置 CSV 或 XLSX 文件
+slug: zh-CN/enterprise/csv-xlsx-configuration
+---
+
+import { Steps, Aside, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import csvFileConfigure from '!/enterprise/project-management/sources/csv_file_configure.png';
+import csvFileConfigureSb from '!/enterprise/project-management/sources/csv_file_configure_sb.png';
+import xlsxInitialOptions from '!/enterprise/project-management/sources/xlsx_initial_options.png';
+import csvFileConfiguration from '!/enterprise/project-management/sources/csv_file_configuration.png';
+
+将 CSV 或 XLSX 文件上传到项目后，系统需要对其进行配置，才能正确解析并导入其内容。
+
+## 文件配置
+
+要开始配置，请按照以下步骤操作：
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Steps>
+      1. 打开您的项目并转到**原文 > 文件**。
+      2. 点击文件旁边的 **配置**，打开配置对话框。
+    </Steps>
+    <Image src={csvFileConfigure} alt="配置文件" />
+    <Aside type="tip">
+      您可以通过以下几种方式同时配置多个文件：
+      * **配置特定文件：** 选择所需文件，右键点击，然后选择 **配置文件**。
+      * **配置同一类型的所有文件：** 点击 **全部配置**，一次性设置所有 CSV 或所有 XLSX 文件。
+    </Aside>
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Steps>
+      1. 打开您的项目并在左侧边栏中选择**上传**。
+      2. 拖放文件或点击 **选择文件**。
+      3. 点击要设置的文件旁边的 **配置**。
+    </Steps>
+    <Image src={csvFileConfigureSb} alt="配置文件（基于字符串）" />
+  </TabItem>
+</Tabs>
+
+本条中提到的相同配置也适用于 TSV 文件格式。 CSV 和 TSV 文件之间的主要区别在于它们在列之间使用不同的分隔符（CSV 中使用逗号，TSV 中使用制表符）。
+
+### XLSX 文件的初始设置
+
+配置 XLSX 文件时，您会首先看到一个包含两个主要选项的对话框，这些选项决定文件的处理方式：
+
+* **导入所有单元格** - 将每个单元格的内容作为单独的源字符串导入。 如果选择此选项，您还可以启用 **内容分段**，将文本自动拆分为更小的翻译单元，例如句子或短段落。 这有助于翻译包含若干句子的内容单元，因为翻译较小篇幅的文本更加容易些。 将使用 Segmentation Rules eXchange (SRX) 进行自动的内容分割。
+* **配置要导入的列** - 此选项将打开详细配置对话框，允许您手动映射源文本、译文、语境等的列。
+
+<Image src={xlsxInitialOptions} alt="XLSX 文件的初始配置选项" />
+
+对于 CSV 文件，或 XLSX 文件在您选择 **配置要导入的列** 后，将立即显示详细配置对话框。
+
+### 列配置
+
+对话框的主要区域用于将文件中的列映射到 Crowdin Enterprise 中相应的数据类型。 界面在列映射上方直接包含以下控件：
+
+* **检测** - 根据第一行中的标题重新运行[列方案的自动检测](#自动列检测)。
+* **重置** - 清除当前列配置，并将所有列重置为 **未选择**。
+* <Icon name="mdi:plus" class="inline-icon" /> 和 <Icon name="mdi:minus" class="inline-icon" /> - 使用这些按钮添加新的语言列或删除选定的语言列。 当您的多语言源文件缺少某些项目目标语言的列时，此功能非常有用。 仅当您在 **导入选项** 部分中选择 **多语言电子表格** 选项时，这些按钮才处于激活状态。
+
+您可以通过从上方的下拉菜单中分配类型来定义每列的用途。 可用的列类型有：
+
+* *键* – 列包含字符串标识符。 通常是字母数字值。
+* *源字符串* – 列包含应翻译的源字符串。
+* *源字符串/译文* – 列包含源字符串，但文件导出时同一列将填充译文。 上传现有译文时，此列的值将用作译文。
+* *译文* – 导出时添加的结果译文列。 导入和上传现有译文时，系统将检查此列中是否存在现有译文并将其上传到项目中。
+* *语境* – 列包含源字符串的评论或语境信息。
+* *标记* – 列包含源字符串的标记。 您可以为每个字符串添加多个标记，用逗号分隔。
+* \*最大。 *最大长度* – 列包含字符串译文的最大长度限制值。
+* *未选择* – 导入时将跳过该列。
+
+<Image src={csvFileConfiguration} alt="CSV 文件的详细配置对话框" />
+
+#### 自动列检测
+
+打开配置对话框时，系统会根据第一行中的列名称自动检测文件方案。 识别不区分大小写。 未自动检测到的列将保留为 **未选择** 状态，以便手动配置。
+
+当您上传包含多种语言和附加列（例如：语境、标记、最大 长度）的多个多语言电子表格时，自动列检测功能尤为有用。
+
+默认情况下，系统最初将电子表格视为单语言。 要正确自动检测包含多种语言译文的列，请在 [**导入选项**](#导入选项) 部分中选择 **多语言电子表格**，然后点击 **检测**。
+
+要充分利用自动列检测功能，请使用下表中的值命名 CSV 或 XLSX 文件中的列：
+
+| 列类型         | 期望值                                                                                                                         |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 键名          | `identifier`, `key`                                                                                                         |
+| 源字符串        | `source phrase`, `source_phrase`, `source string`, `source_string`                                                          |
+| 源字符串/译文     | `source or translation`, `source_or_translation`, `source/translation`                                                      |
+| 翻译          | `translation`                                                                                                               |
+| 语境          | `context`                                                                                                                   |
+| 标记          | `labels`                                                                                                                    |
+| 最大。 长度      | `max. length`, `max_length`                                                                                                 |
+| 语言(用于多语言文件) | 语言名称（例如：Ukrainian）、Crowdin 语言代码（例如：uk-UA）、语言区域（例如：uk-UA）、带下划线的语言区域（例如：uk_UA）、语言代码 ISO 639-1（例如：uk）、语言代码 ISO 639-2/T（例如：ukr） |
+
+<Aside type="tip">
+  访问 [Crowdin 语言代码](/zh/developer/language-codes/) 页面，查找所有支持的语言及其各种代码（例如：语言区域、双字母代码、三字母代码）。
+</Aside>
+
+### 导入选项
+
+右侧边栏允许您定义文件结构的处理方式。
+
+* **不导入第一行（标题）** - 如果文件的第一行包含不应导入翻译的列标题，请选择此选项。
+* **多语言电子表格** - 如果您的文件在一列中包含源文本，在其他列中包含不同语言的译文，请选择此选项。 这使系统能够正确地将语言映射到相应的列，并解锁 **译文** 部分。
+* **导入隐藏的工作表**（仅限 XLSX）- 从 XLSX 文件中的隐藏工作表导入内容。
+* **导入隐藏的行**（仅限 XLSX）- 从 XLSX 文件中的隐藏行导入内容。
+
+### 译文
+
+右侧边栏中的这组选项允许您微调文件中现有译文的处理方式。 选择 **多语言电子表格** 后，这些选项将变为可用。
+
+* **导入译文** - 默认情况下，Crowdin Enterprise 会导入文件中存在的所有译文。 如果只想导入源字符串，请清除此复选框。
+* **允许译文与源文本相同** – 如果译文与源文本有意相同（例如，产品名称、品牌或代码术语），请启用此选项。
+* **批准已添加的译文** – 自动批准上传的译文。 当您对文件中译文的准确性有把握时，此功能非常有用。
+* **翻译隐藏字符串** – 为 Crowdin Enterprise 中标记为隐藏的字符串导入译文。 隐藏字符串通常在编辑器中对译者不可见，用于系统目的或占位符。
+* **将译文添加到翻译记忆** - 将导入的译文添加到项目的主翻译记忆 (TM)。
+
+<Aside>
+  在基于字符串的项目中，上述部分译文设置（**允许译文与源文本相同**、**自动批准已添加的译文**以及**翻译隐藏字符串**）位于上传部分的右侧边栏，而非配置对话框内。
+</Aside>
+
+### 配置模板
+
+此选项位于对话框底部，允许您管理具有相同列结构的文件的配置。
+
+* 要将当前设置保存为模板，请点击 **模板** > **另存为模板**，指定模板名称，然后点击 **创建**。
+* 然后，您可以将此模板应用于新导入的文件。 要从长列表中查找特定模板，请使用模板下拉菜单中的 **搜索** 字段。
+
+## 更改 CSV 和 XLSX 文件的方案
+
+您可能需要更新 CSV 或 XLSX 文件并更改最初配置的方案。 当您向 Crowdin 企业版项目添加新的目标语言时，可能需要更新方案。
+
+要更改源文件的方案，请按照以下步骤操作：
+
+<Steps>
+  1. 右键点击所需文件并选择 **更改方案**。
+  2. 选择您机器上的新文件。
+  3. 相应地为文件设置新的配置/模板。
+</Steps>
+
+<Aside type="caution" title="限制">
+  您无法编辑现有的配置模板。 相反，您可以删除它或新建一个。
+</Aside>
+
+## 另请参阅
+
+<CardGrid>
+  <LinkCard title="上传源文件" description="了解如何将源文件上传到您的项目以进行翻译。" href="/zh/enterprise/uploading-files/" />
+  <LinkCard title="文件管理" description="管理和配置项目中的源文件。" href="/zh/enterprise/file-management/" />
+</CardGrid>

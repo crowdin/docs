@@ -1,0 +1,277 @@
+---
+title: 目标文件包
+description: 以您选择的格式导出字符串或文件集合
+slug: zh/bundles
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Image } from 'astro:assets';
+import createBundle from '!/crowdin/project-management/translations/bundles_create_bundle.png';
+import createBundleSb from '!/crowdin/project-management/translations/bundles_create_bundle_sb.png';
+import downloadBundles from '!/crowdin/project-management/translations/bundles_download.png';
+import downloadBundlesSb from '!/crowdin/project-management/translations/bundles_download_sb.png';
+import bundlesVcs from '!/crowdin/project-management/translations/bundles_vcs.png';
+
+目标文件包（简称为文件包）允许您以您选择的格式导出字符串或文件集合，而不管原始文件格式如何。 默认情况下，您可以从以下三种格式中进行选择：XLIFF、Android XML 和 iOS 字符串。 您可以通过从 Crowdin [商店](https://store.crowdin.com/tags/string-exporter) 安装相应的应用来添加更多目标文件格式。
+
+您可以通过多种方式使用文件包：
+
+* 通过项目的**下载**部分手动管理文件包。
+* 在**目标文件包模式**下连接 VCS 集成。
+* 使用 **CDN 分发**管理文件包。
+* 使用 Crowdin CLI 和 API 管理文件包。
+
+## 用例
+
+最常见的用例包括：
+
+* **跨平台导出：** 上传单个源文件（例如 Android XML），翻译后使用文件包以多种平台格式导出译文（例如适用于 iOS 的 iOS Strings，适用于 Web 的 JSON）。
+* **统一源文件管理：** 上传包含所有平台源字符串的统一电子表格（例如 XLSX 或 CSV）。 使用文件包，通过按标签或路径筛选字符串，为每个平台导出单独的文件。
+* **设计工具集成：** 将设计工具（Figma、Sketch、Adobe XD）中的字符串直接发送到 Crowdin，并使用文件包以开发就绪格式导出译文。
+* **离线翻译：** 以 XLIFF 格式导出特定字符串集以供离线翻译，然后将[已完成的译文](/zh/offline-translation/#上传译文)上传回 Crowdin。
+
+<CardGrid>
+  <LinkCard title="自定义包生成器" description="该应用允许您从已翻译的 Crowdin 字符串生成资源文件。" href="https://store.crowdin.com/custom-bundle-generator" target="_blank" />
+  <LinkCard title="自定义包构建器" description="创建您自己的脚本以从文件包构建文件。" href="https://store.crowdin.com/custom-export" target="_blank" />
+</CardGrid>
+
+## 在 UI 中管理文件包
+
+要手动使用文件包，您可以在项目的**下载**部分配置和下载它们。
+
+### 配置文件包
+
+要配置文件包，请按照下列步骤操作：
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Steps>
+      1. 打开您的项目并前往**译文**选项卡。
+      2. 展开**下载**部分并单击**添加**。
+      3. 在**创建文件包**对话框中，输入**文件包名称**。
+      4. 配置**内容**（左侧面板）：
+         * **选择文件/目录**：浏览您的项目树。 您可以选择特定文件、文件夹或**根文件夹**以包含整个项目。 选择**包含添加到所选文件夹的新文件**以自动包含未来的文件。
+         * **使用模式（高级）**：定义**源文件路径**模式（例如 `*.xml`）以动态包含文件。 您也可以指定**忽略文件或文件夹**以排除特定项目。
+      5. *（可选）* 设置**字符串筛选器**：
+         * **包含标签**：仅导出包含特定标签的字符串。
+         * **排除标签**：跳过包含特定标签的字符串。
+         * 您可以调整多个标签的逻辑（例如，*所有所选标签*（AND）与*任意所选标签*（OR））。
+      6. 配置**语言**：
+         * **所有目标语言**：默认选中。 此选项是动态的，将自动包含未来添加到项目的任何新语言。
+         * **源语言**：选择此项以在文件包中包含源语言内容。
+         * **情境内伪语言**：选择此项以导出包含[情境内](/zh/developer/in-context-localization/)集成所需元数据的文件。
+         * **特定语言**：移除*所有目标语言*标签以手动选择特定语言。
+      7. 配置**目标文件**（右侧面板）：
+         * **文件格式**：选择您要导出的格式。 您可以选择**原始格式**以按原样导出文件，或选择目标格式，如 iOS Strings、XLIFF 等。
+         * **添加更多格式**：要添加其他目标格式，请从 [Crowdin 商店](https://store.crowdin.com/tags/string-exporter) 安装相应的应用。
+         * *（可选）* **格式配置**：某些格式（例如 XLIFF、Android XML）支持高级选项。 单击格式旁边的 <Icon name="mdi:cog" class="inline-icon" /> 可直接在文件包对话框中进行配置。 您也可以在\*\*[设置 > 解析器配置](#配置格式设置)\*\*中全局管理相同的设置。
+         * **导出模式**：
+           * **对于原始格式**：此字段为可选项。 留空以使用文件设置中定义的默认导出模式。 输入模式以覆盖默认路径或名称。
+           * **对于其他格式**：此字段为必填项。
+             * *每种语言单个文件*：使用语言占位符（例如 `%two_letters_code%.xliff`）为每种语言创建一个译文文件。
+             * *多文件导出*：使用 `%file_name%` 或 `%original_path%` 等占位符导出按文件分隔的译文，与源文件结构匹配。
+         * *（可选）* 设置**源语言导出模式**。
+      8. 检查**预览**面板以确保结构正确。
+      9. 点击**保存**。 <Image src={createBundle} alt="创建文件包" />
+    </Steps>
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Steps>
+      1. 打开您的项目并前往**下载**选项卡。
+      2. 展开**下载**部分并单击**添加**。
+      3. 在**创建文件包**对话框中，输入**文件包名称**。
+      4. 配置**内容**（左侧面板）：
+         * **选择分支**：选择要包含的特定源分支。 选择**包含新分支**以自动包含未来的分支。
+         * **使用模式（高级）**：定义**源分支路径**模式（例如 `main`、`feat/*`）以动态包含分支。
+      5. *（可选）* 设置**字符串筛选器**：
+         * **包含标签**：仅导出包含特定标签的字符串。
+         * **排除标签**：跳过包含特定标签的字符串。
+         * 您可以调整多个标签的逻辑（例如，*所有所选标签*（AND）与*任意所选标签*（OR））。 <ReadMore>详细了解[标签](/zh/string-management/#标签)。</ReadMore>
+      6. 配置**语言**：
+         * **所有目标语言**：默认选中。 此选项是动态的，将自动包含未来添加到项目的任何新语言。
+         * **源语言**：选择此项以在文件包中包含源语言内容。
+         * **情境内伪语言**：选择此项以导出包含[情境内](/zh/developer/in-context-localization/)集成所需元数据的文件。
+         * **特定语言**：移除*所有目标语言*标签以手动选择特定语言。
+      7. 配置**目标文件**（右侧面板）：
+         * **文件格式**：选择您要导出的格式（例如 Android XML、iOS Strings）。
+         * **添加更多格式**：要添加其他目标格式，请从 [Crowdin 商店](https://store.crowdin.com/tags/string-exporter) 安装相应的应用。
+         * *（可选）* **格式配置**：某些格式（例如 XLIFF、Android XML）支持高级选项。 单击格式旁边的 <Icon name="mdi:cog" class="inline-icon" /> 可直接在文件包对话框中进行配置。 您也可以在\*\*[设置 > 解析器配置](#配置格式设置)\*\*中全局管理相同的设置。
+         * **导出模式**：使用语言占位符定义生成的文件名（例如 `%two_letters_code%.strings`）。 这将为每种语言创建一个文件。
+         * *（可选）* 设置**源语言导出模式**。
+      8. 检查**预览**面板以确保结构正确。
+      9. 点击**保存**。 <Image src={createBundleSb} alt="创建文件包" />
+    </Steps>
+  </TabItem>
+</Tabs>
+
+<Aside type="caution" title="限制">
+  * **单一格式选择：** 在单个文件包中，您一次只能选择一种格式。
+  * **原始格式限制：** 如果您选择**原始格式**，**字符串筛选器**（包含/排除标签）将被禁用。 要按标签筛选内容，您必须选择特定目标格式（例如 Android XML、iOS Strings）。
+</Aside>
+
+### 配置格式设置
+
+某些文件格式（例如 XLIFF、Android XML）具有额外的配置选项，如**将源复制到空目标**或**转换占位符**。 您可以通过单击格式旁边的 <Icon name="mdi:cog" class="inline-icon" /> 直接在文件包对话框中配置这些设置。 或者，您也可以在**解析器配置**中全局管理相同的设置。
+
+要在文件包对话框中配置这些选项，请按照以下步骤操作：
+
+<Steps>
+  1. 在[**创建文件包**](#配置文件包)或[**编辑文件包**](#编辑文件包)对话框中，单击要配置的格式旁边的 <Icon name="mdi:cog" class="inline-icon" />。
+  2. 通过选择所需选项来调整文件格式导出器设置。
+  3. 点击**保存**。
+</Steps>
+
+如果您希望为项目全局管理相同的设置，请按照以下步骤操作：
+
+<Steps>
+  1. 打开您的项目并前往**设置 > 解析器配置**。
+  2. 找到标有 **Exporter** 标记的格式（例如 **Android XML** 或 **XLIFF**）。 这些是用于生成文件包的特定格式。
+  3. 单击您要配置的格式旁边的 <Icon name="mdi:dots-horizontal" class="inline-icon" />，然后选择**编辑**。 或者，只需双击所需格式即可。
+  4. 通过选择所需选项来调整文件格式导出器设置。
+  5. 点击**保存**。
+</Steps>
+
+### 搜索、筛选和排序文件包
+
+默认情况下，所有文件包都显示在**下载**部分。 要查找特定文件包，您可以使用**搜索文件包**字段。
+
+要筛选文件包列表，请单击**筛选器** <Icon name="mdi:filter-variant" class="inline-icon" /> 并使用可用选项：
+
+* **格式**：按文件格式筛选（**全部**、**原始格式**，或特定目标格式，如 **macosx**、**xml** 等）。
+* **上次修改时间**：按修改日期筛选（**全部**、**今天**、**昨天**、**过去 7 天**、**过去 30 天**、**本月**、**上月**、**自定义范围**）。
+
+要对文件包进行排序，请单击要排序的列标题：
+
+* **文件包名称**
+* **格式**
+* **上次修改于**
+
+单击一次以升序排序，再次单击以降序排序。
+
+如果某个文件包用于一个或多个 [CDN 分发](#cdn-分发中的文件包)，则其名称旁边将显示**云** <Icon name="mdi:cloud" class="inline-icon" /> 图标。 单击此图标可自动导航到**CDN 分发**部分，并应用筛选器以仅显示包含该文件包的分发。
+
+### 下载文件包
+
+要下载文件包，请按以下步骤操作：
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Steps>
+      1. 打开您的项目并前往**译文**选项卡。
+      2. 展开**下载**部分。
+      3. *（可选）* 使用搜索或筛选器找到您需要的文件包。
+      4. 使用以下方法之一下载文件包：
+         * **单个文件包**：单击特定文件包旁边的**下载** <Icon name="mdi:download" class="inline-icon" />。
+         * **多个文件包**：选中要下载的文件包旁边的复选框，然后单击列表右上角的**下载**。 <Image src={downloadBundles} alt="下载文件包" />
+    </Steps>
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Steps>
+      1. 打开您的项目并前往**下载**选项卡。
+      2. 展开**下载**部分。
+      3. *（可选）* 使用搜索或筛选器找到您需要的文件包。
+      4. 使用以下方法之一下载文件包：
+         * **单个文件包**：单击特定文件包旁边的**下载** <Icon name="mdi:download" class="inline-icon" />。
+         * **多个文件包**：选中要下载的文件包旁边的复选框，然后单击列表右上角的**下载**。 <Image src={downloadBundlesSb} alt="下载文件包" />
+    </Steps>
+  </TabItem>
+</Tabs>
+
+系统将构建并下载一个 ZIP 压缩包，其中包含每种所选语言的文件夹，内含您所选格式的译文文件。
+
+<Aside>
+  文件包下载独立于完整项目构建下载运行。
+</Aside>
+
+### 编辑文件包
+
+要编辑文件包，请按以下步骤操作：
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Steps>
+      1. 打开您的项目并前往**译文**选项卡。
+      2. 展开**下载**部分。
+      3. 单击文件包旁边的 <Icon name="mdi:dots-horizontal" class="inline-icon" /> 并选择**编辑**。 或者，只需双击所需文件包即可。
+      4. 在配置对话框中进行更改，然后单击**保存**。
+    </Steps>
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Steps>
+      1. 打开您的项目并前往**下载**选项卡。
+      2. 展开**下载**部分。
+      3. 单击文件包旁边的 <Icon name="mdi:dots-horizontal" class="inline-icon" /> 并选择**编辑**。 或者，只需双击所需文件包即可。
+      4. 在配置对话框中进行更改，然后单击**保存**。
+    </Steps>
+  </TabItem>
+</Tabs>
+
+### 删除文件包
+
+要删除文件包，请按以下步骤操作：
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Steps>
+      1. 打开您的项目并前往**译文**选项卡。
+      2. 展开**下载**部分。
+      3. 使用以下方法之一删除文件包：
+         * **单个文件包**：单击文件包旁边的 <Icon name="mdi:dots-horizontal" class="inline-icon" /> 并选择**删除**。
+         * **多个文件包**：选中要删除的文件包旁边的复选框，然后单击列表右上角的**删除**。
+      4. 在确认对话框中确认删除操作。
+    </Steps>
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Steps>
+      1. 打开您的项目并前往**下载**选项卡。
+      2. 展开**下载**部分。
+      3. 使用以下方法之一删除文件包：
+         * **单个文件包**：单击文件包旁边的 <Icon name="mdi:dots-horizontal" class="inline-icon" /> 并选择**删除**。
+         * **多个文件包**：选中要删除的文件包旁边的复选框，然后单击列表右上角的**删除**。
+      4. 在确认对话框中确认删除操作。
+    </Steps>
+  </TabItem>
+</Tabs>
+
+## VCS 集成中的文件包
+
+在基于文件的项目中，VCS 集成允许您使用**目标文件包模式**处理文件包。
+
+要在**目标文件包模式**下配置 VCS 集成，请按照以下步骤操作：
+
+<Steps>
+  1. 在设置 VCS 集成时选择**目标文件包模式**并授权连接。
+  2. 选择要发送译文的存储库和分支。
+  3. 单击 <Icon name="mdi:pencil" class="inline-icon" /> 以配置所选分支。
+  4. 在**分支配置**对话框中，输入配置文件的首选名称或保留默认名称。 单击**继续**。
+  5. 从列表中选择要同步的文件包。 您可以使用**搜索文件包**字段查找特定文件包，或单击**新建**以设置新的文件包。
+  6. 在**分支配置**对话框中单击**保存**。
+  7. 在主集成对话框中单击**保存**以完成 VCS 集成设置。 <Image src={bundlesVcs} alt="VCS 目标文件包模式" />
+</Steps>
+
+<Aside type="caution">
+  在基于字符串的项目中，VCS 集成仅限于**目标文件包模式**运作。
+</Aside>
+
+<ReadMore>
+  详细了解[在线配置 VCS 集成](/zh/configuring-vcs-integrations-online/)。
+</ReadMore>
+
+## CDN 分发中的文件包
+
+在基于文件和基于字符串的项目中，**CDN 分发**均允许您通过内容分发网络（CDN）将已翻译内容分发到您的应用。 分发通过使用文件包来打包和提供您的文件。
+
+<LinkCard title="配置 CDN 分发" description="了解如何创建分发、管理发布以及查看使用统计信息。" href="/zh/cdn-distributions/" />
+
+## CLI/API 中的文件包
+
+使用 Crowdin CLI 和 API 时，您还可以使用文件包导出译文。
+
+<CardGrid>
+  <LinkCard title="CLI 中的文件包" href="https://crowdin.github.io/crowdin-cli/commands/crowdin-bundle/" target="_blank" />
+  <LinkCard title="API 中的文件包" href="/developer/api/v2/#tag/Bundles" />
+</CardGrid>
