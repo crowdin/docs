@@ -656,19 +656,41 @@ The default pull request title is `New Crowdin updates`. To specify your custom 
 
 ### Commit Message
 
-Each time translations are committed the default message is shown `New translations {fileName} ({languageName})`.
-You can use the `commit_message` parameter to add Git tags (e.g., to skip builds).
+Each time the integration commits translations, it uses the following default commit message:
 
-```yml title="crowdin.yml"
-"commit_message": "[ci skip]"
+```
+New translations {fileName} ({languageName})
+[ci skip]
 ```
 
-To replace the default commit message, use the `append_commit_message` parameter with the `false` value. You can also add two optional placeholders: `%original_file_name%` and `%language%` to use the appropriate file name and language variables accordingly.
+The `[ci skip]` tag is added by default so that syncing many files at once doesn't trigger a separate CI build for each one. Your CI still runs as expected once these changes are merged into your main branch through a pull request.
+
+To add your own text to the commit message, use the `commit_message` parameter. By default, your text is appended below the default message (equivalent to setting `append_commit_message` to `true`):
+
+```yml title="crowdin.yml"
+"commit_message": "Fix: New translations from Crowdin"
+```
+
+The resulting commit message looks like this:
+
+```
+New translations {fileName} ({languageName})
+[ci skip]
+Fix: New translations from Crowdin
+```
+
+To use only your own message instead of the default one, set `append_commit_message` to `false`:
 
 ```yml title="crowdin.yml"
 "commit_message": "Fix: New translations %original_file_name% from Crowdin"
 "append_commit_message": false
 ```
+
+You can use the `%original_file_name%` and `%language%` placeholders in your commit message to insert the file name and language.
+
+<Aside type="caution">
+  When you replace the default message (`append_commit_message: false`), the `[ci skip]` tag is no longer added automatically. Include it in your custom message if you still want to skip intermediate CI builds.
+</Aside>
 
 ### Pull Request Assignee
 
