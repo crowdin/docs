@@ -1,0 +1,62 @@
+---
+title: 文件处理器设置
+description: 自定义对受支持文件格式的处理
+slug: zh-CN/enterprise/project-settings/file-processors
+sidebar:
+  order: 14
+  label: 文件处理器
+---
+
+import { Steps, LinkCard, CardGrid, Aside } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import fileProcessors from '!/enterprise/project-management/settings/file_processors.png';
+
+文件处理器允许您自定义对受支持文件格式的处理。 如果您想在文件被 Crowdin Enterprise 导入之前编辑文件内容，此功能会非常有用。
+
+文件处理器作为 Crowdin 应用程序实现。 您可以创建自己的文件处理器或使用现有的处理器。
+
+<Image src={fileProcessors} alt="文件处理器" />
+
+<CardGrid>
+  <LinkCard title="在商店中探索文件处理器" href="https://store.crowdin.com/tags/file-processors" target="_blank" />
+  <LinkCard title="创建文件处理器" href="/zh/developer/crowdin-apps-modules-file-processing/" />
+</CardGrid>
+
+## 管理文件处理器
+
+要管理文件处理器，请转至项目设置的 **文件处理器** 部分。
+
+### 配置处理顺序
+
+文件处理器的处理顺序决定了同类型模块在项目中的执行方式。 顺序值设置优先级，从 0（最高优先级）开始，依次递增。 您设置的顺序会对结果产生重大影响。
+
+例如，如果您正在翻译一个 CSV 文件，并安装了两个包含 `file-post-export` 模块的应用程序：
+
+* 第一个模块对字符串中的 HTML 标签进行转义，将 `</h1>` 转换为 `\<\/h1\>`。
+* 第二个模块检查是否存在所有闭合标签，如果缺失则添加它们。
+
+这些模块的处理顺序将导致不同的结果：
+
+* 如果 HTML 标签转义模块先运行，然后是标签验证模块，输出可能为：
+  * `<h1>Hello World!` => `\<h1\>Hello World!` => `\<h1\>Hello World!</h1>`
+* 如果顺序相反，标签验证模块先运行，输出将为：
+  * `<h1>Hello World!` => `<h1>Hello World!</h1>` => `\<h1\>Hello World!\<\/h1\>`
+
+<Aside type="caution">
+  当多个同类型的文件处理模块（例如 `file-post-export`）具有相同的顺序值时，可能会出现意外行为。
+</Aside>
+
+在这种情况下，系统将根据文件处理应用程序的安装日期来决定哪个模块先执行，这可能会破坏预期的处理顺序。 因此，建议调整相同的顺序值，以确保文件按所需顺序处理。
+
+### 编辑文件处理器设置
+
+要编辑文件处理器设置，请按以下步骤操作：
+
+<Steps>
+  1. 打开您的项目，然后转至 **设置 > 文件处理器**。
+  2. 单击所需处理器的 <Icon name="mdi:dots-vertical" class="inline-icon" /> 并选择 **编辑**。
+  3. 进行必要的更改，然后单击 **提交**。
+</Steps>
+
+处理器设置可能因您使用的处理器而有所不同。

@@ -1,0 +1,294 @@
+---
+title: 翻译对齐处理模块
+description: 使用自定义服务对非键值文件的翻译进行对齐
+slug: zh-CN/developer/crowdin-apps-module-translation-alignment-processing
+sidebar:
+  order: 7
+  label: 翻译对齐处理
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+翻译对齐处理模块允许您在上传非键值文件（例如 HTML、MD）的翻译时，覆盖 Crowdin 的默认对齐机制。
+
+默认情况下，Crowdin 会自动将上传的翻译与现有源字符串对齐。 当您在 Crowdin 应用中使用此模块时，可以拦截此过程并应用您自己的自定义对齐逻辑，例如使用第三方对齐服务。 这使您能够完全控制翻译如何映射到复杂文档格式中对应的源字符串。
+
+<Aside>
+  此模块专为与[非键值文件格式](/zh/uploading-translations/#text-and-html-based-formats)（如 HTML、Markdown (MD) 等）配合使用而设计。
+</Aside>
+
+## 访问权限
+
+您可以将此模块的访问权限授予以下用户类别之一：
+
+对于 Crowdin：
+
+* 仅限我自己（即项目所有者）
+* 本人、项目管理员和开发者
+* 选定用户
+
+对于 Crowdin Enterprise：
+
+* 仅限组织管理员
+* 组织管理员、项目管理员和开发者
+* 选定用户
+
+## 结构
+
+```json title="manifest.json"
+{
+  "modules": {
+    "file-translations-alignment": [
+      {
+        "key": "your-translations-alignment-module-key",
+        "url": "/translations-alignment",
+        "signaturePatterns": {
+          "fileName": "^.+\.html$",
+          "fileContent": "<html.*>"
+        }
+      }
+    ]
+  }
+}
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 上传翻译时触发的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>描述：</strong> 包含 <code>fileName</code> 和/或 <code>fileContent</code> 正则表达式，用于在通过 UI 上传翻译（或通过 API 上传但未指定 <code>type</code> 参数）时检测文件类型。</p>
+        <p><Aside><code>fileContent</code> 正则表达式仅检查文件内容的前 64 KB。</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 翻译对齐应用与 Crowdin 之间的通信
+
+上传非键值格式的翻译文件时，系统会使用 `signaturePatterns` 参数检测合适的翻译对齐模块。 然后，Crowdin 会向应用的 URL（`$baseUrl . $url`）发出 HTTP 请求。
+
+此请求包含两个主要数组：`sourceStrings`（来自项目）和 `translationStrings`（从上传的翻译文件中解析）。 应用的任务是处理这两组字符串，执行对齐，并返回将翻译映射到正确源字符串标识符的结构化响应。
+
+### 向翻译对齐应用发送的请求
+
+请求载荷示例：
+
+```json
+// max request payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "jobType": "translation-alignment-file",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name",
+    "userId": 1,
+    "sourceLanguageId": "en",
+    "targetLanguageIds": [
+      "ja",
+      "uk",
+      "et"
+    ],
+    "createdAt": "2030-01-15T07:00:00+00:00",
+    "updatedAt": "2030-01-15T07:00:15+00:00",
+    "lastActivity": "2030-01-15T10:12:13+00:00",
+    "description": null,
+    "url": "/project/your-project-identifier",
+    "cname": null
+  },
+  "sourceLanguage": {
+    "id": "en",
+    "name": "English",
+    "editorCode": "en",
+    "twoLettersCode": "en",
+    "threeLettersCode": "eng",
+    "locale": "en-US",
+    "androidCode": "en-rUS",
+    "osxCode": "en.lproj",
+    "osxLocale": "en",
+    "pluralCategoryNames": [
+      "one",
+      "other"
+    ],
+    "pluralRules": "(n != 1)",
+    "pluralExamples": [
+      "1",
+      "0, 2-999; 1.2, 2.07..."
+    ],
+    "textDirection": "ltr",
+    "dialectOf": null
+  },
+  "targetLanguages": [
+    {
+      // Language object for the translation being aligned. Has the same structure as sourceLanguage.
+    }
+  ],
+  "file": {
+    "id": 4219,
+    "name": "en.html",
+    "title": null,
+    "path": "/en.html",
+    "type": "html32",
+    "isMultilingual": false,
+    "status": "active",
+    "revision": 1,
+    "branchId": null,
+    "directoryId": 0
+  },
+  "sourceStrings": [
+    {
+      "id": 1234567,
+      "text": "Welcome!",
+      "context": "Document Title\r\nXPath: \/html\/head\/title"
+    }
+    // other source strings ...
+  ],
+  "translationStrings": [
+    {
+      "id": null,
+      "text": "Ласкаво просимо!",
+      "context": "Document Title\r\nXPath: \/html\/head\/title"
+    }
+    // other translation strings ...
+  ]
+}
+```
+
+参数：
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>jobType</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>值：</strong> <code>translation-alignment-file</code></p>
+        <p><strong>描述：</strong> 指定翻译对齐模块的操作。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>描述：</strong> 包含 Crowdin 中正在上传翻译的源文件的相关信息。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>targetLanguages</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code></p>
+        <p><strong>描述：</strong> 一个数组，包含正在上传和对齐的翻译文件的语言对象。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>sourceStrings</code>, <code>sourceStringsUrl</code></td>
+      <td>
+        <p><strong>类型(sourceStrings)：</strong> <code>array</code></p>
+        <p><strong>类型(sourceStringsUrl)：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 用于原始文件中源字符串的参数。 <code>sourceStrings</code> - 源字符串对象的数组。 <code>sourceStringsUrl</code> - 包含源字符串的 <a href="https://github.com/ndjson/ndjson-spec" target="_blank">换行符分隔 JSON</a> 文件的公共 URL。<br />
+        可使用这两个参数中的任意一个。<Aside title="Limitations">最大请求载荷限制为 5 MB。</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">translationStrings</code>, <code>translationStringsUrl</code></td>
+      <td>
+        <p><strong>类型(translationStrings)：</strong> <code>array</code></p>
+        <p><strong>类型(translationStringsUrl)：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 用于从上传的翻译文件中解析的字符串的参数。
+        <code>translationStrings</code> - 简单字符串对象的数组。 <code>translationStringsUrl</code> - 包含翻译字符串的 <a href="https://github.com/ndjson/ndjson-spec" target="_blank">换行符分隔 JSON</a> 文件的公共 URL。<br />
+        可使用这两个参数中的任意一个。<Aside title="Limitations">最大请求载荷限制为 5 MB。</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### 应用的预期响应
+
+应用必须执行自定义对齐并返回包含 `translations` 数组的响应。 此数组将每个翻译文本映射到其对应的 `sourceStringId`。
+
+响应载荷示例：
+
+```json
+// max response payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "data": {
+    "translations": [
+      {
+        "sourceStringId": 1234567,
+        "text": "Ласкаво просимо!"
+      },
+      // other translation mappings...
+    ],
+    // or use translationsUrl for large payloads
+    "translationsUrl": "https://app.example.com/jKe8ujs7a-aligned.ndjson" // new-line delimited json file with aligned translations
+  },
+  "error": {
+    "message": "Optional error message"
+  }
+}
+```
+
+参数：
+
+<table>
+  <tbody>
+    <tr>
+     <td><code class="whitespace-nowrap">data.translations</code>, <code>data.translationsUrl</code></td>
+      <td>
+        <p><strong>类型(data.translations)：</strong> <code>array</code></p>
+        <p><strong>类型(data.translationsUrl)：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 用于传递已对齐翻译的参数。
+        <code>data.translations</code> - 对齐对象的数组。 <code>data.translationsUrl</code> - 包含对齐对象的 <a href="https://github.com/ndjson/ndjson-spec" target="_blank">换行符分隔 JSON</a> 文件的公共 URL。<br />
+        可使用这两个参数中的任意一个。<Aside title="Limitations">最大响应载荷限制为 5 MB。</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">data.translations.sourceStringId</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>integer</code></p>
+        <p><strong>描述：</strong> 应用翻译的目标源字符串的数字标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>data.translations.text</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code> 或 <code>object</code></p>
+        <p><strong>描述：</strong> 要应用的翻译文本。 对于复数字符串，此项必须是以目标语言的复数类别名称（例如 <code>one</code>、<code>other</code>）为键的对象。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 可从应用传递至 Crowdin 的错误消息，将在 UI 中对用户可见。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>

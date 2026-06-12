@@ -1,0 +1,86 @@
+---
+title: 基于应用的工作流步骤
+description: 配置安装 Crowdin 商店应用后解锁的新工作流步骤
+slug: zh-CN/enterprise/app-based-workflow-step
+sidebar:
+  order: 5
+---
+
+import { Image } from 'astro:assets';
+import { Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import appBasedStepWorkflowEditor from '!/enterprise/organization-management/app_based_step_workflow_editor.png';
+import workflowIssuesBanner from '!/enterprise/organization-management/workflow_issues_banner.png';
+
+基于应用的工作流步骤在您从 [Crowdin 商店](https://store.crowdin.com/)安装特定应用或向您的 Crowdin Enterprise 组织添加私有应用后变为可用。 这些步骤可提供专业功能，例如 AI 驱动的校对、延迟处理等，是根据团队精确需求定制工作流的强大方式。 通过将其添加到您的工作流中，您可以用独特的条件、自动化和集成来扩展 Crowdin Enterprise 的默认功能。
+
+## 用例
+
+以下是基于应用的步骤如何增强您的工作流的几个示例。 部分示例来自现有的 Crowdin 商店应用，另一些则展示了更广泛的可能性：
+
+* **工作流延迟** – [Workflow Delay](https://store.crowdin.com/workflow-step-delay) 应用添加检查点式步骤，使片段暂停，直至满足条件或按设定计划继续。 这有助于防止不完整或未经验证的片段过早向前推进，从而提高整体翻译一致性。
+
+* **AI 校对员** – [AI Proofreader](https://store.crowdin.com/ai-proofread-agent) 应用引入了 **AI 校对员**工作流步骤。 它可以使用自定义 AI 提示自动校对多种语言的内容并执行各种操作，从而减少甚至消除手动校对的需求。
+
+* **AI 源文审查** – 另一个可能的场景是某个应用在翻译前自动审查和完善源文本，捕捉可能导致后续问题的错别字、风格不一致或占位符。 这种方法通过从精心打磨的源字符串开始，有助于确保更高质量的翻译。
+
+* **AI 标记** – 该步骤可分析您的字符串并自动应用标签（例如，“营销内容”、“技术文档”、“高优先级”），有助于将内容路由至最合适的翻译或审校路径。
+
+<CardGrid>
+  <LinkCard title="工作流概览" href="/zh/enterprise/workflows/" />
+  <LinkCard title="Crowdin 商店" href="https://store.crowdin.com/" />
+</CardGrid>
+
+## 从 Crowdin 商店安装应用
+
+在添加基于应用的工作流步骤之前，您需要安装相应的应用。 您可以从 Crowdin 商店安装应用，或者，如果您已自行开发，可将其作为私有应用添加。
+
+<ReadMore>
+  了解更多关于[创建工作流步骤应用](/zh/developer/crowdin-apps-module-workflow-step-type/)的信息。
+</ReadMore>
+
+根据应用的不同，您可能需要特定权限（例如，管理员或 Admin）才能安装它。 安装后，新步骤类型将出现在您的工作流编辑器或工作流模板编辑器中。
+
+<ReadMore>
+  了解更多关于[安装 Crowdin 应用](/zh/developer/crowdin-apps-installation/#在-crowdin-enterprise-中安装)的信息。
+</ReadMore>
+
+<Aside type="caution">
+  如果您之后卸载该应用，任何使用该基于应用步骤的工作流都将显示错误或被标记为存在问题。
+</Aside>
+
+## 将基于应用的工作流步骤添加到您的工作流
+
+您可以通过工作流编辑器直接将基于应用的工作流步骤添加到项目的工作流中，或通过工作流模板编辑器将其包含在工作流模板中。
+
+<Image src={appBasedStepWorkflowEditor} alt="工作流编辑器中基于应用的工作流步骤" />
+
+## 步骤配置
+
+根据应用的实现方式，基于应用的工作流步骤可能提供各种配置选项，也可能没有任何配置选项。 例如：
+
+* **可配置步骤** – 某些步骤允许您在工作流编辑器中调整参数（例如，指定内容处理的延迟时间）。 在这些情况下，您可以修改可用选项以满足您的需求。
+
+* **预配置步骤** – 其他步骤的所有设置均由应用预定义（例如，延迟内容直到整个文件完全翻译完成），因此工作流编辑器中不会出现其他字段。
+
+如果步骤提供配置字段，这些字段通常会在您将步骤拖入工作流后出现在步骤的设置面板中。
+
+这些字段可以包含从 AI 提示和允许的操作（例如，批准或删除翻译、添加翻译建议或评论等） 到 API 令牌、延迟间隔或匹配条件——一切取决于应用开发者启用的内容。 如果没有可见的配置选项，应用可能在内部管理所有必要的设置。
+
+<Aside type="tip">
+  我们建议始终查阅应用文档，以了解其可能提供的任何可用设置的详细信息。
+</Aside>
+
+## 故障排除
+
+当基于应用的步骤配置错误时，Crowdin Enterprise 会将工作流标记为存在问题。 您可能会注意到：
+
+* **错误横幅和非活动步骤** – 如果应用被移除或变为非活动状态，您项目的仪表板可能会显示一个横幅，告知工作流问题及解决方法。
+  <Image src={workflowIssuesBanner} alt="工作流问题横幅" />
+  在工作流编辑器中，您可能会看到验证失败的步骤（例如，*此步骤类型所需的应用已卸载*）。 要解决此问题，请重新安装应用并重新配置其步骤，或在不再需要时移除该步骤。
+* **验证警告** – 保存工作流更改时，如果基于应用的步骤配置错误或存在未满足的依赖项，可能会出现警告（例如，*Workflow Delay Agent 需要管理员权限*）。
+* **无法访问基于应用的步骤** – 有时，如果应用在安装时限制了项目访问范围，或者您缺少所需角色（例如，管理员），基于应用的步骤可能不会出现在工作流编辑器中。 检查您的项目设置，确认您拥有管理员或 Admin 权限，并且该应用已在目标项目中获得允许。
+* **连接或外部服务错误** – 如果基于应用的步骤依赖于第三方服务或 API，超时或网络故障可能导致步骤失败或卡住。
+  * **检查服务状态**：验证应用使用的任何外部服务是否在线且正常运行。
+  * **检查日志**：如果应用提供日志或管理面板，请查看其可能生成的任何错误消息。
+  * **网络和防火墙设置**：验证您的防火墙或 VPN 是否未阻止应用的请求。

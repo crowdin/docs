@@ -1,0 +1,443 @@
+---
+title: SAML 单点登录
+description: 了解如何为您的组织设置 SAML SSO
+slug: enterprise/saml
+sidebar:
+  order: 2
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import authenticationMethod from '!/enterprise/organization-management/saml_authentication_method.png';
+import idpCredentials from '!/enterprise/organization-management/saml_idp_credentials.png';
+import serviceProviderCredentials from '!/enterprise/organization-management/saml_service_provider_credentials.png';
+import settingsAdvancedOptions from '!/enterprise/organization-management/saml_settings_advanced_options.png';
+
+SAML 单点登录 (SSO) 使用户能够通过您选择的身份提供商 (IDP) 访问 Crowdin Enterprise。 SAML 身份验证的优点包括：
+
+* **标准化：** SAML 是一种标准格式，可实现系统之间的无缝互操作性，与具体实现无关。
+* **改善用户体验：** 用户可以使用组织的身份提供商访问 Crowdin Enterprise，无需额外身份验证，只需一组登录凭据即可。
+* **增强安全性：** SAML 是一种用于登录应用程序的安全标准，提供单一身份验证点，将用户凭据保留在防火墙边界内。
+
+<Aside>
+  SAML 单点登录仅适用于 Crowdin Enterprise 上的 Business [订阅计划](https://crowdin.com/pricing#enterprise-plans)。
+</Aside>
+
+## 配置您的身份提供商
+
+首先，您需要为 Crowdin Enterprise 与您的 IDP 建立连接（或连接器）（例如 [Auth0](https://auth0.com/docs/protocols/saml/saml-idp-generic#2-configure-auth0-as-idp)、[Google Workspace (SAML)](https://support.google.com/a/answer/6087519?hl=en)、[Okta](https://developer.okta.com/docs/guides/saml-application-setup/overview/) 等）。
+
+<CardGrid>
+  <LinkCard title="为 Google Workspace 配置 SAML" href="#google-workspace" />
+  <LinkCard title="为 Microsoft Azure 配置 SAML" href="#microsoft-azure" />
+  <LinkCard title="为 Okta 配置 SAML" href="#okta" />
+  <LinkCard title="为 OneLogin 配置 SAML" href="#onelogin" />
+  <LinkCard title="为 Auth0 配置 SAML" href="#auth0" />
+</CardGrid>
+
+## 为 Crowdin Enterprise 设置 SAML SSO
+
+要为您的 Crowdin Enterprise 组织配置 SAML SSO 功能，请按照以下步骤操作：
+
+<Steps>
+  1. 单击右上角的个人资料照片，然后选择 **组织设置**。
+  2. 切换到左侧边栏的 **安全** 部分，然后单击 **SAML**。 <Image src={authenticationMethod} alt="组织设置安全部分中的 SAML" />
+  3. 在 [**身份提供商配置**](#identity-provider-configuration) 部分中，输入您的 IDP 凭据，然后单击 **保存**。 <Image src={idpCredentials} alt="身份提供商配置" />
+  4. 如果您的 IDP 在提供其自身凭据之前需要 Crowdin Enterprise 服务提供商详情，请向下滚动以从 **服务提供商详情** 部分复制所需值。 请注意，**设置** 选项和 **服务提供商详情** 中的高级选项在您于步骤 3 中保存 IDP 凭据之前处于禁用状态。 <Image src={serviceProviderCredentials} alt="服务提供商详情" />
+  5. 在 [**设置**](#saml-settings) 和 [**服务提供商详情**](#service-provider-details) 部分中配置首选选项，然后单击 **保存**。 <Image src={settingsAdvancedOptions} alt="SAML 设置" class="width-xl" />
+</Steps>
+
+配置完成后，SAML 将立即作为组织成员的身份验证选项可用。
+
+## 身份提供商配置
+
+**身份提供商配置** 部分用于输入 IDP 凭据以建立 SAML 连接。 填写以下字段，然后单击 **保存**：
+
+* **SSO URL** &ndash; 身份提供商为身份验证提供的 SAML 2.0 端点 URL。
+* **实体 ID** &ndash; 您的身份提供商的唯一标识符（实体 ID）。
+* **X.509 证书** &ndash; 粘贴来自身份提供商的完整 X.509 公钥证书，或拖放 .pem 文件。
+* *（可选）* **单点注销 (SLO) URL** &ndash; 用于注销用户的 SAML 端点 URL。 如果您的身份提供商不支持此项，请留空。 启用 **设置** 部分中的 **启用单点注销 (SLO)** 选项需要此项。
+
+保存后，该部分将切换为已保存凭据的只读视图。 还会显示从您的 X.509 证书派生的以下附加证书详情：
+
+* **证书有效期** &ndash; IDP 提供的 X.509 证书的到期日期。
+* **证书颁发者** &ndash; 颁发 X.509 证书的组织或实体。
+* **指纹** &ndash; X.509 证书的唯一哈希指纹，用于验证其真实性。
+
+### 编辑身份提供商凭据
+
+要更新您的 IDP 凭据（例如，替换即将到期的证书），请单击 **身份提供商配置** 部分中的 **编辑**，进行必要的更改，然后单击 **保存**。
+
+#### 更新过期证书
+
+X.509 证书具有有限的有效期——通常为一到三年，具体取决于您的 IDP 配置。 证书过期后，组织成员将无法再使用 SAML 登录，直到证书更新为止。
+
+<Steps>
+  1. 从您的身份提供商获取新的 X.509 证书。
+  2. 在 Crowdin Enterprise **组织设置 > 安全 > SAML** 中，单击 **身份提供商配置** 部分中的 **编辑**。
+  3. 在 **X.509 证书** 字段中，将现有证书替换为新证书。
+  4. 点击**保存**。
+</Steps>
+
+### 删除身份提供商凭据
+
+要删除您的 IDP 凭据（例如，切换到其他身份提供商时），请单击 **身份提供商配置** 部分中的 **删除**，然后在确认对话框中单击 **删除** 进行确认。
+
+<Aside type="caution">
+  删除 IDP 凭据将删除整个 SAML 配置。 组织成员将无法再使用 SAML 登录，直到重新完成配置为止。
+</Aside>
+
+## SAML 设置
+
+**设置** 部分提供了微调 SAML 行为的选项。 此部分在 **身份提供商配置** 部分中保存 IDP 凭据后可用。
+
+* **提供商名称** &ndash; 将在您的 Crowdin Enterprise 登录页面上显示的 SAML 身份验证方法名称。
+* **强制使用 SAML** &ndash; 选择 **电子邮件域** 字段中配置的域名下拥有电子邮件的组织成员是否只能使用 SAML SSO 登录。
+* **限制成员更改其账户电子邮件** &ndash; 选择是否限制成员更改其 Crowdin Enterprise 电子邮件。
+* **电子邮件域** &ndash; 使用 SAML SSO 登录的组织成员相关的电子邮件域。 仅在启用 **强制使用 SAML** 或 **限制成员更改其账户电子邮件** 时可用。
+* **跳过 SAML 的 2FA** &ndash; 选择通过 SAML SSO 登录的用户是否绕过组织的双因素身份验证要求。 如果您的身份提供商已处理 2FA，请启用此选项。
+* **每次登录时更新成员账户** &ndash; 选择是否在组织成员每次登录时从 IDP 同步已配置的账户属性。 这些属性在账户创建时从 IDP 同步。
+  <Aside>
+      要使用此选项，请确保事先配置 [SAML 属性](#mapping-saml-attributes) 映射。
+  </Aside>
+* **启用单点注销 (SLO)** &ndash; 选择组织成员从 Crowdin Enterprise 组织注销时是否同时从 IDP 注销。 要启用此选项，请在 **身份提供商配置** 部分中添加 SLO URL。
+
+## 服务提供商详情
+
+**服务提供商详情** 部分提供您需要在 IDP 设置中输入的 Crowdin Enterprise 凭据，以及高级配置选项。 此部分始终可见，但高级选项仅在 **身份提供商配置** 部分中保存 IDP 凭据后才可用。
+
+以下只读值可复制并在配置 IDP 时使用：
+
+* **服务提供商颁发者** &ndash; 您的 Crowdin Enterprise 组织作为服务提供商的唯一标识符。
+* **回复 URL (ACS)** &ndash; 身份提供商发送 SAML 身份验证响应的端点。
+* **服务提供商元数据 URL** &ndash; 您的身份提供商可用于自动配置 SAML 连接的 URL。
+* **SSO 登录 URL** &ndash; 用户将被重定向以启动 SAML 身份验证的 URL。
+
+以下高级选项在保存 IDP 凭据后可用：
+
+* **服务提供商颁发者** &ndash; Crowdin Enterprise 服务提供商的全局唯一名称。 默认情况下，它是您组织的 SAML 元数据 URL。 仅在您的 IDP 要求时才对其进行自定义。
+* **签署 AuthRequest** &ndash; 选择是否对发送到您的 IDP 的授权请求进行签名。
+
+以下选项允许您配置响应签名和身份验证行为。 至少需要一个签名选项（**响应已签名** 或 **断言已签名**）：
+
+* **响应已签名** &ndash; 表示要求 Crowdin Enterprise 接收的 SAML 响应已签名。
+* **断言已签名** &ndash; 表示要求 Crowdin Enterprise 接收的 SAML 断言已签名。
+* **签署 SLO 请求** &ndash; 表示要求发送到您的身份提供商的单点注销 (SLO) 请求已签名。
+* **身份验证上下文** &ndash; 指定您的身份提供商应使用哪些身份验证方法。 留空以允许任何方法。
+
+## 映射 SAML 属性
+
+您可以将 IDP 响应中的属性映射到 Crowdin Enterprise 中使用的用户属性。 请参阅下表中的可用属性。
+
+| 参数          | 详细信息                                           |
+| ----------- | ---------------------------------------------- |
+| `firstName` | **类型：** `string`<br />**描述：** 存储在 IDP 上的用户名字。  |
+| `lastName`  | **类型：** `string`<br />**描述：** 存储在 IDP 上的用户姓氏。  |
+| `timeZone`  | **类型：** `string`<br />**描述：** 用户的时区。           |
+| `avatar`    | **类型：** `string`<br />**描述：** 用户个人资料图片的绝对 URL。 |
+
+## 启用 SAML SSO 后您获得的功能
+
+配置 SAML 后，它将作为登录选项显示在您的 Crowdin Enterprise 登录页面上。 通过 SAML 登录的用户将通过您的 IDP 进行身份验证。 如果用户在您的组织中尚无账户，则在其首次 SAML 登录时将自动创建账户。
+
+配置时已登录的任何用户将保持登录状态。
+
+## 为 Google 工作区配置 SAML SSO {#google-workspace}
+
+要在您的 Google Workspace 中设置 Crowdin Enterprise SAML SSO，请按照以下步骤操作。
+
+#### 设置 Crowdin Enterprise SAML 应用 {#setup-google}
+
+<Steps>
+1. 使用管理员账户打开 Google 管理控制台。
+2. 在管理控制台*主页*页面，转到 **应用 > SAML 应用**。
+3. 单击右下角的 **添加**<Icon name="mdi:plus" class="inline-icon" />。
+4. 单击 **设置我自己的自定义应用**。 *Google IdP 信息*窗口打开，*SSO URL* 和*实体 ID* 字段自动填充。 <Aside>这是您需要在 Crowdin Enterprise *组织设置* > *安全* > *SAML* 中指定的信息。</Aside>
+5. 复制 *SSO URL*、*实体 ID*，并下载证书。
+6. 在单独的浏览器标签页或窗口中，登录您的 Crowdin Enterprise 组织，打开*组织设置* > *安全* > *SAML*，然后在**身份提供商配置**部分输入您在步骤 5 中复制的信息：<div className="mb-4" />
+   * 将 *SSO URL* 粘贴到 **SSO URL** 字段中。
+   * 将 *实体 ID* 粘贴到 **实体 ID** 字段中。
+   * 将您的证书文件拖放到 **X.509 证书** 字段中。
+7. 单击 **保存** 并返回 Google 管理控制台，然后单击 **下一步**。
+8. 在*基本信息*窗口中，添加应用名称（例如 *Crowdin Enterprise*），并可选择添加描述。
+9. *（可选）* 上传 PNG 或 GIF 文件作为您的 Crowdin Enterprise SSO 应用的图标。 图标图片应为 256 像素的正方形。 您可以在 [使用 Crowdin 徽标](/using-logo/) 页面上找到 Crowdin 图标。
+10. 单击 **下一步**。
+11. 在*服务提供商详情*窗口中，您需要输入 *ACS URL*、*实体 ID*，将*起始 URL* 留空，清除*签名响应*复选框，并将*名称 ID 格式*设置为 *PERSISTENT*。
+12. 切换到您的 Crowdin Enterprise *组织设置* > *安全* > *SAML*，步骤 11 所需的所有值可在 **服务提供商详情** 部分中找到。
+13. 在 Google 管理控制台的*服务提供商详情*窗口中，将 **回复 URL (ACS)** 粘贴到 *ACS URL* 字段，将 **服务提供商颁发者** 粘贴到*实体 ID* 字段，清除*响应已签名*选项，然后单击 **保存**。
+14. 单击 **下一步**。
+15. 在*属性映射*页面上单击 **完成**。
+16. 在*为 Crowdin Enterprise 设置 SSO* 窗口中，单击 **确定**。
+</Steps>
+
+#### 启用 Crowdin Enterprise SAML 应用 {#enable-google}
+
+<Steps>
+  1. 在管理控制台*主页*页面，转到 **应用 > SAML 应用**。
+  2. 选择您新建的 Crowdin Enterprise SAML 应用。
+  3. 在灰色框的右上角，单击 **编辑服务** <Icon name="mdi:pencil" class="inline-icon" />。
+  4. 要为组织中的所有人开启或关闭服务，请单击 **为所有人开启** 或 **为所有人关闭**，然后单击 **保存**。
+  5. 要仅为组织单元中的用户开启或关闭服务：
+     * 在左侧，选择组织单元。
+     * 选择 **开启** 或 **关闭**，然后单击 **保存**。 详细了解 [Google Workspace 的组织结构](https://support.google.com/a/answer/4352075)。
+  6. 要为跨组织单元或组织单元内的一组用户开启服务，请选择访问权限组。 有关详情，请转到[为群组开启服务](https://support.google.com/a/answer/9050643)。
+  7. 确保您的用户用于登录 SAML 应用的电子邮件地址与他们用于登录 Google 域的电子邮件地址相匹配。
+</Steps>
+
+<Aside>
+  更改通常会在几分钟内生效，但最长可能需要 24 小时。 有关详情，请参阅[更改如何传播到 Google 服务](https://support.google.com/a/answer/7514107)。
+</Aside>
+
+#### 测试 SSO {#test-sso-google}
+
+<Steps>
+  1. 通过单击 Google 应用菜单中的 Crowdin Enterprise，打开您新建的 Crowdin Enterprise SAML 应用的单点登录 URL。 Crowdin Enterprise 可在应用列表中与 Google Drive、Gmail 等一起找到。 您应该会自动重定向到 Google 登录页面。
+  2. 输入您的登录凭据。 登录凭据通过身份验证后，您将自动重定向到 Crowdin Enterprise。
+</Steps>
+
+## 为 Microsoft Azure 配置 SAML SSO {#microsoft-azure}
+
+要在您的 Microsoft Azure 中设置 Crowdin Enterprise SAML SSO，请按照以下步骤操作。
+
+#### 从库中添加 Confluence SAML SSO by Microsoft
+
+<Steps>
+  1. 使用管理员账户打开 [Azure 门户](https://portal.azure.com/)。
+  2. 在左侧导航面板中，选择 *Microsoft Entra ID* 服务。
+  3. 单击 *管理* 部分，然后从列表中选择 *企业应用程序*。 您将被重定向到 *企业应用程序 > 所有应用程序*。
+  4. 要添加新应用程序，请单击 <Icon name="mdi:plus" class="inline-icon" /> 新建应用程序。
+  5. 在*搜索应用程序*字段中，输入 **Confluence SAML SSO by Microsoft**。
+  6. 从结果面板中选择 **Confluence SAML SSO by Microsoft**，然后单击 **创建**。 请等待几秒钟，直到应用添加完成。
+</Steps>
+
+#### 配置 Microsoft Entra ID SSO
+
+##### 在 Azure 门户上的配置
+
+请按照以下步骤在 Azure 门户中设置 Microsoft Entra ID SSO：
+
+<Steps>
+  1. 应用程序添加完成后，您将被重定向到其*概述*页面。 在 **Confluence SAML SSO by Microsoft** 应用程序的*概述*页面，找到*管理*部分，然后选择*单一登录*。
+  2. 在*选择单一登录方法*页面，选择 **SAML**。
+  3. 您现在位于*使用 SAML 设置单一登录*页面。 以下配置将在此页面的不同部分中进行。
+</Steps>
+
+###### 基本 SAML 配置
+
+<Steps>
+  1. 单击*基本 SAML 配置*部分上的 <Icon name="mdi:pencil" class="inline-icon" />。
+  2. 在此处输入您的 Crowdin Enterprise 服务提供商详情，然后单击 **保存**。 您可以在 Crowdin Enterprise *组织设置* > *安全* > *SAML* 的 **服务提供商详情** 部分中找到这些值。<div className="mb-4" />
+     * *标识符（实体 ID）*：从 **服务提供商颁发者** 复制
+     * *回复 URL（断言消费者服务 URL）*：从 **回复 URL (ACS)** 复制
+     * *登录 URL*：从 **SSO 登录 URL** 复制
+</Steps>
+
+###### 属性和声明
+
+<Steps>
+  1. 单击*属性和声明*部分上的 <Icon name="mdi:pencil" class="inline-icon" />。
+  2. 单击*必填声明*部分中的声明。
+  3. 在*管理声明*页面，为*名称标识符格式*选择 **持久性**，为*源属性*选择 **user.mail**，然后单击 **保存**。
+</Steps>
+
+###### SAML 证书
+
+<Steps>
+  1. 单击 *SAML 证书*部分上的 <Icon name="mdi:pencil" class="inline-icon" />。
+  2. 为*签名选项*选择 **签署 SAML 响应和断言**，然后单击 **保存**。
+  3. 从 *SAML 证书*部分单击*证书 (Base64)* 旁边的 **下载**。
+</Steps>
+
+###### 设置 Confluence SAML SSO by Microsoft
+
+<Steps>
+  1. 转到*设置 Confluence SAML SSO by Microsoft* 部分。
+  2. 复制*登录 URL*、*Microsoft Entra 标识符*、*注销 URL*。
+</Steps>
+
+##### 在 Crowdin Enterprise 中的配置
+
+<Steps>
+  1. 在单独的浏览器标签页或窗口中，登录您的 Crowdin Enterprise 组织，打开*组织设置* > *安全* > *SAML*，然后在 **身份提供商配置** 部分中输入您在 Azure 门户中复制的信息：
+     * 将*登录 URL* 粘贴到 **SSO URL** 字段中。
+     * 将 *Microsoft Entra 标识符*粘贴到 **实体 ID** 字段中。
+     * 将*注销 URL* 粘贴到 **单点注销 (SLO) URL** 字段中。
+     * 将您的证书文件拖放到 **X.509 证书** 字段中。
+  2. 点击**保存**。
+</Steps>
+
+##### 身份验证方法设置
+
+根据您在 Azure 门户中使用的身份验证方法，在某些情况下，可能需要更改 Crowdin Enterprise **服务提供商详情** 部分中 **身份验证上下文** 选项的默认值。
+
+要允许所有可能的身份验证方法，请将 **身份验证上下文** 字段留空（默认值）。
+
+#### 分配用户 {#assign-users-azure}
+
+在本部分中，您将通过授予对 Crowdin Enterprise 组织的访问权限来使用户能够使用 Azure 单一登录。
+
+<Steps>
+  1. 在 Azure 门户中，选择企业应用程序，然后选择所有应用程序。
+  2. 在应用程序列表中，选择 **Confluence SAML SSO by Microsoft**。
+  3. 在应用程序的概述页面，找到*管理*部分，然后选择*用户和组*。
+  4. 单击 **添加用户/组**，然后在*添加分配*窗格中，单击*用户和组*下的*未选择*。
+  5. 在*用户和组*对话框中，从*用户*列表中选择您自己的账户以便测试 SAML SSO，然后单击屏幕底部的 **选择** 按钮，然后单击 **分配**。 同样，您可以随时分配更多用户。
+</Steps>
+
+#### 测试 SSO {#test-sso-azure}
+
+<Steps>
+  1. 在 **Confluence SAML SSO by Microsoft** 应用程序的*概述*页面，找到*管理*部分，然后选择*单一登录*。
+  2. 向下滚动到*使用 Confluence SAML SSO by Microsoft 测试单一登录*部分，然后单击 **测试**。
+  3. 在右侧窗格中，单击 **以当前用户身份登录**。 登录凭据通过身份验证后，您将自动重定向到 Crowdin Enterprise。
+</Steps>
+
+## 为 Okta 配置 SAML SSO {#okta}
+
+要在您的 Okta 中设置 Crowdin Enterprise SAML SSO，请按照以下步骤操作。
+
+#### 设置 Crowdin Enterprise SAML 应用 {#setup-okta}
+
+<Steps>
+1. 使用管理员账户打开 Okta 仪表板。
+2. 在仪表板页面，转到 **应用程序**。
+3. 单击 **添加应用程序**。
+4. 单击 **创建新应用**。
+5. 在*创建新应用程序集成*对话框中，将*平台*设置为 *Web*，将*登录方式*设置为 *SAML 2.0*，然后单击 **创建**。
+6. 在*创建 SAML 集成*页面，在*常规设置*步骤中添加应用名称（例如 *Crowdin Enterprise*）。
+7. *（可选）* 上传 PNG、JPG 或 GIF 文件作为您的 Crowdin Enterprise SSO 应用的徽标。 图像尺寸应小于 1400x400px，大小应小于 100k。 您可以在 [使用 Crowdin 徽标](/using-logo/) 页面上找到 Crowdin 图标。
+8. 保持*应用可见性*选项未选中状态，单击 **下一步**。
+9. 在*配置 SAML* 步骤 > *SAML 设置*部分，您需要输入*单一登录 URL*、*受众 URI（SP 实体 ID）*，将*默认 RelayState* 留空，将*名称 ID 格式*设置为 *持久性*，将*应用程序用户名*设置为 *电子邮件*，然后单击 **下一步**。 您可以在 Crowdin Enterprise *组织设置* > *安全* > *SAML* 的 **服务提供商详情** 部分中找到所需的值。<div className="mb-4" />
+   * *单一登录 URL*：从 **回复 URL (ACS)** 复制
+   * *受众 URI（SP 实体 ID）*：从 **服务提供商颁发者** 复制
+10. 在*反馈*步骤中，选择 **这是我们自己创建的内部应用** 选项，然后单击 **完成**。
+11. 在 Okta 端完成应用设置后，您将被重定向到应用的*登录*标签页。 在*设置*部分，单击 **查看 SAML 设置说明**。
+12. 在新的浏览器标签页中，您将看到需要在 Crowdin Enterprise *组织设置* > *安全* > *SAML* 的 **身份提供商配置** 部分中指定的凭据。
+13. 复制*身份提供商单一登录 URL*、*身份提供商颁发者*，并下载证书。
+14. 在单独的浏览器标签页或窗口中，登录您的 Crowdin Enterprise 组织，打开*组织设置* > *安全* > *SAML*，然后在 **身份提供商配置** 部分中输入您在步骤 13 中复制的信息：
+    * 将*身份提供商单一登录 URL* 粘贴到 **SSO URL** 字段中。
+    * 将*身份提供商颁发者*粘贴到 **实体 ID** 字段中。
+    * 将您的证书文件拖放到 **X.509 证书** 字段中。
+15. 点击**保存**。
+</Steps>
+
+#### 分配用户 {#assign-users-okta}
+
+在本部分中，您将通过授予对 Crowdin Enterprise 组织的访问权限来使用户能够使用 Okta 单一登录。
+
+<Steps>
+  1. 使用管理员账户打开 Okta 仪表板，然后转到 **应用程序**。
+  2. 单击您新建的 Crowdin Enterprise SAML 应用。
+  3. 切换到*分配*标签页，单击 **分配**，然后选择 **分配给组**。
+  4. 在*将 Crowdin Enterprise 分配给组*对话框中，单击 **所有人** 上的 **分配** 以为组织中的所有用户启用 Crowdin Enterprise SAML 应用，然后单击 **完成**。 或者，您也可以分配单独的组或个别用户。
+</Steps>
+
+#### 测试 SSO {#test-sso-okta}
+
+<Steps>
+  1. 在 Crowdin Enterprise [登录页面](https://accounts.crowdin.com/) 上，选择您的组织，然后单击 **登录**。
+  2. 单击 **SAML**。 您应该会自动重定向到 Okta 登录页面。
+  3. 输入您的登录凭据。 登录凭据通过身份验证后，您将自动重定向到 Crowdin Enterprise。
+</Steps>
+
+## 为 OneLogin 配置 SAML SSO {#onelogin}
+
+要在您的 OneLogin 中设置 Crowdin Enterprise SAML SSO，请按照以下步骤操作。
+
+#### 从应用程序目录中添加 OneLogin SAML Test (IdP)
+
+<Steps>
+1. 使用管理员账户打开 OneLogin 管理控制台。
+2. 在管理控制台页面，转到*应用程序*。
+3. 要添加新应用程序，请单击 **添加应用**。
+4. 在*查找应用程序*页面，在搜索框中输入 **OneLogin SAML Test (IdP)**。
+5. 从搜索结果列表中选择 **OneLogin SAML Test (IdP)**。 请等待几秒钟，直到应用添加完成。
+6. 更新或重命名*显示名称*（例如改为 *Crowdin Enterprise*）。
+7. *（可选）* 将默认应用图标替换为您的 Crowdin Enterprise SSO 应用的 PNG 或 SVG 文件。 您可以在 [使用 Crowdin 徽标](/using-logo/) 页面上找到 Crowdin 图标，然后单击 **保存**。
+8. 您现在位于*信息*标签页中。 单击*配置*标签页。 在此处输入您的 Crowdin Enterprise 服务提供商详情，然后单击 **保存** 以继续。 您可以在 Crowdin Enterprise *组织设置* > *安全* > *SAML* 的 **服务提供商详情** 部分中找到所需的值。<div className="mb-4" />
+   * *SAML Consumer URL*：从 **回复 URL (ACS)** 复制
+   * *SAML Audience*：从 **服务提供商颁发者** 复制
+   * *SAML Recipient*：从 **回复 URL (ACS)** 复制
+   * *SAML Single Logout URL*：`https://accounts.crowdin.com/saml2/{your-organization-name}/slo`
+   * *ACS URL Validator*：`^https:\/\/accounts\.crowdin\.com\/saml2\/{your-organization-name}\/acs$`
+     <Aside>请确保将最后两个字段中的 `{your-organization-name}` 替换为您真实的 Crowdin Enterprise 组织名称。</Aside>
+9. 导航到 OneLogin 中的 *SSO* 标签页，复制*颁发者 URL*、*SAML 2.0 端点 (HTTP)* 和 X.509 证书。 要复制 X.509 证书，请单击 **查看详情**。
+10. 在单独的浏览器标签页或窗口中，登录您的 Crowdin Enterprise 组织，打开*组织设置* > *安全* > *SAML*，然后在 **身份提供商配置** 部分中输入您在步骤 9 中复制的信息：
+    * 将*颁发者 URL* 粘贴到 **实体 ID** 字段中。
+    * 将 *SAML 2.0 端点 (HTTP)* 粘贴到 **SSO URL** 字段中。
+    * 将 X.509 证书粘贴到 **X.509 证书** 字段中。
+11. 点击**保存**。
+</Steps>
+
+#### 分配用户 {#assign-users-onelogin}
+
+在本部分中，您将授予用户访问您新建的 Crowdin Enterprise SAML SSO 应用的权限。
+
+<Steps>
+  1. 使用管理员账户打开 OneLogin 管理控制台。
+  2. 在管理控制台页面，转到*应用程序*。
+  3. 单击您新建的 Crowdin Enterprise SAML SSO 应用。
+  4. 导航到*访问权限*标签页，并指定应有权访问此应用的角色。 如果您没有所需角色，可以通过*用户* > *角色*添加新角色，并指定对所需应用的访问权限。 您可以通过*用户*页面将用户分配到新角色。
+</Steps>
+
+#### 测试 SSO {#test-sso-onelogin}
+
+<Steps>
+  1. 在 Crowdin Enterprise [登录页面](https://accounts.crowdin.com/) 上，选择您的组织，然后单击 **登录**。
+  2. 单击 **SAML**。 您应该会自动重定向到 OneLogin 登录页面。
+  3. 输入您的登录凭据。 登录凭据通过身份验证后，您将自动重定向到 Crowdin Enterprise。
+</Steps>
+
+## 为 Auth0 配置 SAML SSO {#auth0}
+
+要在您的 Auth0 中设置 Crowdin Enterprise SAML SSO，请按照以下步骤操作。
+
+#### 设置 Crowdin Enterprise SAML 应用 {#setup-auth0}
+
+<Steps>
+1. 使用管理员账户打开 Auth0 管理仪表板。
+2. 在*仪表板*中，转到*应用程序*。
+3. 单击右侧的 **+ 创建应用程序**。
+4. 在 **名称** 字段中，指定应用名称（例如 *Crowdin Enterprise*），选择 **普通 Web 应用程序** 应用程序类型，然后单击 **创建**。
+5. 返回*仪表板* > *应用程序*。
+6. 找到您刚创建的应用程序所在行，然后单击应用程序名称右侧的设置图标 <Icon name="mdi:cog" class="inline-icon" />。
+7. *（可选）* 在 **应用程序徽标** 字段中指定您的 Crowdin Enterprise SSO 应用徽标的 URL。 您可以在 [使用 Crowdin 徽标](/using-logo/) 页面上找到 Crowdin 图标。
+8. 切换到 **Addons** 标签页。
+9. 单击 **SAML2 WEB APP**。
+10. 在弹出的对话框中，指定 **Application Callback URL**。 您可以在 Crowdin Enterprise *组织设置* > *安全* > *SAML* 的 **服务提供商详情** 部分中找到此值——从 **回复 URL (ACS)** 复制。
+11. 在 **Settings** 中粘贴以下代码段
+    ```json
+    {
+      "nameIdentifierProbes": [
+        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+      ]
+    }
+    ```
+    这样 **NameID** 将被设置为用户电子邮件地址。
+12. 向下滚动并单击 **ENABLE**。
+13. 向上滚动并切换到 **Usage** 标签页。
+14. 在 **Usage** 标签页中，您将看到需要在 Crowdin Enterprise *组织设置* > *安全* > *SAML* 的 **身份提供商配置** 部分中指定的凭据。
+15. 复制 *Issuer*、*Identity Provider Login URL*，并下载证书。
+16. 在单独的浏览器标签页或窗口中，登录您的 Crowdin Enterprise 组织，打开*组织设置* > *安全* > *SAML*，然后在 **身份提供商配置** 部分中输入您在步骤 15 中复制的信息：
+    * 将 *Issuer* 粘贴到 **实体 ID** 字段中。
+    * 将 *Identity Provider Login URL* 粘贴到 **SSO URL** 字段中。
+    * 将您的证书文件拖放到 **X.509 证书** 字段中。
+17. 点击**保存**。
+</Steps>
+
+#### 管理对 Crowdin Enterprise SAML 应用的访问
+
+默认情况下，与单个 Auth0 租户关联的所有用户在租户的应用程序之间共享（因此可以访问这些应用程序）。
+如有必要，您可以使用[规则](https://auth0.com/docs/rules)限制某些用户对应用程序的访问。 请参阅[此规则示例](https://github.com/auth0/rules/blob/aeaf93bc058408e260192d0941a688963449d6be/src/rules/simple-user-whitelist-for-app.js)。
+
+#### 测试 SSO {#test-sso-auth0}
+
+<Steps>
+  1. 在 Crowdin Enterprise <a href="https://accounts.crowdin.com/" target="_blank">登录页面</a>，选择您的组织，然后单击 **登录**。
+  2. 单击 **SAML**。 您应该会自动重定向到 Auth0 登录页面。
+  3. 输入您的登录凭据。 登录凭据通过身份验证后，您将自动重定向到 Crowdin Enterprise。
+</Steps>

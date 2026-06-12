@@ -1,0 +1,205 @@
+---
+title: 文件管理
+description: 管理和配置项目中的源文件
+slug: 文件管理
+sidebar:
+  order: 2
+---
+
+import { Aside, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Image } from 'astro:assets';
+import filesPrioritizing from '!/crowdin/project-management/sources/files_prioritizing.png';
+import filesContextMenuSettings from '!/crowdin/project-management/sources/files_context_menu_settings.png';
+import filesSettings from '!/crowdin/project-management/sources/files_settings.png';
+import filesParserConfiguration from '!/crowdin/project-management/sources/files_parser_configuration.png';
+import filesFileTargetLanguages from '!/crowdin/project-management/sources/files_file_target_languages.png';
+import filesFileContext from '!/crowdin/project-management/sources/files_file_context.png';
+import filesRename from '!/crowdin/project-management/sources/files_rename.png';
+import filesManagementProgresses from '!/crowdin/project-management/sources/files_management_progresses.png';
+import filesUpdating from '!/crowdin/project-management/sources/files_updating.png';
+import filesUpdating2 from '!/crowdin/project-management/sources/files_updating_2.png';
+import filesRestore from '!/crowdin/project-management/sources/files_restore.png';
+import filesFolderBranch from '!/crowdin/project-management/sources/files_folder_branch.png';
+
+你可以通过 **源文件 > 文件** 管理所有项目的文件。 在这里，你可以使用各种[支持的格式](/supported-formats/)手动上传文件以进行本地化。
+上传文件后，你将能够查看文件包含多少个*字符串*以及对每个文件进行了多少次*修订*（更改）。
+
+如果想要配置文件与项目的自动同步，请使用**集成**标签页。
+
+## 调整文件优先级
+
+您可以通过点击所需文件旁边的箭头图标设置每个文件的特定优先级。 译员将能够按照优先级顺序在语言页面和编辑器中看到这些文件。
+
+文件可能具有以下优先级：
+
+* <Icon name="mdi:arrow-down-bold" class="inline-icon" /> – 低
+* <Icon name="mdi:arrow-up-bold-outline" class="inline-icon" /> – 普通
+* <Icon name="mdi:arrow-up-bold" class="inline-icon" /> – 高
+
+<Image src={filesPrioritizing} alt="文件优先级设置" />
+
+## 文件设置
+
+要访问特定文件的配置，请右键单击所需的文件或单击其旁边的 <Icon name="mdi:dots-horizontal" class="inline-icon" />，然后选择**设置**。 或者，直接双击该文件。
+
+<Image src={filesContextMenuSettings} alt="文件上下文菜单" />
+
+### 向译员展示的标题
+
+向译员显示描述性的文件标题。 例如：使用 *About Us Dialog* 代替 *abt_us.xml*，或使用 *In-app texts* 代替 *Localizable.strings*。
+
+<Aside type="caution">
+  文件标题只在 Crowdin UI 中显示，不会重命名实际文件。
+</Aside>
+
+### 导出文件
+
+在生成的档案中定义文件名或完整路径，使用可用的占位符来指示导出内容的结构。
+
+例如，你希望在将带有乌克兰语翻译的源文件 `Overview.csv` 与应用程序集成之前，将其命名为 `Overview.ukrainian.csv`。 在这种情况下，你需要将*导出翻译后生成的文件*设置为以下内容：`Overview.%language%.csv`。
+
+默认情况下，Crowdin 在文件导出时添加 [Crowdin 语言代码](/developer/language-codes/)。 要为整个项目中的特定语言使用自定义语言代码，请设置[语言映射](/project-settings/languages/#adding-custom-language-codes)。
+
+<Image src={filesSettings} alt="文件设置" class="width-xl crowdin-modal" />
+
+### 解析器配置
+
+某些文件格式允许您配置导入和导出行为。 在这种情况下，文件的设置对话框还将包含**解析器配置**标签页。
+
+<Image src={filesParserConfiguration} alt="文件解析器配置" class="width-xl crowdin-modal" />
+
+<ReadMore>
+  详细了解[解析器配置](/project-settings/parser-configuration/)。
+</ReadMore>
+
+### 文件目标语言
+
+默认情况下，源文件可翻译为项目的所有目标语言。 在*文件目标语言*列表中，取消勾选不应翻译成的语言旁边的复选框，然后点击**保存**。
+
+<Image src={filesFileTargetLanguages} alt="文件目标语言" class="width-xl crowdin-modal" />
+
+### 文件上下文
+
+添加额外信息或说明，帮助译员更好地理解如何翻译文件。 文件上下文可以在**文件设置 > 上下文**中以纯文本或 Markdown 格式添加，也可以直接在编辑器中添加。 提供的上下文将在编辑器的[文件上下文](/online-editor/#file-context)标签页中对译员可见。 已添加文件上下文的文件旁边会显示 <Icon name="mdi:information" class="inline-icon" /> 图标，帮助你快速识别哪些文件包含对译员有用的备注。
+
+<Image src={filesFileContext} alt="文件上下文" class="width-xl crowdin-modal" />
+
+<Aside type="caution" title="限制">
+  文件上下文仅适用于[基于文件](/creating-project/#project-types)的项目。
+</Aside>
+
+<LinkCard title="Crowdin Context Harvester CLI" description="使用 Crowdin 的 AI 驱动 CLI 工具自动提取深层、代码感知的语境。 它分析字符串在代码中的使用方式，以帮助提供更准确的译文。" href="https://store.crowdin.com/crowdin-context-harvester-cli" target="_blank" />
+
+## 自动翻译文件和文件夹
+
+要快速对一个或多个文件或文件夹运行自动翻译，请右键单击所需项目或单击其旁边的 <Icon name="mdi:dots-horizontal" class="inline-icon" />，然后选择**自动翻译**。
+
+<ReadMore>
+  详细了解[通过上下文菜单自动翻译所选文件或文件夹](/auto-translation/#auto-translating-files-and-folders-via-context-menu)。
+</ReadMore>
+
+## 查看字符串
+
+要查看特定文件中的所有字符串，请右键单击该文件并选择**查看字符串**。 这将打开**字符串**标签页，并预先应用筛选条件，仅显示所选文件中的字符串。
+
+<ReadMore>
+  详细了解[字符串管理](/string-management/)。
+</ReadMore>
+
+## 重命名文件
+
+要更改文件名，请右键单击所需的文件或单击其旁边的 <Icon name="mdi:dots-horizontal" class="inline-icon" />，然后选择**重命名**。
+
+<Image src={filesRename} alt="文件重命名" />
+
+## 费用估计
+
+要估算特定文件的翻译或校对费用，请右键单击该文件并选择**费用估算**。
+
+<ReadMore>
+  详细了解[生成费用估算报告](/project-reports/#generating-cost-estimate)。
+</ReadMore>
+
+## 创建任务
+
+要为特定文件创建任务，请右键单击该文件并选择**添加任务**。 这允许你将该文件的翻译或校对工作分配给所选的贡献者或翻译供应商。
+
+<ReadMore>
+  详细了解[项目任务](/tasks/)。
+</ReadMore>
+
+## 在编辑器中打开
+
+要直接在编辑器中打开文件，请右键单击该文件并选择**在编辑器中打开**。 这允许你审查翻译和审批，回复字符串评论等。
+
+## 检查进度
+
+您可以检查所需分支、文件夹或文件的翻译和审批进度。 右键单击所需的分支、文件夹或文件，然后选择**进度**。 要查看每种语言翻译或批准了多少个单词，请在进度条上悬停鼠标。 要在编辑器中打开所选文件，请单击所需语言。
+
+要下载所选文件的译文，请选择所需的语言，然后点击**构建并下载**。 你还可以选择**保留导出文件夹层次结构**，以将翻译文件连同其在 Crowdin 中存储的文件夹一起导出。
+
+<Image src={filesManagementProgresses} alt="文件进度" class="width-xl crowdin-modal" />
+
+## 预览源文件
+
+要预览源文件的原始结构和内容，请右键单击该文件并选择**预览源文件**。 这将打开一个只读模态框，显示 Crowdin 接收到的文件内容原貌。
+
+## 下载源文件
+
+要下载存储在 Crowdin 项目中的源文件，请右键单击该文件并选择**下载源文件**。 这对于在 Crowdin 外部审查原始内容、与团队成员共享，或在重新上传之前进行离线编辑非常有用。
+
+## 更新源文件
+
+如果你已向源文件添加了新字符串，则需要在 Crowdin 中更新该文件，以便译员能够使用新内容。 为此，点击所需文件旁边的**更新**，然后从本地计算机中选择新文件。
+
+<Image src={filesUpdating} alt="文件更新" />
+
+如果更新文件中有任何源字符串被修改，Crowdin 将显示**保留已更新字符串的译文**对话框。 该对话框允许你决定对于已修改的字符串保留哪些现有译文。
+
+对话框中列出了每个已修改的字符串，显示其**键**（标识符），并允许你将**当前字符串**（原始文本）与**新字符串**（更新后的文本，新增内容以绿色高亮显示，删除内容以红色高亮显示）进行比较。
+
+<Image src={filesUpdating2} alt="文件更新选项" class="width-xl" />
+
+要保留已修改字符串的当前译文，请勾选其旁边的复选框。 对于未勾选的字符串，其现有译文将在文件更新后被删除。
+
+此外，勾选对话框底部的**保留审批**选项，以保留你选择保留的译文的审批状态。
+
+完成选择后，点击**更新文件**。
+
+<Aside type="tip">
+  点击**键**列中的字符串标识符将在编辑器中打开该字符串，让你在做出决定之前查看其完整上下文、翻译历史记录及其他详细信息。
+</Aside>
+
+更新完成后，Crowdin 可能会在**文件**标签页右上角的 <Icon name="mdi:refresh" class="inline-icon" />**刷新**按钮旁显示一个蓝色圆点，以提示有更改。 点击此按钮可刷新文件列表，显示最新信息。
+
+## 恢复上一个版本
+
+每次更新源文件时，都会创建一个新的修订版本。 要将文件恢复到之前的版本，请点击*修订*列中所需文件的编号。 在弹出的对话框中，选择要恢复到的版本，然后点击其旁边的**恢复**。
+
+<Image src={filesRestore} alt="文件恢复" class="width-xl" />
+
+## 分支及文件夹
+
+你可以在**源文件 > 文件**中使用**新建文件夹**和**新建版本分支**按钮创建文件夹和分支。
+
+文件夹代表您的内容结构，而分支有助于管理内容的不同版本。
+
+通常，如果您使用 GitHub、GitLab 或其他 VCS 集成，Crowdin 中的分支会自动创建。 不过，如果您需要手动创建分支，请确保首先上传主分支，因为所有其他分支将被视为功能分支。
+
+可以在**设置 > 导入 > 源字符串**中，通过为*重复字符串*选择相应选项来管理重复项。
+
+<Image src={filesFolderBranch} alt="分支及文件夹" />
+
+<ReadMore>
+  详细了解[版本管理](/version-management/)。
+</ReadMore>
+
+## 更改 CSV 和 XLSX 文件的方案
+
+CSV 和 XLSX 等文件格式可能需要更改最初配置的方案。 通常，当您向 Crowdin 项目添加新的目标语言时可能需要它。
+
+<ReadMore>
+  详细了解[更改 CSV 和 XLSX 文件的方案](/csv-xlsx-configuration/#changing-scheme-for-csv-and-xlsx-files)。
+</ReadMore>

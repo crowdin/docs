@@ -1,0 +1,93 @@
+---
+title: Crowdin 应用程序收益化
+description: 了解如何通过 Crowdin 应用程序获取收益
+slug: zh-CN/developer/crowdin-apps-monetization
+sidebar:
+  order: 0
+---
+
+import { Image } from 'astro:assets';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import appMonetization from '!/developer/crowdin_apps_monetization.png';
+import appMonetizationEnterprise from '!/developer/crowdin_apps_monetization_enterprise.png';
+
+所有 Crowdin 应用程序可以使用以下支付模式之一：
+
+* **通过 Crowdin 付款** &ndash; 应用程序用户可以直接通过 Crowdin 订阅该应用。 该平台提供了一种简单的付款方式。
+* **通过自有支付系统付款** &ndash; 应用程序用户可以直接通过应用或连接到该应用的其他第三方服务进行订阅。 Crowdin 应用程序的开发者应自行连接并配置首选支付系统。
+* **免费使用 Crowdin 应用程序** &ndash; 应用程序用户无需为使用该应用付费。
+
+## 通过 Crowdin 付款
+
+您可以将 Crowdin 用作支付处理器来处理您的应用程序的订阅。 要通过 Crowdin 付款，请[联系支持团队](https://crowdin.com/contacts)，我们将为您的 Crowdin 应用程序创建订阅。
+
+要实现此支付处理器，您需要使用 API 端点来返回应用订阅的最新信息。 您还应该向您的 Crowdin 应用程序添加一个中间件，以限制未订阅的用户访问该应用程序。
+
+在中间件中，您应该向 Crowdin 发出 API 请求，并根据结果执行以下操作之一：
+
+* `200 OK` &ndash; 订阅处于活跃状态。 Crowdin 应用程序必须在响应中指定的日期之前提供对功能的访问。 此日期应存储在应用程序中，以减少对此 API 端点的请求数量。
+* `402 Payment Required` &ndash; 订阅未完成付款。
+  在这种情况下，限制对应用程序功能的访问并为用户提供结帐页面的 URL。 您将在响应中获得结帐 URL。
+* `404 Bad Request` &ndash; 未找到订阅。 这意味着几个错误之一：用户从组织中删除了 Crowdin 应用程序，或者没有为该应用程序定义订阅。 在这种情况下，您应该限制对 Crowdin 应用程序的访问。
+
+### 请求
+
+要访问 Crowdin 应用程序订阅 API，该应用必须在 [App descriptor](/zh/developer/crowdin-apps-app-descriptor/) 中使用授权方式 `crowdin_app`，并在 Authorization 请求头中使用收到的 Access Token。
+
+```bash
+GET /api/v2/applications/{app-identifier}/subscription
+```
+
+**请求头**
+
+* Content-type: `application/json`
+* Authorization: `bearer \<access-token>`
+
+### 响应
+
+**状态代码：`200`**
+
+```json
+{
+  "expires": "2022-12-19 12:00:00"
+}
+```
+
+**状态代码：`402`**
+
+```json
+{
+  "subscribe_link": "https://crowdin.com/checkout?subscribe=..."
+}
+```
+
+**状态代码：`400`**
+
+```json
+{
+  "message": "App identifier not found"
+}
+```
+
+## 通过 Crowdin 购买 Crowdin 应用程序订阅
+
+如果订阅 Crowdin 应用程序，用户将被引导至包含应用程序订阅详细信息的结帐页面。 请注意，第一笔付款金额可能与应用程序订阅费用不同。 应用程序的订阅费用在计费周期内按比例分配，例如，如果用户在计费周期开始时订阅应用程序，他将全额支付应用程序的订阅价格。 如果用户在他的计费周期中间订阅了一个应用程序，他将只支付该应用程序订阅价格的一半。
+
+<Tabs syncKey="product">
+  <TabItem label="Crowdin 结账页面">
+    <Image src={appMonetization} alt="Crowdin 结账页面" />
+  </TabItem>
+  <TabItem label="Crowdin 企业版结帐页面">
+    <Image src={appMonetizationEnterprise} alt="Crowdin 企业版结帐页面" />
+  </TabItem>
+</Tabs>
+
+让我们回顾以下可能的情况：
+
+Crowdin 应用程序的总订阅价格为每月 30 美元。 假设今天是该月的 1 号，下一个计费周期从当月 10 号开始，那么用户在订阅应用时需要支付 10 美元。
+
+```md
+30美元 / 30天（计费周期）* 10天（按比例分配）= 10美元
+```
+
+在下一个计费周期，应用订阅将完整包含在用户的 Crowdin 订阅中。

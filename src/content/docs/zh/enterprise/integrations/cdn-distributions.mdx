@@ -1,0 +1,191 @@
+---
+title: CDN 分发
+description: 通过 CDN 即时向您的应用程序分发已译内容
+slug: enterprise/cdn-distributions
+sidebar:
+  order: 6
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import webFlow from '!/crowdin/integrations/cdn_distributions_web.png';
+import mobileFlow from '!/crowdin/integrations/cdn_distributions_mobile_server_desktop.png';
+import addDistribution from '!/enterprise/integrations/cdn_distributions_add_distribution.png';
+import releaseDistribution from '!/enterprise/integrations/cdn_distributions_release_distribution.png';
+import usagePrice from '!/enterprise/integrations/cdn_distributions_usage_price.png';
+import usageStats from '!/enterprise/integrations/cdn_distributions_usage_statistics.png';
+
+CDN 分发功能允许您通过单击一下即时更新移动、服务器、桌面或 Web 应用程序中的源文件和译文，而无需准备新版本。
+
+## 工作原理
+
+下图直观地展示了源内容和翻译内容在不同类型的应用程序中的分发方式。
+
+<Tabs>
+  <TabItem label="移动、服务器和桌面应用程序">
+    <Image src={mobileFlow} alt="移动应用程序的 CDN 分发流程" />
+  </TabItem>
+  <TabItem label="Web 应用程序">
+    <Image src={webFlow} alt="Web 应用程序的 CDN 分发流程" />
+  </TabItem>
+</Tabs>
+
+## 分发设置
+
+分发是一个 CDN 保险库，它镜像您项目的已译内容，并且是与应用程序集成所必需的。 分发通过使用[捆绑包](/zh/enterprise/bundles/)来打包和提供您的文件。
+
+要配置分发，请按照下列步骤操作：
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Steps>
+      1. 打开您的项目，然后在左侧边栏中选择**翻译**。
+      2. 展开 **CDN 分发**部分。
+      3. 单击**添加**。
+      4. 在**添加分发**对话框中，输入您偏好的分发名称。
+      5. 选择您要包含在此分发中的捆绑包，或点击**添加捆绑包**从头创建一个。 您可以使用**搜索捆绑包**字段按名称快速查找特定捆绑包。
+      6. 单击 **创建**。
+      7. 复制 <Icon name="material-symbols:file-copy" class="inline-icon" /> **分发哈希值**和**分发清单**。 清单是一个 JSON 文件，包含关键的分发详情（例如，文件、语言、路径），可用于您的集成。
+    </Steps>
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Steps>
+      1. 打开您的项目，然后在左侧边栏中选择**下载**。
+      2. 展开 **CDN 分发**部分。
+      3. 单击**添加**。
+      4. 在**添加分发**对话框中，输入您偏好的分发名称。
+      5. 选择您要包含在此分发中的捆绑包，或点击**添加捆绑包**从头创建一个。 您可以使用**搜索捆绑包**字段按名称快速查找特定捆绑包。
+      6. 单击 **创建**。
+      7. 复制 <Icon name="material-symbols:file-copy" class="inline-icon" /> **分发哈希值**和**分发清单**。 清单是一个 JSON 文件，包含关键的分发详情（例如，文件、语言、路径），可用于您的集成。
+    </Steps>
+  </TabItem>
+</Tabs>
+
+<Image src={addDistribution} alt="含捆绑包的 CDN 分发" />
+
+<Aside>
+  CDN 会将发布中的所有译文缓存长达 1 小时，因此即使在 Crowdin Enterprise 中发布了新的译文，CDN 也可能会延迟返回它们。
+</Aside>
+
+## 针对移动应用程序
+
+要通过 CDN 分发将已译内容发送到您的移动应用程序，请使用 Crowdin SDK。
+
+<CardGrid>
+  <LinkCard title="iOS SDK" href="https://crowdin.github.io/mobile-sdk-ios/" target="_blank" />
+  <LinkCard title="Android SDK" href="https://crowdin.github.io/mobile-sdk-android/" target="_blank" />
+  <LinkCard title="Flutter SDK" href="https://store.crowdin.com/flutter" target="_blank" />
+  <LinkCard title="React Native SDK" href="https://store.crowdin.com/react-native-sdk" target="_blank" />
+</CardGrid>
+
+## 针对 Web 应用程序
+
+要通过 CDN 分发将已译内容发送到您的 Web 应用程序，请使用 Crowdin OTA JavaScript 客户端。
+
+<ReadMore>
+  阅读更多关于 [Crowdin OTA JavaScript 客户端](https://crowdin.github.io/ota-client-js/)的内容。
+</ReadMore>
+
+要手动管理已译内容向 Web 应用程序的分发，您可以选择：
+
+* 使用**分发清单 URL**，该 URL 会显示一个包含分发详情（文件、语言等）的 JSON 文件，或者
+* 使用**分发哈希值**构建每个文件的 URL，如下所示。
+
+翻译文件的 URL 如下：
+
+```shell
+https://distributions.crowdin.net/{distribution_hash}/content/{path_to_file}
+```
+
+`{path_to_file}` 将与常规译文构建中使用的路径一致。 如果您的文件没有包含语言代码占位符的导出模式（例如 `%locale%`、`%two_letters_code%` 等），Crowdin Enterprise 将自动在路径开头添加 Crowdin 语言代码。
+
+要查看您的分发的所有可用文件和语言，请复制分发清单 URL（在 Crowdin Enterprise UI 中提供）并在浏览器中打开它。
+
+您将看到如下 JSON 结构：
+
+```json
+{
+  "files": ["/crowdin_sample_android.xml"],
+  "languages": ["fr","de","uk"],
+  "language_mapping": [],
+  "custom_languages": [],
+  "timestamp": 1234567890,
+  "content": {
+    "fr": ["/content/fr/crowdin_sample_android.xml"],
+    "de": ["/content/de/crowdin_sample_android.xml"],
+    "uk": ["/content/uk/crowdin_sample_android.xml"]
+  },
+  "mapping": ["/mapping/en/crowdin_sample_android.xml"]
+}
+```
+
+此 JSON 包含与分发配合使用的确切路径。
+
+## 定价
+
+| **定价组件** | **免费配额** | **价格**        |
+| -------- | -------- | ------------- |
+| 请求次数     | 100 万/月  | 3.00 美元/100 万 |
+| 数据传输     | 10 GB/月  | 2.00 美元/10 GB |
+
+请求被视为对 CDN 的任何单一查询（譬如对分发清单的请求、对分发文件的请求等）。
+
+数据传输是通过网络传输的数据量（包括标头）。 系统通过 CDN 提供您的语言包，其中包含所有现有译文。
+
+如果分发包含分成多个文件的内容，则下载每个文件的请求都将被视为单独的请求。 此外，文件量也算作数据传输。
+
+例如，如果分发包含 20 个文件，每个文件为 5 MB，则下载将被计为 20 个请求和 100 MB 的数据传输。
+
+为了减少对 CDN 的请求，您可以将所有必要的内容放入一个文件中（使用文件包），当下载时，系统将计为一个请求，而不是 20 个单独的请求。 此外，可以在应用程序端进行缓存配置。
+
+在我们的统计中，我们使用 AWS 提供的数据。 如果一个月内发出 1,000,001（100 万 + 1）个请求，则请求价格为 6 美元。 如果一个月传输 10 GB + 1 字节，则数据传输价格为 4 美元。 请求和数据传输的总费用为每月 10 美元。
+
+## 管理您的 CDN 使用情况
+
+您可以在**组织设置 > 账单 > CDN 分发**中管理 CDN 使用价格并设置每日使用限制通知。
+
+### CDN 使用价格
+
+在 **CDN 分发**使用情况部分，您可以查看当前计费周期（一个月）内的总消费金额。 其中包括请求和数据传输及其各自价格的详细明细。 CDN 使用费用将在下一个计费周期计入您的 Crowdin 订阅账单。 Crowdin 积分不涵盖 CDN 使用费用。
+
+<Image src={usagePrice} alt="CDN 使用价格" />
+
+### 设置每日余额警告阈值
+
+您可以设置每日 CDN 使用限制，当超过此阈值时，您将收到通知。 默认情况下，限额设置为每天 $30。 此功能可帮助您了解使用情况，避免意外超额。 您可以随时更新限额。 此外，如果超出免费配额（1M 次请求和 10GB 数据传输），将发送一次性通知。
+
+要设置使用情况通知，请执行以下步骤：
+
+<Steps>
+  1. 打开您的**组织设置**，然后转到**账单**选项卡。
+  2. 点击 **CDN 分发**。
+  3. 在 **每日余额警告阈值，$** 字段中输入您期望的阈值金额。
+  4. 点击 **保存** 以确认您的设置。
+</Steps>
+
+### 使用统计
+
+**使用统计**部分通过交互式图表提供 CDN 使用情况的可视化分析，显示当月的详细统计数据。 您可以查看所有分发的数据，或专注于特定分发。
+
+该图表同时显示三条折线：请求数量、传输费用和数据传输量。 将鼠标悬停在数据点上可查看每个类别的每日总计。
+
+您也可以将鼠标悬停在图表下方的类别标题上，以聚焦于特定类别。 要从图表中隐藏某个类别，请点击其标题。
+
+<Image src={usageStats} alt="使用统计" />
+
+### 项目统计
+
+**项目统计**部分位于图表下方，提供按项目分组的 CDN 使用情况详细明细。 此表格可帮助您追踪在所选时间段内哪些项目消耗了最多资源。
+
+表格中的每一行代表一个项目，包含以下信息：
+
+* **项目**：项目名称。
+* **请求**：项目发出的请求总数。
+* **数据传输量（GB）**：项目的总数据传输量。
+* **价格**：项目使用的大致费用。
+
+<Aside>
+  使用情况图表和项目统计表中显示的费用为估算值。 实际账单金额可能略有差异。
+</Aside>

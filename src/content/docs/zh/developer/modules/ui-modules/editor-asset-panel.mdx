@@ -1,0 +1,119 @@
+---
+title: 编辑器资源面板模块
+description: 使用自定义应用替换编辑器中特定文件类型的默认资源预览
+slug: developer/crowdin-apps-module-editor-asset-panel
+sidebar:
+  order: 7
+  label: 编辑器资源面板
+  badge: 新
+---
+
+import { Image } from 'astro:assets';
+import editorAP from '!/developer/module_editor_asset_panel.png';
+
+编辑器资源面板模块允许您的应用替换编辑器中的默认资源预览面板。 当用户打开资源时，如果资源的文件名与您定义的模式匹配，您的应用可以接管整个预览区域。
+
+此功能对于处理编辑器中无法原生预览的文件类型（如视频、音频或其他专有格式）特别有用。 如果资源的文件名与应用清单中指定的 `fileNamePattern` 匹配，您的应用将代替默认预览加载。 如果没有匹配项，则会显示标准的 Crowdin 预览面板。
+
+<Image src={editorAP} alt="编辑器资源面板模块" />
+
+## 访问权限
+
+您可以将此模块的访问权限授予以下用户类别之一：
+
+对于 Crowdin：
+
+* 仅限我自己（即项目所有者）
+* 本人、项目管理员和开发者
+* 所有项目成员
+* 选定用户
+
+对于 Crowdin Enterprise：
+
+* 仅限组织管理员
+* 组织管理员、项目管理员和开发者
+* 组织项目中的所有用户
+* 选定用户
+
+## 结构
+
+```json title="manifest.json"
+{
+  "modules": {
+    "editor-asset-panel": [
+      {
+        "key": "your-module-key",
+        "name": "Module name",
+        "url": "/editor-page",
+        "fileNamePattern": "^.+\.xyz$",
+        "environments": [
+          "crowdin", "crowdin-enterprise"
+        ]
+      }
+    ]
+  }
+}
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 模块的可读名称。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 模块内容页面的相对 URL，该页面将嵌入编辑器的资源面板中。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">fileNamePattern</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 用于匹配您的应用可处理的资源文件名的正则表达式。 如果资源名称与此模式匹配，您的应用将在预览面板中加载。 例如，要匹配所有 MOV 文件，请使用 <code>"^.+\.mov$"</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> <code>crowdin</code>、<code>crowdin-enterprise</code></p>
+        <p><strong>描述：</strong> 可安装该模块的环境集合。<br />
+        此参数在跨产品的应用程序中必需。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 工作原理
+
+编辑器资源面板模块基于事件驱动机制运行。 当用户在编辑器中导航到某个资源时，系统会检查是否有使用此模块的已安装应用。
+
+1. **模式匹配**：Crowdin 从您应用的 `manifest.json` 中获取 `fileNamePattern`，并将其与当前打开的资源名称（例如 `clip.mov`）进行匹配测试。
+2. **应用初始化**：如果资源的文件名与模式匹配，Crowdin 将使用指向您应用 `url` 的 iframe 替换默认预览面板。
+3. **事件处理**：应用加载后，Crowdin 会向其派发事件，您的应用必须订阅并处理这些事件。 这些事件包含必要的数据（有效负载），供您的应用显示正确的资源内容。
+
+主要事件包括：
+
+* `asset.source.preview`：当用户点击源资源预览时派发。
+* `asset.suggestion.preview`：当用户点击已翻译资源预览时派发。
+
+您的应用应监听这些事件以实现自定义预览逻辑，例如渲染视频播放器或音频控制台。 如果资源的文件名与 `fileNamePattern` 不匹配，则会正常加载默认的 Crowdin 资源预览器。

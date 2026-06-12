@@ -1,0 +1,610 @@
+---
+title: Auth Guard 模块
+description: 在用户登录流程中实施额外的身份验证和授权检查
+slug: zh-CN/developer/crowdin-apps-module-auth-guard
+sidebar:
+  label: Auth Guard
+  badge: 新
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Auth Guard 模块允许您在用户登录流程中实施额外的身份验证和授权检查。 该模块在标准身份验证（密码、MFA、设备验证）之后、授予访问权限之前执行，非常适合强制执行合规策略（例如法律协议、安全检查）、添加自定义多因素授权或验证 mTLS 证书。
+
+<Aside title="限制">
+  * 此模块仅适用于 Crowdin Enterprise。
+  * Auth Guard 模块从不应用于组织所有者。
+</Aside>
+
+## 结构
+
+```json title="manifest.json"
+{
+  "modules": {
+    "auth-guard": [
+      {
+        "key": "your-module-key",
+        "name": "IP Whitelist Check",
+        "description": "Verifies user IP address",
+        "url": "/api/auth/verify",
+        "options": {
+          "type": "direct",
+          "applyToAdmins": false
+        }
+      }
+    ]
+  }
+}
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 验证期间向用户显示的可读名称。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 否</p>
+        <p><strong>描述：</strong> 向用户显示的附加描述。 仅适用于 <code>frame</code> 验证类型。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 用于验证的端点 URL。 相对于 <code>baseUrl</code>。</p>
+        <p><Aside type="caution">请求超时时间为 10 秒。</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>必填：</strong> 否</p>
+        <p><strong>描述：</strong> 模块配置选项。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.type</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> <code>direct</code>、<code>redirect</code>、<code>frame</code></p>
+        <p><strong>默认值：</strong> <code>direct</code></p>
+        <p><strong>描述：</strong> 验证交互类型。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">options.applyToAdmins</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>boolean</code></p>
+        <p><strong>默认值：</strong> <code>false</code></p>
+        <p><strong>描述：</strong> 是否对组织管理员应用此检查。</p>
+        <p><Aside>组织所有者始终被排除在 Auth Guard 检查之外，以防止锁定。</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是（如果类型为 <code>redirect</code> 或 <code>frame</code>）</p>
+        <p><strong>描述：</strong> 用于交互的面向用户的 URL。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Auth Guard 应用与 Crowdin 之间的通信
+
+Auth Guard 模块在身份验证过程中充当安全检查点。 它在标准验证步骤（密码、MFA、设备信任）之后、向用户授予组织访问权限之前调用。
+
+根据配置，该模块可以通过以下三种方式之一与用户交互：
+
+* [**直接类型**](#直接类型-仅后端)：通过后端 API 调用自动批准或拒绝访问。
+* [**重定向类型**](#重定向类型-外部页面)：将用户重定向到外部页面进行验证。
+* [**Frame 类型**](#frame-类型-嵌入式-ui)：显示嵌入式 iframe 以进行应用内验证。
+
+下图说明了 Auth Guard 模块在用户登录流程中的位置：
+
+```text
+用户登录
+    ↓
+密码验证
+    ↓
+MFA 验证（如已启用）
+    ↓
+设备信任验证（如已启用）
+    ↓
+┌─────────────────────────┐
+│  Auth Guard 模块        │ ← 您的应用
+└─────────────────────────┘
+    ↓
+记住我确认（如已启用）
+    ↓
+授予访问权限
+```
+
+每个组织可以配置多个 Auth Guard 模块。 它们按顺序执行，所有模块都必须通过，用户才能获得访问权限。
+
+### 直接类型（仅后端）
+
+直接类型是最简单的交互方式，非常适合不需要用户输入的自动化检查（例如证书验证）。 Crowdin 向您的应用发起同步服务器到服务器 API 调用，应用必须立即响应（\< 10 秒）。
+
+#### 通信流程
+
+```text
+┌─────────────┐                                    ┌──────────────┐
+│   Crowdin   │                                    │   您的应用   │
+└──────┬──────┘                                    └──────┬───────┘
+       │                                                  │
+       │  POST /api/auth/verify                           │
+       │  Authorization: Bearer <JWT>                     │
+       │  {                                               │
+       │    "userId": 12345,                              │
+       │    "organizationId": 67890,                      │
+       │    "ipAddress": "192.168.1.1",                   │
+       │    "moduleKey": "your-module-key"                │
+       │  }                                               │
+       ├─────────────────────────────────────────────────>│
+       │                                                  │
+       │                    处理验证                      │
+       │                    （IP 检查等）                 │
+       │                                                  │
+       │  { "success": true }                             │
+       │  或                                              │
+       │  {                                               │
+       │    "success": false,                             │
+       │    "message": "Access denied: IP not allowed"    │
+       │  }                                               │
+       │<─────────────────────────────────────────────────┤
+       │                                                  │
+```
+
+#### 向应用发出请求
+
+**HTTP 请求：**
+
+```shell
+POST {AppBaseUrl}/api/auth/verify
+```
+
+**请求头**
+
+向您的应用发出的请求将包含以下请求头：
+
+* `Authorization: Bearer \<JWT_TOKEN>`
+* `Content-Type: application/json`
+
+**请求载荷示例：**
+
+```json
+{
+  "userId": 12345,
+  "organizationId": 67890,
+  "ipAddress": "192.168.1.1",
+  "moduleKey": "your-module-key"
+}
+```
+
+#### 应用的预期响应
+
+应用必须返回一个 JSON 对象，指示成功或失败。
+
+<Aside>
+  即使验证失败（例如，"访问被拒绝"），您也必须返回 **HTTP 200 OK** 状态码。 使用 JSON 正文中的 `success: false` 字段来表示失败。
+</Aside>
+
+**响应载荷示例（成功）：**
+
+```json
+{
+  "success": true
+}
+```
+
+**响应载荷示例（失败）：**
+
+```json
+{
+  "success": false,
+  "message": "Access denied: Your IP address is not in the allowlist"
+}
+```
+
+### 重定向类型（外部页面）
+
+重定向类型将用户路由到外部页面进行验证，然后将其重定向回 Crowdin。 当需要用户交互时（例如接受条款、解决 CAPTCHA 或与外部 OAuth/SAML 提供商集成），此类型非常适用。
+
+#### 通信流程
+
+```text
+┌─────────┐                        ┌──────────────┐                     ┌──────────┐
+│  用户   │                        │   Crowdin    │                     │ 您的应用 │
+└────┬────┘                        └──────┬───────┘                     └────┬─────┘
+     │                                    │                                  │
+     │  1. 登录尝试                        │                                  │
+     ├───────────────────────────────────>│                                  │
+     │                                    │                                  │
+     │                                    │  Try POST /api/auth/verify       │
+     │                                    │  (with empty body initially)     │
+     │                                    ├─────────────────────────────────>│
+     │                                    │                                  │
+     │                                    │  { "success": false }            │
+     │                                    │  (needs user interaction)        │
+     │                                    │<─────────────────────────────────┤
+     │                                    │                                  │
+     │  2. HTTP 302 重定向                 │                                  │
+     │  Location: https://your-app/page   │                                  │
+     │     ?jwtToken=<JWT>&state=<STATE>  │                                  │
+     │<───────────────────────────────────┤                                  │
+     │                                    │                                  │
+     │  3. GET /page?jwtToken=...&state=...                                  │
+     ├──────────────────────────────────────────────────────────────────────>│
+     │                                    │                                  │
+     │                                    │          验证 JWT 令牌           │
+     │                                    │          显示验证界面            │
+     │                                    │                                  │
+     │  4. 显示验证页面                                                       │
+     │<──────────────────────────────────────────────────────────────────────┤
+     │                                    │                                  │
+     │  5. 用户完成验证                                                       │
+     │     （点击批准/拒绝）               │                                  │
+     ├──────────────────────────────────────────────────────────────────────>│
+     │                                    │                                  │
+     │                                    │          生成验证码              │
+     │                                    │                                  │
+     │  6. HTTP 302 重定向返回                                                │
+     │  Location: https://accounts.../callback                               │
+     │     ?state=<STATE>&code=<CODE>     │                                  │
+     │     or ...?state=<STATE>&error=... │                                  │
+     │<──────────────────────────────────────────────────────────────────────┤
+     │                                    │                                  │
+     │  7. GET /callback?state=...&code=...                                  │
+     ├───────────────────────────────────>│                                  │
+     │                                    │                                  │
+     │                                    │  POST /api/auth/verify           │
+     │                                    │  {                               │
+     │                                    │    "code": "<CODE>",             │
+     │                                    │    "userId": ...,                │
+     │                                    │    "organizationId": ...,        │
+     │                                    │    "ipAddress": ...,             │
+     │                                    │    "moduleKey": "..."            │
+     │                                    │  }                               │
+     │                                    ├─────────────────────────────────>│
+     │                                    │                                  │
+     │                                    │  { "success": true }             │
+     │                                    │<─────────────────────────────────┤
+     │                                    │                                  │
+     │  8. 授予访问权限                    │                                  │
+     │<───────────────────────────────────┤                                  │
+     │                                    │                                  │
+```
+
+#### 向应用发出的初始请求
+
+Crowdin 首先尝试直接检查，以确认是否可以自动授予访问权限。
+
+**HTTP 请求：**
+
+```shell
+POST {AppBaseUrl}/api/auth/verify
+```
+
+**请求头**
+
+向您的应用发出的请求将包含以下请求头：
+
+* `Authorization: Bearer \<JWT_TOKEN>`
+* `Content-Type: application/json`
+
+**请求载荷示例：**
+
+```json
+{
+  "userId": 12345,
+  "organizationId": 67890,
+  "ipAddress": "192.168.1.1",
+  "moduleKey": "your-module-key"
+}
+```
+
+**预期响应（触发重定向）：**
+
+要触发重定向流程，您的应用必须返回 `success: false`。
+
+```json
+{
+  "success": false
+}
+```
+
+#### 重定向与回调
+
+如果初始检查返回 `false`，Crowdin 会将用户重定向到清单选项中 `url` 定义的地址。
+
+**重定向 URL 结构：**
+
+```shell
+https://{your-app-url}?jwtToken=<JWT>&state=<STATE>
+```
+
+您的应用必须验证 `jwtToken`，显示验证 UI，并在成功后使用 HTTP 302 重定向将用户重定向回 Crowdin。
+
+**成功时：**
+
+```http
+HTTP 302 Redirect
+Location: https://accounts.crowdin.com/{domain}/guard/callback?state=<STATE>&code=<CODE>
+```
+
+**失败时：**
+
+```http
+HTTP 302 Redirect
+Location: https://accounts.crowdin.com/{domain}/guard/callback?state=<STATE>&error=User+denied+access
+```
+
+<Aside>
+  * `{domain}` 占位符表示 Crowdin Enterprise 组织的唯一域名。 您可以从 JWT 令牌中的 `domain` 声明获取此值。
+  * `state` 参数用于防止 CSRF 攻击。 它必须在回调 URL 中原样返回。
+</Aside>
+
+#### 代码验证请求
+
+一旦 Crowdin 从回调中收到 `code`，它将向您的应用发送最终请求以进行验证。
+
+**HTTP 请求：**
+
+```shell
+POST {AppBaseUrl}/api/auth/verify
+```
+
+**请求头**
+
+* `Authorization: Bearer \<JWT_TOKEN>`
+* `Content-Type: application/json`
+
+**请求载荷示例：**
+
+```json
+{
+  "code": "abc123xyz",
+  "userId": 12345,
+  "organizationId": 67890,
+  "ipAddress": "192.168.1.1",
+  "moduleKey": "your-module-key"
+}
+```
+
+**预期响应：**
+
+```json
+{
+  "success": true
+}
+```
+
+### Frame 类型（嵌入式 UI）
+
+Frame 类型在 Crowdin 登录界面内的 iframe 中显示您的验证页面。 这为自定义表单或 mTLS 检查提供了无缝的用户体验，同时将用户保留在 Crowdin 环境中。
+
+#### 通信流程
+
+```text
+┌─────────┐                    ┌──────────────┐                     ┌──────────┐
+│  用户   │                    │   Crowdin    │                     │ 您的应用 │
+└────┬────┘                    └──────┬───────┘                     └────┬─────┘
+     │                                │                                  │
+     │  1. 登录尝试                    │                                  │
+     ├───────────────────────────────>│                                  │
+     │                                │                                  │
+     │                                │  Try POST /api/auth/verify       │
+     │                                ├─────────────────────────────────>│
+     │                                │                                  │
+     │                                │  { "success": false }            │
+     │                                │<─────────────────────────────────┤
+     │                                │                                  │
+     │  2. 显示验证页面                │                                  │
+     │     含嵌入 iframe               │                                  │
+     │<───────────────────────────────┤                                  │
+     │                                │                                  │
+     │  3. Iframe 加载您的 URL         │                                  │
+     │     GET /frame?jwtToken=...    │                                  │
+     ├──────────────────────────────────────────────────────────────────>│
+     │                                │                                  │
+     │  4. 您的验证界面                │                                  │
+     │<──────────────────────────────────────────────────────────────────┤
+     │                                │                                  │
+     │  5. 用户与 iframe 交互          │                                  │
+     │     （点击批准/拒绝）           │                                  │
+     │────────────────────────────────────────────────────────────────┐  │
+     │                                │                               │  │
+     │  6. 通过以下方式调用 JS API     │                               │  │
+     │     Crowdin Apps SDK           │                               │  │
+     │     AP.verifyAuth({ code: "..."})                              │  │
+     ├────────────────────────────────────────────────────────────────┼─>│
+     │                                │                               │  │
+     │  7. Crowdin 通过 postMessage    │<──────────────────────────────┘  │
+     │     从 iframe 接收验证码        │                                  │
+     │                                │                                  │
+     │                                │  POST /api/auth/verify           │
+     │                                │  {                               │
+     │                                │    "code": "...",                │
+     │                                │    "userId": ...,                │
+     │                                │    "moduleKey": "..."            │
+     │                                │  }                               │
+     │                                ├─────────────────────────────────>│
+     │                                │                                  │
+     │                                │  { "success": true }             │
+     │                                │<─────────────────────────────────┤
+     │                                │                                  │
+     │  8. 授予访问权限                │                                  │
+     │<───────────────────────────────┤                                  │
+     │                                │                                  │
+```
+
+#### 向应用发出的初始请求
+
+Crowdin 首先尝试直接检查，以确认是否可以自动授予访问权限。
+
+**HTTP 请求：**
+
+```shell
+POST {AppBaseUrl}/api/auth/verify
+```
+
+**请求载荷示例：**
+
+```json
+{
+  "userId": 12345,
+  "organizationId": 67890,
+  "ipAddress": "192.168.1.1",
+  "moduleKey": "your-module-key"
+}
+```
+
+**预期响应（触发 Iframe）：**
+
+要触发 iframe 流程，您的应用必须返回 `success: false`。
+
+```json
+{
+  "success": false
+}
+```
+
+#### Iframe 显示与 UI
+
+如果初始检查返回 `false`，Crowdin 将使用以下参数在 iframe 中加载您应用的 `url`：
+
+```shell
+https://{your-app-url}?jwtToken=<JWT>
+```
+
+**验证 UI 实现：**
+
+创建一个 HTML 页面，初始化 Crowdin Apps SDK 并处理用户交互。
+
+```html {"Connect Crowdin Apps JS (SDK)":5-6}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Verification</title>
+
+    <script src="https://cdn.crowdin.com/apps/dist/host.js"></script>
+  </head>
+  <body>
+    <h1>Security Verification</h1>
+    <p>Please confirm your identity</p>
+
+    <button id="approve">Approve</button>
+    <button id="deny">Deny</button>
+
+    <script>
+      // Get parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const jwtToken = urlParams.get('jwtToken');
+      const state = urlParams.get('state');
+
+      document.getElementById('approve').addEventListener('click', async () => {
+        // Generate verification code from your backend
+        const code = await generateVerificationCode();
+
+        // Send success to Crowdin via SDK
+        AP.verifyAuth({
+          code: code
+        });
+      });
+
+      document.getElementById('deny').addEventListener('click', () => {
+        // Send rejection to Crowdin
+        AP.verifyAuth({
+          error: 'User denied access'
+        });
+      });
+
+      async function generateVerificationCode() {
+        // Call your backend to generate a code
+        const response = await fetch('/api/generate-code', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${jwtToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ state })
+        });
+        const data = await response.json();
+        return data.code;
+      }
+    </script>
+  </body>
+</html>
+```
+
+#### 通过 SDK 进行通信
+
+使用 `AP.verifyAuth()` 方法将结果传回 Crowdin。
+
+**成功：**
+
+```javascript
+AP.verifyAuth({
+  code: "your-verification-code"
+})；
+```
+
+**失败：**
+
+```javascript
+AP.verifyAuth({
+  error: "Verification failed: device not trusted"
+})；
+```
+
+#### 代码验证请求
+
+一旦 Crowdin 从 SDK 收到 `code`，它将向您的应用发送最终请求以进行验证。
+
+**HTTP 请求：**
+
+```shell
+POST {AppBaseUrl}/api/auth/verify
+```
+
+**请求载荷示例：**
+
+```json
+{
+  "code": "abc123xyz",
+  "userId": 12345,
+  "organizationId": 67890,
+  "ipAddress": "192.168.1.1",
+  "moduleKey": "your-module-key"
+}
+```
+
+**预期响应：**
+
+```json
+{
+  "success": true
+}
+```

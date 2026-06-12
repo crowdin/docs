@@ -1,0 +1,135 @@
+---
+title: 字段
+description: 设置自定义属性以增强数据管理
+slug: enterprise/fields
+sidebar:
+  order: 4
+---
+
+import { Steps, Icon, Aside, CardGrid } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import fieldsDetails from '!/enterprise/organization-management/fields_details.png';
+import fieldsProjectLabels from '!/enterprise/organization-management/fields_project_labels.png';
+
+字段是自定义属性，允许您通过向各种实体（如项目、用户账户、任务等）添加额外的有用信息、链接或数据来增强 Crowdin 企业版中的工作组织和数据管理。
+
+字段提供灵活性和定制性以适应各种用例，无论是标记关键项目、分类任务还是向用户账户添加语境信息。 这使得 Crowdin 企业版组织内正在开展的工作更加清晰。 可以通过 UI 或 API 创建和管理字段。
+
+字段也经常由 Crowdin 应用程序创建。 通常，最好保留 Crowdin 应用程序创建的自定义属性。
+
+## 用例
+
+您可以在多种场景中使用字段。 以下是几个例子：
+
+* **项目优先级** – 使用自定义复选框字段标记关键项目，以便于识别和确定优先级。
+* **任务分类** – 使用自定义标记或选择列表根据特定标准或属性对任务进行分类。
+* **用户自定义** – 向用户账户添加字段以存储附加信息或偏好设置。
+* **Crowdin 应用程序集成** – 字段可用作应用程序特定信息的存储，促进与第三方应用程序的集成。
+
+## 术语
+
+* **字段** – 一个可自定义的数据输入点，允许用户输入特定的信息。
+* **实体** – 可以添加字段的对象（例如：项目、任务、用户、文件或字符串）。
+* **位置** – UI 中将显示字段的区域。
+
+## 权限
+
+只有组织所有者和管理员可以通过 UI 或 API 创建和编辑字段。 一旦创建，字段就可以由组织中具有适当角色的用户使用。 例如，可以创建项目的用户将能够在创建项目对话框中或该字段实体可用的任何其他位置查看和应用字段。
+
+## 创建新字段
+
+要创建新字段，请按以下步骤操作：
+
+<Steps>
+  1. 转到 **组织设置 > 字段**。
+  2. 单击 **新建字段**。
+  3. 设置字段参数：
+     * *名称* – 指定将在 UI 中显示的字段名称。
+     * *Slug* – 指定用于 API 调用的唯一字段标识符。
+     * *描述* – 指定将作为辅助文本显示在字段下的附加信息。
+     * *类型* – 选择[字段类型](#字段类型)。
+     * *实体* – 选择一个或多个要应用该字段的[对象](#实体和位置)。
+     * *位置* – 选择将显示该字段的特定[页面或模态框](#实体和位置)。
+  4. 点击**保存**。 <Image src={fieldsDetails} alt="字段详情" class="width-xl" />
+     <Aside>
+             在 *可编辑* 列中标有 <Icon name="approve-check" class="inline-icon" /> 图标的位置允许用户在该处编辑字段值。
+     </Aside>
+</Steps>
+
+## 通过 API 管理字段
+
+可以使用 [Fields 类别](/developer/enterprise/api/v2/#tag/Fields)中的 API 方法创建字段。
+
+创建字段后，您可以通过 Patch 和 Get API 方法将其与预配置的实体配合使用：
+
+* [列出项目](/developer/enterprise/api/v2/#operation/api.projects.getMany)
+* [编辑项目](/developer/enterprise/api/v2/#operation/api.projects.patch)
+* [列出任务](/developer/enterprise/api/v2/#operation/api.projects.tasks.getMany)
+* [编辑任务](/developer/enterprise/api/v2/#operation/api.projects.tasks.patch)
+* [列出用户](/developer/enterprise/api/v2/#operation/api.users.getMany)
+* [编辑用户](/developer/enterprise/api/v2/#operation/api.users.patch)
+* [列出文件](/developer/enterprise/api/v2/#operation/api.projects.files.getMany)
+* [编辑文件](/developer/enterprise/api/v2/#operation/api.projects.files.patch)
+* [列出字符串](/developer/enterprise/api/v2/#operation/api.projects.strings.getMany)
+* [编辑字符串](/developer/enterprise/api/v2/#operation/api.projects.strings.patch)
+
+## 编辑字段值
+
+您可以通过两种方式编辑字段值：通过 UI 或 API。
+
+### 通过 UI 编辑字段值
+
+创建后，字段可以添加到 UI 中的可编辑位置，允许用户根据需要输入或修改数据。
+
+### 通过 API 编辑字段值
+
+将字段分配给实体后，可以通过 API 编辑其值。 为此，请在支持字段的 API 调用中添加新参数 `field`。 参数 `field` 应包含一个对象，其键为字段的 slug，值为特定实体的字段值（例如，`{"fieldSlug": 2}`）。
+
+## 字段类型
+
+Crowdin Enterprise 支持多种字段类型，每种类型满足不同的数据输入需求：
+
+* **单选按钮** – 提供具有单选功能的选项列表。 在创建过程中，需要配置选项列表。 每个选项都有一个值和一个标签。 值必须唯一。 在查看模式下，显示选中的选项。
+* **复选框字段** – 接受 true/false 值，通常用于二进制选项。 在查看模式下，显示一个图标。
+* **日期选择器** – 允许用户从日历控件中选择日期。 在查看模式下，将日期显示为字符串。
+* **日期和时间选择器** – 与日期选择器类似，但还包括时间选择。 在查看模式下，将日期和时间显示为字符串。
+* **数字字段** – 接受指定范围内的数字输入。 您可以选择添加显示在数字输入旁边的单位。
+* **标记** – 提供多选选项。 每个选项都有唯一的值和标签。 允许用户创建新选项。 在查看模式下，将选中的选项显示为标签片段。
+* **选择列表（单选）** – 从预定义列表中提供单选选项。
+* **选择列表（多选）** – 与标记类似，但不允许用户创建新选项。
+* **文本字段（仅纯文本）** – 提供单行文本输入字段。
+* **文本区域字段（支持 Markdown）** – 提供多行文本输入字段，支持 Markdown 格式。
+* **URL 字段** – 专为输入 URL 设计的文本字段。
+
+每种字段类型均可根据您在 Crowdin Enterprise 中特定使用场景的需求进行自定义。
+
+## 实体和位置
+
+以下是支持的实体及其各自可添加字段的位置列表。
+
+* **项目**：
+  * 创建项目模态框（可编辑）
+  * 项目主页标题
+  * 项目详情选项卡
+  * 项目公开页面详情选项卡
+  * 项目设置（可编辑）
+* **任务**：
+  * 任务创建/编辑页面（可编辑）
+  * 任务详情页面
+  * 任务看板卡片
+* **用户**：
+  * 用户弹出框
+  * 用户详情侧边栏（项目成员页面）
+  * 用户编辑模态框（用户管理页面）（可编辑）
+* **文件**：
+  * 文件详情侧边栏
+  * 文件设置模态框
+* **字符串**：
+  * 字符串详情（编辑器）
+  * 字符串编辑模态框（项目字符串选项卡和编辑器）（可编辑）
+
+## UI 中的字段
+
+将字段分配到 Crowdin Enterprise UI 中所需的位置（例如，项目）后，用户将能够查看这些字段，并在可能的情况下与其进行交互。
+
+<Image src={fieldsProjectLabels} alt="UI 中的字段" />
