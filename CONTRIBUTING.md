@@ -1,5 +1,9 @@
 # Contributing
 
+## Headings and titles
+
+Use title case for page titles (frontmatter `title:`) and all section headings (`##`, `###`, …), following the Chicago Manual of Style (headline style). Example: Creating a Project.
+
 ## Components
 
 Astro Starlight provides a set of components that you can use to build your documentation site. You can find the list of components in the [Starlight documentation](https://starlight.astro.build/guides/components/).
