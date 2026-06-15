@@ -31,6 +31,7 @@ export default [
     items: [
       { slug: 'creating-project' },
       { slug: 'screenshots' },
+      { slug: 'advisors' },
       { slug: 'project-activity' },
       { slug: 'discussions' },
       { slug: 'webhooks' },

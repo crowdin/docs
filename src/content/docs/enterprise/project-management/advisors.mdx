@@ -1,0 +1,121 @@
+---
+title: Advisors
+description: Run automated background checks on your localization setup to surface context, terminology, style guide, and app recommendations
+slug: enterprise/advisors
+sidebar:
+  badge: New
+---
+
+import { Aside, CardGrid, LinkCard, Badge } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import advisorsOverview from '!/enterprise/project-management/advisors_overview.png';
+
+Advisors monitor your project setup in the background and flag when something is missing, drifting, or under-configured, acting like a linter for your localization setup. Each finding appears as a recommendation card on the **Advisors** tab, with a clear next step to resolve it.
+
+This helps you catch setup issues before they affect translation quality, and keep many projects in good shape without reviewing each one by hand.
+
+<Aside title="Permissions">
+  The **Advisors** tab is available to project members with manager permissions (or higher).
+</Aside>
+
+## Use Cases
+
+Advisors help you keep your projects configured for high-quality translation. For example:
+
+* **Guided project setup** &ndash; when you start a new project, the Advisors point out exactly what's missing, such as screenshots, a glossary, or a style guide, so you don't have to read through the documentation and guess which resources your project actually needs.
+* **Verification at scale** &ndash; when you run many projects, open any one of them and immediately see whether its setup matches your organization's standards, instead of manually checking screenshots, glossaries, and context across hundreds of projects.
+* **Better AI and machine translation** &ndash; context, terminology, and style guides directly shape automated output, so the Advisors help you put them in place before you rely on AI and machine translation, leading to more predictable results.
+* **Catching configuration drift** &ndash; as a project evolves, with new languages added or its content shifting from documentation to marketing, the Advisors flag the parts of your setup that have fallen behind so quality doesn't quietly degrade.
+
+## Reviewing Insights
+
+The **Advisors** tab opens the **Context Advisor**, the current Advisors category. The first time you open it, click **Run analysis** to run the initial checks.
+
+The tab shows the checks that need your attention. Checks that your project already passes, or that don't apply to it, are hidden so the list stays focused on actionable items. Flagged items are ordered by severity, so the most impactful gaps appear first.
+
+<Image src={advisorsOverview} alt="Advisors tab" />
+
+Advisors run in the background, and the list updates automatically as checks complete. While a check is running, it shows a checking indicator. If something changes in your project after a check has run, the result is marked as outdated and refreshes on the next check.
+
+Select an insight to open its details, which can include the following sections:
+
+* **Why this matters** &ndash; explains the impact of the gap and why it's worth addressing.
+* **Findings** &ndash; the metrics behind the check, such as coverage percentages and counts.
+* **Recommendations** &ndash; suggested next steps, often with one-click actions such as installing a suggested app or opening the relevant settings.
+
+To set an insight aside without resolving it, click **Dismiss**. It moves to the collapsible **Dismissed** group but stays monitored in the background. Click **Restore** to bring it back to the main list.
+
+## Built-in Checks
+
+The built-in Advisors cover the configuration dimensions that most directly affect translation quality: context coverage, terminology, style guides, and app recommendations for specific content types. Checks are grouped by severity, so you can prioritize the gaps that affect translation quality the most.
+
+### High
+
+**Low string context coverage** &ndash; analyzes whether your source strings carry enough context, such as screenshots, developer comments, or descriptions, to produce predictable translations. It uses AI to evaluate strings with ambiguous context, and on large projects it checks a representative sample instead of scanning everything.
+
+**Missing file-level context** &ndash; checks whether your files carry [context descriptions](/enterprise/file-management/#file-context) that help translators and AI understand what the file contains.
+
+**Unresolved context issues** &ndash; surfaces unresolved "Lack of context" [issues](/enterprise/issues/) reported by translators in the Editor.
+
+### Medium
+
+**Low screenshot coverage** &ndash; checks how many of your UI strings are covered by [screenshots](/enterprise/screenshots/).
+
+**Insufficient terminology** &ndash; checks your [glossary](/enterprise/glossary/) against the size and scope of your project. It flags thin or missing glossaries before they cause inconsistent output, and highlights frequently used words that are worth formalizing as terms.
+
+**Missing character limits** &ndash; checks whether your short UI strings have [character limits](/enterprise/string-management/) set, so translations fit the available space.
+
+**No style guide connected** &ndash; checks whether a [style guide](/enterprise/style-guide/) is attached to the project and covers your target languages, so the basics like formality, audience, and brand voice are defined.
+
+**Missing project description** &ndash; checks whether your project has a [description](/enterprise/project-settings/#details) that gives translators and AI useful background.
+
+### Low
+
+**Missing website context** &ndash; for CMS projects, checks whether a live website preview is available, since this content rarely carries its own context.
+
+**Missing video preview** &ndash; for projects with subtitles, checks whether an app that previews video in the Editor is installed.
+
+**No communication channel connected** &ndash; checks whether a [communication channel](/enterprise/account-notifications/) with translators is set up.
+
+<Aside type="note">
+  Some checks apply only to certain content types. For example, the video preview check appears for projects with subtitle files, and the website context check for CMS projects. Checks that don't apply to your project aren't shown.
+</Aside>
+
+## Re-check Advisors
+
+Advisors re-check themselves automatically when relevant things change in your project, such as added files or strings, updated settings, or assigned glossaries and style guides. To avoid unnecessary recalculations, checks refresh within an hour (or within a day for the heavier string context coverage check) of relevant changes rather than on every edit, so a result may not update the instant you make a change.
+
+To get a fresh result right away, click **Re-check** to re-run the whole tab, or click the <Icon name="mdi:refresh" class="inline-icon" /> refresh icon in an insight's details to re-run just that check. A manual re-check runs immediately, regardless of the automatic schedule. Only one re-check can run per project at a time.
+
+## Manage Advisors via API
+
+Advisors are also available through the Crowdin Enterprise API. You can list insights, dismiss or reactivate them, and trigger re-checks programmatically. This is useful for monitoring setup health across many projects at once.
+
+* [Advisor API methods](/developer/enterprise/api/v2/#tag/Advisor)
+* [Advisor API methods](/developer/enterprise/api/v2/string-based/#tag/Advisor) <Badge text="String-based" variant="note" />
+
+## See Also
+
+<CardGrid>
+  <LinkCard
+    title="Screenshots"
+    description="Add screenshots to give translators visual context for your source strings."
+    href="/enterprise/screenshots/"
+  />
+  <LinkCard
+    title="Glossary"
+    description="Maintain consistent terminology across your translations."
+    href="/enterprise/glossary/"
+  />
+  <LinkCard
+    title="Style Guide"
+    description="Define formality, audience, and brand voice for your target languages."
+    href="/enterprise/style-guide/"
+  />
+  <LinkCard
+    title="QA Checks"
+    description="Configure quality assurance checks to catch issues during translation."
+    href="/enterprise/project-settings/qa-checks/"
+  />
+</CardGrid>
