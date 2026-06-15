@@ -2806,7 +2806,7 @@ paths:
     patch:
       tags:
         - Applications
-      summary: 'Edit Application Installation'
+      summary: 'Update Application Permissions'
       description: '**Required scopes:** `application` (Read and Write).'
       operationId: api.applications.installations.patch
       parameters:
@@ -2849,6 +2849,99 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/applications/installations/{identifier}/update':
+    get:
+      tags:
+        - Applications
+      summary: 'Get Application Installation Update'
+      description: "**Required scopes:** `application` (Read only).\n\nReturns the diff between the currently installed application and the latest cached manifest, tagged with `manifestHash` for optimistic-locking on apply."
+      operationId: api.applications.installations.update.get
+      parameters:
+        -
+          $ref: '#/components/parameters/Identifier'
+      responses:
+        '200':
+          description: 'Application installation update'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationInstallationUpdateResource'
+        '404':
+          description: 'Application installation with specified identifier was not found, or no cached manifest is available yet'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+    post:
+      tags:
+        - Applications
+      summary: 'Apply Application Installation Update'
+      description: "**Required scopes:** `application` (Read and Write).\n\nApply the latest cached manifest to an installed application. Requires `manifestHash` from a recent GET /update call as an optimistic-locking token. If the cached manifest has changed since, returns 409 with the fresh diff in the response body."
+      operationId: api.applications.installations.update.post
+      parameters:
+        -
+          $ref: '#/components/parameters/Identifier'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationInstallationApplyForm'
+      responses:
+        '200':
+          description: 'Application data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationInstallationResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResource'
+        '404':
+          description: 'Application installation not found or no cached manifest available'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '409':
+          description: 'manifestHash mismatch — cached manifest changed since diff was fetched. Response body carries the fresh diff so the client can re-render without a round trip.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationInstallationUpdateResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
   '/applications/{applicationIdentifier}/api/{path}':
     get:
       tags:
@@ -13190,7 +13283,7 @@ paths:
       tags:
         - 'String Translations'
       summary: 'List Translation Approvals'
-      description: "**Required scopes:** `project.translation` (Read only).\n\n__Note:__ Either `translationId` OR `correctionId` OR `labelIds` OR `excludeLabelIds` with `languageId` OR `stringId` with `languageId` are required"
+      description: "**Required scopes:** `project.translation` (Read only).\n\n__Note:__ Either `translationId` OR `correctionId` OR `languageId` is required. `stringId`, `labelIds` and `excludeLabelIds` can be used only with `languageId` in the same request"
       operationId: api.projects.approvals.getMany
       parameters:
         -
@@ -13216,21 +13309,21 @@ paths:
         -
           name: languageId
           in: query
-          description: 'Language Identifier. Get via [Project Target Languages](#operation/api.projects.get) <br> **Note:** Must be used together with `stringId`'
+          description: 'Language Identifier. Get via [Project Target Languages](#operation/api.projects.get)'
           required: false
           schema:
             type: string
         -
           name: translationId
           in: query
-          description: 'Translation Identifier. Get via [List String Translations](#operation/api.projects.translations.getMany) <br> **Note:** If specified, `stringId` and `languageId` are ignored. Cannot be used with `correctionId`'
+          description: "Translation Identifier. Get via [List String Translations](#operation/api.projects.translations.getMany) <br> **Note:** Can't be used with `correctionId` or `languageId` in the same request"
           required: false
           schema:
             type: integer
         -
           name: correctionId
           in: query
-          description: 'Correction Identifier. Get via [List Corrections](#operation/api.projects.corrections.getMany) <br> **Note:** Cannot be used with `translationId` or `languageId`. Available only for projects with advanced workflow'
+          description: 'Correction Identifier. Get via [List Corrections](#operation/api.projects.corrections.getMany) <br> **Note:** Cannot be used with `translationId`, `languageId` or `stringId`. Available only for projects with advanced workflow'
           required: false
           schema:
             type: integer
@@ -14022,7 +14115,7 @@ paths:
           name: stringId
           in: query
           description: 'String Identifier. Get via [List Strings](#operation/api.projects.strings.getMany)'
-          required: true
+          required: false
           schema:
             type: integer
         -
@@ -14572,7 +14665,7 @@ paths:
       tags:
         - 'String Translations'
       summary: 'List Translation Votes'
-      description: "**Required scopes:** `project.translation` (Read only).\n\n__Note:__ Either `translationId` OR `labelIds` OR `excludeLabelIds` with `languageId` OR `stringId` with `languageId` are required"
+      description: "**Required scopes:** `project.translation` (Read only).\n\n__Note:__ Either `translationId` OR `languageId` is required. `stringId`, `labelIds` and `excludeLabelIds` can be used only with `languageId` in the same request"
       operationId: api.projects.votes.getMany
       parameters:
         -
@@ -14587,14 +14680,14 @@ paths:
         -
           name: languageId
           in: query
-          description: 'Language Identifier. Get via [Project Target Languages](#operation/api.projects.get) <br> **Note:** Must be used together with `stringId`'
+          description: 'Language Identifier. Get via [Project Target Languages](#operation/api.projects.get)'
           required: false
           schema:
             type: string
         -
           name: translationId
           in: query
-          description: 'Translation Identifier. Get via [List String Translations](#operation/api.projects.translations.getMany) <br> **Note:** If specified, `stringId` and `languageId` are ignored'
+          description: "Translation Identifier. Get via [List String Translations](#operation/api.projects.translations.getMany) <br> **Note:** Can't be used with `languageId` in the same request"
           schema:
             type: integer
         -
@@ -23089,6 +23182,15 @@ components:
           properties:
             value:
               $ref: '#/components/schemas/ApplicationInstallationReplaceValue'
+    ApplicationInstallationApplyForm:
+      required:
+        - manifestHash
+      properties:
+        manifestHash:
+          description: 'Hash of the manifest version the admin reviewed (from GET /update response). Must match the currently cached version, otherwise the apply request fails with 409.'
+          type: string
+          example: 5536b952d54e0846b6fd69217f6eb7cfdcfba41774732926e1f0c1a158a6e405
+      type: object
     ApplicationInstallationCreateForm:
       required:
         - url
@@ -23130,6 +23232,16 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/ApplicationInstallationResponseModel'
+    ApplicationInstallationUpdateResource:
+      description: 'Application Installation Update Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/ApplicationInstallationUpdateResponseModel'
     AdvisorInspectorModule:
       title: 'Advisor Inspector Module'
       type: object
@@ -23264,6 +23376,16 @@ components:
           format: date-time
           example: '2019-09-20T11:34:40+00:00'
           nullable: true
+        manifestUpdatedAt:
+          description: "When the installation's manifest was last synced"
+          type: string
+          format: date-time
+          example: '2019-09-20T11:34:40+00:00'
+          nullable: true
+        isManifestOutdated:
+          description: 'Whether the installed manifest is outdated compared to the latest available manifest'
+          type: boolean
+          example: false
         modules:
           type: array
           items:
@@ -23272,7 +23394,53 @@ components:
               -
                 $ref: '#/components/schemas/Module'
               -
+                $ref: '#/components/schemas/AuthGuardModule'
+              -
+                $ref: '#/components/schemas/EditorAssetPanelModule'
+              -
+                $ref: '#/components/schemas/EditorBackgroundWorkerModule'
+              -
+                $ref: '#/components/schemas/AiPromptProviderModule'
+              -
+                $ref: '#/components/schemas/AiProviderModule'
+              -
+                $ref: '#/components/schemas/AutomationActionModule'
+              -
+                $ref: '#/components/schemas/ContextMenuModule'
+              -
+                $ref: '#/components/schemas/CrowdsourcePanelModule'
+              -
+                $ref: '#/components/schemas/CustomFileFormatModule'
+              -
+                $ref: '#/components/schemas/CustomMtModuleResponseModel'
+              -
+                $ref: '#/components/schemas/EditorAutocompleteModule'
+              -
+                $ref: '#/components/schemas/EditorPanelModule'
+              -
+                $ref: '#/components/schemas/ExternalQaCheckModule'
+              -
+                $ref: '#/components/schemas/FileProcessorModule'
+              -
                 $ref: '#/components/schemas/IntegrationModule'
+              -
+                $ref: '#/components/schemas/ManifestModule'
+              -
+                $ref: '#/components/schemas/ModalModule'
+              -
+                $ref: '#/components/schemas/OrganizationMenuCrowdsourceModule'
+              -
+                $ref: '#/components/schemas/OrganizationMenuModule'
+              -
+                $ref: '#/components/schemas/ProjectMenuModule'
+              -
+                $ref: '#/components/schemas/ReportsModule'
+              -
+                $ref: '#/components/schemas/ResourceModule'
+              -
+                $ref: '#/components/schemas/ToolsModule'
+              -
+                $ref: '#/components/schemas/WorkflowStepTypeModule'
         scopes:
           type: array
           items:
@@ -23288,6 +23456,83 @@ components:
         stringBasedAvailable:
           type: boolean
           example: false
+      type: object
+    ApplicationInstallationUpdateResponseModel:
+      title: 'Application Installation Update'
+      description: 'Pending update (diff) between the installed app and the latest manifest'
+      properties:
+        manifestHash:
+          description: 'Hash of the latest manifest. Pass back in the apply request as `manifestHash`.'
+          type: string
+          example: 5536b952d54e0846b6fd69217f6eb7cfdcfba41774732926e1f0c1a158a6e405
+          nullable: true
+        latestManifest:
+          description: 'Full latest manifest payload as fetched and cached by the cron. The client renders it install-modal-style and uses the diff collections (addedScopes/removedScopes/changedModules/...) as markers to label individual fields.'
+          type: object
+          nullable: true
+        addedScopes:
+          description: 'Scopes added in the latest manifest'
+          type: array
+          items:
+            type: string
+            example: tm
+        removedScopes:
+          description: 'Scopes removed in the latest manifest'
+          type: array
+          items:
+            type: string
+            example: project
+        addedModules:
+          description: 'Modules added in the latest manifest'
+          type: array
+          items:
+            type: object
+        removedModules:
+          description: 'Modules removed in the latest manifest'
+          type: array
+          items:
+            type: object
+        changedModules:
+          description: 'Modules that still exist but whose behaviour fields (url, permissions) changed'
+          type: array
+          items:
+            type: object
+        changedEvents:
+          description: 'Lifecycle event URLs that changed (installed/uninstall/status)'
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              from:
+                type: string
+              to:
+                type: string
+        baseUrlChanged:
+          description: 'baseUrl change (host that serves the app)'
+          properties:
+            from:
+              type: string
+              nullable: true
+            to:
+              type: string
+              nullable: true
+          type: object
+          nullable: true
+        authenticationTypeChanged:
+          description: 'Authentication-type change. Read-only / not applicable: an auth-type change cannot be applied as an update, the app must be uninstalled and reinstalled. Present here only so the change is visible.'
+          properties:
+            from:
+              type: string
+              nullable: true
+            to:
+              type: string
+              nullable: true
+          type: object
+          nullable: true
+        hasChanges:
+          description: 'Whether the manifest has any changes'
+          type: boolean
+          example: true
       type: object
     AuthGuardModule:
       title: 'Auth Guard Module'
