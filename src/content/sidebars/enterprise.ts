@@ -55,6 +55,7 @@ export default  [
     items: [
       { slug: path('creating-project') },
       { slug: path('screenshots') },
+      { slug: path('advisors') },
       { slug: path('project-activity') },
       { slug: path('webhooks') },
       {
