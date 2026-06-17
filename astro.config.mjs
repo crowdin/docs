@@ -250,6 +250,7 @@ const config = defineConfig({
           'create-new-folder-sharp',
           'folder-data-sharp',
           'drag-indicator',
+          'dock-to-right',
           'encrypted',
           'warning',
           'groups',
