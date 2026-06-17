@@ -1,0 +1,85 @@
+---
+title: 自定义分段
+description: 为每个源文件单独定义您自己的分段规则
+slug: custom-segmentation
+sidebar:
+  order: 5
+---
+
+import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import Include from '~/components/Include.astro';
+import fileContextMenuSettings from '!/crowdin/project-management/sources/files_context_menu_settings.png';
+import fileParserConfiguration from '!/crowdin/project-management/sources/files_parser_configuration.png';
+
+每次上传 XML、HTML、MD 或任何其他不含键值结构的源文件时，系统都会使用预定义的分段规则 (SRX 2.0) 进行自动内容分段。 但是，有时默认分段规则对源文件的分段结果可能与预期不符。
+
+在这种情况下，您可以使用 [SRX 2.0 标准](https://www.gala-global.org/srx-20-april-7-2008)为每个源文件单独定义自己的分段规则。
+
+## 更改分隔方式
+
+您可以在 **Sources > Files** 中更改分段。
+
+<Steps>
+  1. 打开您要调整分段规则的项目，然后转到 **Sources > Files**。
+  2. 在所需文件上单击 <Icon name="mdi:dots-horizontal" class="inline-icon" />（或右键单击），然后选择 **Settings**。 <Image src={fileContextMenuSettings} alt="文件上下文菜单" />
+  3. 在弹出的对话框中，切换到 **Parser configuration** 选项卡。
+  4. 选择 **Enable content segmentation** 和 **Use custom segmentation rules**。
+  5. 粘贴您的 SRX 分段规则，然后单击 **Save**。 <Image src={fileParserConfiguration} alt="文件分段规则" class="width-xl crowdin-modal" />
+</Steps>
+
+保存新的分段规则后，您的源文件将自动重新导入，并按照这些新规则进行分段。
+
+## 分段示例
+
+<Aside>
+  SRX 规则中使用的正则表达式必须与 PHP (PCRE2) 和 Node.js 兼容。
+</Aside>
+
+典型的 SRX 文件类似于以下内容：
+
+<Include file="srx-file-example.mdx" />
+
+### 更改亚洲语言的句子分隔符
+
+通常，句号用作句子分隔符。 但对于某些亚洲语言，情况并非如此。 例如，中文中典型的句子分隔符是表意文字句号（`。`）。 对于此类情况，您可以使用以下规则集：
+
+```xml
+<rule break="yes">
+  <beforebreak>[\x3002]+</beforebreak>
+  <afterbreak></afterbreak>
+</rule>
+```
+
+### 将文本分成较小的部分
+
+在以下简单示例中，我们将说明一种情况：当需要将一段文本分段为两个（或更多）字符串时该如何处理。
+
+使用默认分段规则的文本：
+
+`这是示例句子的第一部分，这是第二部分。`
+
+使用新分段规则的文本：
+
+`这是示例句子的第一部分`
+
+<code>&#32;这是第二部分。</code>
+
+对于这种特定情况，以下规则集将把初始句子拆分为两个部分：
+
+```xml
+<rule break="yes">
+  <beforebreak>sentence</beforebreak>
+  <afterbreak>\u0020</afterbreak>
+</rule>
+```
+
+## 使用 SRX 编辑器创建分段规则
+
+可以借助 [Ratel](http://okapiframework.org/wiki/index.php?title=Ratel) 等工具来创建和维护 SRX 分段规则。 它提供可视化界面，您可以在其中从头创建分段规则或编辑现有规则。
+
+<CardGrid>
+  <LinkCard title="分段规则生成器" description="在您的 Crowdin 项目中创建和测试新的分段规则。" href="https://store.crowdin.com/segmentation" target="_blank" />
+  <LinkCard title="SRX Playground" description="AI 驱动的 SRX 规则编辑器。" href="https://store.crowdin.com/srx-playground" target="_blank" />
+</CardGrid>

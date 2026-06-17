@@ -1,0 +1,135 @@
+---
+title: Webhook
+description: 订阅
+slug: zh-CN/developer/crowdin-apps-module-webhook
+sidebar:
+  label: Webhook
+---
+
+import ReadMore from '~/components/ReadMore.astro';
+
+Webhook 模块允许 Crowdin Apps 监听特定事件，并在这些事件发生时触发相应操作。 该模块适用于自动化工作流（例如，与 [工作流步骤类型模块](/zh/developer/crowdin-apps-module-workflow-step-type/) 配合使用）、同步外部系统或记录项目活动。
+
+## 结构
+
+```json title="manifest.json"
+{
+  "modules": {
+    "webhook": [
+      {
+        "key": "webhook-key-module-key",
+        "url": "/webhooks",
+        "events": [
+          "project.translated",
+          "project.approved"
+        ],
+        "environments": [
+          "crowdin",
+          "crowdin-enterprise"
+        ]
+      }
+    ]
+  }
+}
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 应用中 webhook 处理程序的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>events</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 触发 webhook 的事件列表。 查看<a href="/developer/webhooks/#events" target="_blank">可用 webhook 事件</a>列表。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">environments</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> <code>crowdin</code>、<code>crowdin-enterprise</code></p>
+        <p><strong>描述：</strong> 可安装该模块的环境集合。<br />
+        此参数在跨产品的应用程序中必需。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 应用与 Crowdin 之间的通信
+
+所有 webhook 均通过 HTTP POST 请求以 JSON 格式的负载触发。 请求可包含单个事件或多个事件（始终以批量模式发送）。
+
+<ReadMore>
+  详细了解 [Webhook 负载示例](/zh/developer/webhooks/#webhook-负载示例)。
+</ReadMore>
+
+### 向应用发出请求
+
+当事件发生时，Crowdin 会向您的 webhook 端点发送一个 HTTP POST 请求，其中包含用于身份验证和安全的必要标头。 以下是此类请求的示例。
+
+**HTTP 请求：**
+
+```
+POST /webhooks HTTP/1.1
+User-Agent: Crowdin-Webhook
+Content-Type: application/json
+X-Crowdin-Id: <organization-id>
+X-Crowdin-Domain: <organization-domain>
+X-Crowdin-Signature: <signature>
+X-Module-Key: <your-module-key>
+```
+
+**请求正文：**
+
+```json
+{
+  "events": [
+    {
+      "event": "project.translated",
+      "project": {
+        "id": "777",
+        // ...
+      },
+      "targetLanguage": {
+        "id": "uk",
+        // ...
+      }
+    },
+    {
+      "event": "project.approved",
+      "project": {
+        "id": "777",
+        // ...
+      },
+      "targetLanguage": {
+        "id": "uk",
+        // ...
+      }
+    }
+  ]
+}
+```
+
+在应用安装过程中，会向您的应用提供一个名为 [`app_secret`](/zh/developer/crowdin-apps-installation/#已安装事件通信流程) 的唯一密钥。 该密钥用于通过 HMAC 算法结合 SHA-256 生成 webhook 签名。
+
+### 应用的预期响应
+
+Crowdin 要求您的应用返回成功的 HTTP 状态码（即任意 2XX 状态）以确认收到 webhook 负载。

@@ -1,0 +1,219 @@
+---
+title: 文件预导入处理模块
+description: 在将文件导入 Crowdin 之前对其进行修改
+slug: developer/crowdin-apps-module-file-pre-import-processing
+sidebar:
+  order: 3
+  label: 文件预导入处理
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+预导入模块允许您在将文件导入 Crowdin 之前对其进行修改。 使用预导入模块，您可以对所选文件应用自动化修改。 该模块可处理多种文件格式，例如 TXT、XML、JSON 等，以自定义其内容。
+
+通过在您的 Crowdin 应用中使用预导入模块，您可以调整文件格式、结构和内容。 由于该模块在 Crowdin 导入文件之前执行，您可以在文件被系统处理之前对内容进行微调。
+
+## 访问权限
+
+您可以将此模块的访问权限授予以下用户类别之一：
+
+对于 Crowdin：
+
+* 仅限我自己（即项目所有者）
+* 所有项目成员
+* 选定用户
+
+对于 Crowdin Enterprise：
+
+* 仅限组织管理员
+* 组织项目中的所有用户
+* 选定用户
+
+## 结构
+
+```json title="manifest.json"
+{
+  "modules": {
+    "file-pre-import": [
+      {
+        "key": "your-pre-import-module-key",
+        "url": "/import-file",
+        "signaturePatterns": {
+          "fileName": "^.+\.xml$",
+          "fileContent": "<properties>\s*<property\s+name=.*value=.*/>"
+        }
+      }
+    ]
+  }
+}
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>说明：</strong> 在文件导入、更新和译文上传时触发的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>说明：</strong> 包含 <code>fileName</code> 和/或 <code>fileContent</code> 正则表达式，用于在通过界面（或通过 API 但未指定 <code>type</code> 参数）上传新源文件时检测文件类型。</p>
+        <p><Aside><code>fileContent</code> 正则表达式仅检查文件内容的前 64 KB。</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 文件处理应用与 Crowdin 之间的通信
+
+导入文件时，Crowdin 通过 `signaturePatterns` 参数检测相应模块，并向应用的 URL（`$baseUrl`）发送 HTTP 请求。 `$url`）发送 HTTP 请求以进行进一步处理。
+
+此外，在文件导入过程中，Crowdin 还会验证文件名和内容，以确保它们与相应的文件处理应用模块匹配。 此过程可以包括预导入处理模块（用于在文件导入前修改文件内容）和后导入处理模块（用于修改从文件中提取的字符串）。
+
+为修改文件内容，系统首先定位相应的预导入模块，并将文件内容发送给该模块。 该模块随后执行预设的修改，这些修改可能包括文件格式更改、结构调整和内容更新。
+
+预导入模块完成文件修改后，Crowdin 将接收修改后的文件内容，以及新文件名或扩展名（如适用）。
+
+### 向文件处理应用发送的请求
+
+请求载荷示例：
+
+```json
+// max request payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "jobType": "file-pre-import",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name"
+  },
+  "file": {
+    "id": 1,
+    "name": "file.xml",
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded source file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // source file public URL
+  },
+  "sourceLanguage": {
+    "id": "es",
+    "name": "Spanish",
+    "editorCode": "es",
+    "twoLettersCode": "es",
+    "threeLettersCode": "spa",
+    "locale": "es-ES",
+    "androidCode": "es-rES",
+    "osxCode": "es.lproj",
+    "osxLocale": "es",
+    "pluralCategoryNames": [
+      "one"
+    ],
+    "pluralRules": "(n != 1)"
+  },
+  "targetLanguages": [
+    {
+      // same structure as for sourceLanguage, empty when uploading a new source file, one element for import_translations, can be more for multilingual files
+    }
+  ]
+}
+```
+
+参数：
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>jobType</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>值：</strong> <code>file-pre-import</code></p>
+        <p><strong>描述：</strong> 指定文件预导入模块的操作。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.content</code>, <code>file.contentUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>说明：</strong> 用于传递 base64 编码的源文件内容（<code>file.content</code>）或源文件公共 URL（<code>file.contentUrl</code>）的参数。<br />
+        可使用这两个参数中的任意一个。<Aside title="Limitations">最大请求载荷限制为 5 MB。</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### 应用的预期响应
+
+响应载荷示例：
+
+```json
+// max response payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "data": {
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded modified file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=...", // modified file public URL
+    "fileName": "file.html", // optional, new file name with extension
+    "fileType": "webxml"  // optional, an importer Crowdin should use to import a file
+  },
+  "error": {
+    "message": "Your error message"
+  }
+}
+```
+
+参数：
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>data.content</code>, <code>data.contentUrl</code></td>
+      <td>
+        <p><strong>类型（data.content）：</strong> <code>string</code></p>
+        <p><strong>类型（data.contentUrl）：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 用于传递 base64 编码的已修改文件内容（<code>data.content</code>）或已修改文件公开 URL（<code>data.contentUrl</code>）的参数。<br />
+        可使用这两个参数中的任意一个。<Aside title="Limitations">最大响应载荷限制为 5 MB。</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>fileName</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 可选参数，用于将文件名和扩展名覆盖为新的名称。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>fileType</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 可选参数，用于指定 Crowdin 应使用哪种导入器来导入文件。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 可从应用传递至 Crowdin 的错误消息，将在 UI 中对用户可见。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>

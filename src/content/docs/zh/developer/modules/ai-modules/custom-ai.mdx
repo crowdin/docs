@@ -1,0 +1,272 @@
+---
+title: 自定义 AI 模块
+description: 连接 Crowdin 尚未支持的 AI 提供商
+slug: developer/crowdin-apps-module-custom-ai
+sidebar:
+  order: 1
+  label: 自定义 AI
+---
+
+此模块帮助您连接 Crowdin 尚未支持的 AI 提供商。 创建此类应用后，您将能够使用所连接的 AI 提供商自动翻译内容，并将该 AI 提供商作为编辑器中的助手使用。
+
+## 访问权限
+
+您可以将此模块的访问权限授予以下用户类别之一：
+
+对于 Crowdin：
+
+* 仅限我自己（即项目所有者）
+* 所有项目成员
+* 选定用户
+
+对于 Crowdin Enterprise：
+
+* 仅限组织管理员
+* 组织项目中的所有用户
+* 选定用户
+
+## 结构
+
+```json title="manifest.json"
+{
+  "modules": {
+    "ai-provider": [
+      {
+        "key": "custom-ai",
+        "name": "Custom Open AI",
+        "logo": "/logo.png",
+        "url": "/ai-settings",
+        "chatCompletionsUrl": "/chat/completions",
+        "modelsUrl": "/models"
+      }
+    ]
+  }
+}
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 模块的可读名称。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>logo</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 自定义 AI 徽标的相对 URL，将在 Crowdin 界面中显示。<br />
+        建议分辨率为 48x48 像素。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 否</p>
+        <p><strong>说明：</strong> 模块设置页面的相对 URL（例如，AI 提供商凭据设置等）。 </p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">chatCompletionsUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>说明：</strong> 用于获取聊天补全的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>modelsUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>说明：</strong> 用于检索 AI 提供商所支持模型列表的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> <code>crowdin</code>、<code>crowdin-enterprise</code></p>
+        <p><strong>描述：</strong> 可安装该模块的环境集合。<br />
+        此参数在跨产品的应用程序中必需。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">restrictAiToSameApp</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>boolean</code></p>
+        <p><strong>说明：</strong> 如果您的应用程序同时实现了 AI Provider 和 AI Prompt Provider 模块，并且需要限制它们仅成对使用，可以使用 `restrictAiToSameApp` 配置属性。 启用此属性后，使用应用程序 AI Provider 的提示词只能在同时使用同一应用程序的 AI Prompt Provider 时才能保存，反之亦然。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 自定义 AI 应用与 Crowdin 之间的通信
+
+Crowdin 使用 `chatCompletionsUrl` 向应用发送提示词，应用处理这些提示词后将回复发送给 Crowdin。
+
+为了在 Crowdin 编辑器中将自定义 AI 作为助手使用时获得更好的体验，建议使用[服务器发送事件](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#event_stream_format)来实现 `stream` 参数。
+
+支持流式传输后，AI 生成的内容可以逐步交付，为用户提供实时反馈。 这通过提供即时建议或更正，无需等待完整响应，来改善工作流程，确保在确认术语、检查一致性或优化译文等任务中获得流畅的交互体验。
+
+Crowdin 在向应用发送 `chatCompletions` 请求时，会将 `stream` 参数设置为 `true`，并期望收到[相应格式](#expected-response-from-the-app-streaming)的响应。
+
+在 **AI > 提供商**页面配置自定义 AI 提供商时，Crowdin 会使用 `modelsUrl` 向应用发送请求，专门用于在自定义 AI 提供商设置页面的相应输入字段中显示可用模型。 您可以选择并保存所需的模型，这些模型随后将通过 `chatCompletionsUrl` 用于内容自动翻译以及与助手的通信。
+
+## Crowdin 向应用发送的 chatCompletions 请求
+
+**HTTP 请求：**
+
+```shell
+https://{AppBaseUrl}/chat/completions/
+```
+
+**请求头**
+
+向 `chatCompletionsUrl` 发送的请求将包含授权头（例如，`Authorization: Bearer \<App JWT token>`）。
+
+请求载荷示例：
+
+```json {"Optional; used to enable streaming responses if set to true":3-4}
+{
+  "model": "gpt-3.5-turbo",
+
+  "stream": false,
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Prompt"
+        },
+        {
+          "type": "image",
+          "mimeType": "image/png",
+          "url": "https://picsum.photos/200/300"
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": "Reply"
+    },
+    {
+      "role": "user",
+      "content": "New prompt"
+    }
+  ]
+}
+```
+
+## 应用的预期响应
+
+响应载荷示例：
+
+```json
+{
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "New reply"
+      }
+    }
+  ]
+}
+```
+
+## 应用的预期响应（流式传输）
+
+响应载荷示例：
+
+```json
+data: {"choices":[{"delta":{"role":"assistant","content":"Your"}}]}
+
+data: {"choices":[{"delta":{"role":"assistant","content":" rephrased"}}]}
+
+....
+
+data: {"choices":[{"delta":{"role":"assistant","content":" translation"}}]}
+
+[DONE]
+```
+
+## 应用向 Crowdin 返回的 modelsUrl 响应
+
+响应载荷示例：
+
+```json
+{
+  "data": [
+    {
+      "id": "gpt-3.5-turbo",
+      "supportsJsonMode": true,
+      "supportsFunctionCalling": true,
+      "supportsVision": false,
+      "contextWindowLimit": 16385,
+      "outputLimit": 4096
+    },
+    {
+      "id": "gpt-4-turbo",
+      "supportsJsonMode": true,
+      "supportsFunctionCalling": true,
+      "supportsVision": true,
+      "contextWindowLimit": 128000,
+      "outputLimit": 4096
+    },
+    {
+      "id": "gpt-5-power",
+      "supportsJsonMode": true,
+      "supportsFunctionCalling": true,
+      "supportsVision": true,
+      "contextWindowLimit": 1000000,
+      "outputLimit": 8192
+    },
+    {
+      "id": "gpt-6-devil",
+      "supportsJsonMode": true,
+      "supportsFunctionCalling": true,
+      "supportsStreaming": true,
+      "supportsVision": true,
+      "contextWindowLimit": 1000000,
+      "outputLimit": 8192
+    },
+    {
+      "id": "gpt-7-magic",
+      "supportsJsonMode": true,
+      "supportsFunctionCalling": true,
+      "supportsStreaming": true,
+      "supportsVision": true,
+      "contextWindowLimit": 1000000,
+      "outputLimit": 8192
+    }
+  ]
+}
+```
+
+默认值：
+
+* **supportsJsonMode**: `false`
+* **supportsFunctionCalling**: `false`
+* **supportsStreaming**: `false`
+* **supportsVision**: `false`
+* **contextWindowLimit**: `4096`
+* **outputLimit**: `4096`
+
+应用返回的响应结构应与所提供的示例一致，否则 Crowdin 将视其为无效。

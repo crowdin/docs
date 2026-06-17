@@ -1,0 +1,119 @@
+---
+title: ICU 消息语法
+description: 使用 ICU 消息格式处理特定语言的细微差别
+slug: icu-message-syntax
+---
+
+import { Image } from 'astro:assets';
+import { Aside, LinkCard } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import icuEditor from '!/crowdin/online-editor/icu_editor.png';
+import icuSyntaxError from '!/crowdin/online-editor/icu_syntax_error.png';
+
+Crowdin 支持 ICU 消息语法, 它用来帮助表达特定语言拼写、语法和翻译格式的微调。
+
+以 ICU 消息语法格式化的字符串可以有不同类型的替换，称为**参数**。
+每个参数都放在单大括号内（例如，`{variable}`），并指定输入数据中的一个值。 请注意，使用双大括号（例如，`{{variable}}`）不受支持，并且会导致语法错误。 在 Crowdin 中支持以下类型的参数：数字、日期、时间、选择和复数。
+
+### 编辑器中的 ICU 消息语法
+
+ICU syntax arguments are always highlighted in the [Editor](/online-editor/), so you know which part of the string shouldn't be translated.
+更改翻译中参数的位置以遵循目标语言中的自然词序。
+还有预览模式，这将使您能看到翻译将如何在界面中显示，以确保所有可翻译元素都被翻译。
+
+<Image src={icuEditor} alt="编辑器中的 ICU 语法标志" />
+
+<LinkCard title="ICU 消息格式终极指南" description="本文将介绍 ICU i18n 和 ICU 消息格式的基础知识，以及 Crowdin 如何处理它。" href="https://crowdin.com/blog/2022/04/13/icu-guide" target="_blank" />
+
+## 复数
+
+Plural 类型用于处理复数类别变化，因为每种语言都有其自己的复数类别集（例如，英语有 "one" 和 "other"，而乌克兰语有 "one"、"few"、"many" 和 "other"）。
+
+```json
+You {itemCount, plural,
+    =0 {have no projects}
+    other {have # projects}
+}。
+```
+
+下面的短标签用于确定复数类别：
+
+* zero
+* one（单数）
+* two（双数）
+* few（数个）
+* many（如果他们有一个单独的类，也用作分数）
+* other（要求一般复数形式，如果语言只有单一形式也使用）
+
+在编辑器中，您无需手动添加或删除翻译中的复数类别。
+只需单击**复制源文**，源字符串将以适合当前目标语言的复数类别数量复制到翻译字段中。
+
+<ReadMore>
+  了解更多关于[语言复数规则](https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html)的信息。
+</ReadMore>
+
+### 嵌套复数
+
+在某些情况下，您可能有一个包含多个名词的字符串，每个名词都需要独立进行复数化，例如，"You have X book(s) and Y pen(s)."。
+
+ICU 通过允许您将复数参数相互嵌套来处理此问题。
+
+```json
+{bookCount, plural,
+    other {You have # books and {penCount, plural,
+        other {# pens}
+    }}
+}
+```
+
+## Select Ordinal
+
+select ordinal 类型的目的是根据序数复数规则（第 1、第 2、第 3 等）选择输出。 基于当前目标语言。 它与 plural 类型非常相似，不同之处在于值被映射到序数复数类别。
+
+```json
+恭喜！这是您订阅的第 {year, selectordinal,
+    other {#}
+} 周年纪念！
+```
+
+## 选取
+
+select 类型用于根据字符串变量选择输出。 它最常用于在消息中表示基于性别的正确变形。
+
+```json
+{gender, select,
+    male {He uses}
+    female {She uses}
+    other {They use}
+} Crowdin。
+```
+
+此类型适用于任何翻译根据特定关键字发生变化的情况。 无论使用场景如何，ICU 标准要求您始终包含 `other` 子句。 此子句在变量与任何指定选项都不匹配的情况下提供必要的回退。
+
+## 数字
+
+number 类型的目的是根据各地区的惯例独立显示不同的数值，例如百分比、货币和小数。
+这使得消息输出能够适应不同区域设置中使用的数字格式。 [ICU 数字骨架](https://unicode-org.github.io/icu/userguide/format_parse/numbers/skeletons.html)也受支持。
+
+```json wrap
+该应用的价格为 {price, number, ::currency/USD}，享有 {discount, number, percent} 折扣。
+```
+
+## 日期和时间
+
+date 和 time 类型根据指定区域设置中首选的格式显示日期和时间值。
+这些类型还可以有样式 &ndash; 关于值如何格式化的额外信息。
+可以使用以下四种样式：short、medium、long 和 full。
+
+```json wrap
+您的会议已安排在 {dateValue, date, long} 上午 {timeValue, time, short}。
+```
+
+## 符号错误
+
+语法错误检测大大减少了翻译 ICU 消息语法字符串时的困惑，因为平台会自动检测潜在的翻译错误。
+如果发现语法错误，您将会看到一个包含需要修复内容的通知。
+
+您还可以使用外部工具验证您的 ICU 语法，例如 [Online ICU Message Editor](https://format-message.github.io/icu-message-format-for-translators/editor.html)。
+
+<Image src={icuSyntaxError} alt="检测到语法错误" />

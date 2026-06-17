@@ -1,0 +1,328 @@
+---
+title: 版本管理
+description: 了解如何管理项目的不同版本
+slug: version-management
+sidebar:
+  order: 4
+---
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Image } from 'astro:assets';
+import branchesStructure from '!/crowdin/project-management/sources/branches_structure.png';
+import versionsDuplicateStrings from '!/crowdin/project-management/sources/versions_duplicate_strings.png';
+import branchesWorkflow from '!/crowdin/project-management/sources/branches_workflow.png';
+import branchMerging from '!/crowdin/project-management/sources/branch_merging.png';
+import branchTranslationVerification from '!/crowdin/project-management/sources/branch_translation_verification.png';
+
+保持灵活的本地化流程，防止添加文本或新产品功能时出现翻译延迟。 将您的项目分支集成到 Crowdin 并允许翻译者立即访问所有新的文本。
+
+当几个人从事产品开发时，分支有助于管理不同的内容版本。 如果您有一个持续的项目，您可以向 Crowdin 添加项目分支，并允许翻译员在开发的同时翻译文本，以避免延误部署。
+
+Crowdin 中的分支看起来就像标有特定图标的常规文件夹，并且对重复字符串有特定行为。
+
+版本控制系统 (VCS) 和 Crowdin 的分支结构示例：
+
+<Image src={branchesStructure} alt="分支结构" class="no-shadow" />
+
+## 管理分支
+
+您可以在 Crowdin 中创建、克隆、合并、重命名、排列优先级、保护或删除分支，以便在开发过程中简化本地化工作。 根据您的工作流和项目类型，使用可用的界面选项、API 或 CLI。
+
+### 创建分支
+
+您可以使用网页界面（UI）手动创建分支，通过将项目连接到版本控制系统自动创建分支，或使用 CLI 或 API 创建分支。 您选择的方法可能取决于您的项目类型或集成偏好。
+
+#### 通过 VCS 集成创建分支
+
+将 Crowdin 项目与 [GitLab](/zh/gitlab-integration/)、[GitHub](/zh/github-integration/)、[Bitbucket](/zh/bitbucket-integration/) 或 [Azure Repos](/zh/azure-repos-integration/) 集成。 当您在 VCS 中选择用于本地化的分支时，它们将在 Crowdin 中自动创建。
+
+#### 通过网页界面创建分支
+
+要通过网页界面（UI）创建分支，请按照以下步骤操作：
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Steps>
+      1. 打开您的项目并转到**原文 > 文件**。
+      2. 点击 **新版本分支**。
+      3. 在弹出的对话框中，输入分支名称。
+      4. 在**重复字符串**部分，选择重复字符串的处理方式。
+      5. 点击**创建**完成。
+    </Steps>
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Steps>
+      1. 打开您的项目并前往**分支**选项卡。
+      2. 点击 **新版本分支**。
+      3. 在弹出的对话框中，输入分支名称。
+      4. 选择**创建空分支**或**克隆现有分支**。
+      5. 如果选择克隆，请从出现的下拉列表中选择源分支。
+      6. 点击**创建**完成。
+    </Steps>
+  </TabItem>
+</Tabs>
+
+#### 使用 API 创建分支
+
+您可以使用 Crowdin API 以编程方式创建分支。 可用方法取决于项目类型：
+
+* [添加分支（基于文件）](https://support.crowdin.com/developer/api/v2/#tag/Source-Files/operation/api.projects.branches.post)
+* [添加分支（基于字符串）](https://support.crowdin.com/developer/api/v2/string-based/#tag/Branches/operation/api.projects.branches.post)
+
+#### 使用 CLI 进行分支管理
+
+使用 Crowdin CLI，您可以使用专用命令直接从本地环境管理分支。 您也可以在文件上传时自动创建分支。
+
+<ReadMore>
+  了解更多关于[使用 CLI 管理分支](https://crowdin.github.io/crowdin-cli/commands/crowdin-branch)的信息。
+</ReadMore>
+
+### 受保护分支
+
+对于基于字符串的项目，您可以将特定分支设为受保护分支（例如您的 `main` 或 `production` 分支），以确保内容稳定性。 当分支启用了**启用保护**选项时，对其内容的直接修改将受到限制。
+
+受保护分支中不允许执行以下操作：
+
+* 上传新的源内容。
+* 删除现有源内容。
+* 直接向该分支中的字符串添加译文或审批。
+
+#### 使用受保护分支
+
+受保护分支的主要工作流程是在单独的分支（例如克隆的 `dev` 分支）中执行所有内容更新和翻译，然后将这些更改合并到受保护分支中。
+
+当您查看受保护的分支时，Crowdin 会显示视觉指示器：
+
+* **上传选项卡**：如果您选择受保护的分支作为目标，将显示一条蓝色提示："不允许将文件上传到受保护的分支。"
+* **字符串选项卡**：将显示一条黄色提示："您当前选择了一个受保护的分支。 不允许对字符串进行任何操作。"
+* **编辑器**：如果您尝试编辑字符串，输入字段将被禁用。 将鼠标悬停在翻译字段上会显示工具提示："不允许对受保护分支中的字符串进行此操作。"
+
+要更新受保护分支，请按照以下步骤操作：
+
+<Steps>
+  1. [克隆](#克隆分支)受保护分支（例如，从 `main` 创建 `dev`）。
+  2. 在克隆的分支中执行必要操作（上传源文件、添加译文、审批字符串）。
+  3. 将克隆的分支[合并](#合并分支)回受保护分支。
+</Steps>
+
+<Aside type="caution" title="限制">
+  受保护分支仅适用于[基于字符串](/zh/creating-project/#基于字符串的项目)的项目。
+</Aside>
+
+### 克隆分支
+
+您可以使用**新版本分支**对话框或上下文菜单中的**克隆**选项来创建现有分支的副本。
+
+要克隆分支，请按照以下步骤操作：
+
+<Steps>
+  1. 打开您的项目并前往**分支**选项卡。
+  2. 执行以下操作之一：
+     * 点击 **新版本分支**。
+     * 将鼠标悬停在所需分支上，单击 <Icon name="mdi:dots-horizontal" class="inline-icon" />（或右键单击），然后选择**克隆**。
+  3. 在弹出的对话框中，输入新分支的名称。
+  4. 如果通过**新版本分支**进行克隆，请选择**克隆现有分支**，然后从下拉列表中选择源分支。
+  5. 点击**创建**完成。
+</Steps>
+
+<Aside type="caution" title="限制">
+  分支克隆仅适用于[基于字符串](/zh/creating-project/#string-based-project)的项目。
+</Aside>
+
+### 合并分支
+
+您可以使用上下文菜单直接从**分支**选项卡将一个分支合并到另一个分支。 在合并过程中，Crowdin 会显示变更摘要（即原文更新和新译文），允许您在完成合并之前选择接受哪些变更。
+
+<Steps>
+  1. 在**分支**选项卡中，将鼠标悬停在要合并的源分支上。
+  2. 单击 <Icon name="mdi:dots-horizontal" class="inline-icon" />（或右键单击），然后选择**合并**。
+  3. 在弹出的对话框中，选择要合并到的目标分支。
+  4. 点击**继续**，进入**合并摘要**页面。
+</Steps>
+
+#### 了解合并摘要
+
+**合并摘要**页面以两列对比的形式显示目标分支（例如 `main`）与源分支（例如 `dev`）之间的所有差异。
+
+页面顶部会显示摘要：**您请求将 `{source_branch}` 合并到 `{target_branch}`。 请选择合并前您接受的更改：**。 此消息中的分支名称为可点击链接，点击后将在编辑器中打开该分支的所有字符串。
+
+在右上角的筛选器旁边，您还可以看到更改的高级摘要，包含以下计数器：
+
+* <Icon name="mdi:minus-box-outline" class="inline-icon text-red-700" /> **已删除的字符串**
+* <Icon name="mdi:plus-box-outline" class="inline-icon text-emerald-700" /> **已添加的字符串**
+* <Icon name="mdi:square-edit-outline" class="inline-icon text-blue-600" /> **已更改的字符串**
+* <Icon name="mdi:alert-outline" class="inline-icon text-yellow-700" /> **冲突字符串**
+
+**查看译文更改**
+
+如果某个字符串的源文本没有更改，但包含新的译文，它也会出现在列表中。 您可以使用箭头图标 <Icon name="mdi:chevron-down" class="inline-icon" /> 展开字符串详情，以查看具体的译文更改：
+
+* **新译文**：以绿色高亮显示，带有 <Icon name="mdi:plus" class="inline-icon" /> 标志。
+* **已删除的译文**：如果源分支中删除了某条译文，它将以红色高亮显示。
+* **审批**：如果源分支中的译文已获审批，将显示 <Icon name="mdi:check-circle-outline" class="inline-icon" /> **已审批**标签。
+* **元数据**：您可以查看投票评分和该译文的**添加日期**。
+
+**此页面的主要功能：**
+
+* **选择性合并**：您必须手动选择每项要应用到目标分支的更改（已添加、已更改或已删除的字符串）。 左上角的计数器（例如，**已选择 4 个中的 1 个**）会跟踪您的选择。
+* **无隐式合并**：只有您在合并摘要页面手动选择的字符串才会被合并。 如果您未选择某个字符串，则不会对目标分支应用任何更改（无论是源文本还是译文）。
+* **字符串详情**：列表中的每个字符串都会显示其上下文、最大长度（如已设置）以及该字符串上次修改的时间戳。
+* **在编辑器中打开**：将鼠标悬停在字符串上可看到**在编辑器中打开**链接，点击后将在新标签页中打开该字符串。
+
+#### 筛选更改
+
+要筛选列表以查看特定类型的更改，请点击右上角的 <Icon name="mdi:filter-variant" class="inline-icon" /> 并选择所需的筛选选项。
+
+可用的过滤选项：
+
+* **所有更改**：显示分支之间的所有差异（源文本和译文）。
+* **已添加的字符串**：仅显示源分支中存在但目标分支中不存在的字符串。
+* **已删除的字符串**：仅显示目标分支中存在但在源分支中已删除的字符串。
+* **已更改的字符串**：显示在源分支中被修改的字符串（包括译文更新）。
+* **冲突字符串**：显示两个分支之间内容存在差异且需要关注的字符串。 包括在两个分支中均被修改的字符串，或目标分支中比源分支中更新的字符串。
+
+<Aside type="caution">
+  请密切关注**冲突字符串**。 如果某个字符串在源分支创建后于目标分支（例如 `main`）中被更新，选择该字符串进行合并将会用源分支中的旧版本**覆盖**目标分支中的较新版本。
+</Aside>
+
+#### 完成合并
+
+选择好所有要应用的更改后，即可完成合并。
+
+在页面底部，您将看到：
+
+* **合并后删除 \{source_branch}**（可选）：选中此项可在更改成功合并后自动删除源分支（例如 `dev`）。 这对于清理临时功能分支非常有用。 如果您计划继续在源分支上工作，请不要选中此项。
+* **合并**：点击此按钮将所有选定的更改应用到目标分支。 在您从列表中至少选择一项更改（已添加、已更改或已删除的字符串，或译文更改）之前，此按钮保持禁用状态。
+
+合并完成后，您所选字符串的译文、审批和投票将来自两个分支的结果合并在一起。
+
+<Aside type="caution" title="限制">
+  分支合并仅适用于[基于字符串](/zh/creating-project/#string-based-project)的项目。
+</Aside>
+
+### 调整分支优先级
+
+您可以为基于文件的项目中的分支设置优先级，帮助译者优先处理最重要的内容。 分支会在语言页面和编辑器中按优先级排序显示。
+
+可用优先级：
+
+* <Icon name="mdi:arrow-down-bold" class="inline-icon" /> – 低
+* <Icon name="mdi:arrow-up-bold-outline" class="inline-icon" /> – 普通
+* <Icon name="mdi:arrow-up-bold" class="inline-icon" /> – 高
+
+要为您的分支设置优先级，请按照以下步骤操作：
+
+<Steps>
+  1. 打开您的项目并转到**原文 > 文件**。
+  2. 点击所需分支旁边的箭头图标，设置首选优先级。
+</Steps>
+
+<Aside type="caution" title="限制">
+  分支优先级调整仅适用于[基于文件](/zh/creating-project/#基于文件的项目)的项目。
+</Aside>
+
+### 上下文菜单中的其他操作
+
+除了克隆和合并之外，每个分支的上下文菜单还包含以下选项：
+
+* **重命名** – 允许您更改所选分支的名称。
+* **添加任务** – 打开任务创建对话框，并预先选中该分支。
+* **费用估算** – 打开以该分支为范围的费用估算对话框。
+* **删除** – 从项目中永久删除该分支。 请谨慎使用。
+
+## 重复项
+
+由于分支是同一产品功能的不同版本，因此它们的本地化内容通常是重复的。 为了帮助翻译员一致地翻译各版本并避免额外的翻译成本，Crowdin 提供了**在版本分支内显示**选项，该选项可隐藏分支之间的重复字符串。
+
+When this option is applied, only the master strings (usually from the master branch) need to be translated. Duplicates in other branches inherit translations from those master strings.
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    在基于文件的项目中，您可以在**设置 > 导入 > 源字符串**中配置重复字符串的处理方式。 如果您的源文件包含明确的标识符（键），建议使用**在版本分支内显示**选项的*严格*版本。 否则，*常规*选项适用于大多数使用场景。
+  <Image src={versionsDuplicateStrings} alt="重复项" />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    在基于字符串的项目中，\*\*在版本分支内显示（常规检测）\*\*行为会自动应用，且无法更改。 这确保了译文可在分支之间复用，无需任何额外配置。
+  </TabItem>
+</Tabs>
+
+<ReadMore>
+  详细了解[重复字符串](/zh/project-settings/import/#重复字符串)。
+</ReadMore>
+
+## 推荐的工作流
+
+为确保开发人员和翻译员之间的顺畅协作，Crowdin 中的版本分支可根据您管理源内容的方式以及所使用的项目类型以不同方式使用。
+
+### 在 Crowdin 外部管理内容
+
+在基于文件和基于字符串的项目中，您都可以将外部系统（例如文件存储或版本控制）作为可信来源。 在这种设置中：
+
+* 源文件在 Crowdin 外部进行管理和更新。
+* 您使用网页界面（UI）、API、CLI 或集成上传项目内容。
+* 相应地在 Crowdin 中创建所选分支。
+* 译文完成后将交付回您的系统。
+
+为了在您的 Crowdin 项目中实施此方法，我们建议采用以下工作流：
+
+<Steps>
+  1. 使用[可用方法](#创建分支)之一将项目文件上传到 Crowdin 项目。
+  2. 在基于文件的项目中，打开您的项目并前往**设置 > 导入 > 源字符串**。
+  3. 将**重复字符串**选项设置为**在版本分支内显示**。
+</Steps>
+
+下方截图直观地展示了此工作流在实践中的运作方式。 *Master*、*Branch 1* 和 *Branch 2* 中的所有文本在出现后会立即传输到翻译服务器，即使这些分支尚未合并到 *Master* 分支。
+
+<Image src={branchesWorkflow} alt="分支工作流" class="no-shadow mb-8" />
+
+### 在 Crowdin 中管理内容（仅限基于字符串的项目）
+
+对于基于字符串的项目，您还可以直接在 Crowdin 中管理分支，而无需依赖外部系统来定义结构或内容更新。 在这种设置中：
+
+* 可以通过网页界面（UI）、API、CLI 或集成添加源内容。
+* 版本分支通过 UI 或 API 在 Crowdin 内创建、克隆和合并。
+* 如果使用了集成，译文可选择性地同步回任何已连接的集成。
+
+此方法为希望完全在 Crowdin 内组织内容和管理版本流程的团队提供了更大的灵活性。
+
+### 下载译文
+
+通过网页界面下载时，所有版本分支的译文将放置在一个 ZIP 压缩包中。 使用 CLI 或 API 分别下载每个分支的译文。
+
+#### 使用 API 下载译文
+
+要使用 API 下载特定版本分支的译文，您可以使用以下 API 方法：
+
+* [构建项目译文](/zh/developer/api/v2/#operation/api.projects.translations.builds.post) - 请确保使用 `CrowdinTranslationCreateProjectBuildForm` schema。
+* [检查项目构建状态](/zh/developer/api/v2/#operation/api.projects.translations.builds.get)。
+* [下载项目翻译](/zh/developer/api/v2/#operation/api.projects.translations.builds.download.download)。
+
+#### 使用 CLI 下载译文
+
+下载特定版本分支的译文：
+
+```shell
+crowdin download -b branch_name
+```
+
+<ReadMore>
+  了解更多关于 [`crowdin download` 命令](https://crowdin.github.io/crowdin-cli/commands/crowdin-download)的信息。
+</ReadMore>
+
+### 在 Crowdin 外部合并分支
+
+一旦 *Feature* 分支被合并，*Master* 分支将包含来自 *Feature* 分支的新文本。 在与 Crowdin 同步时，*主*分支中的文本会填充来自相应分支的译文。
+
+将更新的*主*分支与 Crowdin 同步后，您可以从 Crowdin 中删除*特性*分支。 存储在 *Master* 分支中的所有译文将保留。
+
+此方法通常用于基于文件的项目，但如果内容在 Crowdin 外部进行管理，也适用于基于字符串的项目。
+
+<Image src={branchMerging} alt="合并分支" class="no-shadow mb-8" />
+
+### 分支翻译验证
+
+您可以在将更改合并到 *Master* 分支之前，仅使用 *Feature* 分支在生产环境中验证译文。 这样的测试部署允许您在需要时快速恢复到原始主分支版本。
+
+<Image src={branchTranslationVerification} alt="分支翻译验证" class="no-shadow" />
