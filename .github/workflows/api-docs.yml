@@ -2,7 +2,7 @@ name: Update Crowdin API Docs
 
 on:
   schedule:
-    - cron: '0 14 * * *' # Run every day at 14:00 UTC
+    - cron: "0 14 * * *" # Run every day at 14:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -19,10 +19,14 @@ jobs:
 
       - name: Download Crowdin API docs
         run: |
-          curl -o src/assets/api/crowdin/file-based.yml https://api.crowdin.com/api/docs/rest/file-based.yaml
-          curl -o src/assets/api/enterprise/file-based.yml https://enterprise.api.crowdin.com/api/docs/rest/file-based.yaml
-          curl -o src/assets/api/crowdin/string-based.yml https://api.crowdin.com/api/docs/rest/string-based.yaml
-          curl -o src/assets/api/enterprise/string-based.yml https://enterprise.api.crowdin.com/api/docs/rest/string-based.yaml
+          USER_AGENT="crowdin-docs-updater/1.0"
+          download() {
+            curl --fail --show-error --silent --user-agent "$USER_AGENT" -o "$1" "$2"
+          }
+          download src/assets/api/crowdin/file-based.yml https://api.crowdin.com/api/docs/rest/file-based.yaml
+          download src/assets/api/enterprise/file-based.yml https://enterprise.api.crowdin.com/api/docs/rest/file-based.yaml
+          download src/assets/api/crowdin/string-based.yml https://api.crowdin.com/api/docs/rest/string-based.yaml
+          download src/assets/api/enterprise/string-based.yml https://enterprise.api.crowdin.com/api/docs/rest/string-based.yaml
 
       - name: Check for changes
         id: check_changes
