@@ -45916,6 +45916,11 @@ components:
             languageId: fr
             storageId: 67890
         -
+          op: replace
+          path: /2814
+          value:
+            text: 'new translation text'
+        -
           op: remove
           path: /2815
     TranslationMassOperation:
@@ -45930,12 +45935,14 @@ components:
           enum:
             - remove
             - add
+            - replace
       type: object
       discriminator:
         propertyName: op
         mapping:
           remove: '#/components/schemas/TranslationMassOperationRemove'
           add: '#/components/schemas/TranslationMassOperationAdd'
+          replace: '#/components/schemas/TranslationMassOperationReplace'
     TranslationMassOperationRemove:
       description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       type: object
@@ -45950,6 +45957,31 @@ components:
               format: json-pointer
               enum:
                 - '/{translationId}'
+    TranslationMassOperationReplace:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/TranslationMassOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - '/{translationId}'
+            value:
+              required:
+                - text
+              properties:
+                text:
+                  description: 'Updated translation text'
+                  type: string
+                  example: 'new translation text'
+              type: object
     TranslationMassOperationAdd:
       description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
