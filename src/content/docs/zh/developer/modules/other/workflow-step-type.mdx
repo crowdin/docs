@@ -1,0 +1,543 @@
+---
+title: 工作流步骤类型
+description: 为 Crowdin Enterprise 工作流创建新的工作流步骤类型
+slug: developer/crowdin-apps-module-workflow-step-type
+sidebar:
+  label: 工作流步骤类型
+  badge: 新
+---
+
+此模块允许您创建自定义工作流步骤类型，以扩展 Crowdin Enterprise 中默认工作流步骤列表。 安装此应用后，新的工作流步骤类型将在工作流编辑器中可用，可将其添加到工作流和模板中，从而实现更高程度的自定义和灵活性。
+
+## 访问权限
+
+您可以将此模块的访问权限授予以下用户类别之一：
+
+* 仅限组织管理员
+* 组织项目中的所有用户
+* 选定用户
+
+## 结构
+
+```json title="manifest.json"
+{
+  "modules": {
+    "workflow-step-type": [
+      {
+        "key": "custom-workflow-step",
+        "name": "Custom Workflow Step",
+        "logo": "/logo.png",
+        "description": "A sample custom step for Crowdin Enterprise workflows",
+        "boundaries": {
+          "input": {
+            "title": "Input Strings",
+            "ports": [
+              "untranslated",
+              "translated",
+              "approved",
+              "all",
+              "false",
+              "true",
+              "skipped",
+              "initial"
+            ]
+          },
+          "outputs": [
+            {
+              "title": "Processed Strings",
+              "port": "translated"
+            },
+            {
+              "title": "Unprocessed Strings",
+              "port": "untranslated"
+            }
+          ]
+        },
+        "editorMode": "comfortable",
+        "updateSettingsUrl": "/settings/custom-workflow-step",
+        "deleteSettingsUrl": "/delete/custom-workflow-step",
+        "url": "/workflow-step/custom-workflow-step",
+        "environments": [
+          "crowdin-enterprise"
+        ]
+      }
+    ]
+  }
+}
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 模块的可读名称。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>logo</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 自定义 AI 徽标的相对 URL，将显示在 Crowdin Enterprise 界面中。<br />
+        建议分辨率为 48x48 像素。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 模块功能的人类可读说明。<br />
+        该描述将在 Crowdin Enterprise 界面中显示。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 定义工作流步骤的输入和输出端口，决定字符串进入和退出步骤的方式。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries.input</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 指定工作流步骤输入数据的属性，包括可用端口。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">boundaries.input.title</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 工作流步骤输入部分的标题。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries.input.ports</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>允许值：</strong> <code>untranslated</code>、<code>translated</code>、<code>approved</code>、<code>all</code>、<code>false</code>、<code>true</code>、<code>skipped</code>、<code>initial</code></p>
+        <p><strong>描述：</strong> 定义此工作流步骤可处理的字符串状态。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries.outputs</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 指定工作流步骤的可能输出，决定已处理字符串的后续流向。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries.outputs.[]</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 定义工作流步骤的输出。 数组中的每个对象包含：</p>
+        <ul>
+          <li><code>title</code>（<strong>string</strong>）– 工作流步骤输出部分的标题。</li>
+          <li><code>port</code>（<strong>string</strong>）– 用于连接输出的端口类型。</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editorMode</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 否</p>
+        <p><strong>允许值：</strong> <code>side-by-side</code>、<code>comfortable</code>、<code>multilingual</code></p>
+        <p><strong>描述：</strong> 定义此工作流步骤的 Crowdin Enterprise 编辑器模式。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>updateSettingsUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 否</p>
+        <p><strong>描述：</strong> 用于在用户在工作流编辑器中保存更改后发送已更新工作流步骤设置的相对 URL。 如果自定义工作流步骤具有配置，则使用此项。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>deleteSettingsUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 否</p>
+        <p><strong>描述：</strong> 用于在工作流编辑器中删除工作流步骤的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 否</p>
+        <p><strong>描述：</strong> 用于配置工作流步骤设置的 iframe 的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>描述：</strong> 可安装模块的环境集合。<br />
+        此参数在跨产品的应用程序中必需。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 应用与 Crowdin 之间的通信
+
+工作流步骤类型模块依赖 Webhook 和 API 方法与 Crowdin Enterprise 进行通信。 包含此模块的应用还必须定义 [Webhook 模块](/zh/developer/crowdin-apps-module-webhook/)，以接收与字符串相关的事件（即 `string.status_on_step.recalculation_triggered`）并进行相应处理。
+
+### 从 Crowdin 接收 Webhook 事件
+
+每当字符串到达应用提供的自定义工作流步骤时，Crowdin Enterprise 会定期向应用的 Webhook 模块发送批量 Webhook 负载。
+
+此负载包含 `string.status_on_step.recalculation_triggered` 事件，并包含所有需要外部处理的相关字符串（例如，基于 AI 的校对）。
+
+`string.status_on_step.recalculation_triggered` 事件的 Webhook 负载示例：
+
+```json
+{
+  "events": [
+    {
+      "event": "string.status_on_step.recalculation_triggered",
+      "stringStatus": {
+        "status": "NEED_PROCESS",
+        "output": "",
+        "originEvent": "string.added",
+        "organizationId": "200007777",
+        "translation": {
+          "id": 1106423,
+          "identifier": "058eb6ea2bdcc79a6a7208783c8bfb50",
+          "key": "string_1",
+          "text": "Not all videos are shown to users. See more",
+          "type": "text",
+          "context": "string_1",
+          "maxLength": "50",
+          "isHidden": false,
+          "isDuplicate": false,
+          "masterStringId": null,
+          "revision": 1,
+          "hasPlurals": false,
+          "labelIds": [],
+          "url": "https://umbrella.crowdin.com/editor/173/743/en-et#1106423",
+          "createdAt": "2024-10-29T10:47:13+00:00",
+          "updatedAt": null,
+          "file": {
+            "id": 743,
+            "name": "umbrella_app.xml",
+            "title": null,
+            "type": "android8",
+            "path": "/umbrella_app.xml",
+            "status": "active",
+            "revision": "1",
+            "branch": {
+              "id": null
+            },
+            "directory": {
+              "id": null
+            },
+            "project": null
+          },
+          "project": {
+            "id": 173,
+            "userId": 1,
+            "sourceLanguageId": "en",
+            "targetLanguageIds": [
+              "uk",
+              "et"
+            ],
+            "identifier": "d3026ae4cff9820bc140a210d23b35ad",
+            "name": "Project Name",
+            "createdAt": "2024-10-25T14:37:47+00:00",
+            "updatedAt": "2024-10-25T14:37:47+00:00",
+            "lastActivity": "2025-01-30T09:32:58+00:00",
+            "description": "",
+            "url": "https://umbrella.crowdin.com/u/projects/173",
+            "cname": null,
+            "languageAccessPolicy": null,
+            "visibility": null,
+            "publicDownloads": null,
+            "logo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJY...<truncated>...BBQmCC",
+            "isExternal": false,
+            "externalType": null,
+            "hasCrowdsourcing": false,
+            "groupId": 1
+          }
+        },
+        "sourceLanguage": {
+          "id": "en",
+          "name": "English",
+          "editorCode": "en",
+          "twoLettersCode": "en",
+          "threeLettersCode": "eng",
+          "locale": "en-US",
+          "androidCode": "en-rUS",
+          "osxCode": "en.lproj",
+          "osxLocale": "en",
+          "textDirection": "ltr",
+          "dialectOf": null
+        },
+        "affectedLanguage": {
+          "id": "et",
+          "name": "Estonian",
+          "editorCode": "et",
+          "twoLettersCode": "et",
+          "threeLettersCode": "est",
+          "locale": "et-EE",
+          "androidCode": "et-rEE",
+          "osxCode": "et.lproj",
+          "osxLocale": "et",
+          "textDirection": "ltr",
+          "dialectOf": null
+        },
+        "workflowStep": {
+          "id": 1035,
+          "title": "AI Review",
+          "type": "Application",
+          "languages": [],
+          "applicationModule": {
+            "applicationIdentifier": "custom-workflow-step",
+            "moduleKey": "review-step"
+          }
+        },
+        "user": {
+          "id": "1",
+          "username": "john_smith",
+          "fullName": "John Smith",
+          "avatarUrl": "https://avatar-url.com/avatar/1/small/1bc07ce78f415990547ba1b4fd5ac8a8_default.png"
+        }
+      }
+    }
+  ]
+}
+```
+
+### 处理字符串并更新其状态
+
+1. **应用逻辑** - 应用根据其内部逻辑处理收到的字符串（例如，将其发送到 AI 服务或执行自定义验证）。
+2. [**通过 API 更新字符串状态**](#api-methods) - 处理完成后，应用调用 Crowdin Enterprise 的私有 API 更新自定义工作流步骤上每个字符串的状态。 此操作将字符串路由到相应的工作流步骤输出。
+
+#### API 方法
+
+以下是用于管理自定义工作流步骤上字符串状态的 API 方法。 **更新字符串状态**方法是必填的，因为它会最终确定字符串状态并将其路由到正确的工作流输出。 另一个可用方法**获取当前字符串状态**是可选的，但可帮助处理应用中的边界情况或高级逻辑。
+
+<details>
+  <summary><strong>更新字符串状态</strong></summary>
+
+  使用此端点更新已到达您的自定义工作流步骤的字符串的状态。
+
+  ```shell title="Crowdin Enterprise" wrap
+  PATCH https://{organization_domain}.api.crowdin.com/api/v2/projects/{projectId}/workflow-steps/{stepId}/languages/{languageId}/status
+  ```
+
+  <table>
+    <thead>
+      <tr>
+        <th>参数</th>
+        <th>必填</th>
+        <th>类型</th>
+        <th>描述</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>organization_domain</code></td>
+        <td>是</td>
+        <td><code>string</code></td>
+        <td>您的 Crowdin Enterprise 组织域名。</td>
+      </tr>
+      <tr>
+        <td><code>projectId</code></td>
+        <td>是</td>
+        <td><code>integer</code></td>
+        <td>您的 Crowdin Enterprise 项目的数字标识符。</td>
+      </tr>
+      <tr>
+        <td><code>stepId</code></td>
+        <td>是</td>
+        <td><code>integer</code></td>
+        <td>自定义工作流步骤的数字标识符。</td>
+      </tr>
+      <tr>
+        <td><code>languageId</code></td>
+        <td>是</td>
+        <td><code>string</code></td>
+        <td>目标语言代码。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  **请求正文（示例）**：
+  ```json
+  [
+    {
+      "op": "replace",
+      "path": "/1106423/output",
+      "value": "translated"
+    },
+    {
+      "op": "replace",
+      "path": "/1106430/output",
+      "value": "approved"
+    }
+  ]
+  ```
+
+  **响应示例**：
+  ```json
+  {
+    "data": [
+      {
+        "data": {
+          "stringId": 1106423,
+          "languageId": "uk",
+          "stepId": 889,
+          "status": "DONE",
+          "output": "true"
+        }
+      },
+      {
+        "data": {
+          "stringId": 1106430,
+          "languageId": "uk",
+          "stepId": 889,
+          "status": "DONE",
+          "output": "true"
+        }
+      }
+    ]
+  }
+  ```
+</details>
+
+<details>
+  <summary><strong>获取当前字符串状态</strong></summary>
+
+  获取自定义工作流步骤上字符串的当前状态。
+
+  ```shell title="Crowdin Enterprise" wrap
+  GET https://{organization_domain}.api.crowdin.com/api/v2/projects/{projectId}/workflow-steps/{stepId}/languages/{languageId}/status
+  ```
+
+  <table>
+    <thead>
+      <tr>
+        <th>参数</th>
+        <th>必填</th>
+        <th>类型</th>
+        <th>描述</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>organization_domain</code></td>
+        <td>是</td>
+        <td><code>string</code></td>
+        <td>您的 Crowdin Enterprise 组织域名。</td>
+      </tr>
+      <tr>
+        <td><code>projectId</code></td>
+        <td>是</td>
+        <td><code>integer</code></td>
+        <td>您的 Crowdin Enterprise 项目的数字标识符。</td>
+      </tr>
+      <tr>
+        <td><code>stepId</code></td>
+        <td>是</td>
+        <td><code>integer</code></td>
+        <td>自定义工作流步骤的数字标识符。</td>
+      </tr>
+      <tr>
+        <td><code>languageId</code></td>
+        <td>是</td>
+        <td><code>string</code></td>
+        <td>目标语言代码。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  **响应示例**：
+  ```json
+  {
+    "data": [
+      {
+        "data": {
+          "stringId": 1106423,
+          "languageId": "uk",
+          "stepId": 889,
+          "status": "DONE",
+          "output": "true"
+        }
+      },
+      {
+        "data": {
+          "stringId": 1106430,
+          "languageId": "uk",
+          "stepId": 889,
+          "status": "DONE",
+          "output": "true"
+        }
+      }
+    ]
+  }
+  ```
+</details>
+
+### 在工作流编辑器中配置工作流步骤
+
+用户可以在 Crowdin Enterprise 工作流编辑器中配置或删除自定义工作流步骤：
+
+* **更新设置（`updateSettingsUrl`）**
+  * 当用户在工作流编辑器中更改步骤设置后点击**保存**时，Crowdin Enterprise 会向清单中定义的 `updateSettingsUrl` 发送 **POST** 请求。
+  * 应用返回 **2XX 状态**以确认已成功处理更新后的配置。
+
+* **删除步骤（`deleteSettingsUrl`）**
+  * 当用户在工作流编辑器中删除步骤时，Crowdin Enterprise 会向 `deleteSettingsUrl` 发送 **DELETE** 请求。
+  * 应用可安全删除与已删除工作流步骤相关的所有已存储设置，并返回 **2XX 状态**以确认成功。
+
+### 在您的应用中实现设置界面
+
+如果工作流步骤通过界面提供任何设置，则需要实现工作流步骤配置的验证和保存功能。
+
+#### 验证方法
+
+在您的自定义工作流步骤的 iframe 界面中，需要实现一个用于验证步骤配置的方法：
+
+```js
+window.formRef = {
+  validateForm: () => {
+    // Validate settings form
+    return true;
+  },
+}
+```
+
+每当 Crowdin Enterprise 在保存前检查设置是否有效时，都会调用此方法。
+
+#### 保存设置
+
+要保存工作流步骤的配置，请使用以下方法：
+
+```js
+window.currentFormData = settings;
+AP.formDataUpdated(settings)；
+```

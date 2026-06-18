@@ -1,0 +1,252 @@
+---
+title: 上下文菜单模块
+description: 在可能的情况下在上下文菜单中创建项目
+slug: developer/crowdin-apps-module-context-menu
+sidebar:
+  order: 19
+  label: 上下文菜单
+---
+
+此模块允许在 Crowdin 的上下文菜单中创建自定义项目。
+
+Crowdin 上下文菜单：
+
+* 资源 > 翻译记忆 > 翻译记忆记录
+* 资源 > 词汇表 > 词汇表记录
+* 项目主页标签 > 语言记录
+* 项目 > 内容 > 文件 > 文件记录
+* 项目 > 内容 > 截图 > 截图记录
+* 项目 > 语言页面 > 文件记录
+
+Crowdin Enterprise 上下文菜单：
+
+* 工作区 > 翻译记忆 > 翻译记忆记录
+* 工作区 > 词汇表 > 词汇表记录
+* 项目主页 > 语言记录
+* 项目 > 内容 > 文件 > 文件记录
+* 项目 > 内容 > 截图 > 截图记录
+* 项目主页 > 语言页面 > 文件记录
+
+上下文菜单项目可以打开指定的应用模块，并提供与所选记录相关的额外上下文或自定义 URL。
+支持以下类型的操作：
+
+* 在模态对话框中打开指定的应用模块（参见 [模态模块](#模态)）
+* 重定向到指定的应用模块
+* 在新标签页中打开自定义 URL
+
+## 访问权限
+
+您可以将此模块的访问权限授予以下用户类别之一：
+
+对于 Crowdin：
+
+* 仅限我自己（即项目所有者）
+* 我、项目经理和开发人员（如果 location：`language`、`screenshot`、`source_file`、`translated_file`）
+* 所有项目成员
+* 选定用户
+
+对于 Crowdin Enterprise：
+
+* 仅限组织管理员
+* 组织管理员、项目经理和开发人员（如果 location：`language`、`screenshot`、`source_file`、`translated_file`）
+* 组织项目中的所有用户
+* 选定用户
+
+## 结构
+
+### Modal
+
+上下文菜单项目在模态框中显示指定的模块。
+
+```json title="manifest.json"
+{
+  "modules": {
+    "context-menu": [
+      {
+        "key": "context-menu-key",
+        "name": "Name of Context Menu Item",
+        "description": "Description of Context Menu Item",
+        "options": {
+          "location": "source_file",
+          "type": "modal",
+          "module": {
+            "modal": "modal-module-key"
+          },
+          "signaturePatterns": {
+            "fileName": ".*\.json",
+            "nodeType": [0, 1]
+          }
+        }
+      }
+    ],
+    "modal": [
+      {
+        "key": "modal-module-key",
+        "name": "New Modal",
+        "url": "/path/to/integration/module"
+      }
+    ]
+  }
+}
+```
+
+### 重定向
+
+上下文菜单项目重定向到指定的模块。
+
+```json title="manifest.json"
+{
+  "modules": {
+    "context-menu": [
+      {
+        "key": "context-menu-key",
+        "name": "Name of Context Menu Item",
+        "description": "Description of Context Menu Item",
+        "options": {
+          "location": "source_file",
+          "type": "redirect",
+          "module": {
+            "project-integrations": "integration-module-key"
+          },
+          "signaturePatterns": {
+            "fileName": ".*\.json",
+            "nodeType": [0, 1]
+          }
+        }
+      }
+    ],
+    "project-integrations": [
+      {
+        "key": "integration-module-key",
+        "name": "New Integration",
+        "logo": "/integration-logo.png",
+        "url": "/path/to/integration/module"
+      }
+    ]
+  }
+}
+```
+
+### 新标签页
+
+上下文菜单项目以 URL `baseUrl/options.url` 打开一个新标签页。
+
+```json title="manifest.json"
+{
+  "baseUrl": "https://app.example.com",
+  "modules": {
+    "context-menu": [
+      {
+        "key": "context-menu-key",
+        "name": "Name of Context Menu Item",
+        "description": "Description of Context Menu Item",
+        "options": {
+          "location": "source_file",
+          "type": "new_tab",
+          "url": "/example/path",
+          "signaturePatterns": {
+            "fileName": ".*\.json",
+            "nodeType": [0, 1]
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 在上下文菜单中显示的可读名称。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 对模块功能的可读描述。<br />该描述将在 Crowdin 界面中显示。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">options.location</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>允许的值：</strong> <code>tm</code>、<code>glossary</code>、<code>style_guide</code>、<code>language</code>、<code>screenshot</code>、<code>source_file</code>、<code>translated_file</code></p>
+        <p><strong>描述：</strong> 在 UI 中可添加上下文菜单的位置。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.type</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>允许的值：</strong> <code>modal</code>、<code>new_tab</code>、<code>redirect</code></p>
+        <p><strong>描述：</strong> 此模块将执行的操作类型。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 相对 URL。</p>
+        <p>仅与 <code>new_tab</code> 类型一起使用</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.module</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>描述：</strong> 模块定义。</p>
+        <p>仅与 <code>modal</code> 和 <code>redirect</code> 类型一起使用</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>signaturePatterns</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>描述：</strong> 包含用于检测文件或节点类型的条件，指定何时显示上下文菜单项目。</p>
+        <p>仅当 <code>options.location</code> 设置为 <code>source_file</code> 时使用</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns.fileName</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 包含用于检测文件类型的 <code>fileName</code> 正则表达式。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>signaturePatterns.nodeType</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code></p>
+        <p><strong>允许的值：</strong> <code>0</code> – 文件夹，<code>1</code> – 文件，<code>2</code> – 分支</p>
+        <p><strong>描述：</strong> 节点类型数组，指定上下文菜单项目何时显示。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> <code>crowdin</code>、<code>crowdin-enterprise</code></p>
+        <p><strong>描述：</strong> 可安装该模块的环境集合。<br />
+        此参数在跨产品的应用程序中必需。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>

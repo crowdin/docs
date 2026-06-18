@@ -1,0 +1,1584 @@
+---
+title: 快速开始
+description: 了解如何使用 Node.js 构建 Crowdin 应用程序
+slug: developer/crowdin-apps-quick-start
+---
+
+import { Steps, Aside, CardGrid, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
+
+在本文中，您将了解使用 Node.js 和 Vercel 平台构建 Crowdin 应用程序的基本原则。 您将在此过程中使用 Next.js 构建并部署一个示例应用程序。
+
+**前提条件**：
+
+* 已安装 [Node.js（18 版本或更高版本）](https://nodejs.org/en/download/) 以及 npm 或 pnpm。
+* 已在 [Vercel](https://vercel.com/) 注册账户，并可访问 GitHub 或其他 Git 提供商。
+* 拥有具备创建和安装应用程序权限的 Crowdin 账户。
+* 已在 Crowdin 中创建 [OAuth 应用程序](/zh/developer/authorizing-oauth-apps/)，并获取 `Client ID` 和 `Client Secret` 值。 这些凭据将用于身份验证。
+
+## 安装
+
+在此步骤中，将示例应用程序下载到您的本地计算机并设置开发环境。
+
+克隆仓库：
+
+```bash
+git clone https://github.com/crowdin/apps-quick-start-nextjs.git
+cd apps-quick-start-nextjs
+git checkout v1.0-basic
+```
+
+安装所需依赖项：
+
+<Tabs syncKey="pkgManager">
+  <TabItem label="npm">
+
+```bash
+npm install
+```
+
+  </TabItem>
+  <TabItem label="pnpm">
+
+```bash
+pnpm install
+```
+
+  </TabItem>
+</Tabs>
+
+复制示例环境文件：
+
+```bash
+cp .env.example .env.local
+```
+
+打开 `.env.local` 文件并使用您的应用程序凭据进行更新：
+
+```ini title=".env.local"
+# Where your app runs locally
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+
+# Credentials from Crowdin OAuth app
+CROWDIN_CLIENT_ID=<your-client-id>
+CROWDIN_CLIENT_SECRET=<your-client-secret>
+
+# Crowdin OAuth endpoint
+AUTH_URL=https://accounts.crowdin.com/oauth/token
+
+# Crowdin Apps iframe script (CDN)
+NEXT_PUBLIC_CROWDIN_IFRAME_SRC=https://cdn.crowdin.com/apps/dist/iframe.js
+```
+
+启动开发服务器：
+
+<Tabs syncKey="devCommand">
+  <TabItem label="npm">
+
+```bash
+npm run dev
+```
+
+  </TabItem>
+  <TabItem label="pnpm">
+
+```bash
+pnpm dev
+```
+
+  </TabItem>
+</Tabs>
+
+应用程序运行后，在浏览器中打开 `http://localhost:3000`。 您应该会看到应用程序的欢迎页面。
+
+此时，您已拥有一个具有以下结构的可运行应用程序：
+
+* `app/manifest.json/route.ts` – 动态提供应用程序清单。
+* `app/project-menu/page.tsx` – 在 Crowdin 中加载的项目菜单模块。
+
+在当前状态下，该应用程序仅包含 **项目菜单** 模块，且尚不需要身份验证。 您将在后续步骤中添加 OAuth 和自定义文件格式支持。
+
+<Aside type="tip" title="有意开发 Crowdin 应用？">
+  查看我们的 [Crowdin Apps SDK](https://crowdin.github.io/app-project-module/)，只需几行代码即可创建应用。
+</Aside>
+
+## 应用程序清单
+
+在此步骤中，您将查看描述您的 Crowdin 应用程序并定义其如何与 Crowdin 界面集成的应用程序清单。
+
+清单通过位于 `app/manifest.json/route.ts` 的专用路由动态提供。 此文件返回有关您的应用程序的必要元数据。
+
+```ts title="app/manifest.json/route.ts"
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  const manifestData = {
+    identifier: "getting-started",
+    name: "Getting Started",
+    baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+    logo: "/logo.svg",
+    authentication: {
+      type: "none"
+    },
+    scopes: ["project"],
+    modules: {
+      "project-menu": [
+        {
+          key: "menu",
+          name: "Getting Started",
+          url: "/project-menu"
+        }
+      ]
+    },
+  };
+
+  return NextResponse.json(manifestData);
+}
+```
+
+### 清单要点
+
+* **baseUrl** – 您的应用程序部署所在的根域名。 Crowdin 使用此值为 iframe 模块和 API 调用构建 URL。 部署到 Vercel 时，生产域名会自动注入。
+* **authentication** – 在此基础版本的应用程序中设置为 `"none"`。 我们稍后将更改此设置以启用 OAuth 身份验证。
+* **模块**：
+  * `project-menu` – 在 Crowdin 项目中添加一个新标签。 点击后，它将在 iframe 中打开您应用程序的 `/project-menu` 路由。
+
+应用程序部署后，清单将在以下 URL 中可用：
+
+```
+https://<your-project-name>.vercel.app/manifest.json
+```
+
+在本指南的后续步骤中安装应用程序时，您将在 **从 URL 安装** 对话框中使用此 URL。
+
+## 部署应用程序
+
+在此步骤中，您将把应用程序部署到 Vercel 平台，并获取将用作应用程序 `baseUrl` 的生产 URL。
+
+要部署应用程序，请按照以下步骤操作：
+
+<Steps>
+  1. 将应用程序代码推送到 GitHub 仓库。
+  2. 登录 [Vercel](https://vercel.com/) 并选择 **导入 Git 仓库**。
+  3. 选择您的仓库并继续进行设置。
+  4. 在 **环境变量** 部分，添加 `.env.local` 文件中的变量：
+     * `CROWDIN_CLIENT_ID`
+     * `CROWDIN_CLIENT_SECRET`
+     * `NEXT_PUBLIC_BASE_URL` – 设置为您未来的生产 URL，例如 `https://\<project-name>.vercel.app`
+     * `AUTH_URL` – `https://accounts.crowdin.com/oauth/token`
+     * `NEXT_PUBLIC_CROWDIN_IFRAME_SRC` – `https://cdn.crowdin.com/apps/dist/iframe.js`
+  5. 单击 **部署**。
+</Steps>
+
+部署完成后，Vercel 将为您的应用程序分配一个生产 URL。 此 URL 将用作清单中的 `baseUrl`，如上一步所述。
+您将很快使用它在您的 Crowdin 账户中安装应用程序。
+
+<Aside type="note" title="Edge Function 支持">
+  清单通过 Next.js App Router 提供，并在 Vercel 上作为 Edge Function 运行。 无需额外配置。
+</Aside>
+
+## 在 Crowdin 中安装应用程序
+
+应用程序部署后，您可以使用[手动安装](/zh/developer/crowdin-apps-installation/)方法在您的 Crowdin 账户中安装它。
+
+使用已部署 Vercel 应用程序的生产清单 URL，例如：
+
+```
+https://<project-name>.vercel.app/manifest.json
+```
+
+安装后，项目导航中将出现一个名为 **Getting Started** 的新标签。 如果应用程序欢迎页面成功打开，则说明应用程序已正确安装。
+
+## 添加 API 访问权限
+
+本节为可选内容，适用于希望应用程序代表用户或组织访问 Crowdin API 的情况。
+
+### 使用 Prisma 设置数据库
+
+要安全存储应用程序安装期间收到的组织凭据，您需要一个数据库。 此步骤使用 [Prisma](https://www.prisma.io/) 作为 ORM。 您可以使用 SQLite 进行本地开发，或切换到 PostgreSQL 或其他提供商用于生产环境。
+
+数据模型在 `prisma/schema.prisma` 中定义，包含一个 `Organization` 模型：
+
+```prisma title="prisma/schema.prisma"
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Organization {
+  id                   String    @id @default(cuid())
+  domain               String?
+  organizationId       Int
+  userId               Int
+  baseUrl              String
+  appId                String
+  appSecret            String
+  accessToken          String
+  accessTokenExpires   Int
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@map("organizations")
+}
+```
+
+将数据库连接字符串添加到您的环境变量中：
+
+```ini title=".env.local"
+# Database connection (PostgreSQL)
+DATABASE_URL="postgresql://username:password@localhost:5432/crowdin_app_db"
+```
+
+如果您的应用程序已部署到 Vercel，请在 Vercel 仪表板中更新环境变量并重新部署。
+
+要应用架构并生成本地数据库，请运行以下命令：
+
+```bash
+npx prisma migrate dev --name init
+```
+
+此命令创建一个本地 SQLite 数据库（或配置的其他提供商）并生成所需的 Prisma 客户端。
+
+此时，您的应用程序已准备好存储和检索安装数据。 在下一步中，您将配置路由以处理来自 Crowdin 的 `installed` 和 `uninstall` 事件。
+
+### 处理安装和卸载事件
+
+当 Crowdin 应用程序被安装或卸载时，Crowdin 会向应用程序的后端发送一个已签名的 `POST` 请求。 您现在将创建一个处理这两个事件的动态路由。
+
+处理程序位于 `app/events/[slug]/route.ts`。 根据路由参数，它处理 `installed` 或 `uninstall` 事件：
+
+```ts title="app/events/[slug]/route.ts"
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { refreshCrowdinToken } from '@/lib/crowdinAuth';
+
+/** Data structure received when Crowdin fires the *installed* event. */
+interface InstalledBody {
+  appId: string;
+  appSecret: string;
+  domain: string;
+  organizationId: string | number;
+  userId: string | number;
+  baseUrl: string;
+}
+
+/** Data structure received when Crowdin fires the *uninstall* event. */
+interface UninstallBody {
+  domain: string;
+  organizationId: string | number;
+}
+
+/**
+ * Unified POST handler for Crowdin *App events* (`installed`, `uninstall`).
+ * Dispatches based on the dynamic `slug` in the route.
+ */
+export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const body = await request.json();
+  const { slug } = await params;
+
+  switch (slug) {
+    case 'installed': {
+      const { CROWDIN_CLIENT_ID, CROWDIN_CLIENT_SECRET, AUTH_URL } = process.env;
+
+      if (!CROWDIN_CLIENT_ID || !CROWDIN_CLIENT_SECRET || !AUTH_URL) {
+        console.error('Missing environment variables for Crowdin OAuth');
+
+        return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+      }
+
+      const eventBody = body as InstalledBody;
+
+      let newTokenData: { accessToken: string; accessTokenExpires: number };
+      try {
+        newTokenData = await refreshCrowdinToken({
+          appId: eventBody.appId,
+          appSecret: eventBody.appSecret,
+          domain: eventBody.domain,
+          userId: Number(eventBody.userId),
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to obtain Crowdin token during installation.';
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
+      }
+
+      const organizationData = {
+        domain: eventBody.domain,
+        organizationId: Number(eventBody.organizationId),
+        appId: eventBody.appId,
+        appSecret: eventBody.appSecret,
+        userId: Number(eventBody.userId),
+        baseUrl: eventBody.baseUrl,
+        accessToken: newTokenData.accessToken,
+        accessTokenExpires: newTokenData.accessTokenExpires,
+      };
+
+      try {
+        const existingOrganization = await prisma.organization.findFirst({
+          where: {
+            domain: eventBody.domain,
+            organizationId: Number(eventBody.organizationId),
+          },
+        });
+
+        if (existingOrganization) {
+          await prisma.organization.update({
+            where: { id: existingOrganization.id },
+            data: organizationData,
+          });
+        } else {
+          await prisma.organization.create({
+            data: organizationData,
+          });
+        }
+
+        return NextResponse.json(
+          { message: 'Installation processed successfully' },
+          { status: 200 }
+        );
+      } catch (dbError) {
+        console.error('Database error during installed event:', dbError);
+
+        return NextResponse.json({ error: 'Database operation failed' }, { status: 500 });
+      }
+    }
+
+    case 'uninstall': {
+      const eventBody = body as UninstallBody;
+
+      try {
+        await prisma.organization.deleteMany({
+          where: {
+            domain: eventBody.domain,
+            organizationId: Number(eventBody.organizationId),
+          },
+        });
+
+        return NextResponse.json(
+          { message: 'Uninstallation processed successfully' },
+          { status: 200 }
+        );
+      } catch (dbError) {
+        console.error('Database error during uninstall event:', dbError);
+
+        return NextResponse.json({ error: 'Database operation failed' }, { status: 500 });
+      }
+    }
+
+    default:
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+}
+```
+
+此逻辑执行以下操作：
+
+* 在 `installed` 时，将组织和应用程序凭据保存到数据库。
+* 在 `uninstall` 时，删除组织条目。
+
+要激活这些处理程序，请通过添加 `events` 块并更改身份验证类型来更新您的应用程序清单：
+
+```ts title="app/manifest.json/route.ts"
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  const manifestData = {
+    identifier: 'getting-started',
+    name: 'Getting Started',
+    baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+    logo: '/logo.svg',
+    authentication: {
+      type: 'crowdin_app',
+      clientId: process.env.CROWDIN_CLIENT_ID,
+    },
+    events: {
+      installed: '/events/installed',
+      uninstall: '/events/uninstall',
+    },
+    scopes: ['project'],
+    modules: {
+      'project-menu': [{ key: 'menu', name: 'Getting Started', url: '/project-menu' }]
+    },
+  };
+
+  return NextResponse.json(manifestData);
+}
+```
+
+这些更改后，Crowdin 将在应用程序安装和移除期间调用指定的路由。
+
+### 添加 JWT 中间件
+
+当 Crowdin 应用程序在项目中打开时，Crowdin 会在请求中包含一个已签名的 JWT 令牌。 要验证令牌并提取用户上下文，您将向应用程序添加中间件。
+
+在项目根目录创建 `middleware.ts` 文件并添加以下代码：
+
+```ts title="middleware.ts"
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
+
+interface DecodedJwtPayload {
+  domain: string;
+  context: {
+    organization_id: number;
+    user_id: number;
+  };
+  iat?: number;
+  exp?: number;
+}
+
+const CROWDIN_CLIENT_SECRET = process.env.CROWDIN_CLIENT_SECRET;
+
+export async function middleware(request: NextRequest) {
+  if (!request.nextUrl.pathname.startsWith('/api')) {
+    return NextResponse.next();
+  }
+
+  const authHeader = request.headers.get('Authorization');
+  let token: string | undefined | null = authHeader?.startsWith('Bearer ')
+          ? authHeader.split(' ')[1]
+          : undefined;
+
+  if (!token) {
+    token = request.nextUrl.searchParams.get('jwtToken');
+  }
+
+  if (!token) {
+    return NextResponse.json(
+            { error: { message: 'User is not authorized. Missing or invalid token.' } },
+            { status: 401 }
+    );
+  }
+
+  if (!CROWDIN_CLIENT_SECRET) {
+    console.error('CROWDIN_CLIENT_SECRET is not defined in environment variables for middleware.');
+    return NextResponse.json(
+            { error: { message: 'Server configuration error in middleware.' } },
+            { status: 500 }
+    );
+  }
+
+  try {
+    const secretKey = new TextEncoder().encode(CROWDIN_CLIENT_SECRET);
+
+    const { payload } = (await jwtVerify(token, secretKey)) as { payload: DecodedJwtPayload };
+
+    const decodedJwt = payload;
+
+    console.log('decodedJwt', decodedJwt);
+
+    if (!decodedJwt.context?.user_id || !decodedJwt.context?.organization_id) {
+      console.error('Middleware: JWT is missing necessary fields (user_id or organization_id).');
+
+      return NextResponse.json({ error: { message: 'Invalid token payload.' } }, { status: 403 });
+    }
+
+    const requestHeaders = new Headers(request.headers);
+    if (decodedJwt) {
+      requestHeaders.set('x-decoded-jwt', JSON.stringify(decodedJwt));
+    }
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  } catch (error) {
+    console.error('Middleware JWT verification failed:', error);
+    let errorMessage = 'User is not authorized. Token verification failed.';
+    if (
+            error instanceof Error &&
+            (error.name === 'JWTExpired' ||
+                    error.name === 'JWSSignatureVerificationFailed' ||
+                    error.name === 'JWSInvalid')
+    ) {
+      errorMessage = `Token error: ${error.message}`;
+    }
+
+    return NextResponse.json({ error: { message: errorMessage } }, { status: 403 });
+  }
+}
+```
+
+Next.js 将自动为每个匹配 `matcher` 配置中定义路径的请求运行此中间件。
+
+在文件末尾定义 matcher：
+
+```ts title="middleware.ts"
+export const config = {
+  matcher: ['/api/user/:path*'],
+};
+```
+
+这可确保任何敏感路由（例如用户信息或文件处理）只有在令牌存在且有效时才可访问。
+
+### 创建 /api/user 路由
+
+您现在将创建一个受保护的 API 路由，该路由返回当前已验证身份的 Crowdin 用户的信息。 此路由使用解码后的 JWT 载荷和存储的组织凭据来检索有效的访问令牌并向 Crowdin 发出 API 请求。
+
+创建 `app/api/user/route.ts` 文件并添加以下代码：
+
+```ts title="app/api/user/route.ts"
+import { NextResponse, NextRequest } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import CrowdinApiClient from '@crowdin/crowdin-api-client';
+import { getValidOrganizationToken } from '@/lib/crowdinAuth';
+
+/**
+ * Subset of the JWT payload we expect from Crowdin. Provided by a middleware
+ * that decodes and verifies the token before reaching this handler.
+ */
+interface DecodedJwtPayload {
+  domain: string;
+  context: {
+    organization_id: number;
+  };
+  iat?: number;
+  exp?: number;
+}
+
+/**
+ * Extract organisation sub-domain (if any) from a Crowdin `baseUrl`.
+ */
+function getOrganizationDomain(baseUrl: string): string | undefined {
+  try {
+    const url = new URL(baseUrl);
+
+    if (url.hostname.endsWith('.crowdin.com')) {
+      return url.hostname.split('.')[0];
+    }
+  } catch (error) {
+    console.error('Invalid baseUrl format:', baseUrl, error);
+  }
+  return undefined;
+}
+
+/**
+ * Handle `GET /api/user` request – fetch the authenticated Crowdin user via
+ * Crowdin API. Requires a valid JWT (decoded by middleware) in the
+ * `x-decoded-jwt` header.
+ */
+export async function GET(request: NextRequest) {
+  const decodedJwtString = request.headers.get('x-decoded-jwt');
+
+  if (!decodedJwtString) {
+    console.error('Decoded JWT not found in headers. Middleware might not have run or failed.');
+
+    return NextResponse.json(
+            { error: { message: 'Authentication data not found.' } },
+            { status: 500 }
+    );
+  }
+
+  let decodedJwt: DecodedJwtPayload;
+  try {
+    decodedJwt = JSON.parse(decodedJwtString) as DecodedJwtPayload;
+  } catch (error) {
+    console.error('Failed to parse decoded JWT from headers:', error);
+    return NextResponse.json(
+            { error: { message: 'Invalid authentication data format.' } },
+            { status: 500 }
+    );
+  }
+
+  const organizationFromDb = await prisma.organization.findFirst({
+    where: {
+      domain: decodedJwt.domain,
+      organizationId: Number(decodedJwt.context.organization_id),
+    },
+  });
+
+  if (!organizationFromDb) {
+    return NextResponse.json({ error: { message: 'Organization not found.' } }, { status: 404 });
+  }
+
+  try {
+    const validAccessToken = await getValidOrganizationToken(organizationFromDb.id);
+
+    const organizationDomain = getOrganizationDomain(organizationFromDb.baseUrl);
+
+    const crowdinClient = new CrowdinApiClient({
+      token: validAccessToken,
+      ...(organizationDomain && { organization: organizationDomain }),
+    });
+
+    const userResponse = await crowdinClient.usersApi.getAuthenticatedUser();
+
+    return NextResponse.json(userResponse.data || {}, { status: 200 });
+  } catch (error: unknown) {
+    console.error('Error in GET /api/user:', error);
+
+    let errorMessage = 'An unknown error occurred.';
+    let statusCode = 500;
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      if (
+              errorMessage.includes('Organization not found') ||
+              errorMessage.includes('Failed to refresh Crowdin token')
+      ) {
+        statusCode = 400;
+      }
+    }
+
+    return NextResponse.json({ error: { message: errorMessage } }, { status: statusCode });
+  }
+}
+```
+
+此路由执行以下操作：
+
+* 从请求头中读取解码后的 JWT 载荷
+* 通过 `domain` 和 `organizationId` 定位组织
+* 使用辅助函数检索或刷新访问令牌
+* 实例化 Crowdin API 客户端
+* 以 JSON 格式返回当前用户的信息
+
+确保 `/api/user` 路由包含在您的中间件 matcher 中，以便受到 JWT 验证逻辑的保护：
+
+```ts title="middleware.ts"
+export const config = {
+  matcher: ['/api/user/:path*'],
+};
+```
+
+您现在可以通过在 Crowdin 中打开已安装的应用程序并调用 `/api/user` 路由来测试集成，例如，通过单击项目菜单模块中的 **显示用户详细信息** 按钮。
+
+## 支持自定义文件格式
+
+本节为可选内容，适用于希望应用程序处理上传到 Crowdin 的自定义文件的情况。 您将在清单中配置 `custom-file-format` 模块，定义处理路由，并在后端处理文件解析和预览生成。
+
+在本节结束时，您的应用程序将能够：
+
+* 检测并处理包含特定键（例如 `"hello_world"`）的 `.json` 文件
+* 提取源字符串并为翻译人员提供 HTML 预览
+* 重建翻译后的文件以从 Crowdin 导出
+
+要实现此功能，请按照以下步骤操作。
+
+### 在清单中定义模块
+
+要支持在 Crowdin 中处理自定义文件，请在应用程序清单中定义一个 `custom-file-format` 模块。 在此示例中，应用程序将处理包含 `"hello_world"` 键的 `.json` 文件。
+
+```ts title="app/manifest.json/route.ts"
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  const manifestData = {
+    identifier: 'getting-started',
+    name: 'Getting Started',
+    baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+    logo: '/logo.svg',
+    authentication: {
+      type: 'crowdin_app',
+      clientId: process.env.CROWDIN_CLIENT_ID,
+    },
+    events: {
+      installed: '/events/installed',
+      uninstall: '/events/uninstall',
+    },
+    scopes: ['project'],
+    modules: {
+      'project-menu': [
+        {
+          key: 'menu',
+          name: 'Getting Started',
+          url: '/project-menu',
+        },
+      ],
+      'custom-file-format': [
+        {
+          key: 'custom-file-format',
+          type: 'custom-file-format',
+          url: '/api/file/process',
+          signaturePatterns: {
+            fileName: '.+\.json$',
+            fileContent: '"hello_world":',
+          },
+        },
+      ],
+    },
+  };
+
+  return NextResponse.json(manifestData);
+}
+```
+
+此配置告知 Crowdin：
+
+* 将匹配的文件发送到您应用程序的 `/api/file/process` 路由
+* 仅对包含键 `"hello_world"` 的 `.json` 文件触发此模块
+
+在导入/导出流程中解析或重建文件时，Crowdin 将把文件内容发送到您的应用程序。
+
+### 创建文件处理路由
+
+要处理文件解析和重建，您将创建一个响应 Crowdin `POST` 请求的后端路由。
+此路由将区分两种作业类型：`parse-file` 和 `build-file`。
+
+创建以下路由文件：
+
+```ts title="app/api/file/process/route.ts"
+import { NextResponse, NextRequest } from 'next/server';
+import { parseFile, buildFile } from '@/lib/fileProcessing';
+import { TranslationEntry } from '@/lib/file-utils/types';
+
+/**
+ * Supported job types for the file processing endpoint.
+ */
+type JobType = 'parse-file' | 'build-file';
+
+/**
+ * Request body definition expected by the `/api/file/process` endpoint.
+ */
+interface ProcessRequestBody {
+  jobType: JobType | unknown;
+  file: { content?: string; contentUrl?: string; name: string };
+  targetLanguages: { id: string }[];
+  strings?: TranslationEntry[];
+  stringsUrl?: string;
+}
+
+const validateCommonFields = (body: ProcessRequestBody): { isValid: boolean; error?: string } => {
+  if (!body.file) {
+    return { isValid: false, error: 'File is missing in request' };
+  }
+
+  if (!body.file.name) {
+    return { isValid: false, error: 'File name is missing' };
+  }
+
+  if (!(body.file.content || body.file.contentUrl)) {
+    return { isValid: false, error: 'File content or URL is missing' };
+  }
+
+  return { isValid: true };
+};
+
+const validateBuildFileRequest = (
+        body: ProcessRequestBody
+): { isValid: boolean; error?: string } => {
+  if (!(body.strings || body.stringsUrl)) {
+    return { isValid: false, error: 'For build-file, you need to provide strings or stringsUrl' };
+  }
+
+  return { isValid: true };
+};
+
+const handleParseFile = async (body: ProcessRequestBody) => {
+  const validation = validateCommonFields(body);
+  if (!validation.isValid) {
+    return NextResponse.json({ error: { message: validation.error } }, { status: 400 });
+  }
+
+  const response = await parseFile({
+    file: body.file,
+    targetLanguages: body.targetLanguages,
+  });
+
+  return NextResponse.json(response, {
+    status: 200,
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Content-Type': 'application/json',
+    },
+  });
+};
+
+const handleBuildFile = async (body: ProcessRequestBody) => {
+  const commonValidation = validateCommonFields(body);
+  if (!commonValidation.isValid) {
+    return NextResponse.json({ error: { message: commonValidation.error } }, { status: 400 });
+  }
+
+  const buildValidation = validateBuildFileRequest(body);
+  if (!buildValidation.isValid) {
+    return NextResponse.json({ error: { message: buildValidation.error } }, { status: 400 });
+  }
+
+  // Create proper request object with correct types
+  const buildRequest: {
+    file: { content?: string; contentUrl?: string; name: string };
+    targetLanguages: { id: string }[];
+    strings?: TranslationEntry[];
+    stringsUrl?: string;
+  } = {
+    file: body.file,
+    targetLanguages: body.targetLanguages,
+  };
+
+  // Only add strings if it exists
+  if (body.strings) {
+    buildRequest.strings = body.strings;
+  }
+
+  // Only add stringsUrl if it exists
+  if (body.stringsUrl) {
+    buildRequest.stringsUrl = body.stringsUrl;
+  }
+
+  const response = await buildFile(buildRequest);
+
+  return NextResponse.json(response, {
+    status: 200,
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Content-Type': 'application/json',
+    },
+  });
+};
+
+/**
+ * Primary entry point – decide which file operation to perform based on
+ * `jobType` and delegate to the corresponding handler.
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = (await request.json()) as ProcessRequestBody;
+
+    if (!body.jobType) {
+      return NextResponse.json(
+              { error: { message: 'Missing jobType parameter in request' } },
+              { status: 400 }
+      );
+    }
+
+    switch (body.jobType) {
+      case 'parse-file':
+        return await handleParseFile(body);
+
+      case 'build-file':
+        return await handleBuildFile(body);
+
+      default:
+        const jobTypeMessage = typeof body.jobType === 'string' ? body.jobType : 'unknown type';
+        return NextResponse.json(
+                { error: { message: `Unknown job type: ${jobTypeMessage}` } },
+                { status: 400 }
+        );
+    }
+  } catch (e: unknown) {
+    console.error('Error processing file:', e);
+
+    const errorMessage =
+            e instanceof Error ? e.message : 'An unknown error occurred while processing the file';
+
+    return NextResponse.json(
+            {
+              error: {
+                message: errorMessage,
+                stack: process.env.NODE_ENV === 'development' && e instanceof Error ? e.stack : undefined,
+              },
+            },
+            {
+              status: 500,
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+    );
+  }
+}
+```
+
+此路由：
+
+* 在文件上传或导出时接收来自 Crowdin 的有效载荷
+* 对于 `parse-file`，提取源字符串并构建预览
+* 对于 `build-file`，将译文注入原始结构
+
+确保 `/api/file/process/:path*` 路由包含在您的中间件 matcher 中，以便受到 JWT 验证逻辑的保护：
+
+```ts title="middleware.ts"
+export const config = {
+  matcher: ['/api/user/:path*', '/api/file/process/:path*'],
+};
+```
+
+在下一步中，您将在辅助模块中实现 `parseFile` 和 `buildFile` 背后的逻辑。
+
+### 实现文件解析和重建
+
+现在您将实现 `/api/file/process` 路由中引用的 `parseFile` 和 `buildFile` 函数背后的逻辑。 这些辅助函数从上传的文件中提取字符串，生成预览，并在导出期间重建已翻译的文件。
+
+创建以下辅助文件：
+
+```ts title="lib/fileProcessing.ts"
+'use server';
+
+import React from 'react';
+import FilePreview from './FilePreview';
+import {
+  TranslationEntry,
+  ParseFileRequest,
+  BuildFileRequest,
+  PreviewStrings,
+} from './file-utils/types';
+import { uploadToBlob, exceedsMaxSize, generateUniqueFileName } from './file-utils/blob-storage';
+import { getContent, getStringsForExport, getTranslation } from './file-utils/content-processor';
+
+/**
+ * Processes the input file and generates strings for translation
+ * @param req The request to analyze the file
+ * @returns Strings for translation and HTML preview
+ */
+export async function parseFile(req: ParseFileRequest) {
+  const fileContent = await getContent(req.file);
+  const hasTargetLanguage = req.targetLanguages?.[0]?.id != null;
+
+  const { sourceStrings, previewStrings } = extractStringsFromContent(
+          fileContent,
+          hasTargetLanguage && req.targetLanguages[0] ? req.targetLanguages[0].id : undefined
+  );
+
+  const previewHtml = await generatePreviewHtml(req.file.name || 'Unknown file', previewStrings);
+
+  const fileBaseName = generateUniqueFileName(req.file.name);
+
+  const serializedStrings = JSON.stringify(sourceStrings);
+  if (!exceedsMaxSize(serializedStrings)) {
+    return {
+      data: {
+        strings: sourceStrings,
+        preview: Buffer.from(previewHtml).toString('base64'),
+      },
+    };
+  }
+
+  return {
+    data: {
+      stringsUrl: await uploadToBlob(
+              serializedStrings,
+              `parsed_files/${fileBaseName}_strings.json`,
+              'application/json'
+      ),
+      previewUrl: await uploadToBlob(
+              previewHtml,
+              `parsed_files/${fileBaseName}_preview.html`,
+              'text/html'
+      ),
+    },
+  };
+}
+
+/**
+ * Creates a file with translated strings
+ * @param req The request to create a file
+ * @returns File content or URL to download
+ */
+export async function buildFile(req: BuildFileRequest) {
+  const languageId = req.targetLanguages?.[0]?.id;
+  if (!languageId) {
+    throw new Error('Target language ID is missing');
+  }
+
+  const fileContent = await getContent(req.file);
+  const translations = await getStringsForExport(req);
+
+  if (!fileContent || typeof fileContent !== 'object' || Object.keys(fileContent).length === 0) {
+    throw new Error('No content to translate or invalid file content format');
+  }
+
+  const translatedContent = translateFileContent(fileContent, translations, languageId);
+
+  const responseContent = JSON.stringify(translatedContent, null, 2);
+  const fileBaseName = generateUniqueFileName(req.file.name);
+
+  if (!exceedsMaxSize(responseContent)) {
+    return {
+      data: {
+        content: Buffer.from(responseContent).toString('base64'),
+      },
+    };
+  }
+
+  return {
+    data: {
+      contentUrl: await uploadToBlob(
+              responseContent,
+              `built_files/${fileBaseName}_content.json`,
+              'application/json'
+      ),
+    },
+  };
+}
+
+/**
+ * Extracts strings for translation from the file content
+ * @param fileContent The file content
+ * @param languageId The language ID (optional)
+ * @returns Object with strings for translation and preview
+ */
+function extractStringsFromContent(
+        fileContent: Record<string, string>,
+        languageId?: string
+): { sourceStrings: TranslationEntry[]; previewStrings: PreviewStrings } {
+  const sourceStrings: TranslationEntry[] = [];
+  const previewStrings: PreviewStrings = {};
+  let previewIndex = 0;
+
+  if (!fileContent || typeof fileContent !== 'object') {
+    return { sourceStrings, previewStrings };
+  }
+
+  for (const key in fileContent) {
+    const value = fileContent[key];
+    if (typeof value !== 'string') {
+      continue;
+    }
+
+    let entryTranslations: Record<string, { text: string }> = {};
+    if (languageId) {
+      entryTranslations = { [languageId]: { text: value } };
+    }
+
+    sourceStrings.push({
+      identifier: key,
+      context: `Some context: \n ${value}`,
+      customData: '',
+      previewId: previewIndex,
+      labels: [],
+      isHidden: false,
+      text: value,
+      translations: entryTranslations,
+    });
+
+    previewStrings[key] = {
+      text: value,
+      id: previewIndex,
+    };
+    previewIndex++;
+  }
+
+  return { sourceStrings, previewStrings };
+}
+
+/**
+ * Generates HTML preview for the file
+ * @param fileName The file name
+ * @param previewStrings Strings for preview
+ * @returns HTML code for preview
+ */
+async function generatePreviewHtml(
+        fileName: string,
+        previewStrings: PreviewStrings
+): Promise<string> {
+  try {
+    const ReactDOMServer = (await import('react-dom/server')).default;
+    return ReactDOMServer.renderToStaticMarkup(
+            React.createElement(FilePreview, {
+              fileName,
+              strings: previewStrings,
+            })
+    );
+  } catch (err) {
+    console.error('Error rendering React preview:', err);
+    return `<html><body><h1>Error rendering preview for ${fileName}</h1></body></html>`;
+  }
+}
+
+/**
+ * Translates the file content
+ * @param fileContent The file content
+ * @param translations Translations
+ * @param languageId The language ID
+ * @returns Translated file content
+ */
+function translateFileContent(
+        fileContent: Record<string, string>,
+        translations: TranslationEntry[],
+        languageId: string
+): Record<string, string> {
+  const translatedContent = { ...fileContent };
+
+  for (const key of Object.keys(translatedContent)) {
+    if (typeof translatedContent[key] !== 'string') {
+      continue;
+    }
+    translatedContent[key] = getTranslation(translations, key, languageId, translatedContent[key]);
+  }
+
+  return translatedContent;
+}
+```
+
+此辅助文件导出两个主要函数：
+
+* `parseFile` – 提取可翻译字符串并生成 HTML 预览
+* `buildFile` – 使用来自 Crowdin 的字符串重建最终已翻译的文件
+
+这些函数依赖于用于读取文件内容、格式化译文和生成 HTML 的实用工具。 您将在下一步实现这些工具。
+
+### 创建实用工具辅助函数
+
+此步骤实现用于解析文件内容、生成预览以及准备文件以供下载或导出的辅助函数。 这些辅助函数由 `parseFile` 和 `buildFile` 引用。
+
+首先，创建定义数据结构的 TypeScript 类型：
+
+```ts title="lib/file-utils/types.ts"
+/**
+ * Types for working with the file system and translations
+ */
+
+/**
+ * Record for a single translation string
+ */
+export interface TranslationRecord {
+  text: string;
+}
+
+/**
+ * Record for a single translation string
+ */
+export interface TranslationEntry {
+  /** Unique identifier for the string */
+  identifier: string;
+  /** Context of string usage */
+  context: string;
+  /** Additional data for the string */
+  customData: string;
+  /** Preview ID */
+  previewId: number;
+  /** Labels for the string */
+  labels: string[];
+  /** Whether the string is hidden */
+  isHidden: boolean;
+  /** Original text */
+  text: string;
+  /** Translations for different languages */
+  translations: Record<string, TranslationRecord>;
+}
+
+/**
+ * Information about the file to process
+ */
+export interface FileInfo {
+  /** Base64-encoded file content */
+  content?: string;
+  /** URL to download file content */
+  contentUrl?: string;
+  /** File name */
+  name?: string;
+}
+
+/**
+ * Language information
+ */
+export interface LanguageInfo {
+  /** Language ID */
+  id: string;
+}
+
+/**
+ * Request to analyze a file
+ */
+export interface ParseFileRequest {
+  /** File information */
+  file: FileInfo;
+  /** Target languages */
+  targetLanguages: LanguageInfo[];
+}
+
+/**
+ * Request to create a file
+ */
+export interface BuildFileRequest {
+  /** File information */
+  file: FileInfo;
+  /** Target languages */
+  targetLanguages: LanguageInfo[];
+  /** Strings to translate */
+  strings?: TranslationEntry[];
+  /** URL to download strings */
+  stringsUrl?: string;
+}
+
+/**
+ * Structure of strings for preview
+ */
+export interface PreviewStrings {
+  [key: string]: {
+    text: string;
+    id: number;
+  };
+}
+
+/**
+ * Type of request to the file processing API
+ */
+export interface ProcessRequestBody {
+  /** Job type */
+  jobType: 'parse-file' | 'build-file' | unknown;
+  /** File information */
+  file: FileInfo;
+  /** Target languages */
+  targetLanguages: LanguageInfo[];
+  /** Strings to translate */
+  strings?: TranslationEntry[];
+  /** URL to download strings */
+  stringsUrl?: string;
+}
+```
+
+创建内容处理器实用工具：
+
+```ts title="lib/file-utils/content-processor.ts"
+import { FileInfo, TranslationEntry } from './types';
+
+/**
+ * Retrieve and parse the JSON content from the provided `FileInfo` structure.
+ *
+ * The function supports two mutually exclusive sources:
+ * 1.  `content`   – Base64 encoded string that will be decoded and parsed.
+ * 2.  `contentUrl` – Remote URL that will be fetched via HTTP `GET`.
+ *
+ * @throws When neither source is available or when the content cannot be
+ *         fetched/parsed.
+ */
+export async function getContent(file: FileInfo): Promise<Record<string, string>> {
+  if (file.content) {
+    try {
+      return JSON.parse(Buffer.from(file.content, 'base64').toString());
+    } catch (error) {
+      throw new Error(
+              `Failed to parse file content: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  if (file.contentUrl) {
+    try {
+      const response = await fetch(file.contentUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      throw new Error(
+              `Failed to load content from ${file.contentUrl}: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  throw new Error('File object must contain either content or contentUrl');
+}
+
+/**
+ * Resolve the array of `TranslationEntry` objects that should be used for the
+ * current build/export operation.
+ *
+ * The caller can either inline the strings directly (`req.strings`) or provide
+ * a link to a JSON file (`req.stringsUrl`). The helper normalises both cases
+ * so that the rest of the pipeline receives an in-memory array.
+ *
+ * @throws When neither `strings` nor `stringsUrl` is provided or when the
+ *         remote resource fails to load.
+ */
+export async function getStringsForExport(req: {
+  strings?: TranslationEntry[];
+  stringsUrl?: string;
+}): Promise<TranslationEntry[]> {
+  if (!req.strings && !req.stringsUrl) {
+    throw new Error('Received invalid data: strings not found');
+  }
+
+  if (req.strings) {
+    return req.strings;
+  }
+
+  if (req.stringsUrl) {
+    try {
+      const response = await fetch(req.stringsUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      throw new Error(
+              `Failed to load strings from ${req.stringsUrl}: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  return [];
+}
+
+/**
+ * Safely obtain a translation string for the requested language or return the
+ * fallback value when a translation is missing.
+ */
+export function getTranslation(
+        translations: TranslationEntry[],
+        stringId: string,
+        languageId: string,
+        fallbackTranslation: string
+): string {
+  const translation = translations.find(
+          t => t.identifier === stringId && t.translations && t.translations[languageId]
+  );
+
+  return translation?.translations[languageId]?.text || fallbackTranslation;
+}
+
+```
+
+创建用于处理大型文件的 Blob 存储实用工具：
+
+```ts title="lib/file-utils/blob-storage.ts"
+import { put, BlobAccessError } from '@vercel/blob';
+import { v4 as uuidv4 } from 'uuid';
+
+const MAX_SIZE_BYTES = 1024 * 1024; // 1MB for data response size
+
+/**
+ * Ensure that an RW token for Vercel Blob Storage is present before any upload
+ * is attempted. Throws an `Error` when the token is missing so that the caller
+ * can handle configuration issues gracefully.
+ */
+function validateBlobAccess(): void {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.warn(
+            'BLOB_READ_WRITE_TOKEN is not set. Ensure Vercel Blob Storage is connected to the project.'
+    );
+    throw new Error('Vercel Blob access token is not configured.');
+  }
+}
+
+/**
+ * Checks if the content exceeds the maximum size for direct response
+ * @param content The content to check
+ * @returns True if exceeds max size
+ */
+export function exceedsMaxSize(content: string): boolean {
+  return Buffer.byteLength(content, 'utf8') > MAX_SIZE_BYTES;
+}
+
+/**
+ * Uploads content to blob storage and returns the URL
+ * @param content The content to upload
+ * @param path The path where to store the content
+ * @param contentType The content type
+ * @returns URL to access the uploaded content
+ */
+export async function uploadToBlob(
+        content: string,
+        path: string,
+        contentType: string
+): Promise<string> {
+  validateBlobAccess();
+
+  try {
+    // Split the path to get directory and filename
+    const lastSlashIndex = path.lastIndexOf('/');
+    const basePathname = lastSlashIndex >= 0 ? path.substring(0, lastSlashIndex + 1) : '';
+    const filename = lastSlashIndex >= 0 ? path.substring(lastSlashIndex + 1) : path;
+
+    if (!filename) {
+      throw new Error('Invalid path: filename cannot be empty');
+    }
+
+    const finalBasePath = basePathname || 'uploads/';
+    const finalFilename = filename;
+
+    // Ensure contentType is a valid string
+    const validContentType = contentType || 'application/octet-stream';
+
+    const blob = await put(finalBasePath + finalFilename, content, {
+      access: 'public',
+      contentType: validContentType,
+      addRandomSuffix: true,
+    });
+
+    return blob.url;
+  } catch (error) {
+    console.error('Error uploading to blob:', error);
+
+    if (error instanceof BlobAccessError) {
+      throw new Error(`Blob access error: ${error.message}`);
+    }
+
+    throw new Error(
+            `Failed to upload to blob storage: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+  }
+}
+
+/**
+ * Generates a unique filename without extension
+ * @param fileName Original filename
+ * @returns Base filename without extension
+ */
+export function generateUniqueFileName(fileName?: string): string {
+  const safeFileName = fileName || `file_${uuidv4()}`;
+  if (safeFileName.includes('.')) {
+    const parts = safeFileName.split('.');
+    return parts[0] || safeFileName;
+  }
+  return safeFileName;
+}
+
+```
+
+并创建相应的 React 组件以渲染简单的 HTML 预览：
+
+```tsx title="lib/FilePreview.tsx"
+'use server';
+
+import React from 'react';
+import Head from 'next/head';
+
+/**
+ * Describes a single string item that will be displayed in the preview.
+ * Each preview item keeps the original text and the unique identifier that
+ * helps React render a stable list.
+ */
+interface PreviewStringItem {
+  text: string;
+  id: number;
+}
+
+/**
+ * A map of string keys (i.e. translation identifiers) to their corresponding
+ * preview information. The key is the original string identifier, while the
+ * value provides a human-readable `text` representation and an `id` used as
+ * a React `key` when rendering lists.
+ */
+interface PreviewStrings {
+  [key: string]: PreviewStringItem;
+}
+
+/**
+ * Props accepted by the `FilePreview` React component.
+ */
+interface FilePreviewProps {
+  fileName: string;
+  strings: PreviewStrings;
+}
+
+/**
+ * Presentational component that renders a basic HTML preview of the parsed
+ * file. It shows the file name and a list of strings that were extracted
+ * from the file for translation.
+ *
+ * The component is intentionally free of any business logic – it only knows
+ * how to display the data that was already prepared by the server-side
+ * parser.
+ */
+const FilePreview: React.FC<FilePreviewProps> = ({ fileName, strings }) => {
+  return (
+          <>
+            <Head>
+              <meta charSet="utf-8" />
+              <title>Preview: {fileName}</title>
+            </Head>
+            <h1>File Preview: {fileName}</h1>
+            {Object.keys(strings).length > 0 ? (
+                    <ul>
+                      {Object.entries(strings).map(([key, value]) => (
+                              <li key={value.id}>
+                                <strong>{key}:</strong> {value.text}
+                              </li>
+                      ))}
+                    </ul>
+            ) : (
+                    <p>No strings to display.</p>
+            )}
+          </>
+  );
+};
+
+export default FilePreview;
+```
+
+这些辅助函数使您的应用程序能够：
+
+* 读取上传文件的内容
+* 查找用于导出的正确译文
+* 使用 React 生成内联预览
+* 返回静态 HTML 预览以在 Crowdin 中显示
+
+在下一步中，您可以选择添加对使用 Blob 存储处理大型文件的支持。
+
+### 使用 Blob 存储处理大型文件
+
+如果处理后的文件数据（字符串或预览 HTML）超过 Crowdin 的内联有效载荷大小限制（约 5 MB），您的应用程序应将内容上传到临时位置并返回下载链接。
+
+首先，将 Vercel Blob 存储令牌添加到您的环境变量中：
+
+```ini title=".env.local"
+# Vercel Blob Storage token (for handling large files)
+BLOB_READ_WRITE_TOKEN=<your-vercel-blob-token>
+```
+
+如果您的应用程序已部署到 Vercel，请在 Vercel 仪表板中更新环境变量并重新部署。
+
+然后，更新您的 `parseFile` 和 `buildFile` 逻辑，以在需要时使用此辅助函数。 例如：
+
+```ts
+if (Buffer.byteLength(previewHtml, 'utf8') > 5 * 1024 * 1024) {
+  const previewUrl = await uploadToBlob(previewHtml, 'preview.html', 'text/html');
+  return {
+    data: {
+      strings: sourceStrings,
+      previewUrl,
+    },
+  };
+}
+```
+
+这可确保与较大文件的兼容性，同时保持 Crowdin 所需的响应结构。 Crowdin 将从提供的 URL 下载文件并像处理内联文件一样处理它。
+
+### 测试自定义文件格式实现
+
+要验证您的自定义文件格式模块是否正常工作，请将测试文件上传到安装了您的应用程序的任何 Crowdin 项目。
+
+使用以下示例内容：
+
+```json
+{
+  "hello_world": "Hello World!",
+  "test": "This is a sample string for translation"
+}
+```
+
+将此内容保存到本地计算机上的 `.json` 文件（例如 `sample.json`）。 然后，在 Crowdin 中打开您的测试项目，并通过 **Sources > Files** 上传文件。
+
+Crowdin 将检测到文件与您的自定义文件格式签名匹配，并将其发送到您应用程序的 `/api/file/process` 路由。 如果一切设置正确：
+
+* **文件将被解析**，两个源字符串将出现在编辑器中。
+* **左侧预览面板**将使用您应用程序的预览模板显示渲染的 HTML 视图。
+
+如果文件内容较大，Crowdin 将从您应用程序的 `previewUrl` 下载预览，而不是使用内联数据。
+
+## 更新应用程序 Base URL
+
+如果您的应用程序域名在安装到 Crowdin 后发生更改（例如，从暂存环境迁移到生产环境），您需要更新 `baseUrl` 并重新安装应用程序。
+
+Crowdin 会在安装时缓存清单中的 `baseUrl`。 仅更新环境变量是不够的——Crowdin 在您重新安装应用程序之前不会重新读取它。
+
+要更新部署域名：
+
+<Steps>
+  1. 在您的托管环境中设置新值（例如 `NEXT_PUBLIC_BASE_URL=https://your-new-domain.vercel.app`）。
+  2. 重新部署您的应用程序以应用更改。
+  3. 在浏览器中打开您的清单 URL，确认 `baseUrl` 反映了新域名。
+  4. 在 Crowdin 中，转到 **账户设置 > Crowdin 应用程序**。
+  5. 删除旧版本的应用程序。
+  6. 使用更新后的清单 URL 重新安装应用程序。
+</Steps>
+
+重新安装后，Crowdin 将使用更新后的域名进行 iframe 模块和事件传递。
+
+## 另请参阅
+
+<CardGrid>
+  <LinkCard title="Crowdin JS SDK" description="Crowdin iframe 应用程序的辅助工具。" href="https://github.com/crowdin/apps-helpers" target="_blank" />
+  <LinkCard title="Vercel 中的环境变量" description="在 Vercel 项目中定义和管理变量。" href="https://vercel.com/docs/configuration/project/environment-variables" target="_blank" />
+  <LinkCard title="Next.js App Router" description="Next.js 13+ 中 App Router 的文档。" href="https://nextjs.org/docs/app/building-your-application/routing" target="_blank" />
+</CardGrid>

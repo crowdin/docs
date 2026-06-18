@@ -1,0 +1,291 @@
+---
+title: 文件预导出处理模块
+description: 在文件导出前修改字符串
+slug: developer/crowdin-apps-module-file-pre-export-processing
+sidebar:
+  order: 5
+  label: 文件预导出处理
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+预导出模块允许您在文件导出前修改字符串。 该模块同时适用于源字符串及其对应的译文。 如果您希望保留原始文件结构并按原样导出，但又想对已翻译的字符串进行一些修改，预导出模块将特别有用。
+
+借助预导出模块，您将获得包含文件内容和待导出字符串的请求负载。 使用预导出模块，您可以修改已翻译的字符串并将其返回以供导出。 这使您无需直接修改文件内容即可自定义字符串。
+
+<Aside>
+  如果您的文件处理应用使用后导入模块更改了字符串数量，请确保预导出模块返回原始字符串数量及其字符串 uniqId。
+</Aside>
+
+## 访问权限
+
+您可以将此模块的访问权限授予以下用户类别之一：
+
+对于 Crowdin：
+
+* 仅限我自己（即项目所有者）
+* 所有项目成员
+* 选定用户
+
+对于 Crowdin Enterprise：
+
+* 仅限组织管理员
+* 组织项目中的所有用户
+* 选定用户
+
+## 结构
+
+```json title="manifest.json"
+{
+  "modules": {
+    "file-pre-export": [
+      {
+        "key": "your-pre-export-module-key",
+        "url": "/export-strings",
+        "signaturePatterns": {
+          "fileName": "^.+\.xml$",
+          "fileContent": "<properties>\s*<property\s+name=.*value=.*/>"
+        }
+      }
+    ]
+  }
+}
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 文件导出时触发的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>描述：</strong> 包含 <code>fileName</code> 和/或 <code>fileContent</code> 正则表达式，用于在导出译文文件时检测文件类型。</p>
+        <p><Aside><code>fileContent</code> 正则表达式仅检查文件内容的前 64 KB。</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 文件处理应用与 Crowdin 之间的通信
+
+导出文件时，系统使用 `signaturePatterns` 参数检测适当的预导出模块，并向应用的 URL（`$baseUrl`）发出 HTTP 请求。 $url\`）用于进一步处理，其中包含源字符串及其对应的翻译。
+
+文件处理应用将根据您的需求修改字符串翻译。 请确保预导出模块返回原始字符串数量及其字符串 uniqId，以确保翻译导出成功。 一旦从预导出模块返回修改后的字符串，它们将被用于构建翻译文件。
+
+### 向文件处理应用发送的请求
+
+请求载荷示例：
+
+```json
+// max request payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "jobType": "file-pre-export",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name"
+  },
+  "file": {
+    "id": 1,
+    "name": "file.xml",
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded source file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // source file public URL
+  },
+  "sourceLanguage": {
+    "id": "es",
+    "name": "Spanish",
+    "editorCode": "es",
+    "twoLettersCode": "es",
+    "threeLettersCode": "spa",
+    "locale": "es-ES",
+    "androidCode": "es-rES",
+    "osxCode": "es.lproj",
+    "osxLocale": "es",
+    "pluralCategoryNames": ["one"],
+    "pluralRules": "(n != 1)"
+  },
+  "targetLanguages": [
+    {
+      // same structure as for sourceLanguage, one element for export, can be more for multilingual files
+    }
+  ],
+  "strings": [...],
+  "stringsUrl": "https://tmp.downloads.crowdin.com/strings.ndjson",
+}
+```
+
+参数：
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>jobType</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Value:</strong> <code>file-pre-export</code></p>
+        <p><strong>Description:</strong> 指定文件预导出模块的操作。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.content</code>, <code class="whitespace-nowrap">file.contentUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>说明：</strong> 用于传递 base64 编码的源文件内容（<code>file.content</code>）或源文件公共 URL（<code>file.contentUrl</code>）的参数。<br />
+        可使用这两个参数中的任意一个。<Aside title="Limitations">最大请求载荷限制为 5 MB。</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>strings</code>, <code>stringsUrl</code></td>
+      <td>
+        <p><strong>Type(strings):</strong> <code>array</code></p>
+        <p><strong>Type(stringsUrl):</strong> <code>string</code></p>
+        <p><strong>Description:</strong> 用于文件导出前源字符串及其对应翻译的参数。 <code>strings</code> - 字符串数组。 <code>stringsUrl</code> - 包含字符串的 <a href="https://github.com/ndjson/ndjson-spec" target="_blank">换行符分隔 JSON</a> 的公共 URL。<br />
+        可使用这两个参数中的任意一个。<Aside title="Limitations">最大请求载荷限制为 5 MB。</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### 应用的预期响应
+
+响应载荷示例：
+
+```json
+// max response payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "data": {
+    "strings": [...], // modified strings array
+    "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // new-line delimited json file with modified strings
+  },
+  "error": {
+    "message": "Your error message"
+  }
+}
+```
+
+参数：
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>data.strings</code>, <code>data.stringsUrl</code></td>
+      <td>
+        <p><strong>类型（data.strings）：</strong> <code>array</code></p>
+        <p><strong>类型（data.stringsUrl）：</strong> <code>string</code></p>
+        <p><strong>说明：</strong> 用于传递修改后字符串内容的参数。<br />
+        <code>data.strings</code> - 修改后的字符串数组。<br />
+        <code>data.stringsUrl</code> - 包含修改后字符串的 <a href="https://github.com/ndjson/ndjson-spec" target="_blank">换行符分隔 JSON</a> 的公共 URL。<br />
+        可使用这两个参数中的任意一个。<Aside title="Limitations">最大响应载荷限制为 5 MB。</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 可从应用传递至 Crowdin 的错误消息，将在 UI 中对用户可见。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### 字符串数组结构
+
+以下是应用在导出前将接收到的字符串示例。 应用响应中修改后的字符串也使用相同的结构。
+
+载荷示例：
+
+```json
+// strings should be in "new-line delimited json" format if they passed by URL
+[
+  { // non plural string
+    "uniqId": "9cdfb439c7876e703e307864c9167a15::1", // required, unique ID
+    "identifier": "string-key-1", // required
+    "context": "Some context", // optional
+    "maxLength": 10, // optional, default null
+    "isHidden": false, // optional, default null
+    "hasPlurals": false, // optional, default false
+    "labels": ["label-one", "label-two"], // optional, default []
+    "text": "String source text", // required
+    "translations": { // optional
+      "uk": { // targetLanguage.id
+        "text": "Переклад стрічки", // required
+        "status": "untranslated | translated | approved" // optional, default "translated"
+      }
+      // can be other languages for multilingual, check "targetLanguages" in the request payload
+    }
+  },
+  { // plural string
+    "uniqId": "9cdfb439c7876e703e307864c9167a15::2", // required, unique ID
+    "identifier": "string-key-2",
+    "context": "Some optional context",
+    "maxLength": 15,
+    "isHidden": false,
+    "hasPlurals": true,
+    "labels": [],
+    "text": { // keys from sourceLanguage.pluralCategoryNames
+      "one": "One file",
+      "other": "%d files"
+    },
+    "translations": {
+      "uk": {
+        "text": { // keys from targetLanguage.pluralCategoryNames
+          "one": "One file",
+          "few": "%d файла",
+          "many": "%d файлів"
+        },
+        "status": {
+          "one": "untranslated",
+          "few": "translated",
+          "many": "approved"
+        }
+      }
+    }
+  }
+]
+```
+
+参数：
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>uniqId</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>说明：</strong> 文件内的唯一标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>identifier</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>说明：</strong> 可见的字符串键。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>

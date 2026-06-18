@@ -1,0 +1,117 @@
+---
+title: Webhook
+description: 通过配置 webhook，将 Crowdin 与您的服务集成
+slug: webhooks
+---
+
+import { Image } from 'astro:assets';
+import { Aside, Steps } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Icon } from 'astro-icon/components';
+import webhooksAdd from '!/crowdin/project-management/webhooks_add.png';
+import webhooksEditDelete from '!/crowdin/project-management/webhooks_edit_delete.png';
+import webhooksCallsHistory from '!/crowdin/project-management/webhooks_calls_history.png';
+
+通过 Webhook，您可以接收 Crowdin 项目中发生的关键事件的相关信息，例如译文已完成或校对。 当您配置 webhook 后，Crowdin 将开始通过 HTTP 向 webhook URL 发送带有数据的 POST 或 GET 请求。
+
+<Aside title="权限">
+  要管理项目中的 webhook，您必须具有项目所有者、管理员或开发人员/翻译请求者角色。 请参阅[邀请人员](/zh/inviting-people/)了解更多信息。
+</Aside>
+
+## 用例
+
+您可以通过添加 webhooks 来建立与服务或与您后端的集成。 例如：
+
+* 设置 webhook 来向您的系统发送通知。
+* 向具有特定请求要求的第三方服务传递信息（例如，HTTP 方法、内容类型）。
+* 创建与 Crowdin 的自定义集成。
+
+## 事件
+
+您可以为项目中发生的不同事件配置 webhook，例如，当文件被翻译、校对，或字符串被添加或更新时。
+
+<ReadMore>
+  在 Crowdin 开发者门户上阅读更多关于 [Webhook 事件](https://developer.crowdin.com/webhooks/#events)的信息。
+</ReadMore>
+
+## 添加 Webhooks
+
+要在 Crowdin 中配置 webhook，请按照以下步骤操作：
+
+<Steps>
+  1. 打开您的项目并转到 **工具** 标签页（对于账户级别的 webhook，请打开您的 **账户设置**）。
+  2. 选择 **Webhooks** 并单击 **添加 Webhook**。
+</Steps>
+
+<Image src={webhooksAdd} alt="添加 Webhook" class="width-xl" />
+
+您需要提供以下信息才能注册 Webhook：
+
+* Webhook 名称（例如“应用程序项目已翻译”）
+* 要发布到指定 URL 的事件列表。 您可以选择任意一个或一组事件。
+* 作为直接请求发送 webhook 回调的目标 URL。 不支持重定向，重定向将导致传送失败。 端点必须在 **30 秒**内返回 `2XX` 响应。
+* 指示对给定资源执行所需操作的请求方法（使用 `GET` 或 `POST`）。
+* POST 请求方法的内容类型（`multipart/form-data`、`application/json` 或 `application/x-www-form-urlencoded`）。
+  * 对于 `application/json` 内容类型，您可以选择 **批量 webhook** 将多个事件合并为单个请求。
+
+您可以选择为您的 webhook 添加特殊标头。 作为一种授权方法，它们可以用来提供更多的安全保障。 例如，如果添加标头，则 Webhook 终结点可以检查它们，以确保信息来自 Crowdin。
+
+<Aside type="tip">
+  添加 webhook 时，单击 **测试 webhook** 以查看您的应用程序将如何响应该调用。
+</Aside>
+
+<Aside type="caution" title="限制">
+  您最多可以为项目级别事件配置 20 个 webhook 端点。
+</Aside>
+
+根据您的 Webhook 管理方法，您可能需要向防火墙添加专用的 Crowdin IP 地址，以允许 Crowdin 打开预配置的 Webhook URL。
+
+<ReadMore>
+  详细了解 [IP 地址](/zh/developer/ip-addresses/#webhooks-ai-providers-and-mt-engines)。
+</ReadMore>
+
+## 自定义有效载荷
+
+Crowdin 中的每种事件类型都有包含相关事件信息的特定载荷格式。 您可以自定义 webhook 载荷，按照系统要求的方式添加和组织元素。
+
+要查看事件的可用变量，请将鼠标悬停在 *载荷* 部分右上角的 *信息* <Icon name="mdi:info-outline" class="inline-icon" /> 图标上。
+
+## 编辑或删除 Webhook
+
+在特定项目中，您可以直接从显示的列表中编辑或删除已配置的 webhook，从而访问和管理它们。
+
+<Image src={webhooksEditDelete} alt="编辑或删除 Webhook" />
+
+## 调用历史
+
+在 **调用历史** 部分，您可以查看所有已配置 webhook 的调用列表。 使用筛选器查看所有或仅显示失败的 Webhook 通知。
+
+<Image src={webhooksCallsHistory} alt="调用历史" />
+
+## Webhook 失败
+
+过去 24 小时内响应代码为 4xx 或 5xx 范围内且失败次数达到 100 次及以上的 Webhook 会被自动禁用。
+
+### 已禁用的 Webhook
+
+已禁用的 webhook 会在 **Webhooks** 部分列出，并显示一个清除的勾选标记，表示它们当前由于持续失败而处于非活动状态。 要了解有关失败 webhook 的更多信息，请导航到 **调用历史 > 失败** 部分。 在这里，您可以探索有关每个失败的 Webhook 所遇到的问题的详细信息。
+
+### 手动重新启用
+
+一旦您识别并解决了 Webhook 失败的原因，就可以手动重新启用 Webhook 以恢复其功能。 在 **Webhooks** 部分，找到已禁用的 webhook 并选择它进行重新启用。
+
+## 将 Webhooks 发送至 Slack
+
+借助 Crowdin webhook，您可以将预配置事件类型的通知直接发送到特定的 Slack 频道。
+
+要配置向 Slack 发送 webhook，您需要创建一个简单的 Slack 应用。
+
+<ReadMore>
+  阅读更多关于[使用 Incoming Webhooks 向 Slack 发送消息](https://api.slack.com/messaging/webhooks)的信息。
+</ReadMore>
+
+一旦您创建并配置了 Slack 应用，您将获得一个 Webhook URL，该 URL 应用于 Crowdin 中的 Webhooks 配置。
+
+<Aside>
+  要向 Slack 发送 webhook，请确保您的自定义载荷包含 `"text"` 字段，并且 `批量 webhook` 选项已清除。
+</Aside>

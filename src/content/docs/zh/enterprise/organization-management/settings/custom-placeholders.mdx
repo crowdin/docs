@@ -1,0 +1,145 @@
+---
+title: 自定义占位符
+description: 在编辑器中配置自定义占位符的高亮显示
+slug: enterprise/custom-placeholders
+---
+
+import { Image } from 'astro:assets';
+import { Steps, LinkCard, CardGrid, Aside } from '@astrojs/starlight/components';
+import organizationSettingsMenuItem from '!/enterprise/organization-management/organization_settings_menu_item.png';
+import customPlaceholderExpression from '!/enterprise/organization-management/custom_placeholders_expression.png';
+
+自定义占位符专为源文本包含一些不太常见的占位符而设计，这些占位符默认情况下不会在源字符串（编辑器中）中突出显示。
+
+## 配置您的自定义占位符
+
+您可以在**组织设置**中管理自定义占位符。
+
+<Steps>
+  1. 单击右上角的个人资料照片，然后选择 **组织设置**。 <Image src={organizationSettingsMenuItem} alt="组织设置" />
+  2. 切换到左侧边栏的**自定义占位符**部分，然后单击**添加占位符**。
+  3. 在出现的对话框中，使用表达式语法元素指定自定义占位符表达式，然后单击**创建**。 <Image src={customPlaceholderExpression} alt="自定义占位符表达式" class="width-xl" />
+</Steps>
+
+<LinkCard title="将自定义占位符分配给项目" href="/enterprise/project-settings/import/#assign-custom-placeholder" />
+
+将自定义占位符分配给项目后，项目成员将在翻译过程中看到它们在编辑器中突出显示。
+
+## 了解语法：一个简单示例
+
+要配置自定义占位符表达式，您可以使用[表达式语法表](/zh/enterprise/expression-syntax-elements/)中的元素。
+
+例如，如果您想高亮显示此 `[[Placeholder1]]`，您的表达式可能如下所示：
+
+```
+start, then "[[", range "a,z,A,Z,0,9", limit "1,20", then "]]", end
+```
+
+为了简化一些内容，让我们拆解上面的表达式。
+
+* `start` &ndash; 表示表达式的开始。
+* `then "[["` &ndash; 表示您的自定义占位符以两个开方括号开始。
+* `range "a,z,A,Z,0,9"` &ndash; 表示您的自定义占位符可能包含 a-z 和/或 A-Z 和/或 0-9 范围内的字符。
+* `limit "1,20"` &ndash; 表示占位符的长度为 1 到 20 个字符。
+* `then "]]"` &ndash; 表示您的自定义占位符以两个关方括号结束。
+* `end` &ndash; 表示表达式的结束。
+
+<CardGrid>
+  <LinkCard title="Verbal Tester" description="使用 Verbal Tester 应用程序在 Crowdin 项目中创建、检查和编辑口头表达式" href="https://store.crowdin.com/verbal-tester" target="_blank" />
+  <LinkCard title="试用口头表达式 GPT" description="协助在 Crowdin 中开发口头表达式。" href="https://chat.openai.com/g/g-NdFRRXHwm-crowdin-verbal-expressions-maker" target="_blank" />
+</CardGrid>
+
+## 自定义占位符表达式示例
+
+下面您可以看到自定义占位符表达式的一些示例以及它们如何在编辑器的源字符串中突出显示。
+
+<Aside>
+  以下所有示例均使用相同的参数分隔符 `"`。
+</Aside>
+
+##### 用百分号和花括号括起来的自定义占位符
+
+字符串示例：
+
+```
+A test string with a custom %{placeholder}%
+```
+
+表达式：
+
+```graphql
+start, maybe "(", then "%", then "{", anything,  then "}", maybe ")", then "%", end
+```
+
+该表达式的解析：
+
+* `maybe "("` &ndash; 允许占位符可选地以 `(` 开头。
+* `then "%"` &ndash; 要求一个 `%` 字符。
+* `then "{"` &ndash; 要求一个 `{` 字符。
+* `anything` &ndash; 匹配占位符内的任意字符或字符序列。
+* `then "}"` &ndash; 要求一个 `}` 字符。
+* `maybe ")"` &ndash; 允许占位符可选地以 `)` 结尾。
+* `then "%"` &ndash; 要求一个 `%` 字符。
+
+##### 用双方括号括起来的自定义占位符
+
+字符串示例：
+
+```
+A test string with a custom [[placeholder]]
+```
+
+表达式：
+
+```graphql
+start, then "[[", anythingbut "[[", then "]]", multiple, end
+```
+
+该表达式的解析：
+
+* `then "[["` &ndash; 要求占位符以 `[[` 开头。
+* `anythingbut "[["` &ndash; 匹配除开头 `[[` 括号以外的任意字符。
+* `then "]]"` &ndash; 要求占位符以 `]]` 结尾。
+* `multiple` &ndash; 允许模式（括号内的内容）重复出现。
+
+##### 自定义占位符
+
+字符串示例：
+
+```
+A test string with a custom placeholder
+```
+
+表达式：
+
+```graphql
+start, then "placeholder", end
+```
+
+##### 用段落字符括起来的自定义占位符
+
+字符串示例：
+
+```
+A test string with a custom §placeholder§
+```
+
+表达式：
+
+```graphql
+start, then "§", anything,  then "§", end
+```
+
+##### 您可能希望作为单个自定义占位符高亮显示的长句
+
+字符串示例：
+
+```text wrap
+A test string with a Long sentence that you might want to highlight as a single custom placeholder
+```
+
+表达式：
+
+```graphql wrap
+start, then "Long sentence that you might want to highlight as a single custom placeholder", end
+```

@@ -1,0 +1,167 @@
+---
+title: VCS Bütünleştirmelerini Çevrimiçi Yapılandırma
+description: Learn how to configure a DVCS integration online in Crowdin
+slug: tr/configuring-vcs-integrations-online
+sidebar:
+  order: 5
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import configuringSpreadsheets from '!/crowdin/integrations/vcs_configuring_spreadsheets.png';
+import configuringXml from '!/crowdin/integrations/vcs_configuring_xml.png';
+import editIntegrationEditBranchBtn from '!/crowdin/integrations/vcs_edit_integration_edit_branch_btn.png';
+import filesList from '!/crowdin/integrations/vcs_files_list.png';
+import filesListFilter from '!/crowdin/integrations/vcs_files_list_filter.png';
+import ignoreFiles from '!/crowdin/integrations/vcs_ignore_files.png';
+import languageMapping from '!/crowdin/integrations/vcs_language_mapping.png';
+import languageMapping2 from '!/crowdin/integrations/vcs_language_mapping2.png';
+import loadConfiguration from '!/crowdin/integrations/vcs_load_configuration.png';
+
+Bir sürüm denetim sistemi bütünleştirmesini yapılandırmak için çevirmek istediğiniz kaynak dosyaları ve Crowdin’in çevrilen dosyaları deponuzda nasıl yapılandırması gerektiğini belirtin.
+
+## Dal Yapılandırması
+
+Çeviri için deponuzu ve dalınızı seçtikten sonra, bir sonraki adım seçilen dalı yapılandırmaktır. Click <Icon name="mdi:pencil" class="inline-icon" /> to open the **Branch Configuration** dialog and start the configuration. In the **Branch Configuration** dialog, you can either load the existing configuration file stored in your repository or create a new configuration from scratch.
+
+<Image src={editIntegrationEditBranchBtn} alt="Edit Integration" class="width-2xl crowdin-modal" />
+
+If you want your VCS integration to work in the **Target File Bundles Mode**, you need to configure target file bundles for each branch you have selected for translation.
+
+<ReadMore>
+  [VCS bütünleştirmesi için hedef dosya paketlerini yapılandırma](/tr/bundles/#VCS-bütünleştirmesindeki-paketler) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+## Bir Yapılandırma Yükleme
+
+Deponuzda saklanan varolan yapılandırma dosyasını yüklemek için şu adımları izleyin:
+
+<Steps>
+  1. <Icon name="mdi:dots-horizontal" class="inline-icon" /> simgesine tıklayın ve **Yapılandırmayı yükle**’yi seçin.
+  2. Deponuzda yapılandırma dosyasının adını belirtin.
+  3. Click **Continue**. <Image src={loadConfiguration} alt="Yapılandırmayı Yükleyin" class="width-2xl crowdin-modal" />
+</Steps>
+
+The configuration will be displayed in the **Branch Configuration** dialog. Olduğu gibi kullanabilir veya gerekirse değiştirebilirsiniz.
+
+## Bir Yapılandırma Oluşturma
+
+To create a new configuration file to be used by the integration, specify the preferred name and click **Continue** in the **Branch Configuration** dialog.
+
+Ardından, aşağıda listelenen şekilleri ve yer tutucuları kullanarak kaynak ve çevrilmiş dosya yollarını belirtin. Sağ panelde, çeviri için yüklenecek kaynak dosyaların yapısını ve belirtilen yollara dayanan çevrilmiş dosyaların yapısını önizleyebilirsiniz.
+
+Seçilen dal için yapılandırmayı ayarlamayı bitirdikten ve değişiklikleri kaydettikten sonra yapılandırma dosyası, deponuzdaki çeviri dalının kök dizinine kaydedilecektir.
+
+### Şekiller
+
+You can use wildcard (`*`, `**`, `?`, `[set]`, `\`) patterns to specify which files should be uploaded for translation.
+
+<ReadMore>
+  Read more about [wildcard patterns](/developer/configuration-file/#general-configuration).
+</ReadMore>
+
+### Yer Tutucular
+
+Çevrilen dosyaların nereye yerleştirileceğini ve nasıl adlandırılacağını belirtmek için yer tutucuları kullanın:
+
+<Include file="placeholders.mdx" />
+
+## Gelişmiş Ayarlar
+
+The advanced settings provide more control over the integration's behavior. You can specify files to be excluded from translation, map custom language codes, and configure parsing options for structured file formats, such as spreadsheets and XML. This section also covers additional parameters that can be configured by manually editing the `crowdin.yml` file in your repository.
+
+### Dosyaları Yoksayma
+
+Eğer bazı dosyaların çevrilmesini istemiyorsanız, **Yoksayılan şekil ekle**’ye tıklayın, bu dosyalar için şekli belirtin ve Crowdin bu dosyaları çeviri için yüklemeyecektir.
+
+<Image src={ignoreFiles} alt="Dosyaları veya klasörleri yoksayın" class="width-2xl crowdin-modal" />
+
+### Dil Eşleme
+
+Eğer projeniz yerel dizinleri için özel adlar kullanıyorsa, Crowdin tarafından tanınmak üzere kendi dillerinizi eşlemek için dil eşlemeyi kullanabilirsiniz.
+
+Bir dil eşlemesi eklemek için şu adımları izleyin:
+
+<Steps>
+  1. Click **Language Mapping**. <Image src={languageMapping} alt="Dil eşleme" class="width-2xl crowdin-modal" />
+  2. Gerekli dili ve bir yer tutucuyu seçin.
+  3. Özel kodunuzu belirtin.
+  4. Click **Add Mapping** to add another custom code. <Image src={languageMapping2} alt="Language mapping" class="width-lg" />
+  5. **Kaydet**’e tıklayın.
+</Steps>
+
+### Elektronik Tabloları Yapılandırma
+
+You can specify the scheme of your spreadsheet file in the **Scheme** field. CSV veya XLS/XLSX dosyanız için şemayı oluşturmak amacıyla aşağıdaki sabitleri kullanın:
+
+* `identifier` &ndash; column contains string identifiers.
+* `source_phrase` &ndash; column contains source strings.
+* `source_or_translation` &ndash; column contains source strings, but the same column will be filled with translations when the file is exported. Eğer varolan çevirileri yüklerseniz, bu sütundaki değerler çeviriler olarak kullanılacaktır.
+* `translation` &ndash; column contains translations.
+* `context` &ndash; column contains comments or context information for the source strings.
+* `max_length` &ndash; column contains max.length limit values for the string translations.
+* `labels` &ndash; column contains labels for the source strings.
+* `none` &ndash; column that will be skipped during import.
+
+**Scheme example**: `identifier,source_phrase,context,fr,de,it,uk` ([Language Codes](/developer/language-codes/)).
+
+If a spreadsheet contains the translations for several target languages, select **Multilingual file**. If you don't want to translate the text stored in the first row, select **Import first line as a header**.
+
+<Image src={configuringSpreadsheets} alt="Elektronik Tabloları Yapılandırma" class="width-2xl crowdin-modal" />
+
+### XML Dosyalarını Yapılandırma
+
+Crowdin’in XML dosyalarını nasıl işlemesi gerektiğini belirlemek için XML dosyası içe aktarma ayarlarını yapılandırabilirsiniz.
+
+<Image src={configuringXml} alt="XML Dosyalarını Yapılandırma" class="width-2xl crowdin-modal" />
+
+| **Option**                | **Description**                                                                                                                                            |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Translate Content**     | Etiketlerin içinde saklanan metinleri çevirmek için seçin.                                                                                                 |
+| **Translate Attributes**  | Etiket özniteliklerini çevirmek için seçin.                                                                                                                |
+| **Content Segmentation**  | Select to split the XML source file's content into shorter text segments.                                                                                  |
+| **Translatable Elements** | Bu, XPaths olan yerdeki her öğenin DOM öğesine aktarılması gereken dizgilerin bir dizilimidir. Sample path: `/path/to/node` or `/path/to/attribute[@attr]` |
+
+<Aside>
+  When Content segmentation is enabled, the translation upload is handled by an experimental machine learning technology.
+</Aside>
+
+### Ek Parametreler
+
+Aşağıdaki parametreler çevrimiçi olarak yapılandırılamaz:
+
+* `preserve_hierarchy` - Crowdin’de dizin yapısını korur
+* `dest` - Crowdin’de bir dosya adı belirlemenizi sağlar
+* `type` - Crowdin’de bir dosya türü belirlemenizi sağlar
+* `update_option` - keeps translations and keeps/removes approvals of changed strings during a file update
+* `commit_message` - additional text appended to the default commit message
+* `append_commit_message` - controls whether your custom text is appended to or replaces the default commit message
+* `export_languages` - export translations for the specified languages
+
+Once you save the online configuration, a `crowdin.yml` file is saved in the root of the configured branch in your repository. Gerekli parametreleri eklemek için bu dosyayı el ile düzenleyebilirsiniz.
+
+<ReadMore>
+  Read more about the [configuration file](/developer/configuration-file/#configuration-file-for-vcs-integrations).
+</ReadMore>
+
+## Yapılandırmayı Kaydetme
+
+<Steps>
+  1. Oluşturulan yapılandırmayı önizlemek için **Kaydet**’e tıklayın. <Image src={filesListFilter} alt="Yapılandırmayı kaydedin" class="width-2xl crowdin-modal" />
+  2. Click **Add File Filter** if you have multiple file groups with different configurations. <br />If several branches in the project have the same configuration, and you want the same filters to be applied to them, select **Apply filters to all translatable branches**.
+  3. Click **Save** to save the created configuration. <Image src={filesList} alt="Süzgeçleri tüm çevrilebilir dallara uygulayın" class="width-2xl crowdin-modal" />
+</Steps>
+
+Yapılandırma kaydedildikten sonra, yerelleştirilebilir dosyalar Crowdin projenize yüklenmeye başlayacaktır.
+
+## Ayrıca Bakınız
+
+<CardGrid>
+  <LinkCard title="GitHub" href="/github-integration/" />
+  <LinkCard title="GitLab" href="/gitlab-integration/" />
+  <LinkCard title="Bitbucket" href="/bitbucket-integration/" />
+  <LinkCard title="Azure Repos" href="/azure-repos-integration/" />
+</CardGrid>

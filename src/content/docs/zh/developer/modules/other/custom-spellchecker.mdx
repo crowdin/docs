@@ -1,0 +1,251 @@
+---
+title: 自定义拼写检查器模块
+description: 添加自定义拼写检查器以根据特定规则验证译文
+slug: developer/crowdin-apps-module-custom-spellchecker
+sidebar:
+  label: 自定义拼写检查器
+---
+
+import ReadMore from '~/components/ReadMore.astro';
+
+此模块允许您添加自定义拼写检查器，以根据默认不支持的特定规则验证译文。
+
+每种语言只能分配给一个活动的拼写检查器。 使用多个自定义拼写检查器时，为某个特定拼写检查器选择的语言将自动从所有其他拼写检查器中取消分配。 未分配给任何自定义拼写检查器的语言将由 Crowdin 默认拼写检查器处理。
+
+## 访问权限
+
+您可以将此模块的访问权限授予以下用户类别之一：
+
+* 仅限组织管理员
+* 组织项目中的所有用户
+* 选定用户
+
+## 结构
+
+```json title="manifest.json"
+{
+  "modules": {
+    "custom-spellchecker": [
+      {
+        "key": "custom-spellchecker",
+        "name": "Custom Spellchecker",
+        "description": "Description",
+        "checkSpellingUrl": "/check",
+        "listSupportedLanguagesUrl": "/languages",
+        "url": "/setup.html"
+      }
+    ]
+  }
+}
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 模块的可读名称。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 模块功能的可读描述。<br />
+        该描述将在 Crowdin Enterprise 界面中显示。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>checkSpellingUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>说明：</strong> 发送文本进行拼写检查时触发的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">listSupportedLanguagesUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>说明：</strong> 检索模块支持的语言列表时触发的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>说明：</strong> 模块设置页面的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>描述：</strong> 可安装模块的环境集合。<br />
+        此参数在跨产品的应用程序中必需。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 自定义拼写检查器应用与 Crowdin 之间的通信
+
+系统使用 `checkSpellingUrl` 发送文本进行拼写检查，可以在编辑器中翻译时触发，也可以在 QA 检查验证译文时触发。 应用随后处理文本并将两种可能类型的响应之一回传给系统：[无拼写问题](#无拼写问题时应用的预期响应) 和 [有拼写问题](#有拼写问题时应用的预期响应)。 在某些情况下，系统需要检查模块支持的语言（例如，在组织设置中为自定义拼写检查器配置语言时）。 在这些情况下，Crowdin 使用 `listSupportedLanguagesUrl` 向应用发送请求，应用返回其支持的语言相关数据。
+
+## Crowdin 向应用发送的 checkSpellingUrl 请求
+
+请求载荷示例：
+
+```json
+{
+  "language": "uk",
+  "texts": [
+    "Збререгти якк...",
+    "Ноаий файд"
+  ]
+}
+```
+
+## 应用的预期响应（无拼写问题）
+
+响应载荷示例：
+
+```json
+{
+  "data": [
+    {
+      "text": "Зберегти як...",
+      "matches": []
+    },
+    {
+      "text": "Новий файл",
+      "matches": []
+    }
+  ]
+}
+```
+
+## 应用的预期响应（有拼写问题）
+
+响应载荷示例：
+
+```json collapse={31-50}
+{
+  "data": [
+    {
+      "text": "Збререгти якк...",
+      "matches": [
+        {
+          "category": "typos",
+          "message": "Знайдено потенційну орфографічну помилку.",
+          "shortMessage": "Орфографічна помилка",
+          "offset": 0,
+          "length": 9,
+          "replacements": [
+            "Зберегти"
+          ]
+        },
+        {
+          "category": "typos",
+          "message": "Знайдено потенційну орфографічну помилку.",
+          "shortMessage": "Орфографічна помилка",
+          "offset": 10,
+          "length": 3,
+          "replacements": [
+            "як"
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Ноаий файд",
+      "matches": [
+        {
+          "category": "typos",
+          "message": "Знайдено потенційну орфографічну помилку.",
+          "shortMessage": "Орфографічна помилка",
+          "offset": 0,
+          "length": 5,
+          "replacements": [
+            "Новий"
+          ]
+        },
+        {
+          "category": "typos",
+          "message": "Знайдено потенційну орфографічну помилку.",
+          "shortMessage": "Орфографічна помилка",
+          "offset": 6,
+          "length": 4,
+          "replacements": [
+            "файл"
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**预期类别类型：**
+
+* `typography`
+* `casing`
+* `grammar`
+* `typos`
+* `spelling`
+* `punctuation`
+* `confused_words`
+* `redundancy`
+* `style`
+* `gender_neutrality`
+* `semantics`
+* `colloquialisms`
+* `wikipedia`
+* `barbarism`
+* `misc`
+
+## 应用针对 listSupportedLanguagesUrl 向 Crowdin 发送的响应
+
+响应载荷示例：
+
+```json
+{
+  "data": [
+    {
+      "code": "uk",
+      "name": "Ukrainian"
+    },
+    {
+      "code": "kab",
+      "name": "Kabul"
+    },
+    {
+      "code": "en",
+      "name": "English"
+    }
+  ]
+}
+```
+
+应用返回的响应结构应与所提供的示例一致，否则 Crowdin 将视其为无效。
+
+组织中不可用的语言不会显示在模块的语言列表中。 若要显示此类语言，请将其作为自定义语言添加。
+
+<ReadMore>
+  阅读更多关于[自定义语言](/zh/enterprise/organization-settings/#自定义语言)的内容。
+</ReadMore>

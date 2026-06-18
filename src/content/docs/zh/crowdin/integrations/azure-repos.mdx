@@ -1,0 +1,236 @@
+---
+title: Azure Repos 集成
+description: 在您的 Azure Repos 仓库和 Crowdin 之间同步文件
+slug: azure-repos-integration
+sidebar:
+  order: 4
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import setUpIntegrationDropdown from '!/crowdin/integrations/set_up_integration_dropdown.png';
+import authorizationAzureRepos from '!/crowdin/integrations/azure_repos_integration_authorization.png';
+import unconfigured from '!/crowdin/integrations/integration_unconfigured.png';
+import unconfiguredSb from '!/crowdin/integrations/integration_unconfigured_sb.png';
+import syncNow from '!/crowdin/integrations/integration_sync_now.png';
+import uploadTranslations from '!/crowdin/integrations/integration_sync_translations_to_crowdin.png';
+
+Azure Repos 集成允许您在 Azure Repos 仓库和 Crowdin 项目之间同步文件。
+
+<Aside>
+  您需要先在 Crowdin 账户中[安装 Azure Repos 集成](https://store.crowdin.com/azure-repos)，然后才能设置和使用它。
+</Aside>
+
+在基于文件的项目中，有两种 Azure Repos 集成模式可供选择：
+
+* **源文件和翻译文件模式** &ndash; 在您的 Azure Repos 仓库和 Crowdin 项目之间同步源文件和翻译文件。
+* **目标文件包模式** &ndash; 以所选格式从 Crowdin 项目生成翻译文件并将其推送到您的 Azure Repos 仓库。 在此模式下，集成会推送翻译文件，但不会同步仓库中的源。 如果您在 Crowdin 项目中执行源文本审阅并希望将更新的源文本添加到您的仓库中，您可以将源语言添加为目标语言，该语言将与翻译一起推送到您的仓库中。
+
+在基于字符串的项目中，Azure Repos 集成仅限于**目标文件包模式**运作。
+
+<ReadMore>
+  详细了解[项目类型](/zh/creating-project/#项目类型)。
+</ReadMore>
+
+所有已翻译和已审批的文件（或目标文件包）都会自动合并到 Azure Repos 仓库的 `l10n` 分支中。
+
+## 连接 Azure Repos 账户
+
+<Steps>
+  1. 打开您的项目并前往 **集成** 选项卡。
+  2. 在“集成”列表中单击 **Azure Repos**。
+  3. 单击**设置集成**，然后从下拉列表中选择**源文件和翻译文件模式**或**目标文件包模式**，以通过您的 Azure Repos 账户进行集成。 <Image src={setUpIntegrationDropdown} alt="连接 Azure Repos" class="width-sm" />
+     <Aside>在基于字符串的项目中，Azure Repos 集成仅限于**目标文件包模式**运作。</Aside>
+  4. 然后在 Azure Repos 端授权与 Crowdin 的连接：<Image src={authorizationAzureRepos} alt="Azure Repos 集成授权" />
+</Steps>
+
+如果您所需的仓库是私有的，并且您对其访问权限有限或没有访问权限，请向仓库所有者申请访问令牌。 然后，单击**使用个人访问令牌**，将令牌填入*令牌*字段，再单击**设置集成**。
+
+<Aside title="权限">
+  使用访问令牌设置集成时，请确保您拥有所需仓库的项目管理员级别权限。
+</Aside>
+
+### 选择仓库
+
+在出现的对话框中，选择您的仓库和需要翻译的分支。
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Image src={unconfigured} alt="Azure Repos 集成未配置" class="crowdin-modal" />
+
+    建议将重复字符串切换为**在版本分支内显示**，这样相同的字符串将被隐藏在分支之间。 如果您的源文件包含具有明显标识符（键）的字符串，最好使用此选项的*严格*版本。 在其他情况下，请随意使用*常规*版本。
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Image src={unconfiguredSb} alt="Azure Repos 集成未配置" class="crowdin-modal" />
+  </TabItem>
+</Tabs>
+
+<CardGrid>
+  <LinkCard title="重复的字符串" href="/zh/project-settings/import/#重复字符串" />
+  <LinkCard title="版本管理" href="/zh/version-management/" />
+</CardGrid>
+
+在**目标文件包模式**下使用 Azure Repos 集成时，集成将从您的 Crowdin 项目发送已完成的译文，而无需从您的仓库中提取源文件。 因此，在选择应翻译的仓库和分支时，您可以指定集成应将生成的带有翻译的包放在何处。
+
+<ReadMore>
+  详细了解[为 VCS 集成配置目标文件包](/zh/bundles/#vcs-集成中的文件包)。
+</ReadMore>
+
+当您使用私有集成（例如，与自托管 VCS 集成）时，您需要将专用的 Crowdin IP 地址添加到白名单中，以确保其正常运行并保持安全。
+
+<ReadMore>
+  详细了解 [IP 地址](/zh/developer/ip-addresses/#集成与应用程序)。
+</ReadMore>
+
+### 服务分支
+
+当翻译完成并且您的语言准备好上线时，Crowdin 会将附有译文的拉取请求发送到您的版本控制系统。 对于每个正在本地化的分支，Crowdin 会创建一个包含译文的附加服务分支。 我们不会直接提交到主分支，以便您可以先验证译文。
+
+默认情况下，`l10n_` 会添加到所创建的服务分支名称中。 如有必要，可以轻松更改它。
+
+<Aside type="tip">
+  我们建议在合并拉取请求后从您的仓库中删除 `l10n_` 分支，以防止潜在的冲突。 当新的译文准备好同步时，Crowdin 将自动重新创建服务分支。
+</Aside>
+
+### 同步配置
+
+根据您的需求和偏好配置同步设置。
+
+<Aside type="caution" title="限制">
+  *导入现有译文*和*推送源文件*选项仅适用于基于文件的项目。
+</Aside>
+
+#### 导入现有译文
+
+要从仓库导入现有翻译，请选择以下选项之一：
+
+* **分支连接后一次性导入译文**
+* **始终从仓库导入新译文**
+
+默认情况下，选择第一个选项仅导入翻译一次。 或者，如果您不想从仓库导入翻译，则可以清除这两个选项。
+
+<Aside type="tip">
+  我们建议在集成设置期间仅从仓库导入一次现有译文。 之后，将 Crowdin 视为唯一可信来源，并在 Crowdin 中专门管理译文，以防止覆盖未经审批的译文。
+</Aside>
+
+单击**上传译文选项**以访问以下附加选项：
+
+* **允许目标译文与源文件相同**
+* **审批已添加的译文**
+
+#### 推送源文件
+
+默认情况下，源文件不会随译文一起推送到仓库。 不过，如果您在 Crowdin 项目中执行源文本审查，并希望将对 Crowdin 上的源文件所做的更改推送回您的仓库，请单击**编辑**，在集成设置中选择*推送源文件*，然后单击**保存**。
+
+#### 同步计划
+
+同步每小时自动进行一次。 如有必要，您可以在集成设置中更改更新间隔。 要配置同步计划，请单击**编辑**，向下滚动到*同步计划*，设置首选间隔，然后单击**保存**。
+
+在某些情况下，有必要暂时禁止将译文推送到仓库。 在这种情况下，单击**编辑**，清除集成设置中的*同步计划*，然后单击**保存**。 准备好将译文与仓库同步时，选择*同步计划*，然后单击**保存**。
+
+不依赖于同步设置，仓库上的源文件的更改仍将与 Crowdin 持续同步。
+
+### 自动同步分支
+
+设置集成时，您可以选择要添加到 Crowdin 项目的现有仓库分支。 要将未来的分支从 Azure Repos 自动添加到 Crowdin，请在集成设置中为分支名称创建一个模式。
+
+例如，您在 Azure Repos 集成设置中添加一个模式 \**功能*。 在这种情况下，标题末尾包含该词的未来分支将被添加到项目中。
+
+要添加分支名称的模式，请按照以下步骤操作：
+
+<Steps>
+  1. 单击 Azure Repos 集成部分中的**编辑**。
+  2. 在出现的对话框中，向下滚动到*要自动同步的分支*。
+  3. 在*要自动同步的分支*字段中，使用通配符选择器（例如 `*`、`?`、`[set]`、`\` 等）来标识必要的分支。
+  4. 点击**保存**。
+</Steps>
+
+### 默认配置文件名称
+
+`crowdin.yml` 是用于自动同步分支的默认文件名。 要更改默认设置，请单击**编辑**，在集成设置的*默认配置文件名*字段中指定首选名称，然后单击**保存**。
+
+如果您没有为自动同步的分支指定自定义配置文件名，并且集成在分支的根目录中找不到默认名称为 `crowdin.yml` 的配置文件，则这些分支将在集成设置中用红色图标标记，并带有感叹号，显示“未准备好。 检查配置”。
+
+## 选择要同步的内容
+
+要使集成正常工作，您需要指定应翻译哪些源文件以及 Crowdin 应如何在您的仓库中构建翻译文件。
+
+<Aside type="tip">
+  如果您在服务分支名称旁看到带有感叹号的红色图标，则说明您尚未选择要同步的内容。
+</Aside>
+
+有两种方式可以指定要同步的内容：
+
+* 在线配置
+* 通过创建配置文件手动配置
+
+### 在线配置
+
+此过程对所有版本控制系统 (VCS) 集成都相同。
+
+<ReadMore>
+  查看[在线配置 VCS 集成](/zh/configuring-vcs-integrations-online/)，了解如何在线选择同步内容。
+</ReadMore>
+
+### 创建配置文件
+
+配置文件 `crowdin.yml` 应与您要翻译的每个单独分支一起存储在 Azure Repos 仓库中，以便 Crowdin 知道应该发送哪些文件进行翻译。
+
+它应该具有与 CLI 所需的相同结构，但出于安全原因，项目的凭据不应存储在文件头中。
+
+<ReadMore>
+  详细了解[创建配置文件](/zh/developer/configuration-file/)。
+</ReadMore>
+
+## 在一个项目中使用多个仓库
+
+如果您正在使用具有适用于不同操作系统版本的多平台产品，则可能需要连接包含每个操作系统源文件的多个仓库。 在这种情况下，本地化资源（例如翻译记忆库、术语库）和译文可以得到更有效的利用，从而减少项目本地化所需的时间。
+
+要添加另一个仓库，请按照以下步骤操作：
+
+<Steps>
+  1. 打开您的项目并前往 **集成** 选项卡。
+  2. 在“集成”列表中单击 **Azure Repos**。
+  3. 单击**添加仓库**。
+  4. 根据您的需求和偏好配置与新仓库的集成。
+</Steps>
+
+## 检查同步状态
+
+集成设置完成后，所有相关信息都存储在**集成 > Azure Repos** 中。
+
+集成连接后，只有配置集成的项目成员才能更新设置。 除配置集成的人员外，所有项目管理员都将看到**编辑**按钮被禁用，并在鼠标悬停时显示以下消息：`集成由 {Full Name} ({username}) 配置`。
+
+默认情况下，每小时自动进行一次同步。 如果您需要立即启动同步，请单击**立即同步**。
+
+<Image src={syncNow} alt="集成立即同步" />
+
+或者，如果您只需要单独同步一个分支，请单击所需分支上的 <Icon name="mdi:dots-horizontal" class="inline-icon" />，然后选择**同步分支**。
+
+## 从仓库中上传译文
+
+默认情况下，存储在 仓库中的译文仅在第一次同步期间上传到 Crowdin。 要手动将译文上传到 Crowdin，请单击**立即同步**按钮上的下拉切换按钮，然后单击**将译文同步到 Crowdin**。 该集成会将现有译文上传至您的 Crowdin 项目。
+
+<Image src={uploadTranslations} alt="集成上传译文" />
+
+<Aside type="caution" title="限制">
+  * **将译文同步到 Crowdin** 选项仅适用于基于文件的项目。
+  * 如果翻译已在进行中，请谨慎使用此功能。<br />
+    从仓库手动上传译文可能会覆盖项目中当前未经审批的译文，与[**始终从仓库导入新译文**](#导入现有译文)选项类似。
+</Aside>
+
+## 问答
+
+<QuestionAnswer title="如何避免由 Crowdin 提交触发的不必要的应用程序构建？">
+  由于 Crowdin 中的 VCS 集成使用 API 提交文件而非 Git，因此每个文件都是单独提交的。
+
+  以下是一些可能有助于解决类似情况的建议：
+
+  * 使用 `export_languages` 选项跳过您暂时不感兴趣的语言的提交。 详细了解[导出语言参数](/zh/developer/configuration-file/#导出语言)。
+  * By default, the `[ci skip]` tag is added to the commit message to skip unnecessary builds. 详细了解[提交消息参数](/zh/developer/configuration-file/#提交消息)。
+  * 使用[同步计划](#同步设置)配置首选同步间隔（例如，设置每 24 小时同步一次）。
+  * 合并本地化分支时压缩提交以保持主分支历史记录干净整洁。
+</QuestionAnswer>

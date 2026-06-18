@@ -1,0 +1,124 @@
+---
+title: Crowdin 应用程序的安全性
+description: 确保 Crowdin 应用的高级别安全性
+slug: developer/crowdin-apps-security
+---
+
+为了确保 Crowdin 应用在使用 Crowdin 数据时（即通过 `crowdin_app` 授权）的高级别安全性，我们开发了一套安全机制。 该安全机制的核心原理基于 Crowdin 与 Crowdin 应用之间的 JWT 令牌交换。 JWT 令牌使用只有最后两方知道的 OAuth 客户端密钥进行签名。 这样，Crowdin 应用就能确认页面是在 Crowdin 中打开的。
+
+## 实现
+
+要在您的 Crowdin 应用程序中实现授权和身份验证，请按照以下步骤操作：
+
+* 在您的应用描述符中添加通过 `crowdin_app` 进行的授权，并添加用于授权的 OAuth 客户端 ID。
+* 在您的 Crowdin 应用中添加回调，以处理[安装事件](/zh/developer/crowdin-apps-installation/#安装事件通信流程)。
+* 在您的 Crowdin 应用程序所需的应用程序描述符中指定必要的范围集。 指定的范围集不应超出 OAuth 中指定的范围。
+
+通过上述方式，每次向 Crowdin 应用发出请求时，Crowdin 都会传递一组参数以及安全令牌，该令牌可通过 OAuth 中的密钥进行验证。
+
+以下是 Crowdin 用于打开模块页面的 URL 示例。
+
+```shell wrap
+https://example.com/app-module?jwtToken=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJCcjRhMmhwUW……MX0.yt-lbv3Z8JyIGX4jG405mjZvX8lwc1q0EfWdTtm9GCc&origin=https://{domain}.crowdin.com&clientId=your-client-id
+```
+
+查询参数：
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>jwtToken</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 用于授权的 JWT 令牌。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>origin</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string (url)</code></p>
+      <p><strong>描述：</strong> 用于打开模块页面的主机。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>clientId</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong>用于授权的 OAuth 客户端的 ID。</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+最佳实践是向 Crowdin 应用程序添加中间件，以验证每个请求是否具有带有有效签名和到期时间的令牌。 您可以使用[现有库](https://jwt.io/)之一来验证令牌的真实性。
+
+## JWT 令牌结构
+
+JWT 令牌包含以下部分：
+
+* 头部 - 包含关于令牌类型和编码算法的信息。
+* 载荷 - 包含关于令牌签发的额外信息和令牌的过期时间、令牌签发者和请求者的信息和其他上下文信息。
+* 签名 - 基于头部和载荷的签名部分。
+
+JWT 令牌有效载荷示例：
+
+```json
+{
+  "aud": "Br4a2hpQiNW96anuuO4a",
+  "sub": "1",
+  "domain": null,
+  "context": {},
+  "iat": 1600000000,
+  "exp": 1600000900
+}
+```
+
+参数：
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>aud</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong>发布令牌的 OAuth 客户端的 ID。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>sub</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong>正在向 Crowdin 应用程序发出请求的用户的标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>domain</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string|null</code></p>
+      <p><strong>必填：</strong> 是</p>
+      <p><strong>描述：</strong> 访问应用时所在组织的名称。 对于 Crowdin，domain 值始终为 <code>null</code></p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">context</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>object</code></p>
+      <p><strong>描述：</strong> 有关打开 Crowdin 应用模块的环境信息（例如项目、语言、用户时区等）。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>iat</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 标识令牌的签发时间。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>exp</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 标识令牌的过期时间。</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
