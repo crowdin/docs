@@ -1,0 +1,123 @@
+---
+title: 上传源文件
+description: 了解如何将源文件上传到项目以进行翻译
+slug: uploading-files
+sidebar:
+  order: 0
+---
+
+import { Aside, Tabs, TabItem, Steps, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import uploadFiles from '!/crowdin/project-management/sources/upload_files.png';
+import uploadFilesSB from '!/crowdin/project-management/sources/upload_files_sb.png';
+import baseHtmlEditor from '!/crowdin/project-management/sources/base_html_editor.png';
+
+创建[项目](/zh/creating-project/)后，下一步就是准备上传源文件。 Crowdin 支持多种[文件格式](/zh/supported-formats/)，包括 Android XML、iOS Strings、JSON 等。 准备好文件后，您可以将它们添加到 Crowdin 项目中进行翻译。
+
+Crowdin 提供了一些用于向项目添加内容的选项：
+
+* 通过网络界面（UI）手动进行。
+* 将您的 Crowdin 项目与您已经使用的工具整合在一起。 在 [Crowdin Store](https://store.crowdin.com/) 上探索可用的集成。
+* 使用您选择的 [API](/developer/api/) 或[开发者工具](/developer/dev-tools/)。
+
+通常，这项任务由开发人员完成。 您可以[邀请您的开发者同事](/zh/inviting-people/)协助您完成此步骤。
+
+你也可以使用 Crowdin 示例文件来测试翻译工作流，然后再和实际源文件一同启动你的项目。
+
+<Aside type="tip">
+  通过在 [Crowdin Store](https://store.crowdin.com/categories/file-formats) 中安装相应应用程序来添加对更多格式的支持。
+</Aside>
+
+## 上传文件
+
+要通过网络界面上传文件，请按照以下步骤操作：
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Steps>
+      1. 打开您的项目并转到**原文 > 文件**。
+      2. 从您的计算机将文件拖放到 **Files** 标签页内的任意位置——项目根目录或现有文件夹中均可。 如果您想添加一组有结构的文件夹和文件，可以上传 ZIP 压缩包。
+      3. *（可选）* 点击 **Upload Files** 或 **Add File** 添加文件，点击 **Use Samples** 测试翻译工作流，点击 **Set Up Integration** 自动同步内容，或点击 **Invite Developer / Translation Requestor**（如果内容上传将由您的开发者团队成员处理）。 您也可以点击 **Add File** 按钮旁边的下拉箭头，以访问其他选项，例如 **Create String Vault**（添加一个空的 CSV 文件）或另一个 **Set Up Integration** 快捷方式。 <Image src={uploadFiles} alt="项目设置中的 Files 标签页" />
+    </Steps>
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Steps>
+      1. 打开您的项目并转到**上传**选项卡。
+      2. 选择您要上传源文件的目标分支。 默认情况下，已选择 `main` 分支。 如有需要，可创建新分支。
+      3. 从您的计算机拖放文件，或单击**选择文件**。 如果您想批量上传一组文件，也可以上传 ZIP 压缩包。
+      4. Crowdin 会自动尝试检测您上传的是源内容还是译文。 验证检测结果是否正确，并根据需要调整语言设置（例如，如果项目的源语言为英语，则应为源文件选择 English (source)）。
+      5. *（可选）* 在 **Source files** 部分，上传文件列表的右侧，配置[高级源文件导入设置](#高级导入设置)。
+      6. 点击 **Upload** 完成源内容的上传。 <Image src={uploadFilesSB} alt="项目设置中的 Files 标签页" />
+    </Steps>
+    <Aside>
+      向基于字符串的项目上传可翻译内容时，您可以使用以下文件格式：
+
+      <details>
+        <summary>查看文件格式</summary>
+        <Include file="sb-file-formats.mdx" />
+      </details>
+    </Aside>
+  </TabItem>
+</Tabs>
+
+<ReadMore>
+  详细了解[项目类型](/zh/creating-project/#项目类型)。
+</ReadMore>
+
+<Aside type="caution" title="限制">
+  文件最大为 100 MB。 如果您的文件超出此限制，建议将其拆分为多个较小的文件，然后逐一上传。
+</Aside>
+
+### XML、CSV 和 XLSX 文件
+
+某些文件格式，如 XML、CSV、XLSX 等，可能需要额外配置。
+
+* [CSV/XLSX 文件配置](/zh/csv-xlsx-configuration/)
+* [XML 文件配置](/zh/xml-configuration/)
+* [解析器配置](/zh/project-settings/parser-configuration/)
+
+<Aside type="caution" title="限制">
+  XLSX/XLS 文件大小限制为 2 000 000 个单元格。
+</Aside>
+
+### 带有相对链接的 HTML 文件
+
+要在网站外部使用的 HTML 文件中显示图像和样式，请添加 `<base>` 标签以指定文档中所有相对 URL 的基本 URL/目标。
+
+```html wrap
+<html>
+  <head>
+    <base href="https://www.w3schools.com/images/">
+  </head>
+  <body>
+    <p><img src="stickman.gif" width="24" height="39" alt="Stickman">请注意，我们仅为图像指定了相对地址。由于我们在 head 部分指定了基本 URL，浏览器将在 "https://www.w3schools.com/images/stickman.gif" 处查找该图像。</p>
+  </body>
+</html>
+```
+
+一旦您添加了 `<base>` 标签，译员将在编辑器中翻译 HTML 文件时看到图像。
+
+<Image src={baseHtmlEditor} alt="在编辑器中显示含有 base 标签的 HTML 文件" />
+
+<Aside type="caution" title="限制">
+  [基于字符串](/zh/creating-project/#基于字符串的项目)的项目不支持 HTML 文件。
+</Aside>
+
+## 高级导入设置
+
+您可以使用可用选项为基于字符串的项目中上传的源文件配置所需的系统行为：
+
+* **Update strings** &ndash; 更新具有相同标识符的字符串。 默认情况下，此选项已选中。
+* **Cleanup mode** &ndash; 删除之前上传的、在新上传文件中不存在的字符串。 默认情况下，此选项未启用。
+* **Add labels** &ndash; 为上传的字符串添加所选标记。 上传源文件时，Crowdin 还会添加包含源文件名的系统标记。
+
+## 另请参阅
+
+<CardGrid>
+  <LinkCard title="上传现有的翻译" description="了解如何将现有译文上传到您的项目。" href="/zh/uploading-translations/" />
+  <LinkCard title="文件管理" description="管理和配置项目中的源文件。" href="/file-management/" />
+  <LinkCard title="版本管理" description="了解如何管理项目的不同版本。" href="/zh/version-management/" />
+  <LinkCard title="导入设置" description="配置占位符、重复项和字数统计的处理方式。" href="/zh/project-settings/import/" />
+</CardGrid>

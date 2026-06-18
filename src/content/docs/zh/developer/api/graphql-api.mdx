@@ -1,0 +1,567 @@
+---
+title: GraphQL API
+description: 使用更具针对性的灵活查询精确获取所需数据
+slug: developer/graphql-api
+sidebar:
+  order: 4
+---
+
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+
+GraphQL API 是一种工具，允许您使用更具针对性的灵活查询精确获取所需数据。 GraphQL API 的主要优势之一是您可以通过单个请求获取多种不同的资源。
+
+如果您想针对 Crowdin GraphQL API 运行查询，我们建议使用 GraphQL Playground 应用，借助该应用，您可以在编写任何应用程序代码之前，直接从 Crowdin 和 Crowdin Enterprise Web 界面构建、测试和调试查询。
+
+<LinkCard title="GraphQL Playground" description="集成的 GraphQL IDE，助您优化开发工作流程。" href="https://store.crowdin.com/graphql-playground" target="_blank" />
+
+## 通过 GraphQL API 认证
+
+要在 Crowdin 或 Crowdin Enterprise 中使用 GraphQL API，请使用以下访问令牌之一：
+
+* [Crowdin 个人访问令牌](/zh/account-settings/#创建个人访问令牌)
+* [Crowdin Enterprise 个人访问令牌](/zh/enterprise/account-settings/#创建个人访问令牌)
+* [OAuth 访问令牌](/zh/developer/authorizing-oauth-apps/#make-requests-to-the-api-with-the-access-token-returned)
+
+请确保在您的请求中使用以下标头：
+
+```bash
+Authorization: Bearer <ACCESS_TOKEN>
+```
+
+如果认证失败，响应如下：
+
+401 Unauthorized
+
+```json
+{
+  "error": {
+    "message": "Unauthorized",
+    "code": 401
+  }
+}
+```
+
+## Root Endpoint
+
+与 REST API 不同，GraphQL API 只有一个恒定的端点，不依赖于所执行的操作。
+
+Crowdin GraphQL endpoint：
+
+```bash
+https://api.crowdin.com/api/graphql
+```
+
+Crowdin Enterprise GraphQL endpoint：
+
+```bash
+https://{domain}.api.crowdin.com/api/graphql
+```
+
+## 资源限制
+
+Crowdin GraphQL API 设有限制，以防止对 Crowdin 服务器的过度或滥用调用。
+
+### 节点限制
+
+所有 GraphQL API 调用必须符合以下要求才能通过 schema 验证：
+
+* 用户必须在任何 connection 上提供 `first` 或 `last` 参数。
+* `first` 和 `last` 的值必须在 1 到 10,000 之间。
+* 单次调用请求的总节点数不能超过 10,000 个。
+
+#### 节点计算
+
+在以下示例中，您可以了解一次调用中节点的计算方式。
+
+##### 简单查询
+
+```graphql
+query {
+  viewer {
+    projects(first: 50) {
+      edges {
+        node {
+          name
+
+          files(first: 10) {
+            totalCount
+            edges {
+              node {
+                name
+                type
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+计算方式：
+
+```
+50         = 50 projects
++
+50 x 10    = 500 files
+
+           = 550 total nodes
+```
+
+##### 复杂查询
+
+```graphql
+query {
+  viewer {
+    projects(first: 50) {
+      edges {
+        node {
+          files(first: 20) {
+            edges {
+              node {
+                strings(first: 10) {
+                  edges {
+                    node {
+                      ... on PlainSourceString {
+                        text
+                      }
+                      ... on ICUSourceString {
+                        text
+                      }
+                      ... on PluralSourceString {
+                        plurals {
+                          one
+                          other
+                        }
+                      }
+                      ... on AssetSourceString {
+                        text
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+  
+          translations(first: 20, languageId: "uk") {
+            edges {
+              node {
+                ... on PlainStringTranslation {
+                  text
+                }
+                ... on ICUStringTranslation {
+                  text
+                }
+                ... on PluralStringTranslation {
+                  pluralForm
+                  text
+                }
+                ... on AssetStringTranslation {
+                  text
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+计算方式：
+
+```
+50           = 50 projects
++
+50 x 20      = 1,000 files
++
+50 x 20 x 10 = 10,000 strings
++
+50 x 20      = 1,000 translations
+
+             = 12,050 total nodes
+```
+
+### 速率限制
+
+GraphQL API 的限制与 [REST API 速率限制](/zh/developer/api/v2/#section/Introduction/Rate-Limits) 有很大不同。
+
+如前所述，您只需一次 GraphQL 调用即可获取与多次 REST 调用相同数量的数据。 虽然单个复杂的 GraphQL 调用可能等同于数千次 REST 请求，且不会超过 REST API 速率限制，但其计算开销对 Crowdin 服务器来说可能同样高昂。
+
+GraphQL API 使用归一化积分制，通过计算调用的速率限制分数来精确反映查询的服务器成本。 该分数包括父 connection 及其子项上的 first 和 last 参数。
+
+* 该公式使用父 connection 及其子项上的 `first` 和 `last` 参数来预先确定对 Crowdin 系统（如 MySQL 和 ElasticSearch）的可能负载。
+* 每个新 connection 都有自己的积分值。 这些积分会与调用的其他积分相加，形成最终的速率限制分数。
+
+GraphQL API 的速率限制设置为每小时 5,000 积分。 由于 GraphQL API 和 REST API 使用不同的速率限制，每小时 5,000 积分并不等同于每小时 5,000 次调用。
+
+<Aside type="caution">
+  当前的计算方法和速率限制并非一成不变，可能会在未来发生变化。
+</Aside>
+
+#### 检查调用的速率限制状态
+
+要在使用 GraphQL API 时检查速率限制状态，请查询 `rateLimit` 对象上的字段：
+
+```graphql
+query {
+  viewer {
+    username
+  }
+  rateLimit {
+    limit
+    cost
+    remaining
+    resetAt
+  }
+}
+```
+
+* `limit` &ndash; 返回用户在 60 分钟时间窗口内允许消耗的最大积分数。
+* `cost` &ndash; 返回当前调用计入速率限制的积分成本。
+* `remaining` &ndash; 返回当前速率限制时间窗口内剩余的积分数。
+* `resetAt` &ndash; 返回当前速率限制时间窗口重置的时间，以 UTC epoch 秒为单位。
+
+#### 在执行调用前估算速率限制分数
+
+虽然查询 `rateLimit` 对象可以获取调用的分数，但这会计入限制。 为绕过这一问题，您可以提前估算调用的分数。 使用以下计算方法，您可以获得与 `rateLimit { cost }` 返回值大致相同的成本。
+
+<Steps>
+  1. 首先，将调用中每个唯一 connection 所需的请求数加总。 假设每个请求都会达到 `first` 或 `last` 参数的限制值。
+  2. 然后，将该数字除以 100 并取整，即可得到最终综合成本。 此步骤用于将较大的数字归一化。
+</Steps>
+
+<Aside>
+  GraphQL API 调用的最低成本为 1，代表单次请求。
+</Aside>
+
+以下是一个示例查询及其分数计算：
+
+```graphql
+query {
+  viewer {
+    username
+    projects(first: 100) {
+      edges {
+        node {
+          id
+          files(first: 50) {
+            edges {
+              node {
+                id
+                strings(first: 60) {
+                  edges {
+                    node {
+                      ... on PlainSourceString {
+                        id
+                        text
+                      }
+                      ... on ICUSourceString {
+                        id
+                        text
+                      }
+                      ... on PluralSourceString {
+                        id
+                        plurals {
+                          one
+                          other
+                        }
+                      }
+                      ... on AssetSourceString {
+                        id
+                        text
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+* 在返回 100 个项目时，API 需要连接到用户账户一次以获取项目列表。 因此，项目的请求数 = 1
+* 在返回 50 个文件时，API 需要连接到 100 个项目中的每一个以获取文件列表。 因此，文件的请求数 = 100
+* 在返回 60 个字符串时，API 需要连接到最多 5,000 个文件中的每一个以获取字符串列表。 因此，字符串的请求数 = 5,000
+* 总计 = 5,101
+
+现在，将总计 5,101 除以 100 并取整。 最终得到该查询的分数为 51。
+
+## 分页
+
+分页是 GraphQL 中的一个基本概念，允许您从较大的数据集合中检索数据子集，使信息的管理和展示更加便捷。
+
+在本节中，我们将以 `projects` 字段为例，探讨如何在 Crowdin GraphQL API 中使用分页。
+
+### 了解 Crowdin GraphQL 中的分页
+
+在深入了解分页的具体使用方式之前，让我们先澄清一些关键术语：
+
+* **Connection** &ndash; 在 Crowdin GraphQL 中，connection 是一种包含条目列表的结构。 它通常包含 edges、pageInfo 和 totalCount。 edges 包含实际数据条目，pageInfo 提供分页相关信息，totalCount 表示 connection 中的条目总数。
+* **Edges** &ndash; edges 是 connection 中的各个条目。 每个 edge 包含 node（数据条目）和 cursor，cursor 是用于在集合中导航的字符串。
+* **PageInfo** &ndash; pageInfo 提供帮助您判断是否还有更多条目可检索的信息。 它包含 `hasNextPage`、`hasPreviousPage`、`startCursor` 和 `endCursor` 等字段。
+
+### 在 Crowdin GraphQL 中使用分页
+
+现在，让我们重点介绍如何在 Crowdin GraphQL API 中使用 `projects` 字段进行分页。
+
+#### 使用分页查询项目
+
+`User` 类型中的 `projects` 字段用于查询与用户关联的项目。 它接受多个输入参数，允许您控制结果的分页。 这些参数包括：
+
+* `after` &ndash; 一个 cursor，指示查询应从项目列表的哪个位置开始。
+* `first` &ndash; 在指定 cursor 之后要检索的项目数量。
+* `before` &ndash; 一个 cursor，指示查询应在哪个位置结束。
+* `last` &ndash; 在指定 cursor 之前要检索的项目数量。
+
+#### 示例查询
+
+以下示例查询从提供的 cursor（`cursor_string`）开始，请求与已认证用户关联的前十个项目。 响应将包含含有项目数据的 `edges` 数组，以及用于分页控制的 `pageInfo` 和 `totalCount` 字段。
+
+```graphql
+query {
+  viewer {
+    projects(
+      after: "cursor_string",   # Replace with a valid `after` cursor
+      first: 10
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+      totalCount
+    }
+  }
+}
+```
+
+以下是上述查询的响应示例：
+
+```json
+{
+  "data": {
+    "viewer": {
+      "projects": {
+        "edges": [
+          {
+            "node": {
+              "id": 1,
+              "name": "Umbrella",
+              "description": "Official Umbrella Translation Project"
+            },
+            "cursor": "MA=="
+          },
+          {
+            "node": {
+              "id": 2,
+              "name": "Umbrella iOS",
+              "description": "Official Umbrella iOS App Translation Project"
+            },
+            "cursor": "MQ=="
+          }
+        ],
+        "pageInfo": {
+          "hasNextPage": true,
+          "hasPreviousPage": false,
+          "startCursor": "MA==",
+          "endCursor": "MQ=="
+        },
+        "totalCount": 5
+      }
+    }
+  }
+}
+```
+
+#### 分页控制
+
+* `hasNextPage` &ndash; `pageInfo` 中的此字段指示下一页是否还有更多可用项目。
+* `hasPreviousPage` &ndash; `pageInfo` 中的此字段指示上一页是否还有更多可用项目。
+* `startCursor` &ndash; 指向当前结果集中第一个项目的 cursor。
+* `endCursor` &ndash; 指向当前结果集中最后一个项目的 cursor。
+* `totalCount` &ndash; 与该用户关联的项目总数。
+
+#### 获取上一页
+
+在某些情况下，您可能需要在数据集中向后翻页。 这可能出于各种原因，例如：查看较早的数据、更正或修改等。
+
+要向后翻页，您可以使用 `last` 和 `before` 参数。 `last` 参数指定从列表末尾起要获取的条目数量，`before` 参数接受您想要检索的第一个条目的 cursor。 以下是一个示例：
+
+```graphql
+query {
+  viewer {
+    projects(
+      last: 10,
+      before: "cursor_of_first_item"   # Replace with a valid `before` cursor
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+      }
+    }
+  }
+}
+```
+
+## 筛选与排序
+
+Crowdin GraphQL 提供了筛选和排序（排序）数据的功能，允许您缩小想要检索的数据范围，并按特定顺序排列数据。
+
+与分页类似，在本节中，我们将以 `projects` 字段为例，探讨如何在 Crowdin GraphQL API 中使用筛选和排序功能。
+
+### 筛选数据
+
+筛选是指定条件以从较大数据集中选取数据子集的过程。 在 Crowdin GraphQL 中，筛选允许您根据特定条件缩小查询结果的范围。 当您想要检索满足特定要求或特征的数据时，这尤其有用。
+
+#### `ProjectFilterInput`
+
+Crowdin GraphQL 提供了 `ProjectFilterInput` 类型，允许您根据各种属性筛选项目。 以下是一些可用于筛选的关键属性：
+
+* `and` &ndash; 逻辑合取运算符，用于组合多个筛选条件。
+* `or` &ndash; 逻辑析取运算符，用于组合多个筛选条件。
+* `id` &ndash; 使用各种条件（如等于、大于或小于）按项目 ID 筛选。
+* `userId` &ndash; 按与项目关联的用户 ID 筛选项目。
+* `name` &ndash; 按项目名称筛选，可检查等于、包含或以特定文本开头等条件。
+* `identifier` &ndash; 按项目标识符筛选，类似于按名称筛选。
+* `description` &ndash; 按项目描述筛选，可检查等于、包含或以特定文本开头等条件。
+* `publicDownloads` &ndash; 根据是否启用公开下载来筛选项目。
+* `languageAccessPolicy` &ndash; 按项目的语言访问策略筛选（例如，"open" 或 "moderate"）。
+* `visibility` &ndash; 根据项目的可见性筛选（例如，"open" 或 "private"）。
+* `createdAt` &ndash; 使用各种日期相关条件按项目创建日期筛选。
+* `updatedAt` &ndash; 按项目最后更新日期筛选。
+* `lastActivityAt` &ndash; 按项目最后活动日期筛选。
+
+筛选是一种灵活的方式，可以精确定位查询中所需的数据。 您可以使用 `and` 和 `or` 等逻辑运算符组合多个筛选条件，进一步细化查询。
+
+#### 筛选示例
+
+要检索在特定日期之后创建且可见性设置为 "private" 的项目，您可以创建如下筛选输入：
+
+```graphql
+query {
+  viewer {
+    projects(
+      first: 10,
+      filter: {
+        createdAt: { gt: "2023-01-01T00:00:00Z" }
+        and: { visibility: { equals: private } }
+      }
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+      }
+    }
+  }
+}
+```
+
+此筛选条件将返回同时满足两个条件的项目：在 2023 年 1 月 1 日之后创建，且可见性设置为 "private"。
+
+### 排序数据
+
+排序是指定查询结果呈现顺序的过程。 它不会减少结果数量，而是将结果按特定顺序排列。 Crowdin GraphQL 提供了基于项目名称、创建日期或其他相关因素对数据进行排序的选项。
+
+#### `ProjectOrderInput`
+
+Crowdin GraphQL 中的 `ProjectOrderInput` 类型允许您指定查询结果的排序顺序。 您可以根据以下属性对项目进行排序：
+
+* `id` &ndash; 按项目的唯一标识符排序。
+* `userId` &ndash; 按创建项目的用户标识符排序。
+* `name` &ndash; 按项目名称排序。
+* `identifier` &ndash; 按项目标识符排序。
+* `description` &ndash; 按项目描述排序。
+* `publicDownloads` &ndash; 按项目的公开下载设置排序。
+* `languageAccessPolicy` &ndash; 按项目的语言访问策略排序。
+* `visibility` &ndash; 按项目的可见性设置排序。
+* `createdAt` &ndash; 按项目创建日期排序。
+* `updatedAt` &ndash; 按项目最后更新日期排序。
+* `lastActivityAt` &ndash; 按项目最后活动日期排序。
+
+您可以将排序顺序指定为升序（"asc"）或降序（"desc"），从而完全控制数据的呈现方式。
+
+#### 排序示例
+
+要检索按名称降序排列的项目，您可以创建如下排序输入：
+
+```graphql
+query {
+  viewer {
+    projects(
+      first: 10
+      order: [{ name: desc }]
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+      }
+    }
+  }
+}
+```
+
+此排序顺序将按项目名称的反字母顺序呈现项目。
+
+### 结合筛选与排序
+
+Crowdin GraphQL 允许您同时结合筛选和排序，以精确定制查询。 您可以先筛选数据以选取满足特定条件的子集，然后按所需顺序对结果进行排序。 这种组合方式使您能够根据具体需求检索和排列数据。
+
+#### 筛选与排序示例
+
+要检索在特定日期之后创建、具有 "moderate" 语言访问策略的项目，并按最后活动日期升序排列，您可以创建如下查询：
+
+```graphql
+query {
+  viewer {
+    projects(
+      first: 10
+      filter: {
+        createdAt: { gt: "2023-01-01T00:00:00Z" }
+        and: { languageAccessPolicy: { equals: moderate } }
+      },
+      order: [{ lastActivityAt: asc }]
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+      }
+    }
+  }
+}
+```
+
+此查询将返回满足筛选条件的项目，并按最后活动日期升序呈现。

@@ -1,0 +1,265 @@
+---
+title: 表达式符号元素
+description: 了解表达式语法的不同元素
+slug: enterprise/expression-syntax-elements
+---
+
+import { Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import Include from '~/components/Include.astro';
+
+您可以使用一组共享的表达式语法元素来配置口头表达式和自定义占位符。 这些元素根据结构、字符类型或格式模式，定义了字符串特定部分的匹配方式。
+
+## 表达式元素
+
+<Include file="expression-syntax-elements.mdx" />
+
+## 口头表达式
+
+在编辑器中，您可以在[高级筛选](/zh/enterprise/online-editor/#高级筛选)中使用口头表达式来搜索符合特定模式的字符串，类似于正则表达式。 您可以使用它根据标点符号、字符类型、长度等模式筛选字符串。
+
+例如，要查找所有以大写字母开头并以句点结尾的字符串，请使用以下表达式：
+
+```graphql
+start "true", range "A,Z", anything, range "a,z,A,Z,0,9", limit "1,50", then ".", end "true"
+```
+
+该表达式的含义为：
+
+* `start "true"` – 字符串从起始位置开始
+* `range "A,Z"` – 以大写字母开头
+* `anything` – 后跟任意字符
+* `range "a,z,A,Z,0,9"` – 允许字母和数字
+* `limit "1,50"` – 字符串长度在 1 到 50 个字符之间
+* `then "."` – 以句点结尾
+* `end "true"` – 字符串末尾
+
+<CardGrid>
+  <LinkCard title="Verbal Tester" description="使用 Verbal Tester 应用程序在 Crowdin 项目中创建、检查和编辑口头表达式" href="https://store.crowdin.com/verbal-tester" target="_blank" />
+  <LinkCard title="试用口头表达式 GPT" description="协助在 Crowdin 中开发口头表达式。" href="https://chat.openai.com/g/g-NdFRRXHwm-crowdin-verbal-expressions-maker" target="_blank" />
+</CardGrid>
+
+### 口头表达式示例
+
+以下是多个口头表达式示例，以及它们在项目中帮助匹配的字符串类型。 当您想要筛选具有特定内容或结构的字符串时，这些示例非常实用。
+
+<Aside>
+  以下所有示例均使用相同的参数分隔符 `"`
+</Aside>
+
+##### 以大写字母开头并以句点结尾
+
+字符串示例：
+
+```
+A test string.
+```
+
+表达式：
+
+```graphql
+start "true", range "A,Z", anything, range "a,z,A,Z,0,9", limit "1,50", then ".", end "true"
+```
+
+##### 包含 URL 的字符串
+
+字符串示例：
+
+```
+Visit http://example.com or https://www.example.com
+```
+
+表达式：
+
+```graphql
+then "http", maybe "s", then "://", maybe "www.", anythingbut " "
+```
+
+##### 包含 `%s` 和 `%d` 占位符的字符串
+
+字符串示例：
+
+```
+Welcome, %s! You have %d new messages.
+```
+
+表达式：
+
+```graphql
+then "%", anyof "s,d"
+```
+
+##### 包含双花括号变量的字符串
+
+字符串示例：
+
+```
+Hello, {{user.name}}!
+```
+
+表达式：
+
+```graphql
+then "{{", range "a,z", multiple, then ".", range "a,z", multiple, then "}}"
+```
+
+<Aside>
+  此表达式匹配类似 `{{user.name}}` 的变量，其中两个部分均只包含小写字母。
+</Aside>
+
+##### 包含双花括号变量的字符串（含大写字母和数字）
+
+字符串示例：
+
+```
+Hello, {{User123.name42}}!
+```
+
+表达式：
+
+```graphql
+then "{{", range "a,z,A,Z,0,9", multiple, then ".", range "a,z,A,Z,0,9", multiple, then "}}"
+```
+
+<Aside>
+  使用此版本可匹配名称中包含大写字母或数字的变量。
+</Aside>
+
+##### 包含浮点数的字符串
+
+字符串示例：
+
+```
+The result is 3.14159
+```
+
+表达式：
+
+```graphql
+start, range "0,9", multiple, then ".", range "0,9", multiple, end
+```
+
+##### 以标题大小写开头的字符串（两个首字母大写的单词）
+
+字符串示例：
+
+```
+Quick Access is available now.
+```
+
+表达式：
+
+```graphql
+start, range "A,Z", range "a,z", multiple, then " ", range "A,Z", range "a,z", multiple
+```
+
+##### 末尾含空白字符的字符串
+
+字符串示例：
+
+```
+This is a sentence with trailing space
+```
+
+表达式：
+
+```graphql
+start "true", range "A,Z", anything, range "a,z,A,Z,0,9", then " ", end "true"
+```
+
+##### 以井号开头的字符串（如话题标签或锚点）
+
+字符串示例：
+
+```
+#GettingStarted
+```
+
+表达式：
+
+```graphql
+start "true", then "#", something, end "true"
+```
+
+##### 包含 HTML 标签的字符串
+
+字符串示例：
+
+```
+Click <strong>here</strong> to continue.
+```
+
+表达式：
+
+```graphql
+then "<", something, then ">"
+```
+
+##### 包含电子邮件地址格式的字符串
+
+字符串示例：
+
+```
+Please contact us at support@example.com
+```
+
+表达式：
+
+```graphql
+then "@", somethingbut " "
+```
+
+##### 包含双空格的字符串（可能存在空格问题）
+
+字符串示例：
+
+```
+This  string has extra space.
+```
+
+表达式：
+
+```graphql
+then "  "
+```
+
+##### 以冒号结尾的字符串
+
+字符串示例：
+
+```
+Enter your name:
+```
+
+表达式：
+
+```graphql
+then ":", end "true"
+```
+
+##### 货币符号后跟数字的字符串
+
+字符串示例：
+
+```
+Total: $29.99
+```
+
+表达式：
+
+```graphql
+then "$", range "0,9", multiple
+```
+
+##### 驼峰命名法格式的字符串
+
+字符串示例：
+
+```
+lowerUpper
+```
+
+表达式：
+
+```graphql
+start, range "a,z", multiple, range "A,Z", range "a,z", multiple, end
+```

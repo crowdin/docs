@@ -1,0 +1,95 @@
+---
+title: Google Play 商店集成
+description: 将 Google Play 与 Crowdin 连接，以本地化您的应用数据
+slug: enterprise/google-play-integration
+sidebar:
+  order: 11
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside } from '@astrojs/starlight/components';
+import integrationPublish from '!/enterprise/integrations/google_play_integration_publish.png';
+import integrationSelectLanguages from '!/enterprise/integrations/google_play_integration_select_languages.png';
+import integrationServiceAccountCredentials from '!/enterprise/integrations/google_play_integration_service_account_credentials.png';
+import integrationPublishingProgress from '!/enterprise/integrations/google_play_integration_publishing_progress.png';
+import integrationAccess from '!/crowdin/integrations/google_play_integration_access.png';
+import integrationConfigureServiceAccount from '!/crowdin/integrations/google_play_integration_configure_service_account.png';
+import integrationCreateServiceAccount from '!/crowdin/integrations/google_play_integration_create_service_account.png';
+import integrationLinkProject from '!/crowdin/integrations/google_play_integration_link_project.png';
+import integrationPermissions from '!/crowdin/integrations/google_play_integration_permissions.png';
+import integrationSelectProject from '!/crowdin/integrations/google_play_integration_select_project.png';
+import integrationServiceAccountCreateKey from '!/crowdin/integrations/google_play_integration_service_account_create_key.png';
+import integrationServiceAccountKeyType from '!/crowdin/integrations/google_play_integration_service_account_key_type.png';
+import integrationServiceAccountName from '!/crowdin/integrations/google_play_integration_service_account_name.png';
+import integrationServiceAccountRole from '!/crowdin/integrations/google_play_integration_service_account_role.png';
+
+通过使用 Crowdin 的 Google Play 集成，您可以加快应用的数据本地化进程。 一旦启用了该集成，商店页面的所有文本都会被收集到一个文件中，并添加到您在 Crowdin 企业版的项目中。 当译文完成后，只需几次点击就可以将它们添加至商店中的应用页面中。
+
+<Aside>
+  在设置和使用 Google Play 集成之前，您需要先在 Crowdin Enterprise 组织中[安装 Google Play 集成](https://store.crowdin.com/google-play)。
+</Aside>
+
+## 使用 Crowdin 企业版连接至 Google Play
+
+若要将 Google Play 与您在 Crowdin 企业版的项目连接，请遵循如下步骤：
+
+<Steps>
+  1. 打开您的项目，然后在左侧边栏中选择**集成**。
+  2. 在集成列表中点击 **Google Play**。
+  3. 输入软件包名称，然后点击**设置集成**。
+</Steps>
+
+如果输入错误，您可以编辑包名，并根据需要删除集成。
+
+集成会将源文本收集到一个文件中，该文件将放置在**原文 > 文件**中。 默认情况下，文件名为 `google_play.xml`。
+
+## 发布译文
+
+要发布译文，请遵循以下步骤：
+
+<Steps>
+  1. 打开您的项目并前往**集成 > Google Play**。
+  2. 点击**预览并发布译文**。 <Image src={integrationPublish} alt="发布译文" />
+  3. 可用的译文将根据已配置的[导出选项](/zh/enterprise/project-settings/export/)显示。 查看所有译文是否完好，并清除您不想发布的语言旁边的复选框。 点击**下一步**以继续。 <Image src={integrationSelectLanguages} alt="选择发布语言" class="width-lg" />
+  4. 上传包含您的[服务账号凭据](#创建服务账号凭据)的文件，然后点击**发布**。 <Image src={integrationServiceAccountCredentials} alt="服务账号凭据" class="width-lg" />
+  5. 您可以在下一个对话框中跟踪发布进度。 译文上传后，点击**关闭**。 <Image src={integrationPublishingProgress} alt="发布进度" class="width-lg" />
+</Steps>
+
+<Aside type="caution" title="限制">
+  Google Play 会限制您一天内为同一语言发布译文的次数。
+</Aside>
+
+## 创建服务账户凭据
+
+要将翻译从 Crowdin 企业版直接发布到您的 Google Play 项目，您需要事先配置对 Google Play 管理中心的访问权限。
+
+<Aside>
+  出于安全原因，包含您的服务账户凭据的文件不会存储在 Crowdin Enterprise 中，因此每次您想要将译文发布到 Google Play 时都需要上传此文件。
+</Aside>
+
+要创建并添加服务账户凭据，请按照以下步骤操作：
+
+<Steps>
+  1. 将 Google Play 控制台与 Google Cloud 项目链接：
+     * 打开 Google Play 管理中心，前往**设置 >** [**API 访问权限**](https://play.google.com/console/u/0/developers/api-access)。
+     * 链接现有项目或创建新项目。 <Image src={integrationLinkProject} alt="关联项目" />
+  2. 生成服务账户凭证：
+     * 前往[**服务账号**](https://console.developers.google.com/iam-admin/serviceaccounts)。 如果出现提示，请选择其中一个现有项目。 <Image src={integrationSelectProject} alt="选择项目" />
+     * 点击**创建服务账号**。 <Image src={integrationCreateServiceAccount} alt="创建服务账号" />
+     * 指定服务账号名称，然后点击**创建并继续**。 <Image src={integrationServiceAccountName} alt="服务账号名称" />
+     * 在**角色**列表中，选择**服务账号 > 服务账号用户**，然后点击**完成**。 <Image src={integrationServiceAccountRole} alt="服务账号角色" />
+     * 打开创建的服务账户上的“操作”菜单，然后选择 **管理密钥**。 <Image src={integrationConfigureServiceAccount} alt="配置服务账号" />
+     * 在**密钥**选项卡中，点击**添加密钥 > 创建新密钥**。 <Image src={integrationServiceAccountCreateKey} alt="创建密钥" />
+     * 选择 **JSON** 并点击**创建**。 <Image src={integrationServiceAccountKeyType} alt="密钥类型" class="width-lg" />
+     * 包含您的服务账户凭据的 JSON 文件将下载到您的计算机。
+  3. 授予您的服务账户访问权限：
+     * 在 Google Play 管理中心，前往**设置 >** [**API 访问权限**](https://play.google.com/console/u/0/developers/api-access)，然后点击您的服务账号上的**授予访问权限**。 <Image src={integrationAccess} alt="授予访问权限" />
+     * 在**账号权限**选项卡中，选择以下权限：
+     * 查看应用信息并下载批量报告（只读）
+     * 发布 Play 游戏服务项目
+     * 发布产品版本、排除设备并使用 Play 应用签名
+     * 管理商店形象 <Image src={integrationPermissions} alt="权限" />
+     * 点击**邀请用户**。
+</Steps>
+
+之后，您可以使用该文件和服务账户凭据将您的翻译从 Crowdin 企业版发布到 Google Play。
