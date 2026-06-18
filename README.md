@@ -9,7 +9,6 @@ If you would like to contribute to the documentation, please read the [Contribut
 This project uses [Crowdin](https://crowdin.com) to manage translations.
 
 [![Crowdin](https://badges.crowdin.net/crowdin-support/localized.svg)](https://crowdin.com/project/crowdin-support)
-[![Translations Build](https://github.com/crowdin/docs/actions/workflows/crowdin-localization-build.yml/badge.svg?branch=update-crowdin-translations)](https://github.com/crowdin/docs/actions/workflows/crowdin-localization-build.yml?branch=update-crowdin-translations)
 
 ## Getting Started
 
