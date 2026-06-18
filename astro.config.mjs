@@ -9,6 +9,7 @@ import { rehypeHeadingIds } from '@astrojs/markdown-remark';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeExternalLinks from 'rehype-external-links';
 import { remarkHeadingId } from 'remark-custom-heading-id';
+import remarkLocalizeLinks from './src/plugins/remark-localize-links.ts';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import tailwindcss from '@tailwindcss/vite';
 import icon from 'astro-icon';
@@ -259,6 +260,7 @@ const config = defineConfig({
   markdown: {
     remarkPlugins: [
       remarkHeadingId, // Support custom heading IDs.
+      remarkLocalizeLinks, // Locale-prefix internal links in translated content.
     ],
     rehypePlugins: [
       rehypeHeadingIds,
