@@ -16,7 +16,7 @@ import icon from 'astro-icon';
 import crowdinSidebar from './src/content/sidebars/crowdin.ts';
 import enterpriseSidebar from './src/content/sidebars/enterprise.ts';
 import developerSidebar from './src/content/sidebars/developer.ts';
-import { starlightLocales } from './src/utils/i18n.ts';
+import { starlightLocales, getBaseDocId, localizeDocId } from './src/utils/i18n.ts';
 
 import customConsentScript from './src/scripts/custom-consent-mode.js?raw';
 import postHogScript from './src/scripts/posthog.js?raw';
@@ -158,10 +158,19 @@ const config = defineConfig({
           }
         }),
         starlightLinksValidator({
-          exclude: ({ link, slug }) => {
+          exclude: ({ link, slug, file }) => {
             const linkPath = link.split('#')[0].split('?')[0];
-            const normalizedSlug = slug.replace(/^\//, '');
-            const pageLocale = normalizedSlug.split('/')[0];
+
+            // Determine the page locale. Crowdin keeps the source frontmatter `slug` on
+            // translated pages (no locale prefix), so the validator builds the id from that
+            // slug — e.g. a zh page becomes `github-integration` instead of `zh/github-integration`.
+            // The docs loader (src/content/config.ts) re-applies the prefix via localizeDocId
+            // based on the source file path; mirror that here so locale detection matches routing.
+            const entry = file?.split('/content/docs/')[1] ?? '';
+            const docId = entry
+              ? localizeDocId(entry, getBaseDocId(entry), [...localizedLocales])
+              : slug.replace(/^\//, '');
+            const pageLocale = docId.split('/')[0];
             const isLocalizedPage = localizedLocales.has(pageLocale);
 
             // Exclude API documentation links.
