@@ -1,0 +1,1620 @@
+---
+title: Crowdin 查询语言 (CroQL)
+description: 根据特定条件检索所需的本地化资源
+slug: developer/croql
+sidebar:
+  order: 7
+---
+
+import { Aside, LinkCard, Tabs, TabItem, Badge } from '@astrojs/starlight/components';
+
+Crowdin Query Language (CroQL) 是适用于 Crowdin 编辑器、Crowdin Enterprise 编辑器以及 Crowdin 和 Crowdin Enterprise API 的工具，可让您根据特定条件检索所需的本地化资源。 使用 CroQL，您可以筛选源字符串及其针对特定目标语言的翻译、翻译记忆片段和术语库术语。
+
+您可以通过以下 API 方法使用 CroQL：
+
+<Tabs syncKey="product">
+  <TabItem label="Crowdin">
+    * [列出字符串](/developer/api/v2/#tag/Source-Strings/operation/api.projects.strings.getMany)
+    * [列出字符串](/developer/api/v2/string-based/#tag/Source-Strings/operation/api.projects.strings.getMany) <Badge text="String-based" variant="note" />
+    * [列出语言译文](/developer/api/v2/#tag/StringAsset-Translations/operation/api.projects.languages.translations.getMany)
+    * [列出语言译文](/developer/api/v2/string-based/#tag/String-Translations/operation/api.projects.languages.translations.getMany) <Badge text="String-based" variant="note" />
+    * [列出翻译记忆片段](/developer/api/v2/#tag/Translation-Memory/operation/api.tms.segments.getMany)
+    * [列出翻译记忆片段](/developer/api/v2/string-based/#tag/Translation-Memory/operation/api.tms.segments.getMany) <Badge text="String-based" variant="note" />
+    * [列出术语](/developer/api/v2/#tag/Glossaries/operation/api.glossaries.terms.getMany)
+    * [列出术语](/developer/api/v2/string-based/#tag/Glossaries/operation/api.glossaries.terms.getMany) <Badge text="String-based" variant="note" />
+  </TabItem>
+  <TabItem label="Crowdin 企业版">
+    * [列出字符串](/developer/enterprise/api/v2/#tag/Source-Strings/operation/api.projects.strings.getMany)
+    * [列出字符串](/developer/enterprise/api/v2/string-based/#tag/Source-Strings/operation/api.projects.strings.getMany) <Badge text="String-based" variant="note" />
+    * [列出语言译文](/developer/enterprise/api/v2/#tag/StringAsset-Translations/operation/api.projects.languages.translations.getMany)
+    * [列出语言译文](/developer/enterprise/api/v2/string-based/#tag/String-Translations/operation/api.projects.languages.translations.getMany) <Badge text="String-based" variant="note" />
+    * [列出翻译记忆片段](/developer/enterprise/api/v2/#tag/Translation-Memory/operation/api.tms.segments.getMany)
+    * [列出翻译记忆片段](/developer/enterprise/api/v2/string-based/#tag/Translation-Memory/operation/api.tms.segments.getMany) <Badge text="String-based" variant="note" />
+    * [列出术语](/developer/enterprise/api/v2/#tag/Glossaries/operation/api.glossaries.terms.getMany)
+    * [列出术语](/developer/enterprise/api/v2/string-based/#tag/Glossaries/operation/api.glossaries.terms.getMany) <Badge text="String-based" variant="note" />
+  </TabItem>
+</Tabs>
+
+## 操作符
+
+主要的 CroQL 运算符如下所示。 使用和组合它们，为从 Crowdin 检索所需的内容设置具体条件。 要构建您的 CroQL 查询，可以使用以下表格中的元素。
+
+### 算术运算符
+
+算术运算符用于对任何数值数据类型进行数学运算。
+
+| 名称 | 符号 | 示例     |
+| -- | -- | ------ |
+| 加法 | *  | 1 + 9  |
+| 减法 | -  | 11 - 1 |
+| 除法 | /  | 20 / 2 |
+| 乘法 | *  | 2 \* 5 |
+| 取反 | -  | -10    |
+
+### 比较运算符
+
+比较运算符用于比较值并返回 `true` 或 `false`。
+
+| 名称     | 符号                                                         | 別名 | 示例                                                                                                                      |
+| ------ | ---------------------------------------------------------- | -- | ----------------------------------------------------------------------------------------------------------------------- |
+| 在...之间 | `{{expression}} between {{expression}} and {{expression}}` |    | 5 between 1 and 10                                                                                                      |
+| 相等     | =                                                          |    | 10 = 10                                                                                                                 |
+| 不等     | !=                                                         | ≠  | 1 != 10; 1 ≠ 10                                                                                                         |
+| 大于     | &gt;                                                       |    | 10 &gt; 1                                                                                                               |
+| 大于或等于  | &gt;=                                                      | ≥  | 10 &gt;= 1; 10 ≥ 1                                                                                                      |
+| 小于     | &lt;                                                       |    | 1 &lt; 10                                                                                                               |
+| 小于或等于  | &lt;=                                                      | ≤  | 1 &lt;= 10; 1 ≤ 10                                                                                                      |
+| 包含     | `{{string}} contains {{string}}`                           |    | `"Hello World" contains "Hello"`; `"Hello World" contains text`; `text contains "Hello World"`; `context contains text` |
+
+### 逻辑运算符
+
+逻辑运算符用于组合多个布尔表达式或值，并提供一个布尔值输出。
+
+| 名称 | 符号  | 示例                                  |
+| -- | --- | ----------------------------------- |
+| 与  | and | 1 \< 10 and 10 > 1 |
+| 或  | or  | 1 \< 10 or 10 > 1  |
+| 异或 | xor | 1 \< 10 xor 10 > 1 |
+| 非  | not | not 1 \< 10        |
+
+### 过滤运算符
+
+过滤运算符用于根据指定的条件过滤对象。
+
+| 名称 | 符号                                   | 示例                                        |
+| -- | ------------------------------------ | ----------------------------------------- |
+| 过滤 | `{{collection}} where {{predicate}}` | `translations where (count of votes > 0)` |
+| 匹配 | `{{object}} with {{predicate}}`      | `user with (login = "crowdin")`           |
+
+### 条件（三元）运算符
+
+三元运算符用于检查第一个值中指定的条件，如果是 `true` 则返回第二个值，如果是 `false` 则返回第三个值。
+
+| 名称 | 符号                                                         | 示例                                                       |
+| -- | ---------------------------------------------------------- | -------------------------------------------------------- |
+| 三元 | `If {{condition}} then {{expression}} else {{expression}}` | `If 1 \< 10 then "less" else "greater"` |
+
+### Fetch 运算符
+
+Fetch 运算符用于从对象中获取数据。
+
+| 名称  | 符号                                         | 示例                                  |
+| --- | ------------------------------------------ | ----------------------------------- |
+| 提及  | `@user:{{string}}`; `@language:{{string}}` | `@user:"crowdin"`; `@language:"en"` |
+| 成员  | `{{member}} of {{object}}`                 | `count of translations`             |
+| 标识符 | `{{identifier}}`                           | `text`; `identifier`                |
+
+### 标量运算符
+
+标量运算符用于声明用于进一步处理的值。
+
+| 名称   | 符号             | 示例                             |
+| ---- | -------------- | ------------------------------ |
+| 整数   | `{{integer}}`  | 10                             |
+| 浮点数  | `{{float}}`    | 10.01                          |
+| 字符串  | `{{string}}`   | "crowdin"                      |
+| 日期时间 | `{{datetime}}` | 'today'; '2021-03-16 00:00:00' |
+
+### 分组运算符
+
+分组运算符用于确定运算符的执行顺序。
+
+| 名称 | 符号  | 示例                                               |
+| -- | --- | ------------------------------------------------ |
+| 分组 | ( ) | 1 \< 10 and (20 > 10 or 10 > 5) |
+
+## CroQL 查询示例
+
+在本节中，您可以找到 CroQL 查询的实用示例，帮助您理解和使用 Crowdin 中的查询功能。 这些示例可以帮助您学习如何创建自己的查询，根据各种条件（如翻译状态、用户活动和字符串属性）检索特定的数据集。
+
+<LinkCard title="CroQL Tester - CroQL 表达式编辑器和测试工具" description="在 CroQL Tester 中试用您的 CroQL 查询。" href="https://store.crowdin.com/croql-tester" target="_blank" />
+
+### 字符串查询
+
+这些查询用于检索源字符串的相关信息。
+
+* 没有带审批或投票的乌克兰语译文的字符串：
+  ```graphql wrap
+  count of translations where ( language = @language:"uk" and ( count of approvals > 0 or count of votes > 0 ) ) = 0
+  ```
+
+* 只有一条译文的字符串：
+  ```graphql
+  count of translations = 1
+  ```
+
+* 只有来自某一特定用户的译文的字符串：
+  ```graphql wrap
+  count of translations > 0 and count of translations = count of translations where (user = @user:"crowdin")
+  ```
+
+* 至少有一条不来自特定用户的译文的字符串：
+  ```graphql
+  count of translations where (user != @user:"crowdin") > 0
+  ```
+
+* 所有译文均不来自特定用户的字符串：
+  ```graphql wrap
+  count of translations > 0 and count of translations = count of translations where (user != @user:"crowdin")
+  ```
+
+* 按标识符和 Crowdin 项目中文件的数字 ID 筛选的字符串：
+  ```graphql
+  identifier = "key" and id of file = 777
+  ```
+
+* 按 Crowdin 项目中文件的数字 ID 筛选的含有未解决问题的字符串：
+  ```graphql
+  id of file = 777 and count of comments where (has unresolved issue) > 0
+  ```
+
+* 不是重复项且有一条或多条译文的隐藏字符串：
+  ```graphql
+  is hidden and not is duplicate and count of translations > 0
+  ```
+
+* 有一条或多条审批的字符串：
+  ```graphql
+  count of languages summary where (approvalsCount >= 1) > 0
+  ```
+
+* 用户名为 `crowdin` 的用户发表了评论的字符串：
+  ```graphql
+  count of comments where (user = @user:"crowdin") > 0
+  ```
+
+* 源文本中包含 "ABC" 但译文中不包含 "ABC" 的字符串：
+  ```graphql
+  text contains "ABC" and (count of translations where (text contains "ABC") = 0)
+  ```
+
+#### 字段查询
+
+这些查询用于根据分配给源字符串的[字段](/enterprise/fields/)检索相关信息。
+
+* 具有特定字段名称和精确字段值的字符串：
+
+  *使用场景：查找 "Priority" 字段设置为 "High" 的字符串。*
+
+  ```graphql wrap
+  count of fields where (name = "Priority" and value = "High") > 0
+  ```
+
+* 具有特定字段别名且值包含特定词语的字符串：
+
+  *使用场景：查找 "category" 别名包含 "mobile" 一词的字符串。*
+
+  ```graphql wrap
+  count of fields where (slug = "field-category" and value contains "mobile") > 0
+  ```
+
+* 按名称应用了特定字段的字符串：
+
+  *使用场景：查找所有分配了 "Department" 字段的字符串，无论值是什么。*
+
+  ```graphql wrap
+  count of fields where (name = "Department") > 0
+  ```
+
+* 按别名应用了特定字段的字符串：
+
+  *使用场景：使用 "Owner" 字段的特定系统标识符查找字符串。*
+
+  ```graphql wrap
+  count of fields where (slug = "field-internal-owner") > 0
+  ```
+
+* 字段名称包含特定词语的字符串：
+
+  *使用场景：查找包含任何与 "Status" 相关字段的字符串（例如：Legal Status、Review Status）。*
+
+  ```graphql wrap
+  count of fields where (name contains "Status") > 0
+  ```
+
+* 任意字段具有非空值的字符串：
+
+  *使用场景：查找已填写任何元数据的字符串。*
+
+  ```graphql wrap
+  count of fields where (value != "") > 0
+  ```
+
+* 具有非空值的文本类型字段的字符串：
+
+  *使用场景：用于确保元数据注释或描述已实际填写。*
+
+  ```graphql wrap
+  count of fields where (type = "text" and value != "") > 0
+  ```
+
+* 匹配多个特定字段名称且值包含特定词语的字符串：
+
+  *使用场景：检查 "Platform" 或 "Environment" 字段是否包含 "Production" 一词。*
+
+  ```graphql wrap
+  count of fields where ((name = "Platform" or name = "Environment") and value contains "Production") > 0
+  ```
+
+<details>
+  <summary><strong>在 Crowdin API 中使用字符串和字段查询</strong></summary>
+  在以下 Crowdin API 端点中使用您的查询：
+
+    ```shell title="Crowdin" wrap
+    GET https://api.crowdin.com/api/v2/projects/{projectId}/strings?croql={croql}
+    ```
+
+    ```shell title="Crowdin Enterprise" wrap
+    GET https://{organization_domain}.api.crowdin.com/api/v2/projects/{projectId}/strings?croql={croql}
+    ```
+
+    | 参数            | 详细信息                                             |
+    | ------------- | ------------------------------------------------ |
+    | `{projectId}` | **类型：** `integer`<br />**描述：** Crowdin 项目的数字标识符。 |
+    | `{croql}`     | **类型：** `string`<br />**描述：** CroQL 表达式。         |
+
+    <Aside type="caution">在执行请求之前，请确保对您的 CroQL 表达式进行 URL 编码。</Aside>
+</details>
+
+### 译文查询
+
+这些查询用于检索译文的相关信息。
+
+* 由用户名为 `crowdin` 的用户提交的译文，或获得 ≥ 100 个赞成票的译文：
+  ```graphql
+  user = @user:"crowdin" or count of votes where ( is up ) >= 100
+  ```
+
+<details>
+  <summary><strong>在 Crowdin API 中使用译文查询</strong></summary>
+  在以下 Crowdin API 端点中使用您的查询：
+
+    ```shell title="Crowdin" wrap
+    GET https://api.crowdin.com/api/v2/projects/{projectId}/languages/uk/translations?croql={croql}
+    ```
+
+    ```shell title="Crowdin Enterprise" wrap
+    GET https://{organization_domain}.api.crowdin.com/api/v2/projects/{projectId}/languages/uk/translations?croql={croql}
+    ```
+
+    | 参数            | 详细信息                                             |
+    | ------------- | ------------------------------------------------ |
+    | `{projectId}` | **类型：** `integer`<br />**描述：** Crowdin 项目的数字标识符。 |
+    | `{croql}`     | **类型：** `string`<br />**描述：** CroQL 表达式。         |
+
+    <Aside type="caution">在执行请求之前，请确保对您的 CroQL 表达式进行 URL 编码。</Aside>
+</details>
+
+### 翻译记忆片段查询
+
+这些查询用于检索翻译记忆片段的相关信息。
+
+* 包含至少一条使用过一次或多次的记录的翻译记忆片段：
+  ```graphql
+  count of records where (usageCount > 0) > 0
+  ```
+
+* 包含至少一条由用户名为 `crowdin` 的用户创建的记录的翻译记忆片段：
+  ```graphql
+  count of records where (createdBy = @user:"crowdin") > 0
+  ```
+
+<details>
+  <summary><strong>在 Crowdin API 中使用翻译记忆片段查询</strong></summary>
+  在以下 Crowdin API 端点中使用您的查询：
+
+    ```shell title="Crowdin" wrap
+    GET https://api.crowdin.com/api/v2/tms/{tmId}/segments?croql={croql}
+    ```
+
+    ```shell title="Crowdin Enterprise" wrap
+    GET https://{organization_domain}.api.crowdin.com/api/v2/tms/{tmId}/segments?croql={croql}
+    ```
+
+    | 参数            | 详细信息                                             |
+    | ------------- | ------------------------------------------------ |
+    | `{projectId}` | **类型：** `integer`<br />**描述：** Crowdin 项目的数字标识符。 |
+    | `{croql}`     | **类型：** `string`<br />**描述：** CroQL 表达式。         |
+
+    <Aside type="caution">在执行请求之前，请确保对您的 CroQL 表达式进行 URL 编码。</Aside>
+</details>
+
+### 术语库术语查询
+
+这些查询用于检索术语库术语的相关信息。
+
+* 由用户名为 `crowdin` 的用户为乌克兰语创建的术语：
+  ```graphql
+  user = @user:"crowdin" and language = @language:"uk"
+  ```
+
+* 包含 "ABC" 且词性设置为名词的术语：
+  ```graphql
+  text contains "ABC" and partOfSpeech = "noun"
+  ```
+
+* 标记为不推荐或已过时的术语：
+  ```graphql
+  status = "not_recommended" or status = "obsolete"
+  ```
+
+* 类型为缩写词且包含备注的术语：
+  ```graphql
+  type = "abbreviation" and note contains "tooltip"
+  ```
+
+* 在特定日期之后添加的术语：
+  ```graphql
+  createdAt > '2024-12-01 00:00:00'
+  ```
+
+* 词元等于 "cancel" 且为英语的术语：
+  ```graphql
+  lemma = "cancel" and language = @language:"en"
+  ```
+
+* 包含参考 URL 的术语：
+  ```graphql
+  url contains "https://"
+  ```
+
+<details>
+  <summary><strong>在 Crowdin API 中使用术语库术语查询</strong></summary>
+  在以下 Crowdin API 端点中使用您的查询：
+
+  ```shell title="Crowdin" wrap
+  GET https://api.crowdin.com/api/v2/glossaries/{glossaryId}/terms?croql={croql}
+  ```
+
+  ```shell title="Crowdin Enterprise" wrap
+  GET https://{organization_domain}.api.crowdin.com/api/v2/glossaries/{glossaryId}/terms?croql={croql}
+  ```
+
+  | 参数             | 详细信息                                                  |
+  | -------------- | ----------------------------------------------------- |
+  | `{glossaryId}` | **类型：** `integer`<br />**描述：** Crowdin 术语库的数字标识符。     |
+  | `{croql}`      | **类型：** `string`<br />**描述：** 用于筛选术语库术语条目的 CroQL 表达式。 |
+
+  <Aside type="caution">在执行请求之前，请确保对您的 CroQL 表达式进行 URL 编码。</Aside>
+</details>
+
+### 基于编辑器高级筛选选项的示例
+
+<Aside>
+  要在 Crowdin API 中使用以下查询，请确保在您的 CroQL 查询中指定所需目标语言（例如，`count of languages summary where (language = @language:"uk" and is translated) > 0`）。
+</Aside>
+
+#### 字符串
+
+* 已添加的字符串：
+  ```graphql
+  added between '2023-12-06 13:44:14' and '2023-12-07 13:44:14'
+  ```
+* 已更新的字符串：
+  ```graphql
+  updated between '2023-12-06 13:44:14' and '2023-12-07 13:44:14'
+  ```
+* 字符串类型：
+  ```graphql
+  type is plain or type is icu
+  ```
+* 评论：
+  ```graphql
+  count of comments > 0
+  ```
+* 截图：
+  ```graphql
+  count of screenshots > 0
+  ```
+* QA 问题：
+  ```graphql
+  count of languages summary where (has qa issues) > 0
+  ```
+
+#### 译文
+
+* 未翻译：
+  ```graphql
+  count of languages summary = 0
+  ```
+* 部分翻译（复数形式）：
+  ```graphql
+  count of languages summary where (is partially translated) > 0
+  ```
+* 已翻译：
+  ```graphql
+  count of languages summary where (is translated) > 0
+  ```
+* 翻译者：
+  ```graphql
+  count of translations where (user = @user:"crowdin") > 0
+  ```
+* 未由以下用户翻译：
+  ```graphql
+  count of translations where (user != @user:"crowdin") > 0
+  ```
+* 与源字符串相同：
+  ```graphql
+  count of languages summary where (has translation as source) > 0
+  ```
+* 已修改的源字符串：
+  ```graphql
+  count of languages summary where (is source changed after translation) > 0
+  ```
+* 已更新的译文：
+  ```graphql wrap
+  count of languages summary where ( translation updated between '2023-12-06 13:44:14' and '2023-12-07 13:44:14') > 0
+  ```
+* 投票：
+  ```graphql
+  count of languages summary where (rating > 0) > 0
+  ```
+
+#### 重复项
+
+* 主字符串：
+  ```graphql
+  not is duplicate
+  ```
+* 仅限重复项：
+  ```graphql
+  is duplicate
+  ```
+* 共享译文的重复项：
+  ```graphql wrap
+  is duplicate and count of languages summary where (has shared translation) > 0
+  ```
+* 有独立译文的重复项：
+  ```graphql wrap
+  is duplicate and count of languages summary where (not has shared translation and is translated) > 0
+  ```
+
+#### 审批
+
+* 已翻译，未审批：
+  ```graphql
+  count of languages summary where (is translated and not is approved) > 0
+  ```
+* 部分审批（复数形式）：
+  ```graphql
+  count of languages summary where (is partially approved) > 0
+  ```
+* 已审批：
+  ```graphql
+  count of languages summary where (is approved) > 0
+  ```
+* 审批者：
+  ```graphql wrap
+  count of translations where (count of approvals where (user = @user:"crowdin") > 0) > 0
+  ```
+* 未由以下用户审批：
+  ```graphql wrap
+  count of translations where (count of approvals where (user != @user:"crowdin") > 0) > 0
+  ```
+* 审批后有新译文：
+  ```graphql
+  count of languages summary where (has translation after approval) > 0
+  ```
+
+#### 翻译记忆和 MT
+
+* 由 MT 翻译：
+  ```graphql
+  count of languages summary where (is translated by mt) > 0
+  ```
+* 由翻译记忆翻译：
+  ```graphql
+  count of languages summary where (is translated by tm) > 0
+  ```
+* 由翻译记忆或 MT 翻译：
+  ```graphql
+  count of languages summary where (is auto translated) > 0
+  ```
+
+#### 其他
+
+* 预翻译：
+  * 已使用：不可用
+  * 未使用：不可用
+* 排序方式：不可用
+* 口头表达：不可用
+* 口头表达范围：不可用
+
+## 语境
+
+CroQL 可以在以下上下文中使用：源字符串上下文、译文上下文和翻译记忆 (TM) 片段上下文。 使用以下示例作为构建 CroQL 查询的基础。
+
+### 源字符串上下文
+
+```json collapse={37-56,62-92}
+{
+  "type is plain": true,
+  "type is plural": false,
+  "type is icu": false,
+  "type is asset": false,
+  "text": "Quick Start",
+  "identifier": "quick_start",
+  "context": "quick_start",
+  "max length": 0,
+  "is visible": true,
+  "is hidden": false,
+  "is duplicate": false,
+  "isPassedWorkflow": true,
+  "fields": {
+    "priority": "High",
+    "legal-status": "approved"
+  },
+  "file": {
+    "id": 32,
+    "name": "sample.csv",
+    "title": "Sample",
+    "type": "csv",
+    "context": "Some useful context information"
+  },
+  "branch": {
+    "id": 7,
+    "name": "main",
+    "title": "Main"
+  },
+  "comments": [
+    {
+      "has issue": false,
+      "has unresolved issue": false,
+      "user": 1
+    }
+  ],
+  "screenshots": [],
+  "translations": [
+    {
+      "text": "Швидкий старт",
+      "plural form": "none",
+      "is pre translated": true,
+      "provider": "tm",
+      "language": "uk",
+      "user": 1,
+      "votes": [
+        {
+          "is up": true,
+          "is down": false,
+          "user": 2,
+          "added": "2021-04-09 13:44:14"
+        }
+      ],
+      "approvals": [
+        {
+          "user": 2,
+          "added": "2021-04-09 13:44:14"
+        }
+      ],
+      "updated": "2021-04-09 10:23:17"
+    }
+  ],
+  "languages summary": [
+    {
+      "language": "en",
+      "is translated": false,
+      "is partially translated": false,
+      "is approved": false,
+      "is partially approved": false,
+      "translation updated": false,
+      "is auto translated": false,
+      "is translated by tm": false,
+      "is translated by mt": false,
+      "is source changed after translation": false,
+      "has translation as source": false,
+      "has translation after approval": false,
+      "has shared translation": false,
+      "has qa issues": false,
+      "has empty translation qa issues": false,
+      "has translation length qa issues": false,
+      "has tags mismatch qa issues": false,
+      "has spaces mismatch qa issues": false,
+      "has variables mismatch qa issues": false,
+      "has punctuation mismatch qa issues": false,
+      "has character case mismatch qa issues": false,
+      "has special characters mismatch qa issues": false,
+      "has incorrect translation qa issues": false,
+      "has spelling qa issues": false,
+      "has icu syntax qa issues": false,
+      "has terms qa issues": false,
+      "has duplicate translation qa issues": false,
+      "has ftl syntax qa issues": false,
+      "has android syntax qa issues": false,
+      "has custom qa issues": false,
+      "rating": 1,
+      "approvalsCount": 1
+    }
+  ],
+  "labels": [
+    {
+      "id": 1,
+      "title": "label title",
+      "is system": false
+    }
+  ],
+  "added": "2021-04-08 12:33:27",
+  "updated": "2021-04-08 12:33:27"
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>type is plain</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 纯文本的源字符串。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>type is plural</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 带有复数形式的源字符串。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>type is icu</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 带有 ICU 的源字符串。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>type is asset</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串是资产。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 源字符串文本。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>identifier</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 源字符串标识符（键）。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>context</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 源字符串上下文。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>max length</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 源字符串最大长度。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is visible</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串可见。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is hidden</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串已隐藏。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is duplicate</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串是重复项。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>isPassedWorkflow</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 仅限 Crowdin Enterprise。 源字符串已通过项目工作流。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>fields</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>object</code></p>
+      <p><strong>描述：</strong> 仅限 Crowdin Enterprise。 包含分配给字符串的自定义属性（[字段](/enterprise/fields/)）的对象。<br />
+      您可以通过 <code>name</code>、<code>slug</code>、<code>value</code> 和 <code>type</code> 进行筛选。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>file</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>object</code></p>
+      <p><strong>描述：</strong> 源字符串文件。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>branch</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>object</code></p>
+      <p><strong>描述：</strong> 源字符串分支。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>comments</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>array</code></p>
+      <p><strong>描述：</strong> 源字符串评论。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has issue</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has unresolved issue</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在未解决的问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 添加评论的用户的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>screenshots</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>array</code></p>
+      <p><strong>描述：</strong> 源字符串截图。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>translations</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>array</code></p>
+      <p><strong>描述：</strong> 源字符串的译文。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 译文文本。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>plural form</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 译文复数形式。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is pre translated</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 通过自动翻译添加的译文。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>provider</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>允许的值：</strong> <code>tm</code>, <code>global_tm</code>, <code>google</code>, <code>google_automl</code>, <code>microsoft</code>, <code>crowdin</code>, <code>deepl</code>, <code>modernmt</code>, <code>amazon</code>, <code>watson</code>, <code>custom_mt</code></p>
+      <p><strong>描述：</strong> 通过翻译记忆或机器翻译引擎提供的译文。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>language</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 以字符串形式指定的语言标识符。 使用<a href="/zh/developer/language-codes/">语言代码</a>，例如，乌克兰语使用 <code>"uk"</code>。 在查询中指定时，请使用以下格式：<code>@language:"uk"</code>。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 添加译文的用户的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>votes</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>array</code></p>
+      <p><strong>描述：</strong> 添加到译文的投票数组。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is up</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 赞成票。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is down</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 反对票。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 为译文投票的用户的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 为译文添加投票的日期。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>approvals</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>array</code></p>
+      <p><strong>描述：</strong> 已添加的译文审批数组。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 审批译文的用户的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 添加译文审批的日期。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updated</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 译文更新的日期。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>languages summary</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>array</code></p>
+      <p><strong>描述：</strong> 源字符串的顶级译文（优先级最高的译文）。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>language</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 以字符串形式指定的语言标识符。 使用<a href="/zh/developer/language-codes/">语言代码</a>，例如，乌克兰语使用 <code>"uk"</code>。 在查询中指定时，请使用以下格式：<code>@language:"uk"</code>。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is translated</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串已翻译。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is partially translated</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串已部分翻译。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is approved</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串已审批。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is partially approved</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串已部分审批。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>translation updated</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串译文已更新。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is auto translated</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串已由翻译记忆或 MT 翻译。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is translated by tm</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串已由翻译记忆翻译。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is translated by mt</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串已由 MT 翻译。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is source changed after translation</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 翻译后源字符串已更改。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has translation as source</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串的译文与源文本相同。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has translation after approval</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串在审批后有新译文。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has shared translation</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串的重复项具有来自主字符串的共享译文。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has empty translation qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在空译文 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has translation length qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在译文长度 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has tags mismatch qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在标签不匹配 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has spaces mismatch qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在空格不匹配 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has variables mismatch qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在变量不匹配 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has punctuation mismatch qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在标点符号不匹配 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has character case mismatch qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在字符大小写不匹配 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has special characters mismatch qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在特殊字符不匹配 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has incorrect translation qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在错误译文 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has spelling qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在拼写 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has icu syntax qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在 ICU 语法 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has terms qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在术语 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has duplicate translation qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在重复译文 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has ftl syntax qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在 FTL 语法 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has android syntax qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在 Android 语法 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has custom qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在自定义 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>rating</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 源字符串译文评分。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>approvalsCount</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 译文审批数量。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>labels</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>array</code></p>
+      <p><strong>描述：</strong> 源字符串标签。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>id</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 标签的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>title</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 标签标题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is system</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 系统标签（带有源文件名的标签，会自动添加到基于字符串的项目中的字符串）。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 源字符串的添加日期。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updated</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 源字符串的更新日期。</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### 译文上下文
+
+```json
+{
+  "text": "Швидкий старт",
+  "plural form": "none",
+  "is pre translated": true,
+  "provider": "tm",
+  "user": 1,
+  "votes": [
+    {
+      "is up": true,
+      "is down": false,
+      "user": 2,
+      "added": "2021-04-09 13:44:14"
+    }
+  ],
+  "approvals": [
+    {
+      "user": 2,
+      "added": "2021-04-09 13:44:14"
+    }
+  ],
+  "updated": "2021-04-09 10:23:17"
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 译文文本。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>plural form</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 译文复数形式。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is pre translated</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 通过自动翻译添加的译文。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>provider</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>允许的值：</strong> <code>tm</code>, <code>global_tm</code>, <code>google</code>, <code>google_automl</code>, <code>microsoft</code>, <code>crowdin</code>, <code>deepl</code>, <code>modernmt</code>, <code>amazon</code>, <code>watson</code>, <code>custom_mt</code></p>
+      <p><strong>描述：</strong> 通过翻译记忆或机器翻译引擎提供的译文。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 添加译文的用户的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>votes</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>array</code></p>
+      <p><strong>描述：</strong> 添加到译文的投票数组。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is up</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 赞成票。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is down</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 反对票。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 为译文投票的用户的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 为译文添加投票的日期。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>approvals</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>array</code></p>
+      <p><strong>描述：</strong> 已添加的译文审批数组。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 审批译文的用户的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 添加译文审批的日期。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updated</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 译文更新的日期。</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### 翻译记忆 (TM) 片段上下文
+
+```json
+{
+  "records": [
+    {
+      "id": 1,
+      "text": "Перекладений текст",
+      "usageCount": 77,
+      "createdBy": 1,
+      "updatedBy": 1,
+      "createdAt": "2027-09-16T13:48:04+00:00",
+      "updatedAt": "2027-09-16T13:48:04+00:00"
+    }
+  ]
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>records</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>array</code></p>
+      <p><strong>描述：</strong> 翻译记忆片段记录的数组。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>id</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 记录的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 记录的译文文本。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>usageCount</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 翻译记忆记录的使用次数。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>createdBy</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 创建翻译记忆记录的用户的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updatedBy</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 更新翻译记忆记录的用户的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>createdAt</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 翻译记忆记录的创建日期。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updatedAt</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 翻译记忆记录的更新日期。</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### 术语库概念上下文
+
+```json
+{
+  "id": 101,
+  "user": 12,
+  "subject": "User Interfact",
+  "definition": "A command used to save user progress in the application.",
+  "url": "https://example.com/concept/save",
+  "note": "Commonly used in forms and toolbars.",
+  "translatable": true,
+  "createdAt": "2027-09-16T13:48:04+00:00",
+  "updatedAt": "2027-09-16T13:48:04+00:00"
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>id</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 术语库概念的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 创建概念的用户的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>subject</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 概念所属的领域或知识范围（例如，UI、开发、医疗保健）。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>definition</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 概念的一般解释或定义。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>url</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 链接到包含更多概念信息的资源的 URL。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>note</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 为译者提供的补充信息或说明。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">translatable</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 指示该概念是否可以翻译成其他语言。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>createdAt</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 概念创建的日期和时间。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updatedAt</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 概念最后更新的日期和时间。</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### 术语库术语上下文
+
+```json
+{
+  "id": 301,
+  "text": "Cancel",
+  "description": "A command to stop or abort an operation.",
+  "language": "en",
+  "user": 42,
+  "partOfSpeech": "verb",
+  "status": "admitted",
+  "type": "abbreviation",
+  "gender": "neuter",
+  "note": "Often used in confirmation dialogs.",
+  "lemma": "cancel",
+  "url": "https://example.com/term/cancel",
+  "concept": 101,
+  "createdAt": "2027-09-16T13:48:04+00:00",
+  "updatedAt": "2027-09-16T13:48:04+00:00"
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>id</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 术语库术语的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 术语本身，以指定语言表示。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>description</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 术语的附加解释或含义。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>language</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 以字符串形式指定的语言标识符。 使用<a href="/zh/developer/language-codes/">语言代码</a>，例如，乌克兰语使用 <code>"uk"</code>。 在查询中指定时，请使用以下格式：<code>@language:"uk"</code>。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 添加术语的用户的数字标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">partOfSpeech</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>允许的值：</strong> <code>noun</code>, <code>verb</code>, <code>adj</code>, <code>pron</code>, <code>propn</code>, <code>det</code>, <code>adv</code>, <code>adp</code>, <code>cconj</code>, <code>sconj</code>, <code>num</code>, <code>intj</code>, <code>aux</code>, <code>prt</code>, <code>sym</code>, <code>x</code></p>
+      <p><strong>描述：</strong> 术语的语法类别。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>status</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>允许的值：</strong> <code>preferred</code>, <code>admitted</code>, <code>not_recommended</code>, <code>obsolete</code>, <code>draft</code></p>
+      <p><strong>描述：</strong> 指示术语的审批或使用级别。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>type</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>允许的值：</strong> <code>full_form</code>, <code>acronym</code>, <code>abbreviation</code>, <code>short_form</code>, <code>phrase</code>, <code>variant</code></p>
+      <p><strong>描述：</strong> 按结构或用途对术语进行分类。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>gender</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>允许的值：</strong> <code>masculine</code>, <code>feminine</code>, <code>neuter</code>, <code>common</code>, <code>other</code></p>
+      <p><strong>描述：</strong> 术语的语法性别，如适用。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>note</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 为译者提供的额外指导或与术语相关的备注。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>lemma</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 术语的基本形式。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>url</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>描述：</strong> 术语的参考链接。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>concept</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>描述：</strong> 术语所属概念的 ID。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>createdAt</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 术语创建的日期和时间。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updatedAt</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>datetime</code></p>
+      <p><strong>描述：</strong> 术语最后更新的日期和时间。</p>
+    </td>
+  </tr>
+  </tbody>
+</table>

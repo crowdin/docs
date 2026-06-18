@@ -1,0 +1,236 @@
+---
+title: Azure Repos Bütünleştirmesi
+description: Azure Repos deponuz ile Crowdin arasında dosyaları eşitleyin
+slug: tr/azure-repos-integration
+sidebar:
+  order: 4
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import setUpIntegrationDropdown from '!/crowdin/integrations/set_up_integration_dropdown.png';
+import authorizationAzureRepos from '!/crowdin/integrations/azure_repos_integration_authorization.png';
+import unconfigured from '!/crowdin/integrations/integration_unconfigured.png';
+import unconfiguredSb from '!/crowdin/integrations/integration_unconfigured_sb.png';
+import syncNow from '!/crowdin/integrations/integration_sync_now.png';
+import uploadTranslations from '!/crowdin/integrations/integration_sync_translations_to_crowdin.png';
+
+Azure Repos bütünleştirmesi, dosyaları Azure Repos deponuz ve Crowdin projeniz arasında eşitlemenizi sağlar.
+
+<Aside>
+  Ayarlamadan ve kullanmadan önce Crowdin hesabınıza [Azure Repos bütünleştirmesini yüklemeniz](https://store.crowdin.com/azure-repos) gerekecek.
+</Aside>
+
+Dosya tabanlı projelerde seçebileceğiniz iki olası Azure Repos bütünleştirme kipi vardır:
+
+* **Kaynak ve çeviri dosyaları kipi** &ndash; kaynak ve çeviri dosyalarını Azure Repos deponuz ve Crowdin projeniz arasında eşitleyin.
+* **Hedef dosya paketleri kipi** &ndash; Crowdin projesinden seçilen biçimde çeviri dosyaları oluşturun ve Azure Repos deponuza yollayın. Bu kipte bütünleştirme, çeviri dosyalarını yollar ve deponuzdan kaynakları eşitlemez. Crowdin projenizde bir kaynak metin incelemesi yaptığınız ve güncellenmiş kaynak metinleri deponuza almak istediğiniz durumlarda, çevirilerle birlikte deponuza yollanacak olan bir kaynak dili hedef dil olarak ekleyebilirsiniz.
+
+Dizgi tabanlı projelerde, Azure Repos bütünleştirmesi özellikle **Hedef dosya paketleri kipinde** çalışır.
+
+<ReadMore>
+  [Proje türleri](/tr/creating-project/#proje-türleri) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+Çevrilen ve onaylanan tüm dosyalar (veya hedef dosya paketleri) otomatik olarak Azure Repos deposunun `l10n` dalıyla birleştirilir.
+
+## Azure Repos Hesabını Bağlama
+
+<Steps>
+  1. Projenizi açın ve **Bütünleştirmeler** sekmesine gidin.
+  2. Bütünleştirmeler listesinde **Azure Repos**’a tıklayın.
+  3. **Bütünleştirmeyi Ayarla**’ya tıklayın ve Azure Repos hesabınız aracılığıyla bütünleştirmek için açılır listeden **Kaynak ve çeviri dosyaları kipi** veya **Hedef dosya paketleri kipi**’ni seçin. <Image src={setUpIntegrationDropdown} alt="Azure Repos’u Bağlama" class="width-sm" />
+     <Aside>Dizgi tabanlı projelerde, Azure Repos bütünleştirmesi özellikle **Hedef dosya paketleri kipinde** çalışır.</Aside>
+  4. Ardından Azure Repos tarafında Crowdin ile bağlantıyı yetkilendirin: <Image src={authorizationAzureRepos} alt="Azure Repos Bütünleştirme Yetkilendirmesi" />
+</Steps>
+
+İhtiyacınız olan deponun özel olması ve erişiminizin sınırlı olması veya hiç olmaması durumunda, lütfen depo sahibinden size bir erişim belirteci sağlamasını isteyin. Daha sonra, **Kişisel erişim belirteci kullan**’a tıklayın ve belirteci **Belirteç** alanına yerleştirin ve **Bütünleştirmeyi Ayarla**’ya tıklayın.
+
+<Aside title="İzinler">
+  Bir erişim belirteci ile bir bütünleştirme ayarlarken, gerekli depo için Proje Yöneticisi seviyesinde izne sahip olduğunuzdan emin olun.
+</Aside>
+
+### Depoyu Seçme
+
+Ortaya çıkan ileti öğesinde, deponuzu ve çevrilmesi gereken dalları seçin.
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dosya tabanlı proje">
+    <Image src={unconfigured} alt="Azure Repos Bütünleştirmesi Yapılandırılmama" class="crowdin-modal" />
+
+    Kopya Dizgileri **Bir sürüm dalı içinde göster** olarak değiştirmek önerilir, böylece dallar arasında aynı dizgiler gizlenecektir. Eğer kaynak dosyalarınız görünen tanımlayıcılara (anahtarlar) sahip dizgiler içeriyorsa, bu seçeneğin *tam* sürümünü kullanmak daha iyidir. Diğer durumlarda, *düzenli* olanı kullanmaktan çekinmeyin.
+  </TabItem>
+  <TabItem label="Dizgi tabanlı proje">
+    <Image src={unconfiguredSb} alt="Azure Repos Bütünleştirmesi Yapılandırılmama" class="crowdin-modal" />
+  </TabItem>
+</Tabs>
+
+<CardGrid>
+  <LinkCard title="Kopya Dizgiler" href="/tr/project-settings/import/#kopya-dizgiler" />
+  <LinkCard title="Sürüm Yönetimi" href="/tr/version-management/" />
+</CardGrid>
+
+**Hedef Dosya Paketleri Kipi**’nde Azure Repos bütünleştirmesiyle çalışırken bütünleştirme, deponuzdan kaynakları çekmeden Crowdin projenizden tamamlanan çevirileri gönderecek. Bu nedenle, çevrilmesi gereken bir depo ve dalları seçerken, oluşturulan çeviri paketlerini bütünleştirmenin nereye koyması gerektiğini belirtirsiniz.
+
+<ReadMore>
+  [VCS bütünleştirmesi için hedef dosya paketlerini yapılandırma](/tr/bundles/#VCS-bütünleştirmesindeki-paketler) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+Özel bütünleştirmelerle (örn. kendi kendine barındırılan VCS ile bütünleştirmeler) çalıştığınızda, güvenli kalırken düzgün olarak çalışmasını sağlamak için izinli listesine adanmış Crowdin IP adresleri eklemeniz gerekir.
+
+<ReadMore>
+  [IP Adresleri](/tr/developer/ip-addresses/#bütünleştirmeler-ve-uygulamalar) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+### Hizmet Dalları
+
+Çeviriler tamamlandığında ve dilleriniz yayınlanmaya hazır olduğunda, Crowdin sürüm denetim sisteminize çevirilerle çekme isteği gönderir. Yerelleştirme altındaki her dal için Crowdin, çevirilerle bir ek hizmet dalı oluşturur. Doğrudan master dalına işlemeyiz böylece önce çevirileri doğrulayabilirsiniz.
+
+Varsayılan olarak, oluşturulan hizmet dalı adına `l10n_` eklenir. Eğer gerekirse, kolayca değiştirebilirsiniz.
+
+<Aside type="tip">
+  Olası çakışmaları önlemek için çekme isteğini birleştirdikten sonra `l10n_` dalını deponuzdan silmenizi öneririz. Yeni çeviriler eşitlenmeye hazır olduğunda Crowdin hizmet dalını otomatik olarak yeniden oluşturacak.
+</Aside>
+
+### Eşitleme Ayarları
+
+Eşitleme ayarlarını ihtiyaçlarınıza ve tercihlerinize göre yapılandırın.
+
+<Aside type="caution" title="Limitations">
+  *Varolan çevirileri içe aktar* ve *Kaynakları yolla* seçenekleri sadece dosya tabanlı projeler için kullanılabilir.
+</Aside>
+
+#### Varolan Çevirileri İçe Aktarın
+
+Deponuzdaki varolan çevirileri içe aktarmak için aşağıdaki seçeneklerden birini seçin:
+
+* **Dal bağlandıktan sonra tek seferlik çeviri içe aktarma**
+* **Depodan her zaman yeni çevirileri içe aktar**
+
+Varsayılan olarak, çevirileri sadece bir kez içe aktarmak için ilk seçenek seçilidir. Alternatif olarak, deponuzdan çevirileri içe aktarmak istemiyorsanız her iki seçeneğin de işaretini kaldırabilirsiniz.
+
+<Aside type="tip">
+  Bütünleştirme kurulumu sırasında varolan çevirilerin depodan sadece bir kez içe aktarılmasını öneririz. Daha sonra Crowdin'e gerçek kaynak olarak davranın ve onaylanmamış çevirilerin geçersiz kılınmasını önlemek için çevirileri yalnızca Crowdin’de yönetin.
+</Aside>
+
+Aşağıdaki ek seçeneklere erişmek için **Çevirileri yükleme seçenekleri**’ne tıklayın:
+
+* **Hedef çevirinin kaynakla eşleşmesine izin ver**
+* **Eklenen çevirileri onayla**
+
+#### Kaynakları Yollayın
+
+Varsayılan olarak, kaynaklar çevirilerle depoya yollanmaz. Eğer Crowdin projenizde bir kaynak metin incelemesi yaparsanız ve Crowdin’deki kaynak dosyalarınızda yaptığınız değişiklikleri deponuza geri yollamak isterseniz, **Düzenle**’ye tıklayın, bütünleştirme ayarlarında **Kaynakları Yolla**’yı seçin ve **Kaydet**’e tıklayın\*\*.
+
+#### Eşitleme Zamanlaması
+
+Eşitleme her saat otomatik olarak işlenir. Eğer gerekirse, bütünleştirme ayarlarından güncelleme aralığını değiştirebilirsiniz. Eşitlemeyi zamanlamayı yapılandırmak için – **Düzenle**’ye tıklayın, *Eşitlemeyi zamanla* için aşağı kaydırın, tercih edilen aralığı ayarlayın ve **Kaydet**’e tıklayın.
+
+Çevirilerin geçici olarak depoya yollanmasını etkisizleştirmenin gerekli olduğu durumlar vardır. Bu durumda, bütünleştirme ayarlarında **Düzenle**’ye tıklayın, *Eşitlemeyi zamanla* işaretini kaldırın ve **Kaydet**’e tıklayın. Çevirileri depo ile eşitlemeye hazır olduğunuzda, *Eşitlemeyi zamanla* seçeneğini işaretleyin ve **Kaydet**’e tıklayın\*\*.
+
+Eşitleme ayarlarına bağlı kalmadan, kaynak dosyaların depodaki değişiklikleri Crowdin ile sürekli olarak eşitlemeye devam edecektir.
+
+### Otomatik Olarak Eşitlenecek Dallar
+
+Bütünleştirmeyi ayarladığınızda, Crowdin projesine eklenen mevcut depo dallarını seçersiniz. Azure Repos’dan Crowdin’e ileride dalları otomatik olarak eklemek amacıyla bütünleştirme ayarlarında dal adları için bir model oluşturun.
+
+Örneğin, Azure Repos bütünleştirmesi ayarlarına \**özellik* şeklinde bir model ekleyin. Bu durumda, başlığın sonunda bu kelimeyi içeren gelecekteki dallar projeye eklenecektir.
+
+Dal adlarına bir şekil eklemek için şu adımları izleyin:
+
+<Steps>
+  1. Azure Repos bütünleştirmesi bölümünde **Düzenle**’ye tıklayın.
+  2. Ortaya çıkan ileti öğesinde, *Otomatik Olarak Eşitlenecek Dallar* için aşağı kaydırın\*.
+  3. *Otomatik Olarak Eşitlenecek Dallar* alanında, gerekli dalları tanımlamak için `*`, `?`, `[set]`, `\` ve diğerleri gibi joker karakter seçicileri kullanın.
+  4. **Kaydet**’e tıklayın.
+</Steps>
+
+### Varsayılan Yapılandırma Dosyası Adı
+
+`crowdin.yml` otomatik olarak eşitlenen dallar için kullanılan varsayılan dosya adıdır. Varsayılan ayarları değiştirmek için **Düzenle**’ye tıklayın, bütünleştirme ayarlarındaki *Varsayılan yapılandırma dosyası adı* alanında tercih edilen adı belirtin ve **Kaydet**’e tıklayın.
+
+Eğer otomatik olarak eşitlenen dallar için özel yapılandırma dosyası adınızı belirtmezseniz ve bütünleştirme, dalın kökünde `crowdin.yml` varsayılan adına sahip bir yapılandırma dosyası bulamazsa, bu dallar bütünleştirme ayarlarında "Hazır Değil. Yapılandırmayı gözden geçirin" anlamına gelen bir ünlem işareti bulunan kırmızı bir simgeyle işaretlenecektir.
+
+## Eşitleme için İçerik Seçme
+
+Bütünleştirmenin çalışmasını sağlamak için hangi kaynak dosyaların çevrilmesi gerektiğini ve Crowdin’in deponuzdaki çevrilmiş dosyaları nasıl yapılandırması gerektiğini belirtmeniz gerekir.
+
+<Aside type="tip">
+  Eğer hizmet dalı adının yanında ünlem işareti bulunan kırmızı bir simge görüyorsanız bu, eşitleme için herhangi bir içerik seçmediğiniz anlamına gelir.
+</Aside>
+
+Eşitleme için içeriği belirlemenin iki yolu vardır:
+
+* Çevrimiçi yapılandırma
+* Bir yapılandırma dosyası oluşturarak el ile yapılandırma
+
+### Çevrimiçi Yapılandırma
+
+Bu yöntem, sürüm denetim sistemleri (VCS) ile tüm bütünleştirmeler için aynıdır.
+
+<ReadMore>
+  Çevrimiçi eşitleme için içeriğin nasıl seçileceğini öğrenmek amacıyla [VCS Bütünleştirmelerini Çevrimiçi Yapılandırma](/tr/configuring-vcs-integrations-online/)’yı gözden geçirin.
+</ReadMore>
+
+### Yapılandırma Dosyası Oluşturma
+
+Çevirmek istediğiniz her ayrı dal ile birlikte \`crowdin.yml yapılandırma dosyası Azure Repos deposunda saklanmalıdır, böylece Crowdin çeviriler için tam olarak hangi dosyaların gönderilmesi gerektiğini bilir.
+
+CLI için gereken aynı yapıya sahip olmalıdır, ancak projenizin kimlik bilgileri güvenlik nedeniyle dosyanın üstbilgisinde saklanmamalıdır.
+
+<ReadMore>
+  [Bir yapılandırma dosyası oluşturma](/tr/developer/configuration-file/) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+## Tek Bir Proje içinde Birden Çok Depo ile Çalışma
+
+Eğer farklı işletim sistemleri için sürümleri olan çok platformlu bir ürünle çalışıyorsanız, her işletim sistemi için kaynak dosyaları içeren birden çok depoyu bağlamak isteyebilirsiniz. Bu durumda, yerelleştirme kaynakları (örn. ÇB’ler, Sözlükler) ve çeviriler, proje yerelleştirmesi için gereken süreyi azaltarak daha verimli bir şekilde kullanılabilir.
+
+Başka bir depo eklemek için şu adımları izleyin:
+
+<Steps>
+  1. Projenizi açın ve **Bütünleştirmeler** sekmesine gidin.
+  2. Bütünleştirmeler listesinde **Azure Repos**’a tıklayın.
+  3. **Depo Ekle**’ye tıklayın.
+  4. Yeni depo ile bütünleştirmeyi ihtiyaçlarınıza ve tercihlerinize göre yapılandırın.
+</Steps>
+
+## Eşitleme Durumunu Denetleme
+
+Bütünleştirme ayarlandıktan sonra, ilgili tüm bilgiler **Bütünleştirmeler > Azure Repos** içinde saklanır.
+
+Bütünleştirme bağlandıktan sonra, ayarlar sadece onu yapılandıran proje üyesi tarafından güncellenebilir. Bütünleştirmeyi yapılandıran kişi dışındaki tüm proje yöneticileri, üzerine gelindiğinde şu iletiyle **Düzenle** düğmesinin etkisizleştirildiğini görecek: `Bütünleştirme {Full Name} ({username}) tarafından yapılandırılmış`.
+
+Varsayılan olarak, eşitleme her saat otomatik olarak işlenir. Eğer eşitlemeyi hemen başlatmanız gerekiyorsa – **Şimdi Eşitle**’ye tıklayın.
+
+<Image src={syncNow} alt="Bütünleştirme Şimdi Eşitleyin" />
+
+Alternatif olarak, eğer sadece bir dalı ayrı ayrı eşitlemeniz gerekiyorsa, gereken dalda <Icon name="mdi:dots-horizontal" class="inline-icon" /> simgesine tıklayın ve **Dalı eşitle**’yi seçin.
+
+## Depodan Çevirileri Yükleme
+
+Varsayılan olarak, depoda saklanan çeviriler sadece ilk eşitleme sırasında Crowdin’e yüklenir. Çevirileri Crowdin’e el ile yüklemek için **Şimdi Eşitle** düğmesindeki açılır menü okuna tıklayın ve ardından **Çevirileri Crowdin’e Eşitle**’ye tıklayın. Bütünleştirme, varolan çevirileri Crowdin projenize yükleyecek.
+
+<Image src={uploadTranslations} alt="Bütünleştirme Çevirileri Yükleyin" />
+
+<Aside type="caution" title="Limitations">
+  * **Çevirileri Crowdin’e Eşitle** seçeneği sadece dosya tabanlı projeler için kullanılabilir.
+  * Çeviri zaten devam ediyorsa bu özelliği dikkatli kullanın.<br />
+    Çevirilerin depodan el ile yüklenmesi, [**Depodan yeni çevirileri her zaman içe aktar**](#varolan-çevirileri-içe-aktar) seçeneğine benzer şekilde, şu anda projede bulunan onaylanmamış çevirileri geçersiz kılabilir.
+</Aside>
+
+## Soru ve Yanıt
+
+<QuestionAnswer title="Crowdin’in işlemeleri tarafından tetiklenen gereksiz uygulama yapımlarını nasıl önleyebilirim?">
+  Crowdin’deki VCS bütünleştirmeleri dosyaları işlemek için API kullandığından, Git’i kullanmadığından, her dosya ayrı olarak işlenir.
+
+  Benzer durumları çözmeye yardımcı olabilecek birkaç öneri şunlardır:
+
+  * Henüz ilgilenmediğiniz dillerdeki işlemeleri atlamak için `export_languages` seçeneğini kullanın. [Dilleri dışa aktarma parametresi](/tr/developer/configuration-file/#dilleri-dışa-aktarın) hakkında daha fazlasını okuyun.
+  * Varsayılan olarak gereksiz yapımları atlamak için işleme iletisine `[ci skip]` etiketi eklenir. [İşleme İletisi parametresi](/tr/developer/configuration-file/#işleme-iletisi) hakkında daha fazlasını okuyun.
+  * Tercih edilen eşitleme aralığını [Eşitlemeyi zamanla](#eşitleme-ayarları)’yı kullanarak yapılandırın (örn., eşitlemeyi 24 saatte bire ayarlayın).
+  * Sıkıştırma, asıl dal geçmişini temiz ve derli toplu tutmak için bir yerelleştirme dalını birleştirirken işler.
+</QuestionAnswer>

@@ -1,0 +1,167 @@
+---
+title: 在线配置 VCS 集成
+description: 了解如何在 Crowdin 中在线配置 DVCS 集成
+slug: configuring-vcs-integrations-online
+sidebar:
+  order: 5
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import configuringSpreadsheets from '!/crowdin/integrations/vcs_configuring_spreadsheets.png';
+import configuringXml from '!/crowdin/integrations/vcs_configuring_xml.png';
+import editIntegrationEditBranchBtn from '!/crowdin/integrations/vcs_edit_integration_edit_branch_btn.png';
+import filesList from '!/crowdin/integrations/vcs_files_list.png';
+import filesListFilter from '!/crowdin/integrations/vcs_files_list_filter.png';
+import ignoreFiles from '!/crowdin/integrations/vcs_ignore_files.png';
+import languageMapping from '!/crowdin/integrations/vcs_language_mapping.png';
+import languageMapping2 from '!/crowdin/integrations/vcs_language_mapping2.png';
+import loadConfiguration from '!/crowdin/integrations/vcs_load_configuration.png';
+
+要配置版本控制系统集成，请指定您要翻译的源文件，以及 Crowdin 应如何在您的仓库中构建翻译文件。
+
+## 分支配置
+
+选择好用于翻译的仓库和分支后，下一步是配置所选分支。 点击 <Icon name="mdi:pencil" class="inline-icon" /> 打开 **分支配置** 对话框，开始配置。 在 **分支配置** 对话框中，您可以加载仓库中已有的配置文件，也可以从头创建新的配置。
+
+<Image src={editIntegrationEditBranchBtn} alt="编辑集成" class="width-2xl crowdin-modal" />
+
+如果您希望 VCS 集成在 **目标文件包模式** 下运行，则需要为每个已选择用于翻译的分支配置目标文件包。
+
+<ReadMore>
+  详细了解[为 VCS 集成配置目标文件包](/zh/bundles/#vcs-集成中的文件包)。
+</ReadMore>
+
+## 加载配置
+
+要加载仓库中已有的配置文件，请按照以下步骤操作：
+
+<Steps>
+  1. 单击 <Icon name="mdi:dots-horizontal" class="inline-icon" /> 并选择 **加载配置**。
+  2. 指定仓库中配置文件的名称。
+  3. 单击**继续**。 <Image src={loadConfiguration} alt="加载配置" class="width-2xl crowdin-modal" />
+</Steps>
+
+配置将显示在 **分支配置** 对话框中。 您可以直接使用，也可以根据需要进行修改。
+
+## 创建配置
+
+要创建供集成使用的新配置文件，请在 **分支配置** 对话框中指定首选名称，然后点击 **继续**。
+
+然后使用下方列出的模式和占位符指定源文件路径和翻译文件路径。 在右侧面板中，您可以根据指定的路径预览将上传以供翻译的源文件结构以及翻译文件的结构。
+
+完成所选分支的配置设置并保存更改后，配置文件将保存在仓库中翻译分支的根目录下。
+
+### 模式
+
+您可以使用通配符（`*`、`**`、`?`、`[set]`、`\`）模式来指定应上传以供翻译的文件。
+
+<ReadMore>
+  详细了解[通配符模式](/zh/developer/configuration-file/#general-configuration)。
+</ReadMore>
+
+### 占位符
+
+使用占位符指定翻译文件的存放位置及命名方式：
+
+<Include file="placeholders.mdx" />
+
+## 高级设置
+
+高级设置提供对集成行为的更多控制。 您可以指定要排除在翻译之外的文件、映射自定义语言代码，以及配置结构化文件格式（如电子表格和 XML）的解析选项。 本节还介绍了可通过手动编辑仓库中的 `crowdin.yml` 文件来配置的其他参数。
+
+### 忽略文件
+
+如果您不希望某些文件被翻译，请单击 **添加忽略模式**，指定这些文件的模式，Crowdin 将不会上传这些文件进行翻译。
+
+<Image src={ignoreFiles} alt="忽略文件或文件夹" class="width-2xl crowdin-modal" />
+
+### 语言映射
+
+如果您的项目对语言区域目录使用自定义名称，您可以使用语言映射将自己的语言映射为 Crowdin 可识别的语言。
+
+要添加语言映射，请按照以下步骤操作：
+
+<Steps>
+  1. 点击 **语言映射**。 <Image src={languageMapping} alt="语言映射" class="width-2xl crowdin-modal" />
+  2. 选择所需的语言和占位符。
+  3. 指定您的自定义代码。
+  4. 点击 **添加映射** 以添加另一个自定义代码。 <Image src={languageMapping2} alt="语言映射" class="width-lg" />
+  5. 点击**保存**。
+</Steps>
+
+### 配置电子表格
+
+您可以在 **方案** 字段中指定电子表格文件的方案。 要为 CSV 或 XLS/XLSX 文件创建方案，请使用以下常量：
+
+* `identifier` &ndash; 列包含字符串标识符。
+* `source_phrase` &ndash; 列包含源字符串。
+* `source_or_translation` &ndash; 列包含源字符串，但文件导出时同一列将填充译文。 如果您上传现有译文，此列的值将用作译文。
+* `translation` &ndash; 列包含译文。
+* `context` &ndash; 列包含源字符串的评论或语境信息。
+* `max_length` &ndash; 列包含字符串译文的最大长度限制值。
+* `labels` &ndash; 列包含源字符串的标记。
+* `none` &ndash; 导入时将跳过的列。
+
+**方案示例**：`identifier,source_phrase,context,fr,de,it,uk`（[语言代码](/zh/developer/language-codes/)）。
+
+如果电子表格包含多个目标语言的译文，请选择 **多语言文件**。 如果您不想翻译第一行中存储的文本，请选择 **将第一行作为标题导入**。
+
+<Image src={configuringSpreadsheets} alt="配置电子表格" class="width-2xl crowdin-modal" />
+
+### 配置 XML 文件
+
+您可以配置 XML 文件导入设置，以指定 Crowdin 应如何处理 XML 文件。
+
+<Image src={configuringXml} alt="配置 XML 文件" class="width-2xl crowdin-modal" />
+
+| **选项**    | **描述**                                                                                  |
+| --------- | --------------------------------------------------------------------------------------- |
+| **翻译内容**  | 选中以翻译标签内存储的文本。                                                                          |
+| **翻译属性**  | 选中以翻译标签属性。                                                                              |
+| **内容分段**  | 选中以将 XML 源文件的内容拆分为较短的文本片段。                                                              |
+| **可翻译元素** | 这是一个字符串数组，其中每个条目是应导入的 DOM 元素的 XPath。 示例路径：`/path/to/node` 或 `/path/to/attribute[@attr]` |
+
+<Aside>
+  启用内容分段后，译文上传由实验性机器学习技术处理。
+</Aside>
+
+### 额外参数
+
+以下参数无法在线配置：
+
+* `preserve_hierarchy` - 在 Crowdin 中保留目录结构
+* `dest` - 允许您在 Crowdin 中指定文件名
+* `type` - 允许您在 Crowdin 中指定文件类型
+* `update_option` - 在文件更新期间保留译文并保留/删除已更改字符串的审核
+* `commit_message` - additional text appended to the default commit message
+* `append_commit_message` - controls whether your custom text is appended to or replaces the default commit message
+* `export_languages` - 导出指定语言的译文
+
+保存在线配置后，`crowdin.yml` 文件将保存在仓库中已配置分支的根目录下。 您可以手动编辑此文件以添加所需参数。
+
+<ReadMore>
+  详细了解[配置文件](/zh/developer/configuration-file/#configuration-file-for-vcs-integrations)。
+</ReadMore>
+
+## 保存配置
+
+<Steps>
+  1. 单击 **保存** 以预览已创建的配置。 <Image src={filesListFilter} alt="保存配置" class="width-2xl crowdin-modal" />
+  2. 如果您有多个具有不同配置的文件组，请点击 **添加文件过滤器**。 <br />如果项目中有多个分支具有相同的配置，且您希望对它们应用相同的过滤器，请选择 **将过滤器应用于所有可翻译分支**。
+  3. 点击 **保存** 以保存创建的配置。 <Image src={filesList} alt="将筛选器应用于所有可翻译分支" class="width-2xl crowdin-modal" />
+</Steps>
+
+配置保存后，可本地化的文件将开始上传到您的 Crowdin 项目。
+
+## 另请参阅
+
+<CardGrid>
+  <LinkCard title="GitHub" href="/zh/github-integration/" />
+  <LinkCard title="GitLab" href="/zh/gitlab-integration/" />
+  <LinkCard title="Bitbucket" href="/zh/bitbucket-integration/" />
+  <LinkCard title="Azure Repos" href="/zh/azure-repos-integration/" />
+</CardGrid>

@@ -1,0 +1,145 @@
+---
+title: AI 请求处理器模块
+description: 使用 AI 请求处理器模块在不同处理阶段自定义 AI 请求和响应流程
+slug: developer/crowdin-apps-module-ai-request-processors
+sidebar:
+  order: 3
+  label: AI 请求处理器
+---
+
+AI 请求处理器模块允许您自定义 Crowdin 在不同处理阶段处理 AI 相关请求和响应的方式。 这些模块让您完全控制数据在发送至 AI 提供商之前的准备方式，以及响应返回后的处理方式。
+
+Crowdin 支持四种处理器类型，可在应用中独立使用或组合使用：
+
+* **预编译** – 在提示词编译之前执行。 用于修改原始数据，例如源字符串、翻译记忆匹配或术语表术语。
+* **后编译** – 在提示词编译之后执行。 用于在发送至 AI 提供商之前调整请求正文或请求头。
+* **预解析** – 在接收到 AI 提供商的原始响应之后执行。 用于在解析之前修改响应正文。
+* **后解析** – 在响应被解析为结构化 Crowdin 数据之后执行。 用于根据操作调整最终结果，例如自动翻译或 QA 检查。
+
+这些模块设计为仅限后端使用，不包含用户界面。 但是，您可以使用其他模块（例如项目工具、组织菜单）为您的应用添加 UI 功能。
+
+## 访问权限
+
+您可以向以下用户类别授予这些模块的访问权限：
+
+对于 Crowdin：
+
+* 所有项目成员
+
+对于 Crowdin Enterprise：
+
+* 组织项目中的所有用户
+
+## 结构
+
+```json title="manifest.json"
+{
+  "modules": {
+    "ai-request-pre-compile": [
+      {
+        "key": "liquid-templates-everywhere-ai-request-pre-compile",
+        "processorUrl": "/ai-request-processor/ai-request-pre-compile"
+      }
+    ],
+    "ai-request-post-compile": [
+      {
+        "key": "liquid-templates-everywhere-ai-request-post-compile",
+        "processorUrl": "/ai-request-processor/ai-request-post-compile"
+      }
+    ],
+    "ai-request-pre-parse": [
+      {
+        "key": "liquid-templates-everywhere-ai-request-pre-parse",
+        "processorUrl": "/ai-request-processor/ai-request-pre-parse"
+      }
+    ],
+    "ai-request-post-parse": [
+      {
+        "key": "liquid-templates-everywhere-ai-request-post-parse",
+        "processorUrl": "/ai-request-processor/ai-request-post-parse"
+      }
+    ]
+  }
+}
+
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">processorUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>说明：</strong> 应用中将处理该处理器传入请求的端点的相对路径。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 工作原理
+
+每个 AI 请求处理器模块在 Crowdin 的 AI 请求生命周期的特定阶段运行。 这些模块允许您修改发送至 AI 提供商或从 AI 提供商接收的数据。 它们仅限后端使用，通过 Crowdin 的 POST 请求接收数据。
+
+每个请求包含两个部分：
+
+* `requestData` – 可修改并返回的数据对象。 其结构取决于处理器类型和具体的 AI 操作。 例如，它可能包含源字符串、提示词正文和请求头，或已解析的结果。
+* `requestContext` – 提供请求元数据的只读对象。 其中包括 AI 提供商、模型、限制、项目 ID 以及正在执行的提示词操作。 您可以根据上下文使用此信息调整处理逻辑。
+
+Crowdin 将向对应模块定义的 `processorUrl` 发送请求。 您的应用必须以与接收时相同的结构返回修改后的 `requestData`。 仅更新根据您的逻辑需要转换的部分。
+
+以下各节介绍每种模块类型的工作原理及其触发时机。
+
+### 预编译处理器
+
+在提示词编译**之前**运行。
+
+* **接收：** 用于构建提示词的原始数据——例如字符串、项目名称、术语表术语和翻译记忆匹配。
+* **返回：** 输入数据的修改版本。
+* **用例：**
+  * 在编译之前注入额外的占位符。
+  * 在构建提示词之前过滤或清理字符串（例如，删除不需要的模式或二进制数据）。
+  * 根据项目元数据自定义提示词输入。
+
+### 后编译处理器
+
+在提示词编译**之后**但在发送至 AI 提供商**之前**运行。
+
+* **接收：** 完整的请求详情，包括 `action`、`provider`、`model`、`limitation` 和已编译的 `payload`。 payload 包含 `body` 和 `headers`。
+* **返回：** payload 的修改版本（不包括敏感数据，例如 API 密钥，这些数据不会包含在内）。
+* **用例：**
+  * 针对特定提供商调整请求格式。
+  * 注入工具定义或元数据。
+  * 通过代理路由请求或记录传出内容。
+
+### 预解析处理器
+
+在接收到 AI 提供商的响应**之后**但在解析**之前**运行。
+
+* **接收：** `action` 和提供商响应中的原始 `body`。
+* **返回：** 用于进一步解析的修改后的正文。
+* **用例：**
+  * 在解析之前清理或规范化 AI 响应。
+  * 处理响应转换，例如从 Markdown 块中提取 JSON。
+  * 从流式内容中删除不完整或无效的块。
+
+### 后解析处理器
+
+在响应被解析为结构化 Crowdin 数据**之后**运行。
+
+* **接收：** `action` 和已解析的 `payload`，其内容因上下文而异。
+* **返回：** 修改后的结果 payload。
+* **用例：**
+  * 对 AI 生成的字符串应用最终调整。
+  * 根据自定义规则过滤掉不需要的建议。
+  * 在保存之前对 QA 结果或翻译单元进行后处理。

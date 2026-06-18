@@ -1,0 +1,309 @@
+---
+title: 文件导入后处理模块
+description: 在文件导入后修改从文件中解析的字符串
+slug: developer/crowdin-apps-module-file-post-import-processing
+sidebar:
+  order: 4
+  label: 文件导入后处理
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+后导入模块允许您在文件导入后修改从文件中解析的字符串。 该模块同时适用于源字符串及其对应的译文。 预导入模块在以下场景中特别有用：您希望保留原始文件结构并按原样解析，但又想对源字符串、上下文、字符串译文进行一些修改，或添加标签、译文最大长度限制等。
+
+借助后导入模块，您将获得一个包含文件内容及从中解析的字符串的载荷。 使用后导入模块，您可以通过多种方式修改已解析的字符串（例如，拆分、合并或添加新字符串），并返回修改后的字符串。 这使您无需直接修改文件内容即可自定义字符串。
+
+## 访问权限
+
+您可以将此模块的访问权限授予以下用户类别之一：
+
+对于 Crowdin：
+
+* 仅限我自己（即项目所有者）
+* 所有项目成员
+* 选定用户
+
+对于 Crowdin Enterprise：
+
+* 仅限组织管理员
+* 组织项目中的所有用户
+* 选定用户
+
+## 结构
+
+```json title="manifest.json"
+{
+  "modules": {
+    "file-post-import": [
+      {
+        "key": "your-post-import-module-key",
+        "url": "/import-strings",
+        "signaturePatterns": {
+          "fileName": "^.+\.xml$",
+          "fileContent": "<properties>\s*<property\s+name=.*value=.*/>"
+        }
+      }
+    ]
+  }
+}
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>说明：</strong> 在文件导入、更新和译文上传时触发的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>说明：</strong> 包含 <code>fileName</code> 和/或 <code>fileContent</code> 正则表达式，用于在通过界面（或通过 API 但未指定 <code>type</code> 参数）上传新源文件时检测文件类型。</p>
+        <p><Aside><code>fileContent</code> 正则表达式仅检查文件内容的前 64 KB。</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 文件处理应用与 Crowdin 之间的通信
+
+导入文件时，系统使用 `signaturePatterns` 参数检测合适的后导入模块，并向应用的 URL（`$baseUrl`。 `$url`）发起 HTTP 请求，以便对提取的字符串进行进一步处理。
+
+文件处理应用将根据您的需求修改收到的字符串。 后导入模块允许您拆分、合并、添加新字符串，或编辑现有字符串的属性。 一旦修改后的字符串从后导入模块返回，它们将被添加到 Crowdin 项目中并可供翻译。
+
+### 向文件处理应用发送的请求
+
+请求载荷示例：
+
+```json
+// 最大请求载荷 - 5 MB
+// 等待超时 - 2 分钟
+{
+  "jobType": "file-post-import",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name"
+  },
+  "file": {
+    "id": 1,
+    "name": "file.xml",
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 编码的源文件内容
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // 源文件公共 URL
+  },
+  "sourceLanguage": {
+    "id": "es",
+    "name": "Spanish",
+    "editorCode": "es",
+    "twoLettersCode": "es",
+    "threeLettersCode": "spa",
+    "locale": "es-ES",
+    "androidCode": "es-rES",
+    "osxCode": "es.lproj",
+    "osxLocale": "es",
+    "pluralCategoryNames": ["one"],
+    "pluralRules": "(n != 1)"
+  },
+  "targetLanguages": [
+    {
+      // 结构与 sourceLanguage 相同，上传新源文件时为空，import_translations 时包含一个元素，多语言文件时可包含更多
+    }
+  ],
+  "strings": [...],
+  "stringsUrl": "https://tmp.downloads.crowdin.com/strings.ndjson",
+}
+```
+
+参数：
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>jobType</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>值：</strong> <code>file-post-import</code></p>
+        <p><strong>说明：</strong> 指定文件后导入模块的操作。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.content</code>, <code class="whitespace-nowrap">file.contentUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>说明：</strong> 用于传递 base64 编码的源文件内容（<code>file.content</code>）或源文件公共 URL（<code>file.contentUrl</code>）的参数。<br />
+        可使用这两个参数中的任意一个。<Aside title="Limitations">最大请求载荷限制为 5 MB。</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>strings</code>, <code>stringsUrl</code></td>
+      <td>
+        <p><strong>类型（strings）：</strong> <code>array</code></p>
+        <p><strong>类型（stringsUrl）：</strong> <code>string</code></p>
+        <p><strong>说明：</strong> 用于文件导入后提取的字符串的参数。 <code>strings</code> - 字符串数组。 <code>stringsUrl</code> - 包含字符串的 <a href="https://github.com/ndjson/ndjson-spec" target="_blank">换行符分隔 JSON</a> 的公共 URL。<br />
+        这两个参数可任选其一使用<Aside title="限制">最大请求载荷限制为 5 MB。</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### 应用的预期响应
+
+响应载荷示例：
+
+```json
+// 最大响应载荷 - 5 MB
+// 等待超时 - 2 分钟
+{
+  "data": {
+    "strings": [...], // 修改后的字符串数组
+    "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // 包含修改后字符串的换行符分隔 JSON 文件
+    "preview": "VGhpbmdzIGFyZSBvbmx5IGltcG9zc2libGUgdW50aWwgdGhleSdyZSBub3Qu", // 可选，预览 HTML 文件的 base64 编码内容，不支持含复数字符串的情况
+    "previewUrl": "https://app.example.com/LN3km2K6M-preview.html", // 可选，预览 HTML 文件的 URL，不支持含复数字符串的情况
+  },
+  "error": {
+    "message": "Your error message"
+  }
+}
+```
+
+参数：
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>data.strings</code>, <code>data.stringsUrl</code></td>
+      <td>
+        <p><strong>类型（data.strings）：</strong> <code>array</code></p>
+        <p><strong>类型（data.stringsUrl）：</strong> <code>string</code></p>
+        <p><strong>说明：</strong> 用于传递修改后字符串内容的参数。<br />
+        <code>data.strings</code> - 修改后的字符串数组。<br />
+        <code>data.stringsUrl</code> - 包含修改后字符串的 <a href="https://github.com/ndjson/ndjson-spec" target="_blank">换行符分隔 JSON</a> 的公共 URL。<br />
+        可使用这两个参数中的任意一个。<Aside title="Limitations">最大响应载荷限制为 5 MB。</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>data.preview</code>, <code class="whitespace-nowrap">data.previewUrl</code></td>
+      <td>
+        <p><strong>类型（data.preview）：</strong> <code>string</code></p>
+        <p><strong>类型（data.previewUrl）：</strong> <code>string</code></p>
+        <p><strong>说明：</strong> 用于传递可由应用生成的已解析字符串内容的可选 HTML 预览的参数。 生成的 HTML 预览将在编辑器中显示。 请参阅 <a href="/zh/developer/crowdin-apps-module-custom-file-format/#html文件预览示例">HTML 预览文件示例。</a></p>
+        <p><Aside type="caution">如果应用传递的字符串包含复数形式，HTML 预览将不会在 Crowdin 编辑器中显示。</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 可从应用传递至 Crowdin 的错误消息，将在 UI 中对用户可见。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### 字符串数组结构
+
+以下是应用在导入后将收到的字符串示例。 应用响应中修改后的字符串也使用相同的结构。
+
+载荷示例：
+
+```json
+// strings should be in "new-line delimited json" format if they passed by URL
+[
+  { // non plural string
+    "uniqId": "9cdfb439c7876e703e307864c9167a15::1", // required, unique ID
+    "identifier": "string-key-1", // required
+    "context": "Some context", // optional
+    "maxLength": 10, // optional, default null
+    "isHidden": false, // optional, default null
+    "hasPlurals": false, // optional, default false
+    "labels": ["label-one", "label-two"], // optional, default []
+    "attributes": {
+      "crowdinType": "json"
+    },
+    "text": "String source text", // required
+    "translations": { // optional
+      "uk": { // targetLanguage.id
+        "text": "Переклад стрічки", // required
+        "status": "untranslated | translated | approved" // optional, default "translated"
+      }
+      // can be other languages for multilingual, check "targetLanguages" in the request payload
+    }
+  },
+  { // plural string
+    "uniqId": "9cdfb439c7876e703e307864c9167a15::2", // required, unique ID
+    "identifier": "string-key-2",
+    "context": "Some optional context",
+    "maxLength": 15,
+    "isHidden": false,
+    "hasPlurals": true,
+    "labels": [],
+    "text": { // keys from sourceLanguage.pluralCategoryNames
+      "one": "One file",
+      "other": "%d files"
+    },
+    "translations": {
+      "uk": {
+        "text": { // keys from targetLanguage.pluralCategoryNames
+          "one": "One file",
+          "few": "%d файла",
+          "many": "%d файлів"
+        },
+        "status": {
+          "one": "untranslated",
+          "few": "translated",
+          "many": "approved"
+        }
+      }
+    }
+  }
+]
+```
+
+参数：
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>uniqId</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>说明：</strong> 文件内的唯一标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>identifier</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>说明：</strong> 可见的字符串键。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">attributes.crowdinType</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> 大部分与 <a href="/zh/developer/api/v2/#operation/api.projects.files.post">添加文件 API 方法</a>接受的 <code>type</code> 值匹配，但不包括以下值：<code>auto</code>、<code>xml</code>、<code>csv</code>、<code>docx</code>、<code>xlsx</code>、<code>dita</code>、<code>idml</code>、<code>mif</code>、<code>svg</code>。 此外，还支持通过自定义文件格式模块中的 <a href="/zh/developer/crowdin-apps-module-custom-file-format/#自定义文件格式类型示例"><code>type</code> 属性</a>定义的自定义值。</p>
+        <p><strong>说明：</strong> 用于在需要后处理时为字符串指定文件格式类型。 例如，如果 JSON 文件包含嵌入 HTML 的字符串，将 <code>crowdinType</code> 设置为 <code>html</code> 可使用 HTML 解析器重新解析该字符串。 这有助于确保正确渲染并防止不必要的标签被显示出来。 该值必须与支持的 Crowdin 文件类型之一或自定义文件格式标识符匹配。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>

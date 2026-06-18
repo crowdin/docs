@@ -1,0 +1,126 @@
+---
+title: 自动化截图管理
+description: 了解如何使用 Crowdin In-Context 和 Playwright 自动创建和更新截图
+slug: developer/automating-screenshot-management
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+本指南介绍如何在 Crowdin [In-Context](/zh/developer/in-context-localization/) 中自动生成和更新截图。
+
+通过自动创建截图，译员可获得准确且最新的视觉上下文，从而改善本地化流程和翻译质量。 本指南涵盖前提条件、设置说明、跨网页捕获截图以及通过 API 将其上传至 Crowdin。
+
+## 前提条件
+
+在继续操作之前，请确保您的网站已集成 [Crowdin In-Context 功能](/zh/developer/in-context-localization/#integration)。
+
+### 账户设置
+
+要配置您的账户以使自动化功能正常运行，请按照以下步骤操作：
+
+<Steps>
+  1. **在 Crowdin 中启用 2FA**：打开您的项目，前往 **Settings > Privacy & collaboration > Privacy**，为登录设置双重身份验证。
+  2. **禁用设备验证**：设备验证可确保账户安全，但可能会中断自动化工作流。 在测试环境中禁用此功能可确保自动化不受干扰。
+     * 对于 Crowdin：前往 **Account Settings > Account > New device verification**，禁用该设置。
+     * 对于 Crowdin Enterprise：前往 **Account Settings > Security > Device Verification**，禁用该设置。
+  3. **生成密钥**：获取用于生成 2FA 令牌的密钥。 使用 `otplib` 库以编程方式创建一次性密码 (OTP) 时需要此密钥。
+</Steps>
+
+### 依赖项
+
+本指南使用以下依赖项进行浏览器自动化和 OTP 生成：
+
+* [Playwright](https://playwright.dev/)：一款用于浏览器自动化的现代测试框架，非常适合导航和与网页交互。
+* [`otplib`](https://www.npmjs.com/package/otplib)：一个以编程方式生成一次性密码 (OTP) 的库，对于在自动化工作流中绕过 2FA 至关重要。
+
+运行以下命令安装依赖项：
+
+<Tabs syncKey="pkg">
+  <TabItem label="npm">
+
+    ```bash
+    npm install -D @playwright/test otplib
+    ```
+
+  </TabItem>
+  <TabItem label="Yarn">
+
+    ```bash
+    yarn add -D @playwright/test otplib
+    ```
+
+  </TabItem>
+  <TabItem label="pnpm">
+
+    ```bash
+    pnpm add -D @playwright/test otplib
+    ```
+
+  </TabItem>
+</Tabs>
+
+## 使用 Crowdin In-Context 捕获截图
+
+Crowdin 提供 `window.jipt.capture_screenshot(name: string, options: object | null)` 方法来自动生成截图。 除截图外，此方法还会收集元数据，为译员提供详细且准确的工作上下文。 以下章节介绍如何使用 Playwright 实现此功能。
+
+### 代码示例
+
+以下脚本演示了如何导航网站、登录、捕获截图并将其上传至 Crowdin 供译员参考：
+
+```js
+// @ts-check
+const { test, expect } = require('@playwright/test');
+const { authenticator } = require('otplib');
+
+test('Capture Crowdin Screenshots', async ({ page }) => {
+  const siteUrl = 'https://example.com';
+
+  // Navigate to the application
+  await page.goto(siteUrl);
+
+  // Log in
+  await page.locator('#jipt-login-panel iframe').contentFrame().getByRole('button', { name: 'Log In' }).click();
+  await page.getByLabel('Email or Username').fill('username');
+  await page.getByLabel('Password').fill('password');
+  await page.getByRole('button', { name: 'Log In' }).click();
+
+  // Handle Two-Factor Authentication (if applicable)
+  const token = authenticator.generate('KEY'); // Replace 'KEY' with your 2FA secret
+  await page.getByLabel('Verification Code').fill(token);
+  await page.getByRole('button', { name: 'Log In' }).click();
+
+  // Confirm login and start capturing screenshots
+  await page.getByRole('button', { name: 'Keep Me Logged In' }).click();
+
+  // Capture the first screenshot
+  await page.goto(siteUrl);
+  await page.locator('#crowdin-jipt-mask').click();
+  await expect(page.locator('h1')).toContainText('Crowdin HTML Sample');
+  await page.evaluate(() => {
+    return new Promise((resolve, reject) => {
+      window.jipt.capture_screenshot('HTML Sample File', { success: resolve, error: reject });
+    });
+  });
+
+  // Capture a second screenshot on another page
+  await page.goto(`${siteUrl}/second`);
+  await expect(page.locator('h1')).toContainText('Second Crowdin HTML Sample');
+  await page.evaluate(() => {
+    return new Promise((resolve, reject) => {
+      window.jipt.capture_screenshot('Second HTML Sample File', { override: false, success: resolve, error: reject });
+    });
+  });
+});
+```
+
+### 关键代码实现细节
+
+* **导航页面**：使用 `page.goto(url)` 导航至应用中的特定页面。
+* **登录**：使用 Playwright 的定位器（如 `getByRole()` 和 `getByLabel()`）模拟用户操作，例如填写表单和点击按钮。
+* **捕获截图**：使用 `window.jipt.capture_screenshot()` 生成截图并将其上传至 Crowdin。 该方法接受以下参数：
+  * `name: string`：截图的名称。
+  * `options: object | null`：自定义设置：
+    * `override: boolean`：`override` 参数决定 Crowdin 如何处理名称重复的截图。 使用 `true`（默认值）覆盖第一个匹配的截图，或使用 `false` 创建新的截图，即使名称相同。
+    * `success: function`：上传成功时触发的回调函数。 它接收一个包含 `{msg_type: 'make_screenshot_data', screenshot_name: string}` 的对象，提供消息类型和已上传截图的名称。
+    * `error: function`：上传失败时触发的回调函数。 它接收一个包含 `{msg_type: 'make_screenshot_error', response: object}` 的对象或一个 `Error`，其中包含有关失败的详细信息。
+* **双重身份验证**：在启用 2FA 的情况下，使用 `otplib` 库以编程方式生成 OTP 令牌。 将 `'KEY'` 替换为您项目的密钥，以生成有效的 OTP。

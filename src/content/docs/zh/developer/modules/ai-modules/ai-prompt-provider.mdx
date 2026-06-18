@@ -1,0 +1,761 @@
+---
+title: AI Prompt Provider 模块
+description: 创建外部自动翻译和 Assist 提示
+slug: developer/crowdin-apps-module-ai-prompt-provider
+sidebar:
+  order: 2
+  label: AI Prompt Provider
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+AI Prompt Provider 模块旨在简化为自定义及原生支持的 AI 提供商生成提示的过程。 通过将此模块集成到您的应用中，您可以创建利用 Crowdin 项目中各类上下文信息的外部自动翻译和 Assist 提示。 该模块允许您在外部编译提示，确保其可直接由 AI 提供商执行，无需任何进一步修改。 此方法对于使用经过微调的模型的用户尤为有益，这些模型需要与 Crowdin 生成的提示结构不同的特定提示结构，从而实现无缝集成和最佳性能。
+
+## 访问权限
+
+您可以将此模块的访问权限授予以下用户类别之一：
+
+对于 Crowdin：
+
+* 仅限我自己（即项目所有者）
+* 所有项目成员
+* 选定用户
+
+对于 Crowdin Enterprise：
+
+* 仅限组织管理员
+* 组织项目中的所有用户
+* 选定用户
+
+## 结构
+
+```json title="manifest.json"
+{
+  "modules": {
+    "ai-prompt-provider": [
+      {
+        "key": "ai-prompt-provider",
+        "name": "AI prompt provider",
+        "logo": "/logo.png",
+        "configuratorUrl": "/configurator",
+        "compileUrl": "/compile",
+        "environments": [
+          "crowdin",
+          "crowdin-enterprise"
+        ]
+      }
+    ]
+  }
+}
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 模块的可读名称。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>logo</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 自定义 AI 徽标的相对 URL，将在 Crowdin 界面中显示。<br />
+        建议分辨率为 48x48 像素。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">configuratorUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 否</p>
+        <p><strong>描述：</strong> iframe 的相对 URL，提供一组存储在提示中的选项，并将在编译期间发送。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>compileUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 用于提示编译的 API 端点的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> <code>crowdin</code>、<code>crowdin-enterprise</code></p>
+        <p><strong>描述：</strong> 可安装该模块的环境集合。<br />
+        此参数在跨产品的应用程序中必需。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## AI Prompt Provider 应用与 Crowdin 之间的通信
+
+系统收集需要翻译的字符串及所有相关上下文，并将这些数据发送至 AI Prompt Provider 应用。 应用处理数据，并使用 `compileUrl` 编译针对特定 AI 模型和需求优化的提示。 编译后的提示随后返回至 Crowdin，并发送给所选的 AI 提供商。
+
+## Crowdin 向应用发出的 Assist 操作请求
+
+<Aside>
+   对于基于字符串的项目，不包含 `file` 属性。
+</Aside>
+
+<Aside>
+  对于 Crowdin Enterprise 项目，`project` 和 `file` 属性以及字符串相关属性（即 `strings`、`siblingsStrings` 和 `filteredStrings`）将包含 `fields` 对象。
+</Aside>
+
+请求载荷示例：
+
+```json collapse={13-73,80-93,98-111}
+{
+  "action": "assist",
+  "provider": "open_ai",
+  "model": "gpt-4o",
+  "limitation": {
+    "contextWindow": 128000,
+    "output": 4096
+  },
+  "options": null,
+  "payload": {
+    "project": {
+      "id": 748586,
+      "type": 0,
+      "sourceLanguage": {
+        "id": "en",
+        "name": "English",
+        "twoLettersCode": "en",
+        "threeLettersCode": "eng",
+        "locale": "en-US",
+        "pluralCategoryNames": [
+          "one",
+          "other"
+        ],
+        "pluralRules": "(n != 1)",
+        "pluralExamples": [
+          "1",
+          "0, 2-999; 1.2, 2.07..."
+        ],
+        "textDirection": "ltr",
+        "dialectOf": null
+      },
+      "targetLanguages": [
+        {
+          "id": "de",
+          "name": "German",
+          "twoLettersCode": "de",
+          "threeLettersCode": "deu",
+          "locale": "de-DE",
+          "pluralCategoryNames": [
+            "one",
+            "other"
+          ],
+          "pluralRules": "(n != 1)",
+          "pluralExamples": [
+            "1",
+            "0, 2-999; 1.2, 2.07..."
+          ],
+          "textDirection": "ltr",
+          "dialectOf": null
+        },
+        {
+          "id": "uk",
+          "name": "Ukrainian",
+          "twoLettersCode": "uk",
+          "threeLettersCode": "ukr",
+          "locale": "uk-UA",
+          "pluralCategoryNames": [
+            "one",
+            "few",
+            "many",
+            "other"
+          ],
+          "pluralRules": "((n%10==1 && n%100!=11) ? 0 : ((n%10 >= 2 && n%10 <=4 && (n%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || (n%10 >= 5 && n%10 <=9)) || (n%100 >= 11 && n%100 <= 14)) ? 2 : 3))",
+          "pluralExamples": [
+            "1, 21, 31, 41, 51, 61, 71, 81...",
+            "2-4, 22-24, 32-34, 42-44, 52-54, 62...",
+            "0, 5-19, 100, 1000, 10000...",
+            "0.0-0.9, 1.1-1.6, 10.0, 100.0..."
+          ],
+          "textDirection": "ltr",
+          "dialectOf": null
+        }
+      ],
+      "name": "Umbrella Android",
+      "description": "Localization project for Umbrella Android"
+    },
+    "sourceLanguage": {
+      "id": "en",
+      "name": "English",
+      "twoLettersCode": "en",
+      "threeLettersCode": "eng",
+      "locale": "en-US",
+      "pluralCategoryNames": [
+        "one",
+        "other"
+      ],
+      "pluralRules": "(n != 1)",
+      "pluralExamples": [
+        "1",
+        "0, 2-999; 1.2, 2.07..."
+      ],
+      "textDirection": "ltr",
+      "dialectOf": null
+    },
+    "targetLanguage": {
+      "id": "de",
+      "name": "German",
+      "twoLettersCode": "de",
+      "threeLettersCode": "deu",
+      "locale": "de-DE",
+      "pluralCategoryNames": [
+        "one",
+        "other"
+      ],
+      "pluralRules": "(n != 1)",
+      "pluralExamples": [
+        "1",
+        "0, 2-999; 1.2, 2.07..."
+      ],
+      "textDirection": "ltr",
+      "dialectOf": null
+    },
+    "strings": [
+      {
+        "id": 5511717,
+        "text": "Welcome!",
+        "key": "welcome",
+        "context": "welcome",
+        "maxLength": null,
+        "pluralForm": null
+      }
+    ],
+    "siblingsStrings": {
+      "previous": null,
+      "next": {
+        "id": 5511718,
+        "text": "Save as...",
+        "key": "save_as",
+        "context": "save_as",
+        "maxLength": null
+      }
+    },
+    "filteredStrings": [
+      {
+        "id": 5511717,
+        "text": "Welcome!",
+        "key": "welcome",
+        "context": "welcome",
+        "maxLength": null
+      },
+      {
+        "id": 5511718,
+        "text": "Save as...",
+        "key": "save_as",
+        "context": "save_as",
+        "maxLength": null
+      },
+      {
+        "id": 5511719,
+        "text": "View",
+        "key": "view",
+        "context": "view",
+        "maxLength": null
+      }
+    ],
+    "tmSuggestions": [
+      {
+        "tmId": 736613,
+        "phraseId": 316642,
+        "source": {
+          "text": "Welcome!"
+        },
+        "target": {
+          "text": "Willkommen!"
+        },
+        "relevant": 100,
+        "updatedAt": "2024-05-17T09:09:32+00:00"
+      }
+    ],
+    "terms": [
+      {
+        "glossaryId": 728017,
+        "conceptId": 211993,
+        "source": {
+          "id": 357901,
+          "userId": 13575027,
+          "languageId": "en",
+          "text": "Welcome",
+          "description": null,
+          "partOfSpeech": "PROPN",
+          "status": null,
+          "type": null,
+          "gender": null,
+          "note": null,
+          "url": null,
+          "lemma": "welcome",
+          "createdAt": "2024-06-21T07:44:26+00:00",
+          "updatedAt": "2024-06-21T07:44:26+00:00"
+        },
+        "target": {
+          "id": 357902,
+          "userId": 13575027,
+          "languageId": "de",
+          "text": "Willkommen",
+          "description": null,
+          "partOfSpeech": "PROPN",
+          "status": null,
+          "type": null,
+          "gender": null,
+          "note": null,
+          "url": null,
+          "lemma": "willkommen",
+          "createdAt": "2024-06-21T07:44:26+00:00",
+          "updatedAt": "2024-06-21T07:44:26+00:00"
+        }
+      }
+    ],
+    "file": {
+      "id": 4549,
+      "name": "crowdin_sample_android.xml",
+      "title": null,
+      "context": "File context",
+      "type": "android",
+      "path": "/crowdin_sample_android.xml"
+    }
+  }
+}
+```
+
+## Crowdin 向应用发出的自动翻译操作请求
+
+<Aside>
+  对于基于字符串的项目，不包含 `file` 属性。
+</Aside>
+
+<Aside>
+  对于 Crowdin Enterprise 项目，`project` 和 `file` 属性以及字符串相关属性（即 `strings`、`siblingsStrings` 和 `filteredStrings`）将包含 `fields` 对象。
+</Aside>
+
+请求载荷示例：
+
+```json collapse={13-73,80-93,98-111} wrap
+{
+  "action": "pre_translate",
+  "provider": "open_ai",
+  "model": "gpt-4o",
+  "limitation": {
+    "contextWindow": 128000,
+    "output": 4096
+  },
+  "options": null,
+  "payload": {
+    "project": {
+      "id": 748586,
+      "type": 0,
+      "sourceLanguage": {
+        "id": "en",
+        "name": "English",
+        "twoLettersCode": "en",
+        "threeLettersCode": "eng",
+        "locale": "en-US",
+        "pluralCategoryNames": [
+          "one",
+          "other"
+        ],
+        "pluralRules": "(n != 1)",
+        "pluralExamples": [
+          "1",
+          "0, 2-999; 1.2, 2.07..."
+        ],
+        "textDirection": "ltr",
+        "dialectOf": null
+      },
+      "targetLanguages": [
+        {
+          "id": "de",
+          "name": "German",
+          "twoLettersCode": "de",
+          "threeLettersCode": "deu",
+          "locale": "de-DE",
+          "pluralCategoryNames": [
+            "one",
+            "other"
+          ],
+          "pluralRules": "(n != 1)",
+          "pluralExamples": [
+            "1",
+            "0, 2-999; 1.2, 2.07..."
+          ],
+          "textDirection": "ltr",
+          "dialectOf": null
+        },
+        {
+          "id": "uk",
+          "name": "Ukrainian",
+          "twoLettersCode": "uk",
+          "threeLettersCode": "ukr",
+          "locale": "uk-UA",
+          "pluralCategoryNames": [
+            "one",
+            "few",
+            "many",
+            "other"
+          ],
+          "pluralRules": "((n%10==1 && n%100!=11) ? 0 : ((n%10 >= 2 && n%10 <=4 && (n%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || (n%10 >= 5 && n%10 <=9)) || (n%100 >= 11 && n%100 <= 14)) ? 2 : 3))",
+          "pluralExamples": [
+            "1, 21, 31, 41, 51, 61, 71, 81...",
+            "2-4, 22-24, 32-34, 42-44, 52-54, 62...",
+            "0, 5-19, 100, 1000, 10000...",
+            "0.0-0.9, 1.1-1.6, 10.0, 100.0..."
+          ],
+          "textDirection": "ltr",
+          "dialectOf": null
+        }
+      ],
+      "name": "Umbrella Android",
+      "description": "Localization project for Umbrella Android"
+    },
+    "sourceLanguage": {
+      "id": "en",
+      "name": "English",
+      "twoLettersCode": "en",
+      "threeLettersCode": "eng",
+      "locale": "en-US",
+      "pluralCategoryNames": [
+        "one",
+        "other"
+      ],
+      "pluralRules": "(n != 1)",
+      "pluralExamples": [
+        "1",
+        "0, 2-999; 1.2, 2.07..."
+      ],
+      "textDirection": "ltr",
+      "dialectOf": null
+    },
+    "targetLanguage": {
+      "id": "de",
+      "name": "German",
+      "twoLettersCode": "de",
+      "threeLettersCode": "deu",
+      "locale": "de-DE",
+      "pluralCategoryNames": [
+        "one",
+        "other"
+      ],
+      "pluralRules": "(n != 1)",
+      "pluralExamples": [
+        "1",
+        "0, 2-999; 1.2, 2.07..."
+      ],
+      "textDirection": "ltr",
+      "dialectOf": null
+    },
+    "strings": [
+      {
+        "id": 5511717,
+        "text": "Welcome!",
+        "key": "welcome",
+        "context": "welcome",
+        "maxLength": null,
+        "pluralForm": null
+      },
+      {
+        "id": 5511718,
+        "text": "Save as...",
+        "key": "save_as",
+        "context": "save_as",
+        "maxLength": null,
+        "pluralForm": null
+      },
+      {
+        "id": 5511719,
+        "text": "View",
+        "key": "view",
+        "context": "view",
+        "maxLength": null,
+        "pluralForm": null
+      }
+    ],
+    "tmSuggestions": [
+      {
+        "tmId": 736613,
+        "phraseId": 316642,
+        "source": {
+          "text": "Welcome!"
+        },
+        "target": {
+          "text": "Willkommen!"
+        },
+        "relevant": 100,
+        "updatedAt": "2024-05-17T09:09:32+00:00"
+      },
+      {
+        "tmId": 736613,
+        "phraseId": 316643,
+        "source": {
+          "text": "Save as..."
+        },
+        "target": {
+          "text": "Speichern unter..."
+        },
+        "relevant": 100,
+        "updatedAt": "2024-05-17T09:09:59+00:00"
+      }
+    ],
+    "terms": [
+      {
+        "glossaryId": 728017,
+        "conceptId": 211993,
+        "source": {
+          "id": 357901,
+          "userId": 13575027,
+          "languageId": "en",
+          "text": "Welcome",
+          "description": null,
+          "partOfSpeech": "PROPN",
+          "status": null,
+          "type": null,
+          "gender": null,
+          "note": null,
+          "url": null,
+          "lemma": "welcome",
+          "createdAt": "2024-06-21T07:44:26+00:00",
+          "updatedAt": "2024-06-21T07:44:26+00:00"
+        },
+        "target": {
+          "id": 357902,
+          "userId": 13575027,
+          "languageId": "de",
+          "text": "Willkommen",
+          "description": null,
+          "partOfSpeech": "PROPN",
+          "status": null,
+          "type": null,
+          "gender": null,
+          "note": null,
+          "url": null,
+          "lemma": "willkommen",
+          "createdAt": "2024-06-21T07:44:26+00:00",
+          "updatedAt": "2024-06-21T07:44:26+00:00"
+        }
+      },
+      {
+        "glossaryId": 728017,
+        "conceptId": 211992,
+        "source": {
+          "id": 357899,
+          "userId": 13575027,
+          "languageId": "en",
+          "text": "Save",
+          "description": null,
+          "partOfSpeech": "PROPN",
+          "status": "PREFERRED",
+          "type": "FULL_FORM",
+          "gender": "OTHER",
+          "note": null,
+          "url": null,
+          "lemma": "save",
+          "createdAt": "2024-05-17T09:12:36+00:00",
+          "updatedAt": "2024-05-17T09:12:36+00:00"
+        },
+        "target": null
+      }
+    ],
+    "file": {
+      "id": 4549,
+      "name": "crowdin_sample_android.xml",
+      "title": null,
+      "context": "File context",
+      "type": "android",
+      "path": "/crowdin_sample_android.xml",
+      "contentUrl": "https://crowdin-importer.s3.eu-central-1.amazonaws.com/72057531/748586/3407.xml?response-content-disposition=attachment%3B%20filename%3D%22crowdin_sample_android.xml%22&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential={aws-access-key-id}%2F20240621%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20240621T080230Z&X-Amz-SignedHeaders=host&X-Amz-Expires=900&X-Amz-Signature={signature}"
+    }
+  }
+}
+```
+
+## Crowdin 向应用发出的 Alignment 操作请求
+
+请求载荷示例：
+
+```json collapse={13-73,80-93,98-111}
+{
+  "action": "alignment",
+  "provider": "open_ai",
+  "model": "gpt-4o",
+  "limitation": {
+    "contextWindow": 128000,
+    "output": 4096
+  },
+  "options": null,
+  "payload": {
+    "project": {
+      "id": 748586,
+      "type": 0,
+      "sourceLanguage": {
+        "id": "en",
+        "name": "English",
+        "twoLettersCode": "en",
+        "threeLettersCode": "eng",
+        "locale": "en-US",
+        "pluralCategoryNames": [
+          "one",
+          "other"
+        ],
+        "pluralRules": "(n != 1)",
+        "pluralExamples": [
+          "1",
+          "0, 2-999; 1.2, 2.07..."
+        ],
+        "textDirection": "ltr",
+        "dialectOf": null
+      },
+      "targetLanguages": [
+        {
+          "id": "de",
+          "name": "German",
+          "twoLettersCode": "de",
+          "threeLettersCode": "deu",
+          "locale": "de-DE",
+          "pluralCategoryNames": [
+            "one",
+            "other"
+          ],
+          "pluralRules": "(n != 1)",
+          "pluralExamples": [
+            "1",
+            "0, 2-999; 1.2, 2.07..."
+          ],
+          "textDirection": "ltr",
+          "dialectOf": null
+        },
+        {
+          "id": "uk",
+          "name": "Ukrainian",
+          "twoLettersCode": "uk",
+          "threeLettersCode": "ukr",
+          "locale": "uk-UA",
+          "pluralCategoryNames": [
+            "one",
+            "few",
+            "many",
+            "other"
+          ],
+          "pluralRules": "((n%10==1 && n%100!=11) ? 0 : ((n%10 >= 2 && n%10 <=4 && (n%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || (n%10 >= 5 && n%10 <=9)) || (n%100 >= 11 && n%100 <= 14)) ? 2 : 3))",
+          "pluralExamples": [
+            "1, 21, 31, 41, 51, 61, 71, 81...",
+            "2-4, 22-24, 32-34, 42-44, 52-54, 62...",
+            "0, 5-19, 100, 1000, 10000...",
+            "0.0-0.9, 1.1-1.6, 10.0, 100.0..."
+          ],
+          "textDirection": "ltr",
+          "dialectOf": null
+        }
+      ],
+      "name": "Umbrella Android",
+      "description": "Localization project for Umbrella Android"
+    },
+    "sourceLanguage": {
+      "id": "en",
+      "name": "English",
+      "twoLettersCode": "en",
+      "threeLettersCode": "eng",
+      "locale": "en-US",
+      "pluralCategoryNames": [
+        "one",
+        "other"
+      ],
+      "pluralRules": "(n != 1)",
+      "pluralExamples": [
+        "1",
+        "0, 2-999; 1.2, 2.07..."
+      ],
+      "textDirection": "ltr",
+      "dialectOf": null
+    },
+    "targetLanguage": {
+      "id": "de",
+      "name": "German",
+      "twoLettersCode": "de",
+      "threeLettersCode": "deu",
+      "locale": "de-DE",
+      "pluralCategoryNames": [
+        "one",
+        "other"
+      ],
+      "pluralRules": "(n != 1)",
+      "pluralExamples": [
+        "1",
+        "0, 2-999; 1.2, 2.07..."
+      ],
+      "textDirection": "ltr",
+      "dialectOf": null
+    },
+    "alignmentPairs": [
+      {
+        "id": "0c92b4f9-6475-4c9e-9fe2-efc76f2917d5",
+        "source": "Your password has been reset successfully!",
+        "translation": "Ihr Passwort wurde erfolgreich zurückgesetzt!"
+      },
+      {
+        "id": "9e5fa3ab-3629-49ef-868d-09a6ea5f3df9",
+        "source": "Are you sure you want to delete this message?",
+        "translation": "Sind Sie sicher, dass Sie diese Nachricht löschen möchten?"
+      }
+    ]
+  }
+}
+```
+
+## 应用的预期响应（纯文本内容）
+
+响应载荷示例：
+
+```json
+{
+  "data": {
+    "content": "<prompt>"
+  }
+}
+```
+
+## 应用的预期响应（内容部分）
+
+响应载荷示例：
+
+```json
+{
+  "data": {
+    "content": [
+      {
+        "type": "text",
+        "text": "<prompt>"
+      },
+      {
+        "type": "image",
+        "mimeType": "<mime-type>",
+        "url": "<image-url>"
+      }
+    ]
+  }
+}
+```
+
+应用返回的响应结构应与所提供的示例一致，否则 Crowdin 将视其为无效。
