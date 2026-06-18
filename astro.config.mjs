@@ -16,7 +16,7 @@ import icon from 'astro-icon';
 import crowdinSidebar from './src/content/sidebars/crowdin.ts';
 import enterpriseSidebar from './src/content/sidebars/enterprise.ts';
 import developerSidebar from './src/content/sidebars/developer.ts';
-import { starlightLocales, getBaseDocId, localizeDocId } from './src/utils/i18n.ts';
+import { starlightLocales } from './src/utils/i18n.ts';
 
 import customConsentScript from './src/scripts/custom-consent-mode.js?raw';
 import postHogScript from './src/scripts/posthog.js?raw';
@@ -31,8 +31,6 @@ if (process.env.VERCEL_ENV === 'production' && process.env.VERCEL_PROJECT_PRODUC
 } else {
   site = 'https://support.crowdin.com';
 }
-
-const localizedLocales = new Set(Object.keys(starlightLocales).filter((locale) => locale !== 'root'));
 
 // https://astro.build/config
 const config = defineConfig({
@@ -158,39 +156,21 @@ const config = defineConfig({
           }
         }),
         starlightLinksValidator({
-          exclude: ({ link, slug, file }) => {
-            const linkPath = link.split('#')[0].split('?')[0];
-
-            // Determine the page locale. Crowdin keeps the source frontmatter `slug` on
-            // translated pages (no locale prefix), so the validator builds the id from that
-            // slug — e.g. a zh page becomes `github-integration` instead of `zh/github-integration`.
-            // The docs loader (src/content/config.ts) re-applies the prefix via localizeDocId
-            // based on the source file path; mirror that here so locale detection matches routing.
-            const entry = file?.split('/content/docs/')[1] ?? '';
-            const docId = entry
-              ? localizeDocId(entry, getBaseDocId(entry), [...localizedLocales])
-              : slug.replace(/^\//, '');
-            const pageLocale = docId.split('/')[0];
-            const isLocalizedPage = localizedLocales.has(pageLocale);
-
-            // Exclude API documentation links.
-            const isExcludedPath = (
-              linkPath.startsWith('/developer/api/v2/') ||
-              linkPath.startsWith('/developer/api/v2/string-based/') ||
-              linkPath.startsWith('/developer/enterprise/api/v2/') ||
-              linkPath.startsWith('/developer/enterprise/api/v2/string-based/') ||
-              /^\/[^/]+\/developer\/api\/v2\//.test(linkPath) ||
-              /^\/[^/]+\/developer\/api\/v2\/string-based\//.test(linkPath) ||
-              /^\/[^/]+\/developer\/enterprise\/api\/v2\//.test(linkPath) ||
-              /^\/[^/]+\/developer\/enterprise\/api\/v2\/string-based\//.test(linkPath) ||
-              /^\/[^/]+\/introduction\//.test(linkPath) ||
-              /^\/[^/]+\/enterprise\/introduction\//.test(linkPath) ||
-              /^\/[^/]+\/developer\/crowdin-apps-about\//.test(linkPath)
-            );
-
-            // Skip all link validation for target locale pages.
-            return isExcludedPath || isLocalizedPage;
-          },
+          errorOnFallbackPages: false,
+          errorOnInvalidHashes: false,
+          exclude: [
+            '/developer/api/v2/**',
+            '/developer/api/v2/string-based/**',
+            '/developer/enterprise/api/v2/**',
+            '/developer/enterprise/api/v2/string-based/**',
+            '/*/developer/api/v2/**',
+            '/*/developer/api/v2/string-based/**',
+            '/*/developer/enterprise/api/v2/**',
+            '/*/developer/enterprise/api/v2/string-based/**',
+            '/*/introduction/**',
+            '/*/enterprise/introduction/**',
+            '/*/developer/crowdin-apps-about/**',
+          ],
         }),
         starlightHeadingBadges(),
         // https://delucis.github.io/starlight-llms-txt/
