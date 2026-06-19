@@ -4,24 +4,15 @@ description: Learn how to create, manage, and share glossaries in Crowdin Enterp
 slug: enterprise/glossary
 ---
 
-import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { Steps, Aside, LinkCard, CardGrid, Badge } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
 import KBD from '~/components/KBD.astro';
 import QuestionAnswer from '~/components/QuestionAnswer.astro';
 import { Image } from 'astro:assets';
 import termHover from '!/crowdin/localization-resources/glossary_term_hover.png';
-import createGlossary from '!/enterprise/localization-resources/glossary_create_glossary.png';
-import createGlossaryDialog from '!/enterprise/localization-resources/glossary_create_glossary_dialog.png';
-import addConcept from '!/enterprise/localization-resources/glossary_add_concept.png';
 import addConceptDialog from '!/enterprise/localization-resources/glossary_add_concept_dialog.png';
 import addConceptEditor from '!/crowdin/localization-resources/glossary_add_concept_editor.png';
-import conceptsView from '!/enterprise/localization-resources/glossary_concepts_view.png';
-import termsView from '!/enterprise/localization-resources/glossary_terms_view.png';
-import editConcept from '!/enterprise/localization-resources/glossary_edit_concept.png';
-import deleteAllConcepts from '!/enterprise/localization-resources/glossary_delete_all_concepts.png';
-import downloadUpload from '!/enterprise/localization-resources/glossary_upload_download.png';
 import configureImport from '!/enterprise/localization-resources/glossary_configure_import.png';
-import shareGlossaries from '!/enterprise/localization-resources/glossary_share_glossaries.png';
 
 With a glossary, you can create, store, and manage all the project terminology in one place. The main aim of terminology is to explain some specific terms or the ones often used in the project to be translated properly and consistently.
 
@@ -37,10 +28,10 @@ To create a glossary, follow these steps:
 
 <Steps>
   1. Open your organization's **Workspace** and select **Glossaries** on the left sidebar.
-  2. At the bottom right, click <Icon name="mdi:plus" class="inline-icon"/>**Create**. <Image src={createGlossary} alt="Create glossary" />
+  2. At the bottom right, click <Icon name="mdi:plus" class="inline-icon"/>**Create**.
   3. In the appeared dialog, name your glossary and select a default language that will be displayed first in the table of glossary records.
   4. *(Optional)* Click **Select files** to upload your existing glossary. You can skip this step and upload a glossary later.
-  5. Click **Create**. <Image src={createGlossaryDialog} alt="Create glossary dialog" class="width-lg" />
+  5. Click **Create**.
 </Steps>
 
 <CardGrid>
@@ -81,24 +72,41 @@ Term details:
 * Type &ndash; Classifies the term's function (e.g., full form, acronym, abbreviation, phrase, variant).
 * Status &ndash; Defines the term's approval level (e.g., preferred, admitted, not recommended).
 * Gender &ndash; The grammatical gender of the term (e.g., masculine, feminine, neuter).
-* Description &ndash; A brief explanation or context for the specific term (distinct from the concept's definition).
+* Description (context) &ndash; A brief explanation or context for the specific term (distinct from the concept's definition).
 * Note &ndash; Short notes about a term that might be helpful to translators.
 * URL &ndash; URL to the web page with relevant information about a term.
+
+The concept dialog opens as a full-screen view with two panes:
+
+* The left pane contains concept-level details: the **Primary term** (filled in automatically from the source-language term), **Subject**, **Definition**, and the **Translatable** toggle. The expandable **Concept details** section holds the concept **Note**, **URL**, and **Figure**.
+* The right pane lists all terms across languages, grouped by language. The source language is pinned at the top and marked with a <Badge text="SOURCE" variant="success" /> badge. Each term row shows its **Part of speech**, **Gender**, **Type**, and **Status**, along with the **desc**, **url**, and **note** badges that expand the term's **Description (context)**, **URL**, and **Note** fields.
 
 To add a new glossary concept, follow these steps:
 
 <Steps>
   1. Open your organization's **Workspace** and select **Glossaries** on the left sidebar. Alternatively, open your project and go to **Settings > Glossaries**.
   2. Click on the needed glossary.
-  3. Click **Add concept**. <Image src={addConcept} alt="Add Concept" />
-  4. In the appeared dialog, select the language from the drop-down menu, and specify the term and all related details. Click <Icon name="mdi:auto-fix" class="inline-icon"/> to detect the part of speech automatically.
+  3. Click **Add term**.
+  4. In the source-language row, enter the term and set its **Part of speech**, **Gender**, **Type**, and **Status**. Hover over the row and click <Icon name="mdi:auto-fix" class="inline-icon"/> to detect the part of speech automatically.
       <Aside>
         Part of speech can be automatically detected only for the following languages: English, French, Spanish, German, Norwegian, Polish, Swedish, Russian, Italian, and Chinese.
       </Aside>
-  5. *(Optional)* Click **Add term** to add a term variation (e.g., acronym, short form, etc.)
-  6. Specify the concept details.
-  7. Click **Create**. <Image src={addConceptDialog} alt="Add Concept Dialog" />
+  5. *(Optional)* Click **Add term** below the language to add a term variation (e.g., acronym, short form, etc.)
+  6. *(Optional)* Click **Add language** and search for a language to add its translation.
+  7. Specify the concept details in the left pane (**Subject**, **Definition**, and the **Concept details** section).
+  8. Click **Create**. <Image src={addConceptDialog} alt="Add Term as New Concept dialog" />
 </Steps>
+
+<Aside title="Adding a new concept vs. a new term">
+  Use **Add term** to define a new meaning from scratch. To add a synonym or translation to an existing entry, search for the concept first and add the term there.
+</Aside>
+
+<Aside type="tip">
+  A few things that speed up working with concepts:
+  * Click the **desc**, **url**, or **note** badge in a term row to expand it and jump straight to that field.
+  * Click the link icon (**Open URL**) next to the **URL** field to open the link in a new browser tab.
+  * Turn off the **Translatable** toggle to collapse a concept to its source language only; turning it back on restores the previously added languages.
+</Aside>
 
 To add glossary concepts via the Editor, follow these steps:
 
@@ -129,13 +137,11 @@ Enhance terminology consistency across your project by setting up AI Alignment. 
 
 ### Viewing, Searching, and Filtering Glossary Concepts and Terms
 
-Once you open a glossary, you can view and filter its glossary concepts and terms using either the **Concepts** or **Terms** tabs.
+Once you open a glossary, you can switch between two views using the **Group by concept** toggle.
 
-On the **Concepts** tab, you can view glossary content grouped as concepts (one concept per row, each term displayed in a separate language column).
+With **Group by concept** enabled, glossary content is grouped as concepts (one concept per row), with each term's translations shown in separate language columns. Under each term, its part of speech, status, gender, and type appear as badges.
 
-<Image src={conceptsView} alt="Concepts View" />
-
-On the **Terms** tab, you can view glossary content as individual terms (one term per row) with the following details:
+With **Group by concept** disabled, glossary content is shown as individual terms (one term per row) with the following details:
 
 * **Term**: Contains either source or target language text.
 * **Language**: The term's language (e.g., French, Spanish).
@@ -148,15 +154,12 @@ On the **Terms** tab, you can view glossary content as individual terms (one ter
 * **Concept subject**: The subject field from the parent concept.
 * **Concept definition**: The definition from the parent concept.
 
-<Image src={termsView} alt="Terms View" />
+By default, all glossary concepts and terms are displayed. To find a specific concept or term, type in the **Search** field. In both views, the search matches against the following fields:
 
-By default, all glossary concepts and terms are displayed. To find a specific concept or term, you can use the **Search** field.
-
-In the **Concepts** tab, you can search by the following details:
-
-* **Terms**
-* **Concept definitions**
-* **Concept subjects**
+* **Term text**
+* **Term description (context)**
+* **Concept definition**
+* **Concept subject**
 
 To refine the search results, you can use the following options:
 
@@ -166,26 +169,22 @@ To refine the search results, you can use the following options:
 
 To filter the list of concepts or terms, click **Filter** <Icon name="mdi:filter-variant" class="inline-icon" /> and use the available options:
 
-* **Languages** (Specific to the **Terms** tab): Filter by **All languages** or a **Specific language**.
-* **Modified**: Filter by modification date (**All**, **Custom Range**).
+* **Languages** (available when **Group by concept** is disabled): Filter by **All languages** or a **Specific language**.
+* **Last modified**: Filter by modification date (**All**, **Custom range**).
 * **Part of speech**: Filter by grammatical category (**All**, **Noun**, **Verb**, etc.).
 * **Type**: Filter by classification (**All**, **Full form**, **Acronym**, etc.).
 * **Status**: Filter by approval status (**All**, **Preferred**, **Draft**, etc.).
 * **Gender**: Filter by grammatical gender (**All**, **Masculine**, **Feminine**, etc.).
 * **Author**: Filter by **All** or a particular user.
 
-To sort concepts or terms, click **Sort by** and select one of the available options:
-
-* **Text**
-* **Date modified**
-* **Date created**
+To sort concepts or terms, click a column header. By default, the list is sorted by the source-language terms. You can also sort by the **Created** or **Last modified** column. Click a column header once to sort in ascending order and click again to sort in descending order.
 
 To customize your viewing experience, you can use the following options on the top toolbar:
 
 * **Word Wrap**: Click <Icon name="mdi:wrap" class="inline-icon" /> to toggle the word wrap feature. This is useful for viewing long texts (such as definitions, subjects, or notes) without expanding the column width.
-* **Column Settings**: Click <Icon name="mdi:cog" class="inline-icon" /> to configure which columns are displayed in the table.
-  * **Concepts** page: You can show or hide columns like *Definition*, *Subject*, *Translatable*, and *Note*.
-  * **Terms** page: You can show or hide columns like *Language*, *Part of speech*, *Type*, *Status*, *Gender*, *Description (context)*, *Note*, *Concept subject*, and *Concept definition*.
+* **Column Settings**: Click <Icon name="mdi:view-column" class="inline-icon" /> to configure which columns are displayed in the table. Use **All columns** to show or hide all of them at once.
+  * **Concepts** view: You can show or hide columns such as *Definition*, *Subject*, *Translatable*, *Note*, *Created*, and *Last modified*, as well as the language columns. All columns and languages are shown by default, except *Translatable* and *Note*.
+  * **Terms** view: You can show or hide columns like *Language*, *Part of speech*, *Type*, *Status*, *Gender*, *Description (context)*, *Note*, *Concept subject*, and *Concept definition*.
 
 ### Editing Glossary Concepts and Terms
 
@@ -197,19 +196,28 @@ To edit a glossary concept, follow these steps:
   1. Open your organization's **Workspace** and select **Glossaries** on the left sidebar. Alternatively, open your project and go to **Settings > Glossaries**.
   2. Click on the needed glossary.
   3. Hover over a glossary concept and click <Icon name="mdi:pencil" class="inline-icon" /> to open it.
-  4. In the appeared dialog, make the necessary edits to the concept or terms and click **Save**. <Image src={editConcept} alt="Edit Glossary Concept" />
+  4. In the **Edit concept** dialog, make the necessary edits to the concept or its terms. The dialog uses the same two-pane layout described in [Creating Glossary Concepts and Terms](#creating-glossary-concepts-and-terms), with an added **Metadata** section that lists the concept **ID**, creation date, and last modification details.
+  5. Click **Save**.
 </Steps>
 
-### Deleting Glossary Concepts
+<Aside>
+  If you close the dialog with unsaved changes, you'll be asked to confirm: select **Discard** to close without saving or **Cancel** to keep editing.
+</Aside>
 
-You can delete one, multiple, or all the glossary concepts at once.
+### Deleting Glossary Concepts and Terms
 
-To delete all the concepts from the glossary, follow these steps:
+You can delete a single term, an entire concept, or several concepts at once.
+
+When [editing a concept](#editing-glossary-concepts-and-terms), you can delete individual terms or the entire concept directly in the dialog:
+
+* Delete a single term &ndash; expand the term's row and click **Delete term**.
+* Delete the entire concept &ndash; click **Delete concept** in the bottom-left corner of the dialog.
+
+To delete several concepts at once, follow these steps:
 
 <Steps>
-  1. Select the top checkbox above the concept list.
-  2. Confirm the selection of all concepts.
-  3. Click <Icon name="mdi:delete" class="inline-icon"/>. <Image src={deleteAllConcepts} alt="Deleting Glossary Concepts" />
+  1. Select the checkboxes next to the concepts you want to delete. To delete all concepts, select the top checkbox and confirm the selection of all concepts.
+  2. Click <Icon name="mdi:delete" class="inline-icon"/>.
 </Steps>
 
 ## Managing Glossaries
@@ -237,7 +245,7 @@ To upload or download the glossary, follow these steps:
   3. Click <Icon name="mdi:swap-vertical" class="inline-icon" /> and select one of the following options:
       * **Upload** – uploads new glossary content.
       * **Download** – downloads the full glossary.
-      * **Download filtered** – downloads only glossary concepts that match the applied filters or search criteria. <Image src={downloadUpload} alt="Downloading and Uploading Glossary" />
+      * **Download filtered** – downloads only glossary concepts that match the applied filters or search criteria.
 </Steps>
 
 The owner, admins, and managers can upload and download the glossary in the following file formats: TBX (v2), TBX (v3), CSV, XLSX.
@@ -330,7 +338,7 @@ To share your glossaries between all of the projects within the organization, fo
 
 <Steps>
   1. Open your organization's **Workspace** and select **Glossaries** on the left sidebar.
-  2. Select **Share Glossaries**. <Image src={shareGlossaries} alt="Sharing Glossaries" />
+  2. Select the **Share Glossaries** checkbox.
 </Steps>
 
 <Aside>
@@ -348,6 +356,6 @@ To share your glossaries between all of the projects within the organization, fo
 
 ## Q&A
 
-<QuestionAnswer title="A client updates a glossary term translation, but the vendor doesn’t see it in the Editor. How it can be fixed?">
+<QuestionAnswer title="A client updates a glossary term translation, but the vendor doesn’t see it in the Editor. How can it be fixed?">
   The priority is given to the organization's own glossaries first, followed by external (i.e., client) glossaries. To resolve this, the vendor can disable their own glossary and use only the client's glossary to ensure they see the updated term.
 </QuestionAnswer>
