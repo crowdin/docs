@@ -19,19 +19,20 @@ git clone git@github.com:crowdin/docs.git
 
 cd docs
 
-npm install
+pnpm install
 ```
 
 Run the development server:
 
 ```console
-npm run dev
+pnpm dev
 ```
 
 Open your browser and navigate to http://localhost:4321.
 
 > **Note!**
 > - Make sure you have Node.js v22 or higher installed on your machine.
+> - This project uses [pnpm](https://pnpm.io) as the package manager. The required version is pinned via the `packageManager` field in `package.json` and can be installed with [Corepack](https://nodejs.org/api/corepack.html) (`corepack enable`).
 > - This project uses the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for commit messages and PR titles.
 
 ### Project Structure
@@ -51,14 +52,14 @@ Some important files and directories:
 
 All commands are run from the root of the project, from a terminal:
 
-| Command                   | Action                                           |
-|:--------------------------|:-------------------------------------------------|
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+| Command                | Action                                           |
+|:-----------------------|:-------------------------------------------------|
+| `pnpm install`         | Installs dependencies                            |
+| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
+| `pnpm build`           | Build your production site to `./dist/`          |
+| `pnpm preview`         | Preview your build locally, before deploying     |
+| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
+| `pnpm astro -- --help` | Get help using the Astro CLI                     |
 
 ## Learn More
 

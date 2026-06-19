@@ -21,18 +21,21 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build
         id: build
-        run: npm run build
+        run: pnpm run build
 
       - name: Comment link validation issues on PR
         if: |
@@ -61,7 +64,7 @@ jobs:
           delete: true
 
       - name: Build API Docs styles
-        run: npm run build:api
+        run: pnpm run build:api
 
       - name: Find unused images
-        run: npm run find-unused-images
+        run: pnpm run find-unused-images
