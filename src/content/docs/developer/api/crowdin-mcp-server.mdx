@@ -20,19 +20,40 @@ Think of the MCP Server as a universal adapter and interpreter. Your AI assistan
 ## Prerequisites
 
 * A Crowdin account.
-* A [Personal Access Token](#authentication-tokens-and-scopes) from your account.
-* An MCP-compatible client (e.g., Crowdin Copilot, Claude, Cursor, or ChatGPT).
+* A way to [authenticate](#authentication-access-tokens-and-scopes)—either the OAuth sign-in flow (no token needed) or an access token generated via a Personal Access Token or an OAuth app.
+* An MCP-compatible client (e.g., Crowdin Copilot, Claude Desktop, Cursor, VS Code, or Windsurf).
 
 ## Setup and Configuration
 
 This section provides the details needed to connect your AI client to Crowdin.
 
-### Authentication: Tokens and Scopes
+### Authentication: Access Tokens and Scopes
 
-To connect to your Crowdin account, the MCP Server uses a **Personal Access Token (PAT)**. This token is your secure key. When you create a token, you must grant it specific **scopes** (permissions) that define what actions it can perform. For the MCP Server to function correctly, the token you use must have the necessary scopes for the commands you want to give. For example, to create a project task, your token will need the **Tasks (Read and Write)** scope.
+The MCP Server supports two ways to authenticate your client:
+
+* **OAuth sign-in flow** — your client connects using only the MCP endpoint URL and opens a browser for you to sign in to Crowdin. This is the simplest option for interactive clients (most IDEs and desktop apps) and requires no token to create or store.
+* **Access token** — you pass a static token in the `Authorization: Bearer {YOUR_CROWDIN_TOKEN}` header. Use this for headless setups, automation, or clients that don't support the OAuth flow. You can obtain a token by creating a **Personal Access Token (PAT)** or using an **OAuth app**.
+
+Regardless of the method, you grant specific **scopes** (permissions) that define what actions are allowed. For the MCP Server to function correctly, the credentials you use must have the necessary scopes for the commands you want to give. For example, to create a project task, your credentials will need the **Tasks (Read and Write)** scope.
+
+#### OAuth Sign-In Flow
+
+With clients that support MCP OAuth, you configure only the MCP endpoint URL—no token required. On first connection, the client opens a browser where you authorize access to your Crowdin account, after which it stores and refreshes the tokens for you. You don't need to create an OAuth app beforehand: the client registers itself automatically. The scopes you approve during sign-in determine what the client can do.
+
+#### Personal Access Token (PAT)
+
+A PAT is a secure, personal key tied directly to your account. It is the quickest way to authenticate with a static token for individual, personal use.
 
 <ReadMore>
   Read more about [Creating a Personal Access Token (Crowdin)](/account-settings/#creating-a-personal-access-token) or [Creating a Personal Access Token (Crowdin Enterprise)](/enterprise/account-settings/#creating-a-personal-access-token).
+</ReadMore>
+
+#### OAuth Apps
+
+If you are building an integration, developing a custom app, or prefer not to use personal credentials, you can authenticate using an OAuth app. You can create a new OAuth application in your account or organization settings, configure the required scopes, and use it to make authorized requests.
+
+<ReadMore>
+  Read more about managing OAuth applications in [Crowdin](/account-settings/#oauth) and [Crowdin Enterprise](/enterprise/organization-settings/#oauth-apps).
 </ReadMore>
 
 ### Endpoint Structure
@@ -134,7 +155,7 @@ Here is a basic JSON configuration snippet for your client.
       "crowdin": {
         "url": "https://mcp.crowdin.com/v2/mcp",
         "headers": {
-          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+          "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}"
         }
       }
     }
@@ -146,7 +167,7 @@ Here is a basic JSON configuration snippet for your client.
       "crowdin": {
         "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
         "headers": {
-          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+          "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}"
         }
       }
     }
@@ -174,7 +195,7 @@ The V2 endpoint supports optional HTTP headers that make tool filtering more con
       "crowdin": {
         "url": "https://mcp.crowdin.com/v2/mcp",
         "headers": {
-          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}",
+          "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}",
           "crowdin-read-only": "true",
           "crowdin-project-type": "string-based"
         }
@@ -188,7 +209,7 @@ The V2 endpoint supports optional HTTP headers that make tool filtering more con
       "crowdin": {
         "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
         "headers": {
-          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}",
+          "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}",
           "crowdin-read-only": "true",
           "crowdin-project-type": "string-based"
         }
@@ -209,7 +230,7 @@ By default, the server loads all available tool sets. If you want to focus the a
       "crowdin": {
         "url": "https://mcp.crowdin.com/v2/mcp",
         "headers": {
-          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}",
+          "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}",
           "crowdin-tool-sets": "source_files,source_strings,string_translations,translation_status,tasks,reports,webhooks"
         }
       }
@@ -222,7 +243,7 @@ By default, the server loads all available tool sets. If you want to focus the a
       "crowdin": {
         "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
         "headers": {
-          "Authorization": "Bearer {YOUR_CROWDIN_API_TOKEN}",
+          "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}",
           "crowdin-tool-sets": "source_files,source_strings,string_translations,translation_status,tasks,reports,webhooks,teams,organization,workflows,security_logs"
         }
       }
@@ -274,7 +295,7 @@ Available resources:
 
 ## Configuring Your AI Client
 
-This section guides you through connecting your preferred AI client to the Crowdin MCP Server. While the specific steps may vary slightly between clients, the core process involves providing your client with the server's URL and your Personal Access Token for authentication.
+This section guides you through connecting your preferred AI client to the Crowdin MCP Server. While the specific steps may vary slightly between clients, the core process involves providing your client with the server's URL and your token for authentication.
 
 ### Compatible MCP Clients
 
@@ -293,23 +314,27 @@ This list is not exhaustive, and we encourage you to try connecting the MCP Serv
 
 ### General Configuration Steps
 
-If you use Crowdin Copilot, no manual MCP setup is required. The steps below apply to external MCP-compatible clients.
+If you use Crowdin Copilot, no manual MCP setup is required. For external MCP-compatible clients, the core process involves the following steps:
 
-1.  **Get Your Personal Access Token (PAT):** Before you begin, ensure you have a PAT with the necessary scopes for your intended tasks, as detailed in the [Authentication](#authentication-tokens-and-scopes) section.
-2.  **Locate Your Client's Settings:** Open your AI client and find the settings area for connecting to external tools or contexts.
+1.  **Choose How to Authenticate:** Decide whether to use the OAuth sign-in flow (no token to prepare) or a static access token with the necessary scopes for your intended tasks, as detailed in the [Authentication](#authentication-access-tokens-and-scopes) section.
+2.  **Locate Your Client's Settings:** Open your AI client and find the settings area for connecting to external tools or MCP servers.
 3.  **Enter the Configuration Details:** In most clients, you will need to provide:
     * The **endpoint URL** for the Crowdin MCP Server.
-    * An **Authorization header** containing your PAT.
+    * For token-based authentication, an **Authorization header** containing your token (e.g., `Authorization: Bearer {YOUR_CROWDIN_TOKEN}`). With the OAuth flow, you provide only the URL and sign in through the browser instead.
     * Optional **filtering headers** if you want to limit the available tool sets or enable read-only access.
 
-### Configuring MCP Client for Claude Desktop
+<Aside type="tip" title="Secure Token Handling">
+  Where supported by the host application (e.g., Claude Desktop), we recommend storing your Crowdin token as an environment variable rather than hardcoding it directly into configuration files.
+</Aside>
+
+### Claude Desktop
 
 To set up the MCP client in Claude Desktop, follow these steps:
 
 <Steps>
-  1. Navigate to **Settings > Developer** in the Claude desktop application.
-  2. Click **Edit Config** to locate the `claude_desktop_config.json` file.
-  3. Open `claude_desktop_config.json` and enter the following configuration:
+  1. Navigate to **Settings > Developer** in the Claude Desktop app.
+  2. Click **Edit Config** to locate and open the `claude_desktop_config.json` file.
+  3. Enter the following configuration, adjusting the URL based on your product:
 
      <Tabs syncKey="product">
        <TabItem label="Crowdin">
@@ -325,7 +350,7 @@ To set up the MCP client in Claude Desktop, follow these steps:
                  "Authorization:${AUTH_TOKEN}"
                ],
                "env": {
-                 "AUTH_TOKEN": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+                 "AUTH_TOKEN": "Bearer {YOUR_CROWDIN_TOKEN}"
                }
              }
            }
@@ -345,7 +370,7 @@ To set up the MCP client in Claude Desktop, follow these steps:
                  "Authorization:${AUTH_TOKEN}"
                ],
                "env": {
-                 "AUTH_TOKEN": "Bearer {YOUR_CROWDIN_API_TOKEN}"
+                 "AUTH_TOKEN": "Bearer {YOUR_CROWDIN_TOKEN}"
                }
              }
            }
@@ -354,8 +379,176 @@ To set up the MCP client in Claude Desktop, follow these steps:
        </TabItem>
      </Tabs>
 
-  4. Save the changes, and restart the Claude Desktop app.
+  4. Save the file and restart the Claude Desktop app.
 </Steps>
+
+<Aside type="tip" title="Prefer OAuth?">
+  To sign in with the OAuth flow instead of managing a token, remove the `--header` argument (and its value) along with the `env` block, leaving just the `mcp-remote@latest` and URL arguments. On first connection, a browser opens for you to authorize access to Crowdin.
+</Aside>
+
+### Claude Code
+
+To add the Crowdin MCP Server to the Claude Code CLI, run the following command in your terminal:
+
+<Tabs syncKey="product">
+  <TabItem label="Crowdin">
+    ```bash
+    claude mcp add --transport http --header "Authorization: Bearer {YOUR_CROWDIN_TOKEN}" crowdin https://mcp.crowdin.com/v2/mcp
+    ```
+  </TabItem>
+  <TabItem label="Crowdin Enterprise">
+    ```bash
+    claude mcp add --transport http --header "Authorization: Bearer {YOUR_CROWDIN_TOKEN}" crowdin https://{your-organization-domain}.mcp.crowdin.com/v2/mcp
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip" title="Prefer OAuth?">
+  To sign in with the OAuth flow instead of managing a token, drop the `--header` flag: `claude mcp add --transport http crowdin https://mcp.crowdin.com/v2/mcp`. The first time you use the server, Claude Code opens a browser for you to authorize access to Crowdin.
+</Aside>
+
+### Cursor
+
+To integrate the Crowdin MCP Server into Cursor:
+
+<Steps>
+  1. Create or open the Cursor MCP configuration file—`~/.cursor/mcp.json` for global access across all projects, or `.cursor/mcp.json` in your project for project-specific access.
+  2. Add the `crowdin` server block to the `mcpServers` object:
+
+     <Tabs syncKey="product">
+       <TabItem label="Crowdin">
+         ```json
+         {
+           "mcpServers": {
+             "crowdin": {
+               "url": "https://mcp.crowdin.com/v2/mcp",
+               "headers": {
+                 "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}"
+               }
+             }
+           }
+         }
+         ```
+       </TabItem>
+       <TabItem label="Crowdin Enterprise">
+         ```json
+         {
+           "mcpServers": {
+             "crowdin": {
+               "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+               "headers": {
+                 "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}"
+               }
+             }
+           }
+         }
+         ```
+       </TabItem>
+     </Tabs>
+  3. Save the file. Cursor picks up the new server automatically—you can confirm it is enabled in Cursor's MCP settings.
+</Steps>
+
+<Aside type="tip" title="Prefer OAuth?">
+  To sign in with the OAuth flow instead of managing a token, remove the `headers` block, leaving only the `url`. On first connection, Cursor opens a browser for you to authorize access to Crowdin.
+</Aside>
+
+### VS Code
+
+To configure the Crowdin MCP Server in VS Code:
+
+<Steps>
+  1. Create or open the `.vscode/mcp.json` file in your workspace.
+  2. Add the following configuration:
+
+     <Tabs syncKey="product">
+       <TabItem label="Crowdin">
+         ```json
+         {
+           "servers": {
+             "crowdin": {
+               "type": "http",
+               "url": "https://mcp.crowdin.com/v2/mcp",
+               "headers": {
+                 "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}"
+               }
+             }
+           }
+         }
+         ```
+       </TabItem>
+       <TabItem label="Crowdin Enterprise">
+         ```json
+         {
+           "servers": {
+             "crowdin": {
+               "type": "http",
+               "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+               "headers": {
+                 "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}"
+               }
+             }
+           }
+         }
+         ```
+       </TabItem>
+     </Tabs>
+  3. Open the Command Palette and run **MCP: List Servers** to start the connection.
+</Steps>
+
+<Aside type="tip" title="Prefer OAuth?">
+  To sign in with the OAuth flow instead of managing a token, remove the `headers` block, leaving `type` and `url`. On first connection, VS Code prompts you to sign in to Crowdin in the browser.
+</Aside>
+
+### Windsurf
+
+To configure the Crowdin MCP Server for Windsurf:
+
+<Steps>
+  1. Open your Windsurf MCP configuration file located at `~/.codeium/windsurf/mcp_config.json`.
+  2. Add the `crowdin` server block to the `mcpServers` object:
+
+     <Tabs syncKey="product">
+       <TabItem label="Crowdin">
+         ```json
+         {
+           "mcpServers": {
+             "crowdin": {
+               "command": "npx",
+               "args": [
+                 "mcp-remote@latest",
+                 "https://mcp.crowdin.com/v2/mcp",
+                 "--header",
+                 "Authorization: Bearer {YOUR_CROWDIN_TOKEN}"
+               ]
+             }
+           }
+         }
+         ```
+       </TabItem>
+       <TabItem label="Crowdin Enterprise">
+         ```json
+         {
+           "mcpServers": {
+             "crowdin": {
+               "command": "npx",
+               "args": [
+                 "mcp-remote@latest",
+                 "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+                 "--header",
+                 "Authorization: Bearer {YOUR_CROWDIN_TOKEN}"
+               ]
+             }
+           }
+         }
+         ```
+       </TabItem>
+     </Tabs>
+  3. Save the file and restart Windsurf.
+</Steps>
+
+<Aside type="tip" title="Prefer OAuth?">
+  To sign in with the OAuth flow instead of managing a token, remove the `--header` argument and its value from `args`, leaving just `mcp-remote@latest` and the URL. On first connection, a browser opens for you to authorize access to Crowdin.
+</Aside>
 
 ## Making Your First Request
 
@@ -445,7 +638,7 @@ The real power of the MCP server comes from chaining commands to complete real-w
 * **Use Read-Only Mode for Safe Exploration:** Set `crowdin-read-only: true` when onboarding new team members or testing integrations. This prevents accidental changes while still providing full read access.
 * **Be Specific in Your Prompts:** Reference project names and IDs rather than generic terms. For example, `List tasks for project ID 12345 in French` is better than `Show me my tasks.`
 * **Start with a Simple Query:** Begin with a safe prompt such as `What tasks am I currently working on?` to confirm that your client can access the expected Crowdin context.
-* **Manage Tokens Securely:** Treat your Personal Access Tokens like passwords and handle them with care.
-    * **Use Minimal Scopes:** When creating a token, grant only the permissions necessary for the tasks you intend to perform.
+* **Manage Tokens Securely:** Treat your credentials like passwords and handle them with care.
+    * **Use Minimal Scopes:** When creating a token or configuring an app, grant only the permissions necessary for the tasks you intend to perform.
     * **Store Securely:** Keep tokens in encrypted vaults or secure environment variables, not in shared configuration files.
     * **Rotate Regularly:** For enhanced security, periodically revoke old tokens and create new ones.
