@@ -1,0 +1,95 @@
+---
+title: Google Play Bütünleştirmesi
+description: Uygulamanızın verilerini yerelleştirmek için Google Play’i Crowdin’e bağlayın
+slug: google-play-integration
+sidebar:
+  order: 11
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside } from '@astrojs/starlight/components';
+import integrationPublish from '!/crowdin/integrations/google_play_integration_publish.png';
+import integrationSelectLanguages from '!/crowdin/integrations/google_play_integration_select_languages.png';
+import integrationServiceAccountCredentials from '!/crowdin/integrations/google_play_integration_service_account_credentials.png';
+import integrationPublishingProgress from '!/crowdin/integrations/google_play_integration_publishing_progress.png';
+import integrationAccess from '!/crowdin/integrations/google_play_integration_access.png';
+import integrationConfigureServiceAccount from '!/crowdin/integrations/google_play_integration_configure_service_account.png';
+import integrationCreateServiceAccount from '!/crowdin/integrations/google_play_integration_create_service_account.png';
+import integrationLinkProject from '!/crowdin/integrations/google_play_integration_link_project.png';
+import integrationPermissions from '!/crowdin/integrations/google_play_integration_permissions.png';
+import integrationSelectProject from '!/crowdin/integrations/google_play_integration_select_project.png';
+import integrationServiceAccountCreateKey from '!/crowdin/integrations/google_play_integration_service_account_create_key.png';
+import integrationServiceAccountKeyType from '!/crowdin/integrations/google_play_integration_service_account_key_type.png';
+import integrationServiceAccountName from '!/crowdin/integrations/google_play_integration_service_account_name.png';
+import integrationServiceAccountRole from '!/crowdin/integrations/google_play_integration_service_account_role.png';
+
+Crowdin’in Google Play bütünleştirmesiyle uygulamanızın veri yerelleştirme sürecini hızlandırabilirsiniz. Bütünleştirme etkinleştirildikten sonra, mağaza sayfasından gelen tüm metinler tek bir dosyada toplanır ve Crowdin’deki projenize eklenir. Çeviriler tamamlandığında, bunları uygulamanızın mağazadaki sayfasına eklemek birkaç tıklama alır.
+
+<Aside>
+  Ayarlamadan ve kullanmadan önce Crowdin hesabınıza [Google Play bütünleştirmesini yüklemeniz](https://store.crowdin.com/google-play) gerekecek.
+</Aside>
+
+## Google Play’i Crowdin ile Bağlama
+
+Google Play’i Crowdin’deki projenizle bağlamak için şu adımları izleyin:
+
+<Steps>
+  1. Projenizi açın ve **Bütünleştirmeler** sekmesine gidin.
+  2. Bütünleştirmeler Listesinde **Google Play**’e tıklayın.
+  3. Paket adını girin ve **Bütünleştirmeyi Ayarla**’ya tıklayın.
+</Steps>
+
+Yanlış girdiyseniz paket adını düzenleyebilir ve gerekirse bütünleştirmeyi silebilirsiniz.
+
+Bütünleştirme, kaynak metinleri **Kaynaklar > Dosyalar** içine yerleştirilecek bir dosyaya toplayacak. Varsayılan olarak, dosya adı `google_play.xml` olarak ayarlanır.
+
+## Çevirileri Yayınlama
+
+Çevirileri yayınlamak için şu adımları izleyin:
+
+<Steps>
+  1. Projenizi açın ve **Bütünleştirmeler > Google Play**’e gidin.
+  2. **Çevirileri Önizle ve Yayınla**’ya tıklayın. <Image src={integrationPublish} alt="Çevirileri Yayınlayın" />
+  3. Kullanılabilir çeviriler, yapılandırılmış [Dışa aktarma seçenekleri](/tr/project-settings/export/)’ne göre görünecek. Tüm çevirilerin iyi görünüp görünmediğine bakın ve yayınlamak istemediğiniz dillerin yanındaki onay kutusunun işaretini kaldırın. Devam etmek için **İleri**’ye tıklayın. <Image src={integrationSelectLanguages} alt="Yayınlama için Dilleri Seçme" class="width-lg" />
+  4. [Hizmet hesabı kimlik bilgilerinizin](#hizmet-hesabı-kimlik-bilgileri-oluşturma) olduğu bir dosya yükleyin ve **Yayınla**’ya tıklayın. <Image src={integrationServiceAccountCredentials} alt="Hizmet Hesabı Kimlik Bilgileri" class="width-lg" />
+  5. Yayınlama ilerlemesini sonraki ileti öğesinde izleyebilirsiniz. Çeviriler yüklendikten sonra **Kapat**’a tıklayın. <Image src={integrationPublishingProgress} alt="Yayınlama İlerlemesi" class="width-lg" />
+</Steps>
+
+<Aside type="caution" title="Limitations">
+  Google Play, bir günde aynı dil için çevirileri yayınlayabileceğiniz tekrar sayısını sınırlar.
+</Aside>
+
+## Hizmet Hesabı Kimlik Bilgileri Oluşturma
+
+Crowdin’den doğrudan Google Play projenize çevirileri yayınlamak için önceden Google Play Konsolunuza erişimi yapılandırmanız gerekir.
+
+<Aside>
+  Güvenlik nedenleriyle, Crowdin’de hizmet hesabı kimlik bilgilerinize sahip dosya saklanmaz, bu nedenle çevirilerinizi Google Play’de yayınlamak istediğinizde bu dosyayı yüklemek gerekir.
+</Aside>
+
+Hizmet hesabı kimlik bilgilerinizi oluşturmak ve eklemek için şu adımları izleyin:
+
+<Steps>
+  1. Google Play Konsolu’nu Google Cloud projesi ile bağlayın:
+     * Google Play Konsolu’nu açın ve **Kurulum >** [**API erişimi**](https://play.google.com/console/u/0/developers/api-access)’ne gidin.
+     * Varolan bir projeyi bağlantılayın veya yeni bir tane oluşturun. <Image src={integrationLinkProject} alt="Projeyi Bağlantılayın" />
+  2. Hizmet hesabı kimlik bilgileri oluşturun:
+     * [**Hizmet hesapları**](https://console.developers.google.com/iam-admin/serviceaccounts)’na gidin. İstenirse, varolan projelerden birini seçin. <Image src={integrationSelectProject} alt="Proje Seçin" />
+     * **Hizmet Hesabı Oluştur**’a tıklayın. <Image src={integrationCreateServiceAccount} alt="Hizmet Hesabı Oluşturun" />
+     * Hizmet hesabı adını belirtin ve **Oluştur ve Devam**’a tıklayın. <Image src={integrationServiceAccountName} alt="Hizmet Hesabı Adı" />
+     * **Rol** listesinden **Hizmet Hesapları > Hizmet Hesabı Kullanıcısı**’nı seçin ve **Bitti**’ye tıklayın. <Image src={integrationServiceAccountRole} alt="Hizmet Hesabı Rolü" />
+     * Oluşturulan hizmet hesabında Eylemler menüsünü açın ve **Anahtarları yönet**’i seçin. <Image src={integrationConfigureServiceAccount} alt="Hizmet Hesabını Yapılandırın" />
+     * **Anahtarlar** sekmesinde, **Anahtar ekle > Yeni anahtar oluştur**’a tıklayın. <Image src={integrationServiceAccountCreateKey} alt="Anahtar Oluşturun" />
+     * **JSON**’u seçin ve **Oluştur**’a tıklayın. <Image src={integrationServiceAccountKeyType} alt="Anahtar Türü" class="width-lg" />
+     * Hizmet hesabı kimlik bilgilerinizi içeren bir JSON dosyası makinenize indirilecektir.
+  3. Hizmet hesabınıza erişim verin:
+     * Google Play Konsolu’nda **Kurulum >** [**API erişimi**](https://play.google.com/console/u/0/developers/api-access) bölümüne gidin ve hizmet hesabınızda **Erişim ver**’e tıklayın. <Image src={integrationAccess} alt="Erişim Verin" />
+     * **Hesap izinleri** sekmesinde aşağıdaki izinleri seçin:
+       * Uygulama bilgilerini görüntüleme ve toplu raporları indirme (salt okunur)
+       * Play Games Hizmetleri projelerini yayınlayın
+       * Üretim için yayımlayın, cihazları hariç tutun ve Play Uygulaması İmzalamayı kullanın
+       * Mağaza varlığını yönetin <Image src={integrationPermissions} alt="İzinler" />
+     * **Kullanıcı davet et**’e tıklayın.
+</Steps>
+
+Bundan sonra, çevirilerinizi Crowdin’den Google Play’e yayınlamak için dosyayı hizmet hesabı kimlik bilgilerinizle kullanabilirsiniz.
