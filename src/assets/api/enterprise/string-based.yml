@@ -22137,6 +22137,7 @@ components:
             - x_ai
             - watsonx
             - deepseek
+            - microsoft_foundry
             - custom_ai
         credentials:
           description: "User’s own AI provider credentials.\n\n__Note__: Use only if `useSystemCredentials` is set to false."
@@ -22160,6 +22161,8 @@ components:
             -
               $ref: '#/components/schemas/ai.provider.credentials.deepseek'
             -
+              $ref: '#/components/schemas/ai.provider.credentials.microsoft_foundry'
+            -
               $ref: '#/components/schemas/ai.provider.credentials.custom_ai'
         config:
           deprecated: true
@@ -22168,7 +22171,7 @@ components:
           type: boolean
           default: true
         useSystemCredentials:
-          description: "Enables the paid service AI provider via Crowdin.\n\n__Note__: Set to true if `credentials` is not provided. Not supported for `custom_ai`, `x_ai`, `watsonx`, `deepseek` and `google_gemini_ai_studio` types."
+          description: "Enables the paid service AI provider via Crowdin.\n\n__Note__: Set to true if `credentials` is not provided. Not supported for `custom_ai`, `x_ai`, `watsonx`, `deepseek`, `microsoft_foundry` and `google_gemini_ai_studio` types."
           type: boolean
           default: false
       type: object
@@ -22442,6 +22445,37 @@ components:
           description: 'AI Provider module key'
           type: string
       type: object
+    ai.provider.credentials.microsoft_foundry:
+      title: 'Microsoft Foundry'
+      required:
+        - deployments
+      properties:
+        deployments:
+          description: 'Deployed models of the Foundry project. Each entry is self-contained — copy its Target URI and API key from the deployment details page in the Foundry portal (deployments of one project may live on different connected Azure resources)'
+          type: array
+          items:
+            required:
+              - deploymentName
+              - targetUri
+              - apiKey
+            properties:
+              deploymentName:
+                description: 'Deployment name (used as the model id)'
+                type: string
+              targetUri:
+                description: 'Deployment Target URI (its path encodes the API the deployment is served by, e.g. /anthropic/v1/messages or /openai/v1/chat/completions)'
+                type: string
+              apiKey:
+                description: 'API key of the Azure resource hosting the deployment'
+                type: string
+            type: object
+          minItems: 1
+        headers:
+          description: "Custom HTTP headers sent with every request to the provider. Authorization headers are managed by the provider and can't be overridden."
+          type: object
+          additionalProperties:
+            type: string
+      type: object
     EnterpriseAiProviderCollectionResource:
       description: 'AI Provider Collection Resource'
       type: object
@@ -22585,6 +22619,8 @@ components:
               $ref: '#/components/schemas/ai.provider.credentials.watsonx'
             -
               $ref: '#/components/schemas/ai.provider.credentials.deepseek'
+            -
+              $ref: '#/components/schemas/ai.provider.credentials.microsoft_foundry'
             -
               $ref: '#/components/schemas/ai.provider.credentials.custom_ai'
         config:
