@@ -1,0 +1,469 @@
+---
+title: Figma Eklentisi
+description: Start localizing at the design stage
+slug: tr/figma-plugin
+sidebar:
+  order: 8
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, CardGrid, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import settings from '!/crowdin/integrations/figma_plugin_settings.png';
+import stringsTab from '!/crowdin/integrations/figma_plugin_strings_tab.png';
+import addStrings from '!/crowdin/integrations/figma_plugin_add_strings.png';
+import uploadSummary from '!/crowdin/integrations/figma_plugin_upload_summary.png';
+import previewStrings from '!/crowdin/integrations/figma_plugin_preview_strings.png';
+import pagesTab from '!/crowdin/integrations/figma_plugin_pages_tab.png';
+
+Figma için Crowdin eklentisi ile hem tasarımcılar hem de geliştiriciler için zamandan tasarruf etmek amacıyla tasarımlarınızda Crowdin’den gelen metinleri kullanabilirsiniz. Bunlar orijinal veya çevrilmiş metinleri içerebilir. Gerekirse yenilerini ekleyebilir (örn. ileti öğesi başlıkları, düğme etiketleri) ve bunları Crowdin’deki çevirmenlere gönderebilirsiniz.
+
+## Kullanım Durumları
+
+* Hızlı bir şekilde çok dilli yaratıcı varlıklar oluşturun.
+* Orijinal biçimlemeyi ve stilleri koruyarak modelleri çevirin ve programlama başlamadan önce bunları farklı dillerde deneyin.
+* 'Lorem Ipsum' tabirini kullanmayı bırakın, bunun yerine Crowdin’den gelen gerçek metinleri asıl örneklerinize ekleyin. Crowdin’den eklenen dizgiler, Figma’daki metin alanlarına bağlantılanır.
+* Tasarımlarınızdan kaynak dizgiler oluşturun ve Crowdin projenize yükleyin. Oluşturulan dizgiler, Figma’daki metin alanlarına bağlantılanır. Bu şekilde geliştiriciler, yüklenen dizgileri kullanarak geliştirme için harcanan süreyi azaltabilir.
+* Tasarımlarınızda çevirileri ve dizgi anahtarlarını önizleyin.
+* Etiketli ekran görüntülerini Crowdin projenize yükleyin.
+
+## Installation
+
+<Steps>
+  1. Figma’ya giriş yapın.
+  2. Tasarım dosyalarınızdan birini açın veya **Yeni tasarım dosyası**’na tıklayın\*\*.
+  3. Dosya menüsünde **Eklentiler > Eklentileri yönet…**’e tıklayın\*\*. Alternatif olarak, tuvale sağ tıklayın ve **Eklentiler > Eklentileri yönet**’e tıklayın\*\*.
+  4. **Figma için Crowdin** eklentisini bulmak amacıyla arama alanını kullanın.
+  5. **Figma için Crowdin** eklentisine tıklayın ve **Kaydet**’i seçin\*\*.
+  6. Kaydedildikten sonra çalıştırmak için **Figma için Crowdin** eklentisine tıklayın.
+</Steps>
+
+## Configuration
+
+<Aside title="İzinler">
+  Figma bütünleştirmesini ayarlamak için Crowdin projesinde yönetici veya sahip izinlerine sahip olmanız gerekir.
+</Aside>
+
+### Setting up Credentials
+
+Figma’da Crowdin kimlik bilgilerinizi belirlemek için şu adımları izleyin:
+
+<Steps>
+  1. Dosya menüsünde **Eklentiler > Kayıtlı eklentiler**’e gidin. Alternatif olarak, tuvale sağ tıklayın ve **Eklentiler > Kayıtlı eklentiler**’e tıklayın.
+  2. **Figma için Crowdin**’e tıklayın.
+  3. **Ayarlar** sekmesine geçin.
+  4. Kişisel Erişim Belirteci’nizi girin.
+  5. **Bağlan**’a tıklayın.
+</Steps>
+
+Crowdin’de yeni bir belirteç oluşturmak için şu adımları izleyin:
+
+<Steps>
+  1. **Hesap Ayarları > API**, **Kişisel Erişim Belirteçleri** bölümüne gidin ve **Yeni Belirteç**’e tıklayın.
+  2. **Belirteç Adı**’nı belirtin, **Kapsamlar**’ı seçin ve **Oluştur**’a tıklayın.
+</Steps>
+
+<QuestionAnswer title="Hangi kapsamları seçmeliyim?">
+  * **Projeler (Liste, Al, Oluştur, Düzenle)** - Proje listelerine erişim, projeleri görüntüleme, oluşturma ve güncelleme izni verir.
+  * **Kaynak dosyalar ve dizgiler** - Dosya düzeltimlerine erişimin yanı sıra proje dalları, dizinleri, kaynak dosyaları ve kaynak dizgileri ekleme, alma, silme ve güncelleme erişimi verir.
+  * **Çeviriler** - Yeni çeviriler eklemek ve varolan çevirileri yönetmek için erişim verir.
+  * **Ekran görüntüleri** - Ekran görüntüleri listesi alma, ekran görüntüleri ekleme, alma, değiştirme ve silme erişimi, ekran görüntüsü etiketlerine erişme ve değiştirme yeteneği verir.
+</QuestionAnswer>
+
+### Selecting a Project
+
+Çalışmak istediğiniz Crowdin projesini seçmek için şu adımları izleyin:
+
+<Steps>
+  1. **Ayarlar** sekmesinde **Crowdin Projesi** altındaki açılır menüye tıklayın ve listeden bir proje seçin.
+  2. Bu projede çalışacağınız **içerik türünü** (örn. Kullanıcı Arayüzü Yerelleştirmesi veya Pazarlama Görselleri Yerelleştirmesi) seçin ve **Kaydet**’e tıklayın. Seçilen seçenek, Figma için Crowdin eklentisinin hangi kipinde kullanımınıza sunulacağını etkiler.
+  3. *(İsteğe bağlı)* **Crowdin Dalı** bölümünde, içeriğinizin yükleneceği belirli dalı seçin. Eğer projeniz sürüm dallarını kullanıyorsa, ya varolanı seçebilir ya da doğrudan Figma’dan yeni bir tane oluşturabilirsiniz; aksi takdirde bu adımı atlayabilirsiniz.
+     * **Varolan bir dalı seçmek için**: Açılır listeden istediğiniz dalı seçin.
+     * **Yeni bir dal oluşturmak için**: Dal alanının yanındaki <Icon name="mdi:plus" class="inline-icon" /> simgesine tıklayın. **Yeni Sürüm Dalı** ileti öğesinde, bir ad girin ve **Oluştur**’a tıklayın. Yeni dal Crowdin projenizde oluşturulacak ve eklentide otomatik olarak seçilecektir.
+</Steps>
+
+<Image src={settings} alt="Figma Eklentisi Ayarları" class="width-xl" />
+
+<CardGrid>
+  <LinkCard title="Kullanıcı Arayüzü Yerelleştirme" href="#kullanıcı-arayüzü-yerelleştirme" />
+  <LinkCard title="Pazarlama Görselleri Yerelleştirme" href="#pazarlama-görselleri-yerelleştirme" />
+</CardGrid>
+
+## Kullanıcı Arayüzü Yerelleştirme
+
+Kullanıcı arayüzünü yerelleştirirken, geliştirme ve pazarlama ekiplerinizle değişken sayfalar üzerinde çalışırken **Dizgiler** sekmesini kullanın. Bu sekmede, Crowdin’den Figma’daki tasarımlarınıza tek bir tıklamayla kaynak dizgileri ekleyebilirsiniz. Metinler tasarımlarda kullanıldıktan sonra, çevirmenlerin Crowdin’e geri başvurması için etiketli ekran görüntülerini otomatik olarak yükleyebilirsiniz.
+
+### Figma’da Crowdin’den Kaynak Dizgileri Kullanma
+
+<Steps>
+  1. Figma için Crowdin eklentisini açın.
+  2. **Dizgiler** sekmesinde, belirli kopyayı bulmak için **Arama** alanını kullanın. Dizgileri kaynak metne, dizgi tanımlayıcıya veya bağlama göre arayabilirsiniz. <Image src={stringsTab} alt="Figma Eklentisi Dizgiler Sekmesi" class="width-xl" />
+  3. Figma’da metin eklemek istediğiniz metin katmanını seçin ve eklentide gerekli dizginin yanındaki bağlantı simgesine tıklayın.
+</Steps>
+
+Tasarımlarınızda Crowdin’deki kaynak dizgileri kullandıktan sonra, metin alanlarıyla bağlantılı hale gelirler ve Figma’da bu dizgiler için [çevirileri önizleyebilir](#dizgileri-önizleme) ve bunlar için Crowdin projenize [ekran görüntülerini yükleyebilirsiniz](#etiketli-ekran-görüntülerini-crowdin’e-yükleme).
+
+Tek bir Crowdin dizgisini Figma’daki bir veya birden çok metin alanına bağlantılayabilirsiniz. Ancak, bir metin alanı sadece tek bir Crowdin dizgisine bağlantılanabilir. Eğer varolan bir bağlantıya sahip bir metin alanını yeni bir Crowdin dizgisine bağlantılarsanız, önceki bağlantı sonlandırılacak ve yeni bir bağlantı kurulacaktır. Bir Crowdin dizgisinin daha önce bağlantılı olduğu tüm metin alanlarından bağlantısını kaldırmak için gerekli dizginin yanındaki bağlantı simgesine sağ tıklayın.
+
+### Bağlantılı Dizgileri Yönetme
+
+Bir dizginin metnini, bağlamını veya diğer özelliklerini doğrudan eklentinin içinden düzenleyebilirsiniz. Bunu yapmak için dizgi listesinde yanındaki <Icon name="mdi:pencil" class="inline-icon" /> simgesine tıklayın. Düzenleme biçiminde istediğiniz değişiklikleri yapın ve **Kaydet**’e tıklayın.
+
+Aynı listeden, ilgili simgeleri kullanarak dizgileri de gizleyebilir veya silebilirsiniz. Yaptığınız tüm değişiklikler Crowdin projenizle eşitlenecektir.
+
+<Aside type="tip" title="Tüm Bağlantılı Öğeleri Anında Bulun">
+  Belirli bir dizgiyi düzenlerken kullanılan her konumu görmek için sol alt köşedeki <Icon name="mdi:bullseye" class="inline-icon" /> simgesine tıklayın. Eklenti, şu anki Figma sayfanızda bu dizgiye bağlantılı tüm metin katmanlarını otomatik olarak seçecek ve vurgulayacaktır.
+</Aside>
+
+### Figma’dan Crowdin’e Kaynak Dizgileri Ekleme
+
+Tasarımlarda zaten kullanılmış olan dizgileri ekleyebilirsiniz.
+
+<Steps>
+  1. Figma için Crowdin eklentisini açın.
+  2. Tasarımlarda kullanılan dizgileri eklemek için bütün çerçeveyi, birden çok çerçeveyi veya çerçevelerdeki gerekli metin öğelerini seçin.
+  3. **Dizgiler** sekmesinde <Icon name="mdi:plus" class="inline-icon" /> simgesine tıklayın.
+  4. Görünen ileti öğesinde, eklenecek dizgilerin listesini gözden geçirin. Eğer gerekliyse, süzgeç panelini açmak ve belirli öğeleri hariç tutmak için süzgeç simgesine <Icon name="mdi:filter-variant" class="inline-icon" /> tıklayın:
+     * Bazı çerçeveler Crowdin’e eklenmemesi gereken gizli öğeler içeriyorsa **Gizli öğeleri atla**’yı seçin.
+     * Bazı çerçeveler Crowdin’e eklenmemesi gereken çevrilemez öğeler içeriyorsa **Çevrilemez öğeleri atla**’yı seçin.
+     * Herhangi bir kilitli metin öğesinin çeviri için gönderilmesini hariç tutmak amacıyla **Kilitli öğeleri atla**’yı seçin. Bu, belirli bir metnin ekran görüntülerinde bağlam için görünür kalmasını ancak kaynak dizgi olarak Crowdin’e eklenmemesini istediğinizde kullanışlıdır. <Image src={addStrings} alt="Figma Eklentisi Dizgi Ekleme" class="width-2xl" />
+  5. *(İsteğe bağlı)* Dizgi ayarlarını yapılandırın. Ayarları tek tek dizgiler için düzenleyebilir veya toplu ayarları tüm dizgilere aynı anda uygulayabilirsiniz:
+     * **Tek Tek Dizgi Ayarları**: Bağlamını güncellemek veya o satır için çevrilmiş metnin en fazla uzunluğunu ayarlamak için listedeki belirli bir dizginin yanındaki <Icon name="mdi:cog-outline" class="inline-icon" /> simgesine tıklayın.
+     * **Çoklu Dizgi Ayarları**: Seçilen tüm dizgiler için ayarları açmak amacıyla sağ üst köşede, dizgi listesinin yukarısındaki <Icon name="mdi:cog-outline" class="inline-icon" /> simgesine tıklayın. Burada **En Fazla Uzunluk Düzeltme (%)** seçeneğini yapılandırabilirsiniz. Bu özellik, orijinal dizginin uzunluğuna belirli bir yüzde ekleyerek otomatik olarak en fazla karakter sınırını ayarlar (örneğin, "20" girilmesi 100 karakterlik bir dizginin, en fazla uzunluğunun 120 olacağı anlamına gelir). Bu, özellikle çeviri sırasında metin genişlemesine uyum sağlamak için kullanışlıdır ve yerelleştirilmiş kullanıcı arayüzünde metnin kesilmesini önlemenize yardımcı olur. Burada uygulanan tüm toplu ayarlar, tek tek dizgi ayarları kullanılarak dizgi başına yine de geçersiz kılınabilir.
+  6. Gerekli tüm dizgiler seçildikten ve yapılandırıldıktan sonra, **İleri**’ye tıklayın.
+  7. Sonraki ileti öğesi sayfasında tercih edilen seçenekleri seçin:
+     * **Varolan dizgileri otomatik olarak bağlantıla** &ndash; Metni Crowdin’deki varolan dizgilerle otomatik olarak karşılaştırır. Eğer bir eşleşme varsa, metin öğesi Crowdin projesindeki dizgiye bağlantılanacaktır.
+     * **Eksik anahtarlar oluştur** &ndash; Crowdin’e sadece yeni metin öğeleri eklenir.
+     * **Kopyaları birleştir** &ndash; Crowdin’de aynı metin öğelerini tek bir yeni dizgiye bağlantılar. Varsayılan davranış, kaynak metinlerini karşılaştırarak kopyaları tanımlamaktır. Bu aşağıdaki durumlarda yararlıdır:
+       * Aynı metne (örn. `Gönder` etiketli birkaç düğme) sahip birden çok metin alanı eklerken, eklenti Crowdin projenize sadece bir dizgi ekler ve tüm kopya metin alanlarını buna bağlantılar.
+       * Eğer Crowdin projeniz, tasarımlardan eklediğiniz aynı metne sahip bir dizgi zaten içeriyorsa, eklenti, yeni bir dizgi oluşturmak yerine varolanı dizgiye bağlantılar.
+       * Kopyayı algılama yöntemini değiştirmek için **Kopyaları anahtara göre algıla** alt seçeneğini etkinleştirin. Bu, eklentinin kopyaları metin içerikleri yerine dizgi tanımlayıcılarına (anahtarlara) göre tanımlamasını sağlayacaktır.
+     * *(İsteğe bağlı)* Dizgilere etiketleri eklemek için bunları alternatif olarak **Etiketler** açılır menüsünden seçin.
+     * [**Ekran görüntülerini gönderin**](#etiketli-ekran görüntülerini-crowdin’e-yükleme).
+  8. **Dosya** açılır menüsünden Crowdin’de dizgileri eklemek istediğiniz dosyayı seçin.
+  9. **Güncelleme Seçeneği** açılır menüsünden, Figma’da metni değişen bağlantılı dizgileri güncellediğinizde Crowdin’deki varolan çevirilere ve onaylara ne olacağını seçin. Aşağıdakilerden birini seçin:
+     * **Çevirileri ve Onayları Tut** &ndash; Hem varolan çevirileri hem de onay durumlarını korur. Çevirinin doğru kaldığı küçük yazım hatası düzeltmeleri için idealdir.
+     * **Çevirileri Tut** &ndash; Varolan çevirileri korur ancak onay durumlarını kaldırır; bu, çevirilerin tekrar gözden geçirilmesi ve onaylanması gerekeceği anlamına gelir.
+     * **Çevirileri ve Onayları Temizle** &ndash; Varolan tüm çevirileri ve onayları kaldırır. Kaynak metnin anlamı önemli ölçüde değiştiğinde ve dizginin sıfırdan çevrilmesini gerektirdiğinde bunu kullanın.
+  10. **Gönder**’e tıklayın.
+</Steps>
+
+#### Yükleme Özetini Anlamak
+
+Dizgiler Crowdin’e eklendikten sonra, gönderilen içeriğin bir özetini göreceksiniz. Bu özet, işlemle ilgili ayrıntılı geri bildirim sağlar:
+
+* **Oluşturulan anahtar**: Crowdin projenize eklenen yeni dizgilerin sayısı.
+* **Güncellenen anahtar**: Crowdin’de güncellenmiş varolan dizgilerin sayısı.
+* **Bağlantılı anahtar**: Crowdin’de Figma’daki metin öğelerine bağlantılanmış varolan dizgilerin sayısı.
+* **Bağlantılı metin öğesi**: Figma’da Crowdin’deki dizgilere bağlantılanmış metin öğelerinin toplam sayısı. Tek bir dizgiye birden fazla metin öğesi bağlantılandıysa bu sayı **Bağlantılı anahtar**’dan daha yüksek olabilir.
+* **Oluşturulan ekran görüntüsü**: Crowdin’e yüklenen yeni ekran görüntülerinin sayısı.
+* **Güncellenen ekran görüntüsü**: Güncellenmiş varolan ekran görüntülerinin sayısı.
+
+Özet ekranından, projenizdeki dizgileri görüntülemek için **Crowdin’de Aç**’a tıklayabilir veya eklentinin ana ekranına dönmek için **Ana sayfa**’ya tıklayabilirsiniz.
+
+<Image src={uploadSummary} alt="Figma Eklenti Yükleme Özeti" class="width-xl" />
+
+### Çoğul Biçimlerle Kaynak Dizgileri Ekleme
+
+Çoğul biçimli dizgiler ekleyebilirsiniz.
+
+<Steps>
+  1. Figma için Crowdin eklentisini açın.
+  2. Tasarımlarda kullanılan dizgileri eklemek için bütün çerçeveyi, birden çok çerçeveyi veya çerçevelerdeki gerekli metin öğelerini seçin.
+  3. **Dizgiler** sekmesinde <Icon name="mdi:plus" class="inline-icon" /> simgesine tıklayın.
+  4. Görünen ileti öğesinde, dizgilerin listesini gözden geçirin.
+  5. Gerekli dizginin yanındaki <Icon name="mdi:cog-outline" class="inline-icon" /> simgesine ve **Çoğulları ekle**’ye tıklayın.
+  6. Görünen ileti öğesinde, her bir çoğul biçim için alanları doldurun ve **Kaydet**’e tıklayın. Bağlı Crowdin projesinin kaynak diline bağlı olarak, belirtmeniz gereken farklı sayıda çoğul biçimler olabilir.
+  7. Gerekli tüm dizgiler seçildikten ve yapılandırıldıktan sonra, **İleri**’ye tıklayın.
+  8. Tercih edilen seçenekleri ve Crowdin’de dizgileri eklemek istediğiniz dosyayı seçin ve ardından **Gönder**’e tıklayın.
+</Steps>
+
+<Aside>
+  Çoğul dizgiler eklenirken, **Dizgi** sütunundaki alanlar **diğer** çoğul biçiminin eklenmesine yarar. Çoğul dizgileri sadece çoğul biçimleri destekleyen dosyalara ekleyebilirsiniz (örn. Android XML, Stringsdict, XLIFF, vb.).
+</Aside>
+
+<ReadMore>
+  [Çoğul Biçimler](/tr/online-editor/#çoğul-biçimler) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+### ICU Kaynak Dizgi Yer Tutucularını Yapılandırma
+
+Tasarımınızda ICU dizgileri kullanırken, yer tutucuların değerlerini ayarlayabilirsiniz ve bu tür dizgileri tasarımlara ekledikten sonra, önceden yapılandırılmış değerlerle biçimlendirilmiş bir görünümde görüntüleneceklerdir.
+
+Tasarımınızda Crowdin’den gerekli ICU dizgisini [kullandıktan](#figma’daki-crowdin’den-kaynak-dizgileri-kullanma) sonra, yer tutucu değerlerini yapılandırabilirsiniz.
+
+<Steps>
+  1. Figma için Crowdin eklentisini açın.
+  2. **Dizgiler** sekmesinde, belirli bir kopyayı kaynak metne, dizgi tanımlayıcısına veya bağlama göre bulmak için **Arama** alanını kullanın.
+  3. Click <Icon name="mdi:pencil" class="inline-icon" /> on the needed ICU string.
+  4. Click **Set placeholders**.
+  5. ICU dizgisi yer tutucuları için gerekli değerleri yazın.
+  6. Girilen yer tutucuları kaydetmek için **Kaydet**’e tıklayın.
+  7. Tasarımlarda kaynak dizgi metnini güncellemek için **Kaydet**’e tıklayın.
+</Steps>
+
+Figma’da ICU dizgileri için [çevirileri önizlerken](#çevirileri-önizleme), değerler önceden yapılandırılmışsa bunlar da biçimlendirilmiş bir görünümde görüntülenecektir.
+
+### Anahtar Adlandırma Şekli Ayarları
+
+Figma’dan Crowdin projesine dizgiler eklemeyi basitleştirmek için eklenti ayarlarında kaynak dizgi tanımlayıcıları için istenen anahtar adlandırma şeklini ayarlayabilirsiniz. Figma için Crowdin eklentisi, seçilen şekle göre yeni dizgiler için dizgi tanımlayıcıları önerecek. Yeni kaynak dizgileri eklerken, önerilen tanımlayıcıyı her zaman tercih edilen görünüme göre düzenleyebilirsiniz.
+
+Anahtar adlandırma şeklini seçmek için şu adımları izleyin:
+
+<Steps>
+  1. Figma için Crowdin eklentisini açın.
+  2. **Ayarlar** sekmesine geçin.
+  3. **Anahtar Adlandırma Şekli** bölümünde, açılır menüden tercih edilen seçeneği seçin.
+</Steps>
+
+Varolan şekillerin yanı sıra kendi şeklinizi de yapılandırabilirsiniz. To use a custom pattern, select the **Custom key naming pattern** option from the drop-down list and specify your pattern in the **Custom Key Naming Pattern** field.
+
+### Etiketli Ekran Görüntülerini Crowdin’e Yükleme
+
+[Tasarımlarda kullanılan kaynak dizgileri eklerken](#figma’dan-crowdin’e-kaynak-dizgileri-ekleme), **Ekran görüntülerini gönder** seçeneğinin seçili kaldığından emin olun. Sonuç olarak, Figma için Crowdin eklentisi, kaynak dizgilerle birlikte ekran görüntülerini yükleyecektir.
+
+Ayrıca, tasarımlardaki metin alanlarına bağlantılı bir Crowdin dizgisini düzenlerken **Ekran görüntülerini güncelle** seçeneğiyle ekran görüntülerini güncelleyebilirsiniz.
+
+Ek olarak, tasarımlardaki metin alanlarıyla bağlantılı dizgiler için ekran görüntülerini Crowdin’e toplu olarak yükleyebilirsiniz.
+
+<Steps>
+  1. Figma için Crowdin eklentisini açın.
+  2. Bağlantılı dizgilere sahip bir veya daha fazla çerçeve seçin.
+  3. **Dizgiler** sekmesinde, seçilen karelerin ekran görüntülerini yüklemek için **Etiketlenmiş ekran görüntülerini Crowdin’e gönder**’e<Icon name="mdi:image-outline" class="inline-icon" /> tıklayın.
+</Steps>
+
+<ReadMore>
+  Read more about [Screenshots](/screenshots/).
+</ReadMore>
+
+### Dizgileri Önizleme
+
+Tasarımlarda kullanılan dizgiler için Crowdin’den yapılan çevirileri doğrudan Figma’da önizleyin. Varsayılan olarak önizlemeler, orijinal tasarımlarınızı olduğu gibi korumak için yeni, çoğaltılmış bir sayfada oluşturulur.
+
+<Image src={previewStrings} alt="Figma Eklentisi Dizgileri Önizleyin" class="width-xl" />
+
+#### Çevirileri Önizleme
+
+Çevirilerle doldurulmuş dizgileri önizlemek için şu adımları izleyin:
+
+<Steps>
+  1. Figma için Crowdin eklentisini açın.
+  2. **Dizgiler** sekmesine gidin ve **Crowdin’den Dizgileri Önizle** bölümünü genişletin.
+  3. **Çoğaltılmış sayfada önizle** onay kutusunun seçili olduğundan emin olun.
+  4. **Dil ile oluştur**’u seçin.
+  5. Çevirilerini önizlemek istediğiniz hedef dili seçin (isteğe bağlı olarak tercih edilen çoğul biçimleri seçebilirsiniz). Ayrıca **Tüm diller**’i seçebilirsiniz.
+  6. Figma’da önizlemek istediğiniz içeriği seçin: **Tüm Kareler** veya **Seçilen Kareler**.
+</Steps>
+
+<Aside type="tip">
+  Çevirileri doğrudan şu anki sayfanızda önizlemek için **Çoğaltılmış sayfada önizle** onay kutusunun işaretini kaldırın. Bunu yapmanın, anahtar adlarıyla önizlemeler oluşturma gibi diğer seçenekleri etkisizleştireceğini unutmayın.
+</Aside>
+
+#### Anahtar Adları ile Önizleme
+
+Geliştiricilerin dizgileri tanımlamasına yardımcı olmak için tasarımlarınızı çevrilmiş metin yerine dizgi anahtarlarıyla doldurabilirsiniz.
+
+<Steps>
+  1. Figma için Crowdin eklentisini açın.
+  2. **Dizgiler** sekmesine gidin ve **Crowdin’den Dizgileri Önizle** bölümünü genişletin.
+  3. **Çoğaltılmış sayfada önizle** onay kutusunun seçili olduğundan emin olun.
+  4. **Anahtar adları ile oluştur**’u seçin.
+  5. Figma’da önizlemek istediğiniz içeriği seçin: **Tüm Kareler** veya **Seçilen Kareler**.
+</Steps>
+
+### Dizgileri Süzme
+
+**Dizgiler** sekmesindeki dizgileri, dosya veya bağlantı durumu gibi çeşitli ölçütlere göre süzebilirsiniz. Süzgeç yan panelini açmak için <Icon name="mdi:filter-variant" class="inline-icon" /> simgesine tıklayın. Burada, dizgileri görüntülemek veya sadece şu anki metin seçiminize bağlantılı dizgileri (örn. seçilen metin öğeleri, bütün bir çerçeve veya birden çok çerçeve) görüntülemek için dosyaları seçebilirsiniz. Tüm süzgeç seçeneklerini temizlemek için **Sıfırla**’ya tıklayın.
+
+## Pazarlama Görselleri Yerelleştirme
+
+Broşürler ve afişler gibi sabit sayfaları yerelleştirmek için **Sayfalar** sekmesini kullanın. Bu sekmede, çevirmenler için bağlama sahip metinleri Crowdin’e gönderebilir ve çevrilmiş kopyaları Figma’ya geri yükleyebilirsiniz.
+
+<Image src={pagesTab} alt="Figma Eklentisi Sayfalar Sekmesi" class="width-xl" />
+
+<Aside type="caution" title="Limitations">
+  [Dizgi Tabanlı](/tr/creating-project/#dizgi-tabanlı-proje) projelerle çalışırken Sayfalar sekmesi ve diğer bazı eklenti ayarları kullanılamayabilir.
+</Aside>
+
+### Crowdin’e Çeviri için Metinleri Gönderme
+
+Bir Figma dosyasından ya seçilen ya da tüm çerçevelerden gelen çeviri için metni gönderebilirsiniz. Çevirmenler, liste görünümünde bu metinlerle çalışabilecek ve tasarımları daha da yüksek çeviri kalitesi için ek bir bağlam olarak kullanacaklar.
+
+Crowdin’de, bir *figma-plugin* kök klasörü oluşturulacaktır. İçinde her çerçeve için HTML dosyaları içeren Figma dosyanızdan sonra adlandırılan bir alt klasör içerecek.
+
+Çeviri amacıyla Figma tasarımlarını göndermek için şu adımları izleyin:
+
+<Steps>
+  1. Gerekli Figma dosyasını açın.
+  2. **Eklentiler > Figma için Crowdin**’e gidin.
+  3. **Sayfalar** > **Figma’dan Crowdin’e** bölümünde çevirmek istediğiniz içeriği seçin: **Tüm Çerçeveler** veya **Seçilen Çerçeveler**.
+  4. Bir sonraki ekranda, yüklenen çerçevelerin Crowdin’de çeviri için kullanılabilir olacağı hedef dilleri seçin. Varsayılan olarak **Tüm diller** seçilidir.
+  5. *(İsteğe bağlı)* Uzun metinleri Crowdin’e göndermeden önce cümleler gibi daha küçük bölümlere ayırmak için **İçerik Bölümleme**’yi seçin.
+  6. **Tüm Çerçeveleri Gönder**’e (veya **Seçilen Çerçeveleri Gönder**’e) tıklayın.
+</Steps>
+
+Kaynak dosyalar Crowdin projenize yüklendiğinde, katkıda bulunanları bunları çevirmeye ve düzeltmeye davet edebilirsiniz.
+
+<ReadMore>
+  [Çeviri stratejileri](/tr/translation-strategies/) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+### Crowdin’den Figma’ya Çevirileri Yükleme
+
+Çevrilen kopyayı Figma içinde denemek veya çok dilli varlıklar oluşturmak istediğinizde metinleri Figma ve Crowdin projeleri arasında eşitleyebilirsiniz.
+
+Çevrilen kopyaları Figma’ya yüklemek için şu adımları izleyin:
+
+<Steps>
+  1. Gerekli Figma dosyasını açın.
+  2. **Eklentiler > Figma için Crowdin**’e gidin.
+  3. **Sayfalar** > **Crowdin’den Figma’a** bölümünde, çevirileri uygulamak istediğiniz içeriği seçin: **Tüm Çerçeveler** veya **Seçilen Çerçeveler**.
+  4. Bir sonraki ekranda çevirileri içe aktarmak istediğiniz bir veya daha fazla dili seçin. Her dil için çeviri ilerlemesini doğrudan bu listeden izleyebilirsiniz. Bu ilerleme, Crowdin projeniz içerisindeki *figma-plugin* kök klasöründe özellikle bulunan dosyaların çeviri durumunu yansıtır.
+  5. *(İsteğe bağlı)* İçe aktarılan çevrilmiş çerçeveleri ayrı bir sayfa oluşturmak yerine şu anki Figma sayfanıza yerleştirmek için **Şu anki sayfada çevirileri birleştir** seçeneğini seçin.
+  6. **Tüm Çerçeveleri İçe Aktar**’a (veya **Seçilen Çerçeveleri İçe Aktar**’a) tıklayın.
+</Steps>
+
+Figma’ya çevirilerin yüklenmesinden sonra değiştirilen dosya, her hedef dil için çevirilerin yer aldığı ayrı bir çerçeve içerecek. Yeni yüklenen çevrilmiş sürümler, önceden yüklediğiniz sürümleri geçersiz kılmayacak. Artık ihtiyacınız olmayan çevrilmiş kopyaları her zaman silebilirsiniz.
+
+Eğer **Şu anki sayfada çevirileri birleştir**’i seçerseniz, çevrilmiş çerçeveler doğrudan şu anda çalışmakta olduğunuz sayfaya eklenecektir.
+
+If you'd like the newly uploaded translated versions to override the previously uploaded ones, open the plugin **Settings** and select **Override existing translations**.
+
+### Eklentiyi Figma Buzz ile Kullanma :badge[Yeni]{variant=success}
+
+Figma için Crowdin eklentisi, pazarlama ve reklam içeriği oluşturmak için tasarlanmış yeni bir alan olan [Figma'nın Buzz düzenleyicisi](https://www.figma.com/buzz/) ile tamamen uyumludur. Bu bütünleştirme, sosyal medya varlıklarını, dijital reklamları ve diğer tanıtım görsellerini yerelleştiren takımlar için idealdir.
+
+Eklentiyi Buzz’da kullanırken, **Sayfalar** sekmesinin basitleştirilmiş bir sürümünü doğrudan sol kenar çubuğunda bulacaksınız. İş akışı Buzz düzenleyici için en iyi hale getirilmiştir:
+
+* **Odaklanmış İşlevsellik:** Sadece **Sayfalar** sekmesi mevcuttur ve görsel yerelleştirme için ihtiyacınız olan özelliklere doğrudan erişmenizi sağlar.
+* **Varlık Tabanlı Seçim:** Çerçeve seçmek yerine varlıklarla çalışacaksınız. Düğmeler, Buzz terminolojisiyle eşleşmesi için **Seçilmiş Varlıklar** olarak etiketlenmiştir.
+
+Figma Buzz’da tasarımlarınızı yerelleştirmek için şu adımları izleyin:
+
+<Steps>
+  1. Sol kenar çubuğundan Crowdin eklentisini açın.
+  2. Buzz düzenleyicisinde çevirmek istediğiniz bir veya daha fazla varlığı seçin.
+  3. **Figma’dan Crowdin’e** bölümünde **Seçilmiş Varlıklar**’a tıklayın. Bir sonraki ekranda hedef dilleri seçin ve **Seçilmiş Varlıkları Gönder**’e tıklayın.
+  4. Çeviriler hazır olduktan sonra **Crowdin’den Figma’ya** bölümüne gidin ve **Seçilmiş Varlıklar**’a tıklayın. Bir sonraki ekranda içe aktarmak istediğiniz hedef dilleri seçin ve çevirileri uygulamak için **Seçilmiş Varlıkları İçe Aktar**’a tıklayın.
+</Steps>
+
+## Sözde Yerelleştirme
+
+Çeviriler tamamlanmadan önce bile, sözde yerelleştirme kullanılarak uygulamanızın yerelleştirilmeye hazır olup olmadığını deneyebilirsiniz. Bu özellik, proje yerelleştirmesi başlamadan önce kaynak dizgilerinin değiştirilmesi gerekip gerekmediğini denetlemek için uygulamanın kullanıcı arayüzünün farklı dillerde nasıl görüneceğini benzetmenizi sağlar.
+
+Denemek istediğiniz içeriğe bağlı olarak Figma için Crowdin eklentisindeki **Dizgiler** veya **Sayfalar** sekmesini kullanabilirsiniz.
+
+<Tabs syncKey="figmaMode">
+  <TabItem label="Dizgiler sekmesi">
+    <Steps>
+      1. Gerekli Figma dosyasını açın.
+      2. **Eklentiler > Figma için Crowdin**’e gidin.
+      3. **Dizgiler** > **Crowdin’den Dizgileri Önizle** bölümünde, **Çoğaltılmış sayfada önizle**’nin seçildiğinden emin olun.
+      4. **Sözde yerelleştirme**’yi seçin.
+      5. Sözde yerelleştirmeyle denemek istediğiniz içeriği seçin: **Tüm Çerçeveler** veya **Seçilen Çerçeveler**.
+      6. **Sözde yerelleştirme** ileti öğesinde, önceden tanımlanmış ön ayarlardan seçebilir ve ayarları tercihlerinize göre yapılandırabilirsiniz.
+      7. **Gönder**’e tıklayın.
+    </Steps>
+    <Aside>
+      Sözde yerelleştirme oluşturmadan önce Crowdin dizgilerinizin metin öğeleriyle bağlantılandığından emin olun.
+    </Aside>
+  </TabItem>
+  <TabItem label="Sayfalar sekmesi">
+    <Steps>
+      1. Gerekli Figma dosyasını açın.
+      2. **Eklentiler > Figma için Crowdin**’e gidin.
+      3. **Sayfalar** > **Sözde yerelleştirme** bölümünde, sözde yerelleştirme ile denemek istediğiniz içeriği seçin: **Tüm Çerçeveler** veya **Seçilen Çerçeveler**.
+      4. **Sözde yerelleştirme** ileti öğesinde, önceden tanımlanmış ön ayarlardan seçebilir ve ayarları tercihlerinize göre yapılandırabilirsiniz.
+      5. **Gönder**’e tıklayın.
+    </Steps>
+    <Aside>
+      Sözde yerelleştirme oluşturmadan önce çerçevelerinizi Figma’dan Crowdin’e yüklediğinizden emin olun.
+    </Aside>
+  </TabItem>
+</Tabs>
+
+<ReadMore>
+  [Sözde yerelleştirme](/tr/developer/pseudolocalization/) ve ayarları hakkında daha fazlasını okuyun.
+</ReadMore>
+
+## Dev Mode’da Figma için Crowdin Eklentisi
+
+Figma’nın Dev Mode’u, tasarımcıların ve geliştiricilerin işbirliği yapmasına izin verir, uygulamada doğruluğu ve tasarımdan koda sorunsuz geçişi sağlar.
+
+<ReadMore>
+  [Figma Dev Mode](https://help.figma.com/hc/en-us/articles/15023124644247-Guide-to-Dev-Mode) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+Figma için Crowdin eklentisinin Dev Mode ile bütünleştirmesi, her iki platformun işlevselliğini genişleterek tasarım ortamında yerelleştirme sürecini geliştirir. Figma’daki Dev Mode salt okunur olsa da Figma için Crowdin eklentisinin yetenekleri için belirli sınırlamalar uygulanır:
+
+**Ne Yapabilirsiniz**:
+
+* Dizgileri görüntülemek ve yönetmek için **Dizgiler** sekmesine erişin.
+* Dosya, anahtar, bağlam ve etiketler dahil dizgi ayrıntılarını keşfedin.
+* Verimli iş akışı için dizgi anahtarlarını hızla kopyalayın.
+
+Dev Mode’da bulunmayan özellikler: Crowdin’e yeni dizgiler ekleme, dizgileri bağlantılama, ekran görüntüleri gönderme, çevirileri önizleme, dizgileri düzenleme, gizleme veya silme.
+
+### Dev Mode’da Figma için Crowdin Eklentisini Kullanma
+
+Sınırlamalara rağmen Figma için Crowdin eklentisi Dev Mode’da değerini korur, geliştiricilere metin öğeleri yönetimine yönelik kolaylaştırılmış bir yaklaşım sunar. İşte tipik bir kullanım durumu:
+
+<Steps>
+  1. [Dev Mode](https://help.figma.com/hc/en-us/articles/15023124644247-Guide-to-Dev-Mode#01H8CR3K6VG21T3H9789QMV6CP)’a girin.
+  2. Sağ kenar çubuğunda *Eklentiler* sekmesine geçin.
+  3. **Figma için Crowdin**’e tıklayın\*\*.
+  4. **Dizgiler** sekmesinde, **Dizgileri süz**’e<Icon name="mdi:filter-variant" class="inline-icon" /> tıklayın ve **Seçilen metin öğelerine bağlantılı dizgileri göster**’i seçin.
+  5. Çerçevede gerekli metin öğesini seçin ve bu belirli dizgiyle ilgili gerekli tüm bilgileri (yani anahtar, bağlam, depolandığı dosya, etiketler) görüntülemek için dizgi listesindeki <Icon name="mdi:info-outline" class="inline-icon" /> simgesinin üzerine gelin.
+  6. *(İsteğe bağlı)* Kodda daha fazla kullanmak için **Dizgi anahtarını panoya kopyala**’ya tıklayın.
+</Steps>
+
+### VS Code için Figma ile Uyumluluk
+
+Ayrıca Figma için Crowdin eklentisi, Figma için Crowdin ile sorunsuz bir şekilde bütünleşerek işlevselliğini bu ortamı kullanan geliştiricilere kadar genişletir.
+
+<ReadMore>
+  [VS Kodu için Figma](https://help.figma.com/hc/en-us/articles/15023121296151-Figma-for-VS-Code) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+## Troubleshooting
+
+### Büyük Figma Dosyalarında Ekran Görüntüsü Oluşturma Sorunları
+
+Büyük Figma dosyalarından ekran görüntüleri içeren dizgiler yüklenirken kullanıcılar performansta yavaşlama veya Figma’da donma yaşayabilir. Bu sorun, metin öğeleri büyük bir üst seviye çerçeveye yerleştirildiğinde ortaya çıkar.
+
+Figma’dan Crowdin’e bir dizgi eklediğinizde eklenti:
+
+1. Metin öğesini içeren üst seviye çerçeveyi tanımlar.
+2. Figma API’sini kullanarak bu çerçeveyi bir resme dönüştürür.
+3. Görüntüyü ekran görüntüsü olarak Crowdin’e yükler.
+
+Eklenti her zaman hiyerarşideki en üst seviye çerçeveyi arar ve çerçeve olmayan bir öğeyle (bölüm veya grup gibi) karşılaştığında durur. Eğer üst seviye çerçeve çok büyükse ekran görüntüsü oluşturmak performans sorunlarına neden olabilir.
+
+Örneğin:
+
+* `bölüm` > `grup` > **`çerçeve`** > `metin` → Eklenti, ekran görüntüsünü `çerçeve`’den yakalar.
+* **`çerçeve 1`** > `çerçeve 2` > `çerçeve 3` > `metin` → Eklenti, ekran görüntüsünü `çerçeve 1`’den yakalar.
+
+Yavaşlamaları önlemek için Figma dosyanızı, üst seviye çerçevelerin sadece ilgili kullanıcı arayüzü bağlamını içerecek şekilde yeniden yapılandırın. Tüm kullanıcı arayüzü öğelerini tek bir büyük çerçeveye yerleştirmek yerine, bunları daha küçük, mantıksal bölümlere ayırın.
+
+### Dizgileri Bağlantılarken Yazı Tipi Değiştirme
+
+Figma’da çalışırken, yerel olarak eksik olan yazı tipleri, Figma için Crowdin eklentisi kullanılarak dizgileri bağlantıladıktan sonra beklenmedik değişikliklere neden olabilir.
+
+Bu durum genellikle şu durumlarda meydana gelir:
+
+* Orijinal tasarım, yerel Figma ortamınızda yüklü olmayan bir yazı tipi kullandığı zaman.
+* Figma, eksik yazı tiplerini tuvalin sol üst köşesinde ve sağ kenar çubuğunun **Tipografi** bölümündeki yazı tipi adının yanında gösterilen özel bir **A?** simgesiyle işaretlediği zaman.
+* Eksik yazı tipine sahip bir metin öğesini seçtiğinizde Figma, onu değiştirmeyi teklif eden **Eksik yazı tipi** ileti öğesini görüntülediği zaman.
+
+Eğer bir Crowdin dizgisini böyle bir metin öğesine bağlantılarsanız, Figma otomatik olarak eksik yazı tipini varsayılan kullanılabilir bir yazı tipiyle (örn. Roboto) değiştirecektir. Bu beklenen bir davranıştır. Eklenti orijinal yazı tipini korumaya çalışır, ancak yerel sisteminizde mevcut olmadığında Figma metnin görünür ve düzenlenebilir kalmasını sağlamak için onu değiştirir.
+
+Bu sorun hemen fark edilmeyebilir. Bazı kullanıcılar yazı tipi değişikliğini ancak ekran görüntülerini Figma’dan Crowdin’e yükledikten sonra algılar ve bu da karışıklığa neden olabilir.
+
+Bunu önlemek için:
+
+* Dizgileri bağlantılamadan önce eksik yazı tipi göstergelerini (**A?**) gözden geçirin.
+* Orijinal tasarımda kullanılan yazı tiplerinin Figma’nızda yüklü ve kullanılabilir olduğundan emin olun.
+* Eğer gerekirse doğru yazı tipi ayarını onaylamak için tasarımcıyla koordineli çalışın.
