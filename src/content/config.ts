@@ -24,6 +24,7 @@ export const collections = {
         'editLink.error': z.string().optional(),
         'feedback.question': z.string().optional(),
         'feedback.placeholder': z.string().optional(),
+        'feedback.required': z.string().optional(),
         'feedback.submit': z.string().optional(),
         'feedback.success': z.string().optional(),
         'footer.status': z.string().optional(),
