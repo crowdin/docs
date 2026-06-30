@@ -61,19 +61,19 @@ export default [
       },
       {
         ...sidebarLabel('crowdinApiFileBased'),
-        link: '/developer/api/v2/'
+        link: 'https://support.crowdin.com/developer/api/v2/'
       },
       {
         ...sidebarLabel('crowdinApiStringBased'),
-        link: '/developer/api/v2/string-based/'
+        link: 'https://support.crowdin.com/developer/api/v2/string-based/'
       },
       {
         ...sidebarLabel('enterpriseApiFileBased'),
-        link: '/developer/enterprise/api/v2/'
+        link: 'https://support.crowdin.com/developer/enterprise/api/v2/'
       },
       {
         ...sidebarLabel('enterpriseApiStringBased'),
-        link: '/developer/enterprise/api/v2/string-based/'
+        link: 'https://support.crowdin.com/developer/enterprise/api/v2/string-based/'
       },
       { slug: path('graphql-api') },
       { slug: path('croql') },

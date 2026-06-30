@@ -127,7 +127,29 @@ By default, images take up the entire width of the content container. To make th
 
 ### Criteria for including a screenshot
 
-See the GitHub's [Creating screenshots](https://docs.github.com/en/contributing/writing-for-github-docs/creating-screenshots) guide.
+A screenshot should add something the text cannot. Default to **not** adding one — it should support the text, not repeat it. If the text alone already gets the point across, leave the screenshot out. See GitHub's [Creating screenshots](https://docs.github.com/en/contributing/writing-for-github-docs/creating-screenshots) guide for the general approach.
+
+**Add a screenshot when:**
+
+- The element is hard to find or its location isn't obvious (for example, hidden in a menu or dropdown, or one control among many).
+- The interface has competing choices a user could easily get wrong.
+- It shows a visual result or layout that's hard to describe in words (a rendered preview, a complex dialog, a chart or diagram).
+- It's an orientation checkpoint in a long, multi-step procedure.
+
+**Skip a screenshot when:**
+
+- The text next to it already describes everything it shows.
+- It's a standard, self-evident control (a labeled button, a simple form, a plain table) recognizable from its label.
+- It's a single icon — reference it inline with the `<Icon>` component instead.
+- All its information is already in the text — instead, put the location into the step (for example, "click [icon] next to the [item] and select [option]").
+- It shows text, code, or output — use real text instead.
+- It contains volatile or demo data (percentages, counts, test names) or personal information.
+
+**Capturing screenshots:**
+
+- Crop to the relevant part of the screen and leave out UI that doesn't help illustrate the point.
+- Use realistic content — no lorem ipsum or personal data.
+- For a dialog with collapsible sections, capture it in the default (collapsed) state with a bit of realistic data — not everything expanded. It's what users see, and it avoids repeating fields the text already lists.
 
 ## File-based/String-based content differentiation
 
@@ -167,9 +189,9 @@ The yml specification for the API documentation is located in the `src/assets/ap
 
 The API documentation is implemented using custom pages (`src/pages/developer/**`). These pages are not processed by Astro during the build process, so we need to manually move their dependencies (scripts, specifications, styles) to the `dist` directory. This is done in the `vite` configuration within the `astro.config.mjs` file.
 
-Also, scss files should be compiled using the `npm run build:api` command, as Vite doesn't "see" them and won't bundle them automatically (due to the use of custom html pages).
+Also, scss files should be compiled using the `pnpm run build:api` command, as Vite doesn't "see" them and won't bundle them automatically (due to the use of custom html pages).
 
-You can use `npm run watch:api` to watch for changes in the API documentation during development.
+You can use `pnpm run watch:api` to watch for changes in the API documentation during development.
 
 ## Adding a new language
 

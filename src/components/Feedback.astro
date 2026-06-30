@@ -2,7 +2,7 @@
 import { Icon } from 'astro-icon/components';
 ---
 
-<div class="flex flex-col border border-zinc-300 dark:border-zinc-700 p-3 rounded-xl w-72">
+<div class="flex flex-col border border-zinc-300 dark:border-zinc-700 p-3 rounded-xl w-80">
     <div id="vote-buttons" class="flex gap-4 mx-auto">
         <span>{Astro.locals.t('feedback.question')}</span>
         <div class="flex gap-3">
@@ -19,6 +19,7 @@ import { Icon } from 'astro-icon/components';
                 rows="3"
                 maxlength="250"
                 placeholder={Astro.locals.t('feedback.placeholder')}></textarea>
+            <span id="feedback-error" class="hidden text-sm text-red-500">{Astro.locals.t('feedback.required')}</span>
         </div>
         <button
             id="submit-button"
@@ -49,6 +50,10 @@ import { Icon } from 'astro-icon/components';
         return document.getElementById('feedback-comment') as HTMLTextAreaElement;
     }
 
+    function getErrorMessage(): HTMLElement {
+        return document.getElementById('feedback-error') as HTMLElement;
+    }
+
     getLikeButton()?.addEventListener('click', function() {
         toggleForm('like');
     });
@@ -68,6 +73,10 @@ import { Icon } from 'astro-icon/components';
         }
     });
 
+    getCommentTextarea()?.addEventListener('input', function() {
+        getErrorMessage().classList.add('hidden');
+    });
+
     function toggleForm(type: FeedbackType): void {
         const feedbackForm = getFeedbackForm();
         const activeClass = 'text-accent-700';
@@ -83,6 +92,7 @@ import { Icon } from 'astro-icon/components';
             getLikeButton().classList.remove(activeClass);
             getDislikeButton().classList.remove(activeClass);
             getCommentTextarea().value = '';
+            getErrorMessage().classList.add('hidden');
             return;
         }
 
@@ -99,6 +109,14 @@ import { Icon } from 'astro-icon/components';
     }
 
     async function submitFeedback() {
+        const comment = getCommentTextarea().value.trim();
+
+        if (!comment) {
+            getErrorMessage().classList.remove('hidden');
+            getCommentTextarea().focus();
+            return;
+        }
+
         const host = import.meta.env.PUBLIC_DIRECTUS_HOST;
         const feedbackType = getFeedbackForm().dataset.feedbackType as FeedbackType;
 
@@ -115,7 +133,7 @@ import { Icon } from 'astro-icon/components';
                 createItem('feedback' as never, {
                     type: feedbackType,
                     page: window.location.pathname,
-                    comment: getCommentTextarea().value,
+                    comment: comment,
                 })
             );
         } catch (error) {

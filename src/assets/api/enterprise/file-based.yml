@@ -24143,6 +24143,7 @@ components:
             - x_ai
             - watsonx
             - deepseek
+            - microsoft_foundry
             - custom_ai
         credentials:
           description: "User’s own AI provider credentials.\n\n__Note__: Use only if `useSystemCredentials` is set to false."
@@ -24166,6 +24167,8 @@ components:
             -
               $ref: '#/components/schemas/ai.provider.credentials.deepseek'
             -
+              $ref: '#/components/schemas/ai.provider.credentials.microsoft_foundry'
+            -
               $ref: '#/components/schemas/ai.provider.credentials.custom_ai'
         config:
           deprecated: true
@@ -24174,7 +24177,7 @@ components:
           type: boolean
           default: true
         useSystemCredentials:
-          description: "Enables the paid service AI provider via Crowdin.\n\n__Note__: Set to true if `credentials` is not provided. Not supported for `custom_ai`, `x_ai`, `watsonx`, `deepseek` and `google_gemini_ai_studio` types."
+          description: "Enables the paid service AI provider via Crowdin.\n\n__Note__: Set to true if `credentials` is not provided. Not supported for `custom_ai`, `x_ai`, `watsonx`, `deepseek`, `microsoft_foundry` and `google_gemini_ai_studio` types."
           type: boolean
           default: false
       type: object
@@ -24448,6 +24451,37 @@ components:
           description: 'AI Provider module key'
           type: string
       type: object
+    ai.provider.credentials.microsoft_foundry:
+      title: 'Microsoft Foundry'
+      required:
+        - deployments
+      properties:
+        deployments:
+          description: 'Deployed models of the Foundry project. Each entry is self-contained — copy its Target URI and API key from the deployment details page in the Foundry portal (deployments of one project may live on different connected Azure resources)'
+          type: array
+          items:
+            required:
+              - deploymentName
+              - targetUri
+              - apiKey
+            properties:
+              deploymentName:
+                description: 'Deployment name (used as the model id)'
+                type: string
+              targetUri:
+                description: 'Deployment Target URI (its path encodes the API the deployment is served by, e.g. /anthropic/v1/messages or /openai/v1/chat/completions)'
+                type: string
+              apiKey:
+                description: 'API key of the Azure resource hosting the deployment'
+                type: string
+            type: object
+          minItems: 1
+        headers:
+          description: "Custom HTTP headers sent with every request to the provider. Authorization headers are managed by the provider and can't be overridden."
+          type: object
+          additionalProperties:
+            type: string
+      type: object
     EnterpriseAiProviderCollectionResource:
       description: 'AI Provider Collection Resource'
       type: object
@@ -24591,6 +24625,8 @@ components:
               $ref: '#/components/schemas/ai.provider.credentials.watsonx'
             -
               $ref: '#/components/schemas/ai.provider.credentials.deepseek'
+            -
+              $ref: '#/components/schemas/ai.provider.credentials.microsoft_foundry'
             -
               $ref: '#/components/schemas/ai.provider.credentials.custom_ai'
         config:
@@ -45916,6 +45952,11 @@ components:
             languageId: fr
             storageId: 67890
         -
+          op: replace
+          path: /2814
+          value:
+            text: 'new translation text'
+        -
           op: remove
           path: /2815
     TranslationMassOperation:
@@ -45930,12 +45971,14 @@ components:
           enum:
             - remove
             - add
+            - replace
       type: object
       discriminator:
         propertyName: op
         mapping:
           remove: '#/components/schemas/TranslationMassOperationRemove'
           add: '#/components/schemas/TranslationMassOperationAdd'
+          replace: '#/components/schemas/TranslationMassOperationReplace'
     TranslationMassOperationRemove:
       description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       type: object
@@ -45950,6 +45993,31 @@ components:
               format: json-pointer
               enum:
                 - '/{translationId}'
+    TranslationMassOperationReplace:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/TranslationMassOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - '/{translationId}'
+            value:
+              required:
+                - text
+              properties:
+                text:
+                  description: 'Updated translation text'
+                  type: string
+                  example: 'new translation text'
+              type: object
     TranslationMassOperationAdd:
       description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:

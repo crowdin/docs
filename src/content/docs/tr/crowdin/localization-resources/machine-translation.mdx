@@ -1,0 +1,226 @@
+---
+title: Makine Çevirisi
+description: Crowdin’de makine çevirisi motorlarını nasıl yapılandıracağınızı öğrenin
+slug: machine-translation
+---
+
+import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import machineTranslationSuggestions from '!/crowdin/localization-resources/mt_suggestions.png';
+import deeplGlossaryConfiguration from '!/crowdin/localization-resources/deepl_glossary_configuration.png';
+import automlCustomGlossaryConfiguration from '!/crowdin/localization-resources/automl_custom_glossary_configuration.png';
+
+Crowdin ile bütünleştirilmiş makine çeviri motorları, Google Çeviri ve AutoML Translation, Microsoft Translate ve diğerleri gibi hizmetlerden çeviri önerileri sağlar.
+
+MT suggestions are displayed in the Editor’s TM and MT Suggestions section in the order of the engines' configuration dates. To prioritize a specific engine's suggestions, configure that engine first.
+
+Ayrıca MÇ motorlarını kullanarak [Otomatik Çeviri](/tr/auto-translation/) gerçekleştirebilirsiniz.
+
+<Image src={machineTranslationSuggestions} alt="Düzenleyicide Makine Çevirisi önerileri" />
+
+<LinkCard title="Add More Machine Translation Engines" description="Install more machine translation engines from the Crowdin Store." href="https://store.crowdin.com/tags/machine-translation" target="_blank" />
+
+Varsayılan olarak, makine çevirileri her proje için etkinleştirilir, ancak proje üyelerinin bunları kullanabilmesi için çeviri motorlarının yapılandırılması gerekir. Eğer belirli projeler için bu seçeneği etkisizleştirmek istiyorsanız, [Proje Ayarları](/tr/project-settings/machine-translation/)’nda **Makine çevirisi önerilerini göster** işaretini kaldırın.
+
+### Makine Çeviri Motorlarını Yapılandırma
+
+Makine çeviri motorlarını yapılandırmak için şu adımları izleyin:
+
+<Steps>
+  1. Profilinizin ana sayfasını açın ve sol kenar çubuğundaki **MÇ**’yi seçin.
+  2. Yapılandırmak istediğiniz MÇ motorunun yanındaki <Icon name="mdi:dots-horizontal" class="inline-icon" /> simgesine tıklayın ve **Düzenle**’yi seçin. Alternatif olarak, sadece gerekli MÇ moturuna çift tıklayın.
+  3. **Etkinleştirildi**’yi seçin.
+  4. Seçilen çeviri motorunun kimlik bilgilerini girin.
+  5. *(İsteğe bağlı)* **Gelişmiş ayarlar** bölümünde aşağıdaki seçenekleri yapılandırabilirsiniz:
+     * MÇ motorunun çeviri sağlaması gereken dilleri seçin. Alternatif olarak tüm dilleri etkinleştirmek için boş bırakın.
+     * MÇ motorunu kullanmak istediğiniz projeleri seçin. Alternatif olarak tüm projelerde etkinleştirmek için boş bırakın.
+  6. **Güncelle**’ye tıklayın.
+</Steps>
+
+<Aside type="caution">
+  Makine çeviri motorları, proje sahibinin hesabı kullanılarak yapılandırılmak zorundadır.
+</Aside>
+
+### Microsoft Translator
+
+Go to [Windows Azure](https://portal.azure.com/#blade/HubsExtension/BrowseAll) to access your Microsoft Translator API subscription key. Translator Metin API, 2.000.000 çevrilmiş karakter içeren ücretsiz bir katman sunar.
+
+<Aside>
+  If the *Resource Location* associated with your Microsoft Translator Text API key is other than *global*, please make sure to specify it along with other credentials while configuring the Microsoft Translator MT engine in your Crowdin account.
+</Aside>
+
+<LinkCard title="How to sign up for the Microsoft Translator Text API" href="https://docs.microsoft.com/en-us/azure/cognitive-services/translator/translator-text-how-to-signup" target="_blank" />
+
+### DeepL Translator
+
+DeepL API is accessible only with the DeepL API Free and Pro subscription plans ([For developers](https://www.deepl.com/pro.html#developer) tab). Navigate to the [DeepL Pro Account page](https://www.deepl.com/pro-account.html) to get a unique Authentication Key. DeepL API planının bu özelliği sağlayan tek plan olduğunu lütfen unutmayın.
+
+If you’re subscribed to a different subscription plan, you can switch to the DeepL API plan in your [personal account settings](https://www.deepl.com/pro-account.html). DeepL also provides a [simulator](https://www.deepl.com/docs-api/simulator) that allows you to check your Authentication Key in action.
+
+#### DeepL Glossary Configuration
+
+The DeepL Translator supports multilingual glossaries, allowing you to ensure consistent translation of your domain-specific terminology. Crowdin’de birden çok sözlük yapılandırabilir ve her birine belirli dil çifti atayabilirsiniz.
+
+To configure your DeepL glossaries, follow these steps:
+
+<Steps>
+  1. **Sözlükler** açılır menüsünden bir sözlük seçin. This list is automatically populated from your connected DeepL account.
+  2. **Sözlük dil çiftleri** açılır menüsünden, seçilen sözlüğün uygulanmasının gerektiği bir veya daha fazla dil çiftini seçin.
+  3. *(İsteğe bağlı)* Başka bir sözlük yapılandırmak için <Icon name="mdi:plus" class="inline-icon" /> simgesine tıklayın ve yukarıdaki adımları tekrarlayın. Bir sözlük yapılandırmasını kaldırmak için <Icon name="mdi:minus" class="inline-icon" /> simgesine tıklayın.
+  4. **Güncelle**’ye tıklayın.
+</Steps>
+
+<Image src={deeplGlossaryConfiguration} alt="DeepL Glossary Configuration" />
+
+<Aside type="tip" title="Mapping Language Variants">
+  Crowdin farklı dil çeşitlerini eşlemenizi sağlar. Örneğin, eğer DeepL’deki sözlüğünüz "İngilizce" gibi genel bir kaynak dil kullanıyorsa, bunu Crowdin projenizdeki "İngilizce, Amerika Birleşik Devletleri" gibi belirli bir değişkenle eşleyebilirsiniz. This ensures the glossary is applied correctly even if your project’s source language is a specific dialect (e.g., English, Canada; Spanish, Mexico).
+</Aside>
+
+### ModernMT
+
+ModernMT Gerçek zamanlı çeviri API’sine Gerçek zamanlı veya Döngüdeki İnsan abonelik planlarıyla erişilebilir. Navigate to the [ModernMT Dashboard](https://www.modernmt.com/dashboard/) to get your License key. If you’re subscribed to a different subscription plan, you can switch to the Real time or Human-in-the-loop plan via the [Manage Plan](https://www.modernmt.com/dashboard/manage-plan) page.
+
+### Amazon Translate
+
+Amazon Translate’in ücretsiz sürümü 12 ay boyunca kullanılabilir. Sonrasında, çevrilen karakter sayısı için ödeme yapmanız gerekecektir. Crowdin, Amazon Translate tarafından sağlanan Standart Metin Çevirisi türünü kullanır. Read more about [available Amazon Translate pricing options](https://aws.amazon.com/translate/pricing/).
+
+Read more about [obtaining your access key](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys) needed for Amazon Translate integration.
+
+To use your [Custom Terminology](https://docs.aws.amazon.com/translate/latest/dg/how-custom-terminology.html), follow these steps:
+
+<Steps>
+  1. AWS Bölgenizi belirtin (örn., us-east-2).
+  2. Özel Terminolojinizi ilgili açılır menüden seçin.
+</Steps>
+
+<QuestionAnswer title="What are the minimal scopes for an IAM user required to set up Amazon Translate to be used in Crowdin?">
+  The minimal IAM scopes required depend on whether you're using terminologies or not:
+
+  **Without terminologies:**
+
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "translate:TranslateText",
+        "Resource": "*"
+      }
+    ]
+  }
+  ```
+
+  **With terminologies:**
+
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "translate:TranslateText",
+          "translate:GetTerminology",
+          "translate:ListTerminologies"
+        ],
+        "Resource": "*"
+      }
+    ]
+  }
+  ```
+
+  Alternatively, you can use the [AWS managed policy: TranslateReadOnly](https://docs.aws.amazon.com/translate/latest/dg/security-iam-awsmanpol.html#security-iam-awsmanpol-TranslateReadOnly), which provides the necessary read-only access to Amazon Translate.
+
+  <Aside>The `"Resource": "*"` allows access to all resources. For stricter security, consider limiting this to specific AWS regions or resources if applicable.</Aside>
+</QuestionAnswer>
+
+### Google Çeviri
+
+Google Çeviri’yi kullanmak için etkin bir faturalandırma profiline sahip Google Cloud hesabınız olmalıdır. Bulut Çeviri, kullanıma göre aylık olarak fiyatlandırılır. [Learn more](https://cloud.google.com/translate/pricing).
+
+Bütünleştirme amacıyla gerekli API anahtarını elde etmek için şu adımları izleyin:
+
+<Steps>
+  1. Go to [Google Cloud Console](https://console.cloud.google.com/). Varolan Google Cloud hesabına oturum açın veya yeni bir tane oluşturun.
+  2. Select an existing project or add a project using the **New Project**.
+  3. Go to [API & Services > Library](https://console.cloud.google.com/apis/library) and search for *Cloud Translation API*.
+  4. Click **Enable**.
+  5. Go to [API & Services > Credentials](https://console.cloud.google.com/apis/credentials/) and click **Create credentials > API key**.
+  6. Copy the API key and click **Close**.
+</Steps>
+
+### Google Cloud AutoML Translation
+
+AutoML Çevirisi’ni kullanmak için etkin bir faturalandırma profiline sahip Google Cloud hesabınız olmalıdır. Google AutoML Translation, çeviri için kaç karakter gönderdiğinize bağlı olarak aylık olarak fiyatlandırılır. [Learn more](https://cloud.google.com/translate/automl/pricing#translation_costs).
+
+Bir hizmet hesabı anahtarı oluşturmak ve bütünleştirme amacıyla gerekli kimlik bilgilerini elde etmek için şu adımları izleyin:
+
+<Steps>
+  1. Go to [Google Cloud Console](https://console.cloud.google.com/). Varolan Google Cloud hesabına oturum açın veya yeni bir tane oluşturun.
+  2. Select an existing project or add a project using the **New Project**.
+  3. Go to [API & Services > Library](https://console.cloud.google.com/apis/library) and search for *Cloud AutoML API*.
+  4. Click **Enable**.
+  5. Bir sonraki adım, bir hizmet hesabı özel anahtar çifti oluşturmaktır. Hizmet hesabı Crowdin tarafından kullanılır. Uygulamalar, yetkili API çağrıları yapmak için hizmet hesaplarını kullanır.
+</Steps>
+
+Kimlik doğrulamayı ayarlamak ve özel anahtarınızı oluşturmak için şu adımları izleyin:
+
+<Steps>
+  1. Go to [API & Services > Credentials](https://console.cloud.google.com/apis/credentials/).
+  2. Click **Create credentials > Service account**.
+  3. In the *Service account name* field, enter a name that describes what this service account will do.
+  4. Click **Create and continue**.
+  5. From the *Role list*, select *Project* > *Cloud Translation API Editor* and click **Continue**.
+  6. Click **Done**.
+  7. In the [API & Services > Credentials](https://console.cloud.google.com/apis/credentials/), click on the created service account.
+  8. Switch to the **Keys** tab.
+  9. Click **Add key > Create new key**.
+  10. **JSON**’u seçin ve **Oluştur**’a tıklayın. Anahtarınızı içeren bir JSON dosyası bilgisayarınıza indirilecektir.
+</Steps>
+
+#### Google Cloud AutoML Özel Sözlük Yapılandırması
+
+Google Cloud AutoML özel sözlük, etki alanına özgü terminolojinizi sürekli olarak çevirmenizi sağlar.
+
+Google Cloud AutoML özel sözlüğünüzü yapılandırmak için şu adımları izleyin:
+
+<Steps>
+  1. Profilinizin ana sayfasını açın ve sol kenar çubuğundaki **MÇ**’yi seçin.
+  2. **Google AutoML Translation** motorunun yanındaki <Icon name="mdi:dots-horizontal" class="inline-icon" /> simgesine tıklayın ve **Düzenle**’yi seçin.
+  3. JSON kimlik bilgilerinizi yükleyin.
+  4. Kaynak Konumunuzu belirtin (örn. us-central1).
+  5. Sözlüğünüzü ilgili açılır menüden seçin.
+  6. (İsteğe bağlı) Özel Modelinizi belirtin. Gerekirse, Özel Model ve Crowdin dilleri arasında dil eşlemeyi yapılandırın.
+</Steps>
+
+<Image src={automlCustomGlossaryConfiguration} alt="Google Cloud AutoML Özel Sözlük Yapılandırması" />
+
+## MÇ Motoru Kimlikleri
+
+MÇ motoru kimlik bilgilerinizi belirttikten sonra, sistem otomatik olarak benzersiz bir MÇ motoru kimliği atar. Later on, you can use these IDs in API requests for auto-translation via machine engines.
+
+MÇ motoru kimliğini, motor ayrıntılarını açtıktan sonra profilinizin **Makine Çevirisi** sekmesinde bulabilirsiniz.
+
+Alternatif olarak, [MÇ motoru kimliklerinizi API aracılığıyla da alabilirsiniz](/developer/api/v2/#tag/Machine-Translation-Engines/operation/api.mts.getMany).
+
+## Clearing MT Engine Cache
+
+MÇ motorları yeni özellikler veya modellerle güncellendiğinde, Crowdin’de önbelleğe alınan çeviriler artık en son çeviri yeteneklerini yansıtmayabilir. To display updated translations in the Editor’s **TM and MT Suggestions** section, clear the MT engine cache. Crowdin bu dizgiler için önbelleklenmiş MÇ önerilerini sakladığından, Düzenleyicide belirli dizgileri zaten görüntülediyseniz bu özellikle yararlı olabilir.
+
+To clear the cache for your configured MT engine, follow these steps:
+
+<Steps>
+  1. Profilinizin ana sayfasını açın ve sol kenar çubuğundaki **MÇ**’yi seçin.
+  2. Listede gerekli MÇ motorunda <Icon name="mdi:dots-horizontal" class="inline-icon" /> simgesine tıklayın.
+  3. Click **Clear cache**.
+</Steps>
+
+## Ayrıca Bakınız
+
+<CardGrid>
+  <LinkCard title="Auto-Translation" description="Speed up the translation process and ease the work of translators." href="/auto-translation/" />
+  <LinkCard title="Proje Ayarları" description="Configure machine translation settings for your project." href="/tr/project-settings/machine-translation/" />
+</CardGrid>
