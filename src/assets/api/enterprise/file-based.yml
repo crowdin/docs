@@ -192,10 +192,7 @@ paths:
           in: query
           description: 'Filter insights by dismissal flag. Omit to return both dismissed and active insights.'
           schema:
-            type: integer
-            enum:
-              - 0
-              - 1
+            type: boolean
         -
           name: status
           in: query
@@ -4807,11 +4804,7 @@ paths:
           in: query
           description: "Use to list directories recursively\n\n__Note:__ Works only when `directoryId` or `branchId` parameter is specified"
           schema:
-            type: integer
-            enum:
-              - 0
-              - 1
-            nullable: true
+            type: boolean
         -
           $ref: '#/components/parameters/PaginationLimit'
         -
@@ -5959,11 +5952,7 @@ paths:
           in: query
           description: "Use to list files recursively\n\n__Note:__ Works only when `directoryId` or `branchId` parameter is specified"
           schema:
-            type: integer
-            enum:
-              - 0
-              - 1
-            nullable: true
+            type: boolean
         -
           $ref: '#/components/parameters/PaginationLimit'
         -
@@ -10864,7 +10853,6 @@ paths:
         -
           $ref: '#/components/parameters/TaskIdInQuery'
         -
-          parameter: FileIdInQuery
           name: fileId
           in: query
           description: 'Filter the collection by the specified file id. Get via [List Files](#operation/api.projects.files.getMany)'
@@ -28903,9 +28891,9 @@ components:
           type: string
           format: json-pointer
           enum:
-            - /title
             - /description
-            - /snippet
+            - /definition
+            - /argumentDelimiter
       type: object
       discriminator:
         propertyName: op
@@ -29963,6 +29951,7 @@ components:
         - name
         - type
         - entities
+        - config
       properties:
         name:
           description: 'Field name'
@@ -30056,9 +30045,17 @@ components:
         config:
           type: object
         entities:
+          description: 'Entities that will be associated with field'
           type: array
           items:
-            type: integer
+            type: string
+            enum:
+              - project
+              - user
+              - task
+              - file
+              - translation
+              - string
             example: task
         createdAt:
           description: 'in UTC'
@@ -32064,8 +32061,6 @@ components:
           example: 2
       type: object
     GlossaryExportForm:
-      required:
-        - storageId
       properties:
         format:
           description: "Supported formats:\n * 'tbx'\n * 'tbx_v3'\n * 'csv'\n * 'xlsx'"
@@ -33860,7 +33855,7 @@ components:
     MtTranslateForm:
       required:
         - targetLanguageId
-        - string
+        - strings
       properties:
         languageRecognitionProvider:
           description: "Select a provider for language recognition\n\n__Note:__ Is required if the source language is not selected"
@@ -34695,7 +34690,6 @@ components:
     EnterprisePreTranslationForm:
       required:
         - languageIds
-        - fileIds
       properties:
         languageIds:
           description: 'Set of languages to which pre-translation should be applied. Get via [List Supported Languages](#operation/api.languages.getMany)'
@@ -35609,7 +35603,7 @@ components:
       type: object
       allOf:
         -
-          $ref: '#/components/schemas/CustomPlaceholderOperation'
+          $ref: '#/components/schemas/FileFormatSettingsOperation'
         -
           properties:
             value:
@@ -35672,7 +35666,7 @@ components:
       type: object
       allOf:
         -
-          $ref: '#/components/schemas/CustomPlaceholderOperation'
+          $ref: '#/components/schemas/ProjectPlaceholderOperation'
         -
           properties:
             value:
@@ -36090,7 +36084,7 @@ components:
           example: true
         qaApprovalsCount:
           description: 'Clear QA checks for translations with specific number of approvals'
-          type: number
+          type: integer
           default: 1
           example: 1
         qaCheckCategories:
@@ -37130,7 +37124,7 @@ components:
       type: object
     ProjectPlaceholderCreateForm:
       required:
-        - placeholderId
+        - customPlaceholderId
       properties:
         customPlaceholderId:
           description: 'Placeholder identifier'
@@ -37427,7 +37421,7 @@ components:
         -
           properties:
             data:
-              $ref: '#/components/schemas/EnterpriseProjectAiSettingsResource'
+              $ref: '#/components/schemas/EnterpriseProjectAiSettings'
     SystemStringsExporterSettingsCollectionResource:
       description: 'File Format Settings Collection Resource'
       type: object
@@ -43820,6 +43814,11 @@ components:
         $ref: '#/components/schemas/TagCreateForm'
     TagPositionScheme:
       title: 'Tag position'
+      required:
+        - x
+        - 'y'
+        - width
+        - height
       properties:
         x:
           type: integer
@@ -46054,7 +46053,7 @@ components:
         languageId:
           description: 'Language Identifier. Get via [List Languages](#operation/api.projects.languages.getMany)'
           type: string
-          example: 12345
+          example: uk
         storageId:
           description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
           type: integer
@@ -48022,7 +48021,7 @@ components:
           nullable: true
         status:
           description: 'Task status'
-          type: integer
+          type: string
           enum:
             - todo
             - in_progress
@@ -48150,7 +48149,7 @@ components:
           example: fr
         status:
           description: 'Task status'
-          type: integer
+          type: string
           enum:
             - todo
             - in_progress
@@ -48493,7 +48492,7 @@ components:
         precedingTaskId:
           description: 'Translate Task Identifier. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
           type: integer
-          example: '1'
+          example: 1
         type:
           description: "Task type:\n * 1 - proofread\n * 3 - proofread by vendor (requires `vendor` field)\n\n__Note:__ One of fields `type` or `workflowStepId` is required. Both cannot be provided simultaneously"
           type: integer
@@ -48767,7 +48766,7 @@ components:
         -
           properties:
             data:
-              $ref: '#/components/schemas/EnterpriseUserFileBasedTaskResource'
+              $ref: '#/components/schemas/EnterpriseUserFileBasedTaskResponseModel'
     EnterpriseUserStringBasedTaskResource:
       description: 'User Task Resource'
       type: object
@@ -48777,7 +48776,7 @@ components:
         -
           properties:
             data:
-              $ref: '#/components/schemas/EnterpriseUserStringBasedTaskResource'
+              $ref: '#/components/schemas/EnterpriseUserStringBasedTaskResponseModel'
     EnterpriseUserTaskCollectionResource:
       description: 'Task Collection Resource'
       type: object
@@ -48929,7 +48928,7 @@ components:
           type: integer
           example: 2
         creatorId:
-          type: string
+          type: integer
           example: 6
         type:
           type: integer
@@ -48975,6 +48974,11 @@ components:
           type: string
           example: 'https://crowdin.com/project/example-project/tasks/1'
         wordsCount:
+          description: 'Number of words currently in the task'
+          type: integer
+          example: 24
+        originalWordsCount:
+          description: 'Number of words when the task was created. Preserved when source strings are later removed.'
           type: integer
           example: 24
         commentsCount:
@@ -50745,7 +50749,6 @@ components:
     EnterpriseTranslationImportForm:
       required:
         - storageId
-        - branchId
       properties:
         storageId:
           description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
@@ -50789,7 +50792,6 @@ components:
     EnterpriseTranslationUploadForm:
       required:
         - storageId
-        - branchId
       properties:
         storageId:
           description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
@@ -50921,7 +50923,6 @@ components:
     TranslationImportForm:
       required:
         - storageId
-        - branchId
       properties:
         storageId:
           description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
@@ -50965,7 +50966,6 @@ components:
     TranslationUploadForm:
       required:
         - storageId
-        - branchId
       properties:
         storageId:
           description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
@@ -51691,6 +51691,16 @@ components:
                   uk: { allContent: true }
                   it: { allContent: true }
       type: object
+      anyOf:
+        -
+          required:
+            - userIds
+        -
+          required:
+            - usernames
+        -
+          required:
+            - emails
     EnterpriseReplaceProjectMemberForm:
       properties:
         accessToAllWorkflowSteps:
@@ -54056,12 +54066,6 @@ components:
           - 3
           - 4
           - 5
-    TranslationExportProgressBranchId:
-      name: branchId
-      in: query
-      description: 'Defines a branch for built translation. Get via [List Branches](#operation/api.projects.branches.getMany)'
-      schema:
-        type: integer
     UserId:
       name: userId
       in: path

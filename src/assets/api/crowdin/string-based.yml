@@ -192,10 +192,7 @@ paths:
           in: query
           description: 'Filter insights by dismissal flag. Omit to return both dismissed and active insights.'
           schema:
-            type: integer
-            enum:
-              - 0
-              - 1
+            type: boolean
         -
           name: status
           in: query
@@ -8677,7 +8674,6 @@ paths:
         -
           $ref: '#/components/parameters/TaskIdInQuery'
         -
-          parameter: BranchIdInQuery
           name: branchId
           in: query
           description: 'Filter the collection by the specified branch id. Get via [List Branches](#operation/api.projects.branches.getMany)'
@@ -23131,136 +23127,6 @@ components:
           type: integer
           example: 25
       type: object
-    CustomPlaceholderPatch:
-      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
-      type: array
-      items:
-        $ref: '#/components/schemas/CustomPlaceholderOperation'
-    CustomPlaceholderOperation:
-      description: "A JSON Patch operation as defined by [RFC\n     *     6902](https://tools.ietf.org/html/rfc6902#section-4)"
-      required:
-        - op
-        - path
-      properties:
-        op:
-          description: 'Patch operation to perform'
-          type: string
-          enum:
-            - replace
-            - test
-        path:
-          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
-          type: string
-          format: json-pointer
-          enum:
-            - /title
-            - /description
-            - /snippet
-      type: object
-      discriminator:
-        propertyName: op
-        mapping:
-          replace: '#/components/schemas/CustomPlaceholderOperationReplace'
-          test: '#/components/schemas/CustomPlaceholderOperationTest'
-    CustomPlaceholderOperationReplace:
-      description: "A JSON Patch `Replace` operation as defined by [RFC\n     *     6902](https://tools.ietf.org/html/rfc6902#section-4.3)"
-      required:
-        - value
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/CustomPlaceholderOperation'
-        -
-          properties:
-            value:
-              oneOf:
-                -
-                  type: string
-    CustomPlaceholderOperationTest:
-      description: "A JSON Patch `Replace` operation as defined by [RFC\n     *     6902](https://tools.ietf.org/html/rfc6902#section-4.3)"
-      required:
-        - value
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/CustomPlaceholderOperation'
-        -
-          properties:
-            value:
-              oneOf:
-                -
-                  type: string
-    CustomPlaceholderCreateForm:
-      required:
-        - definition
-      properties:
-        description:
-          type: string
-          example: 'URL validation'
-        definition:
-          type: string
-          example: 'start, then "http", maybe "s", then "://", maybe "www.", anything but " ", end'
-        argumentDelimiter:
-          type: string
-          default: '"'
-          example: '"'
-      type: object
-    CustomPlaceholderCollectionResource:
-      description: 'Custom Placeholder Collection Resource'
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/CollectionResource'
-        -
-          $ref: '#/components/schemas/CollectionResource'
-        -
-          properties:
-            data:
-              type: array
-              items:
-                $ref: '#/components/schemas/CustomPlaceholderResource'
-            pagination:
-              $ref: '#/components/schemas/Pagination'
-    CustomPlaceholderResource:
-      description: 'Custom Placeholder Resource'
-      type: object
-      allOf:
-        -
-          $ref: '#/components/schemas/Resource'
-        -
-          properties:
-            data:
-              oneOf:
-                -
-                  $ref: '#/components/schemas/CustomPlaceholder'
-                -
-                  $ref: '#/components/schemas/CustomPlaceholderFull'
-    CustomPlaceholderFull:
-      title: 'Custom Placeholder'
-      properties:
-        id:
-          type: integer
-          example: 1
-        definition:
-          type: string
-          example: 'start, then "http", maybe "s", then "://", maybe "www.", anything but " ", end'
-        description:
-          type: string
-          example: 'URL validation'
-        argumentDelimiter:
-          type: string
-          example: '"'
-      type: object
-    CustomPlaceholder:
-      title: 'Custom Placeholder'
-      properties:
-        id:
-          type: integer
-          example: 1
-        description:
-          type: string
-          example: 'URL validation'
-      type: object
     CustomQaCheckPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -24194,6 +24060,7 @@ components:
         - name
         - type
         - entities
+        - config
       properties:
         name:
           description: 'Field name'
@@ -24287,9 +24154,17 @@ components:
         config:
           type: object
         entities:
+          description: 'Entities that will be associated with field'
           type: array
           items:
-            type: integer
+            type: string
+            enum:
+              - project
+              - user
+              - task
+              - file
+              - translation
+              - string
             example: task
         createdAt:
           description: 'in UTC'
@@ -26198,8 +26073,6 @@ components:
           example: fr
       type: object
     GlossaryExportForm:
-      required:
-        - storageId
       properties:
         format:
           description: "Supported formats:\n * 'tbx'\n * 'tbx_v3'\n * 'csv'\n * 'xlsx'"
@@ -27373,7 +27246,7 @@ components:
     MtTranslateForm:
       required:
         - targetLanguageId
-        - string
+        - strings
       properties:
         languageRecognitionProvider:
           description: "Select a provider for language recognition\n\n__Note:__ Is required if the source language is not selected"
@@ -28858,7 +28731,7 @@ components:
       type: object
       allOf:
         -
-          $ref: '#/components/schemas/CustomPlaceholderOperation'
+          $ref: '#/components/schemas/FileFormatSettingsOperation'
         -
           properties:
             value:
@@ -28921,7 +28794,7 @@ components:
       type: object
       allOf:
         -
-          $ref: '#/components/schemas/CustomPlaceholderOperation'
+          $ref: '#/components/schemas/ProjectPlaceholderOperation'
         -
           properties:
             value:
@@ -30094,7 +29967,7 @@ components:
       type: object
     ProjectPlaceholderCreateForm:
       required:
-        - placeholderId
+        - customPlaceholderId
       properties:
         customPlaceholderId:
           description: 'Placeholder identifier'
@@ -30391,7 +30264,7 @@ components:
         -
           properties:
             data:
-              $ref: '#/components/schemas/CrowdinProjectAiSettingsResource'
+              $ref: '#/components/schemas/CrowdinProjectAiSettings'
     SystemStringsExporterSettingsCollectionResource:
       description: 'File Format Settings Collection Resource'
       type: object
@@ -35041,6 +34914,11 @@ components:
         $ref: '#/components/schemas/TagCreateForm'
     TagPositionScheme:
       title: 'Tag position'
+      required:
+        - x
+        - 'y'
+        - width
+        - height
       properties:
         x:
           type: integer
@@ -36697,7 +36575,7 @@ components:
         languageId:
           description: 'Language Identifier. Get via [List Languages](#operation/api.projects.languages.getMany)'
           type: string
-          example: 12345
+          example: uk
         storageId:
           description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
           type: integer
@@ -39262,7 +39140,7 @@ components:
           type: integer
           example: 2
         creatorId:
-          type: string
+          type: integer
           example: 6
         type:
           type: integer
@@ -39308,6 +39186,11 @@ components:
           type: string
           example: 'https://crowdin.com/project/example-project/tasks/1'
         wordsCount:
+          description: 'Number of words currently in the task'
+          type: integer
+          example: 24
+        originalWordsCount:
+          description: 'Number of words when the task was created. Preserved when source strings are later removed.'
           type: integer
           example: 24
         commentsCount:
@@ -40738,7 +40621,6 @@ components:
     TranslationImportForm:
       required:
         - storageId
-        - branchId
       properties:
         storageId:
           description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
@@ -40784,7 +40666,6 @@ components:
     TranslationUploadForm:
       required:
         - storageId
-        - branchId
       properties:
         storageId:
           description: 'Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)'
@@ -41339,10 +41220,6 @@ components:
           example: /fullName
       type: object
     CrowdinAddProjectMemberForm:
-      required:
-        - userIds
-        - usernames
-        - emails
       properties:
         userIds:
           description: "User Identifier. Get via [List Users](#operation/api.projects.members.getMany)\n\n__Note:__ One of fields `userIds`, `usernames` or `emails` is required"
@@ -41396,6 +41273,16 @@ components:
                   uk: { allContent: true }
                   it: { allContent: true }
       type: object
+      anyOf:
+        -
+          required:
+            - userIds
+        -
+          required:
+            - usernames
+        -
+          required:
+            - emails
     ReplaceProjectMemberForm:
       description: '__Note:__ `managerAccess`, `developerAccess` and`roles` parameters are mutually exclusive'
       properties:
@@ -43656,12 +43543,6 @@ components:
           - 3
           - 4
           - 5
-    TranslationExportProgressBranchId:
-      name: branchId
-      in: query
-      description: 'Defines a branch for built translation. Get via [List Branches](#operation/api.projects.branches.getMany)'
-      schema:
-        type: integer
     UserId:
       name: userId
       in: path
