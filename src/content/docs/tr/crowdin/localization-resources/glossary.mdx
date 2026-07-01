@@ -4,7 +4,7 @@ description: Crowdin’de sözlükleri nasıl oluşturacağınızı, yöneteceğ
 slug: glossary
 ---
 
-import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { Steps, Aside, LinkCard, CardGrid, Badge } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
 import KBD from '~/components/KBD.astro';
 import { Image } from 'astro:assets';
@@ -28,7 +28,7 @@ Sözlük oluşturmak için şu adımları izleyin:
 
 <Steps>
   1. Profilinizin ana sayfasını açın ve sol kenar çubuğundaki **Sözlükler**’i seçin.
-  2. **Sözlük oluştur**’a tıklayın.
+  2. Sağ üstte **Sözlük Oluştur**’a tıklayın.
   3. Görüntülenen ileti öğesinde, sözlüğünüzü adlandırın ve sözlük kayıtları tablosunda ilk olarak görüntülenecek varsayılan bir dil seçin.
   4. *(İsteğe bağlı)* Sözlüğü gerekli projelere atayın. Bu adımı atlayabilir ve daha sonra bir sözlüğü atayabilirsiniz.
   5. **Oluştur**’a tıklayın.
@@ -66,24 +66,41 @@ Terim ayrıntıları:
 * Type &ndash; Classifies the term's function (e.g., full form, acronym, abbreviation, phrase, variant).
 * Status &ndash; Defines the term's approval level (e.g., preferred, admitted, not recommended).
 * Gender &ndash; The grammatical gender of the term (e.g., masculine, feminine, neuter).
-* Description &ndash; A brief explanation or context for the specific term (distinct from the concept's definition).
+* Description (context) &ndash; A brief explanation or context for the specific term (distinct from the concept's definition).
 * Note &ndash; Short notes about a term that might be helpful to translators.
 * URL &ndash; bir terimle ilgili bilgileri içeren web sayfasının URL’si.
+
+The concept dialog opens as a full-screen view with two panes:
+
+* The left pane contains concept-level details: the **Primary term** (filled in automatically from the source-language term), **Subject**, **Definition**, and the **Translatable** toggle. The expandable **Concept details** section holds the concept **Note**, **URL**, and **Figure**.
+* The right pane lists all terms across languages, grouped by language. The source language is pinned at the top and marked with a <Badge text="SOURCE" variant="success" /> badge. Each term row shows its **Part of speech**, **Gender**, **Type**, and **Status**, along with the **desc**, **url**, and **note** badges that expand the term's **Description (context)**, **URL**, and **Note** fields.
 
 Yeni bir sözlük kavramı eklemek için şu adımları izleyin:
 
 <Steps>
   1. Profilinizin ana sayfasını açın ve sol kenar çubuğundaki **Sözlükler**’i seçin. Alternatively, open your project and go to **Settings > Glossaries**.
   2. Gerekli sözlükte **Kayıtları Görüntüle**’ye tıklayın.
-  3. Click **Add concept**.
-  4. Görünen ileti öğesinde, açılır menüden dili seçin ve terimi ve ilgili tüm ayrıntıları belirtin. Click <Icon name="mdi:auto-fix" class="inline-icon" /> to detect the part of speech automatically.
+  3. Click **Add term**.
+  4. In the source-language row, enter the term and set its **Part of speech**, **Gender**, **Type**, and **Status**. Hover over the row and click <Icon name="mdi:auto-fix" class="inline-icon" /> to detect the part of speech automatically.
      <Aside>
              Part of speech can be automatically detected only for the following languages: English, French, Spanish, German, Norwegian, Polish, Swedish, Russian, Italian, and Chinese.
      </Aside>
-  5. *(Optional)* Click **Add term** to add a term variation (e.g., acronym, short form, etc.)
-  6. Kavram ayrıntılarını belirtin.
-  7. **Oluştur**’a tıklayın. <Image src={addConceptDialog} alt="Kavram İleti Öğesi Ekleyin" class="crowdin-modal" />
+  5. *(Optional)* Click **Add term** below the language to add a term variation (e.g., acronym, short form, etc.)
+  6. *(Optional)* Click **Add language** and search for a language to add its translation.
+  7. Specify the concept details in the left pane (**Subject**, **Definition**, and the **Concept details** section).
+  8. **Oluştur**’a tıklayın. <Image src={addConceptDialog} alt="Add Term as New Concept dialog" />
 </Steps>
+
+<Aside title="Adding a new concept vs. a new term">
+  Use **Add term** to define a new meaning from scratch. To add a synonym or translation to an existing entry, search for the concept first and add the term there.
+</Aside>
+
+<Aside type="tip">
+  A few things that speed up working with concepts:
+  * Click the **desc**, **url**, or **note** badge in a term row to expand it and jump straight to that field.
+  * Click the link icon (**Open URL**) next to the **URL** field to open the link in a new browser tab.
+  * Turn off the **Translatable** toggle to collapse a concept to its source language only; turning it back on restores the previously added languages.
+</Aside>
 
 Düzenleyici aracılığıyla sözlük kavramları eklemek için şu adımları izleyin:
 
@@ -106,11 +123,11 @@ Alternatively, you can grant full access, allowing them to manage all glossary t
 
 ### Viewing, Searching, and Filtering Glossary Concepts and Terms
 
-Once you open a glossary, you can view and filter its glossary concepts and terms using either the **Concepts** or **Terms** tabs.
+Once you open a glossary, you can switch between two views using the **Group by concept** toggle.
 
-On the **Concepts** tab, you can view glossary content grouped as concepts (one concept per row, each term displayed in a separate language column).
+With **Group by concept** enabled, glossary content is grouped as concepts (one concept per row), with each term's translations shown in separate language columns. Under each term, its part of speech, status, gender, and type appear as badges.
 
-On the **Terms** tab, you can view glossary content as individual terms (one term per row) with the following details:
+With **Group by concept** disabled, glossary content is shown as individual terms (one term per row) with the following details:
 
 * **Term**: Contains either source or target language text.
 * **Language**: The term's language (e.g., French, Spanish).
@@ -123,13 +140,12 @@ On the **Terms** tab, you can view glossary content as individual terms (one ter
 * **Concept subject**: The subject field from the parent concept.
 * **Concept definition**: The definition from the parent concept.
 
-By default, all glossary concepts and terms are displayed. To find a specific concept or term, you can use the **Search** field.
+By default, all glossary concepts and terms are displayed. To find a specific concept or term, type in the **Search** field. In both views, the search matches against the following fields:
 
-In the **Concepts** tab, you can search by the following details:
-
-* **Terms**
-* **Concept definitions**
-* **Concept subjects**
+* **Term text**
+* **Term description (context)**
+* **Concept definition**
+* **Concept subject**
 
 Arama sonuçlarını daraltmak için aşağıdaki seçenekleri kullanabilirsiniz:
 
@@ -137,26 +153,24 @@ Arama sonuçlarını daraltmak için aşağıdaki seçenekleri kullanabilirsiniz
 * **Match whole phrase**
 * **Exact match**
 
-To filter the list of concepts or terms, click **Filter** <Icon name="mdi:filter-variant" class="inline-icon" /> and use the available options:
+Kavramların veya terimlerin listesini süzmek için **Süzgeçler**’e <Icon name="mdi:filter-variant" class="inline-icon" /> tıklayın ve mevcut seçenekleri kullanın:
 
-* **Languages** (Specific to the **Terms** tab): Filter by **All languages** or a **Specific language**.
-* **Modified**: Filter by modification date (**All**, **Custom Range**).
+* **Languages** (available when **Group by concept** is disabled): Filter by **All languages** or a **Specific language**.
+* **Son değiştirilme**: Değiştirilme tarihine göre süzün (**Tümü**, **Özel Aralık**).
 * **Part of speech**: Filter by grammatical category (**All**, **Noun**, **Verb**, etc.).
 * **Type**: Filter by classification (**All**, **Full form**, **Acronym**, etc.).
 * **Status**: Filter by approval status (**All**, **Preferred**, **Draft**, etc.).
 * **Gender**: Filter by grammatical gender (**All**, **Masculine**, **Feminine**, etc.).
 * **Author**: Filter by **All** or a particular user.
 
-To sort concepts or terms, click **Sort by** and select one of the available options:
-
-* **Text**
-* **Last modified**
-* **Oluşturma**
+To sort concepts or terms, click a column header. By default, the list is sorted by the source-language terms. You can also sort by the **Created** or **Last modified** column. Click a column header once to sort in ascending order and click again to sort in descending order.
 
 To customize your viewing experience, you can use the following options on the top toolbar:
 
 * **Word Wrap**: Click <Icon name="mdi:wrap" class="inline-icon" /> to toggle the word wrap feature. This is useful for viewing long texts (such as definitions, subjects, or notes) without expanding the column width.
-* **Sütun Ayarları**: Tabloda hangi sütunların görüntüleneceğini yapılandırmak için <Icon name="mdi:view-column" class="inline-icon" /> simgesine tıklayın. Dil sütunlarının yanı sıra *Tanım*, *Konu*, *Çevrilebilir* ve *Not* gibi sütunların gösterebilir veya gizleyebilirsiniz.
+* **Sütun Ayarları**: Tabloda hangi sütunların görüntüleneceğini yapılandırmak için <Icon name="mdi:view-column" class="inline-icon" /> simgesine tıklayın. Tümünü aynı anda göstermek veya gizlemek için **Tüm Sütunlar**’ı kullanın.
+  * **Concepts** view: You can show or hide columns such as *Definition*, *Subject*, *Translatable*, *Note*, *Created*, and *Last modified*, as well as the language columns. All columns and languages are shown by default, except *Translatable* and *Note*.
+  * **Terms** view: You can show or hide columns like *Language*, *Part of speech*, *Type*, *Status*, *Gender*, *Description (context)*, *Note*, *Concept subject*, and *Concept definition*.
 
 ### Sözlük Kavramlarını ve Terimleri Düzenleme
 
@@ -167,20 +181,29 @@ Bir sözlük kavramını düzenlemek için şu adımları izleyin:
 <Steps>
   1. Profilinizin ana sayfasını açın ve sol kenar çubuğundaki **Sözlükler**’i seçin. Alternatively, open your project and go to **Settings > Glossaries**.
   2. Gerekli sözlükte **Kayıtları Görüntüle**’ye tıklayın.
-  3. Bir çift tıklama ile bir sözlük kavramını açın veya **Düzenle**’ye tıklayın.
-  4. In the appeared dialog, make the necessary edits to the concept or terms and click **Save**.
+  3. Çift tıklayarak bir sözlük kavramı açın veya satırındaki <Icon name="mdi:dots-horizontal" class="inline-icon" /> simgesine tıklayın ve **Düzenle**’yi seçin.
+  4. In the **Edit concept** dialog, make the necessary edits to the concept or its terms. The dialog uses the same two-pane layout described in [Creating Glossary Concepts and Terms](#creating-glossary-concepts-and-terms), with an added **Metadata** section that lists the concept **ID**, creation date, and last modification details.
+  5. **Kaydet**’e tıklayın.
 </Steps>
 
-### Sözlük Kavramlarını Silme
+<Aside>
+  If you close the dialog with unsaved changes, you'll be asked to confirm: select **Discard** to close without saving or **Cancel** to keep editing.
+</Aside>
 
-Bir, birden çok veya tüm sözlük kavramlarını aynı anda silebilirsiniz.
+### Deleting Glossary Concepts and Terms
 
-Sözlükten tüm kavramları silmek için şu adımları izleyin:
+You can delete a single term, an entire concept, or several concepts at once.
+
+When [editing a concept](#editing-glossary-concepts-and-terms), you can delete individual terms or the entire concept directly in the dialog:
+
+* Delete a single term &ndash; expand the term's row and click **Delete term**.
+* Delete the entire concept &ndash; click **Delete concept** in the bottom-left corner of the dialog.
+
+To delete several concepts at once, follow these steps:
 
 <Steps>
-  1. Kavram listesinin üstündeki üst onay kutusunu işaretleyin.
-  2. Tüm kavramların seçimini onaylayın.
-  3. <Icon name="mdi:delete" class="inline-icon" /> simgesine tıklayın.
+  1. Select the checkboxes next to the concepts you want to delete. To delete all concepts, select the top checkbox and confirm the selection of all concepts.
+  2. <Icon name="mdi:delete" class="inline-icon" /> simgesine tıklayın.
 </Steps>
 
 ## Managing Glossaries
@@ -277,7 +300,7 @@ Sözlüklerinizi sahip olduğunuz tüm projeler arasında paylaşmak için şu a
 
 <Steps>
   1. Profilinizin ana sayfasını açın ve sol kenar çubuğundaki **Sözlükler**’i seçin.
-  2. Select **Share Glossaries**.
+  2. **Sözlükler** sayfasının sol üst kısmında **Sözlükleri Paylaş** onay kutusunu işaretleyin.
 </Steps>
 
 <Aside>
