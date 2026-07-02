@@ -32,7 +32,6 @@ import { Icon } from 'astro-icon/components';
 
 <script>
     type FeedbackType = 'like' | 'dislike';
-    import { createDirectus, rest, createItem } from '@directus/sdk';
 
     function getFeedbackForm(): HTMLElement {
         return document.getElementById('feedback-form') as HTMLElement;
@@ -110,34 +109,39 @@ import { Icon } from 'astro-icon/components';
 
     async function submitFeedback() {
         const comment = getCommentTextarea().value.trim();
+        const feedbackType = getFeedbackForm().dataset.feedbackType as FeedbackType;
 
-        if (!comment) {
+        // A comment is only mandatory for dislikes.
+        if (feedbackType === 'dislike' && !comment) {
             getErrorMessage().classList.remove('hidden');
             getCommentTextarea().focus();
             return;
         }
 
-        const host = import.meta.env.PUBLIC_DIRECTUS_HOST;
-        const feedbackType = getFeedbackForm().dataset.feedbackType as FeedbackType;
+        const host = import.meta.env.PUBLIC_STORE_API_HOST;
 
         if (!host) {
-            console.error('Directus host is not set');
+            console.error('Store API host is not set');
             closeForm(feedbackType);
             return;
         }
 
-        const client = createDirectus(host).with(rest());
-
         try {
-            await client.request(
-                createItem('feedback' as never, {
+            const response = await fetch(`${host}/api/feedback/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     type: feedbackType,
                     page: window.location.pathname,
-                    comment: comment,
-                })
-            );
+                    ...(comment ? { comment } : {}),
+                }),
+            });
+
+            if (!response.ok) {
+                console.error(`Feedback submission failed: ${response.status}`);
+            }
         } catch (error) {
-            console.log(error);
+            console.error(error);
         }
 
         closeForm(feedbackType);
