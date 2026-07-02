@@ -28,19 +28,19 @@ Admin has similar rights to the organization owner, with full access to the orga
 
 ## Manager
 
-Manager has a more focused scope of control that depends on their assignment at various levels. Based on the [Permission granularity](/enterprise/permissions-granularity-mode/#permissions) settings, Managers can be assigned at the organization, group, subgroup, or project levels. They inherit access to all child entities within their assigned parent entity (i.e., organization, group, or subgroup). Managers can't manage vendors, invite or manage users at the organization level, or configure organization settings.
+Manager has a more focused scope of control that depends on their assignment at various levels. Based on the [Permission granularity](/enterprise/permissions-granularity-mode/#permissions) settings, Managers can be assigned at the organization, group, subgroup, or project levels. They inherit access to all child entities within their assigned parent entity (i.e., organization, group, or subgroup). Managers can't manage vendors, manage users at the organization level, or configure organization settings, but they can invite organization members. Whether a Manager can create new projects depends on their scope: Workspace and Group Managers can, while a Project Manager only manages the projects already assigned to them.
 
 ### Workspace Manager
 
-Workspace Manager can create and manage projects across the entire organization (including inviting people to projects and managing resources). They also have access to all groups and subgroups.
+Workspace Manager can create and manage projects across the entire organization, including all its groups and subgroups (inviting people to projects and managing resources).
 
 **Use case:** Suitable for users responsible for maintaining consistency across multiple projects in the organization.
 
-If permission granularity is disabled, Workspace Manager can be assigned using the **Workspace manager** toggle in the **User details**. If enabled, the organization's workspace is treated as a root group, and the role is granted by assigning the user to manage the root group from the **Groups** tab in the **User details**.
+If permission granularity is disabled, Workspace Manager can be assigned using the **Workspace manager** toggle in the **User details**. If enabled, the role is granted by assigning the user to manage the whole workspace from the **Groups** tab in the **User details** (select the top-level **Workspace** entry).
 
 ### Group Manager
 
-Group Manager can create and manage projects within a specific group (including inviting people to projects and managing resources). They also inherit manager access to all subgroups within the assigned group.
+Group Manager can create and manage projects within an assigned group and its subgroups (inviting people to projects and managing resources).
 
 **Use case:** Suitable for users responsible for managing a group of projects and ensuring consistency within that group.
 
@@ -48,7 +48,7 @@ Group managers can be assigned only when permission granularity is enabled. In t
 
 ### Project Manager
 
-Project Managers are responsible for the management of individual projects. Within those projects, they can manage project members, tasks, and resources, etc., but do not have access to settings or resources outside of their assigned projects.
+Project Manager manages the projects they're assigned to, including members, tasks, resources, and project settings, but can't create new projects or access anything outside those projects.
 
 **Use case:** Suitable for users who need to focus only on managing specific projects without broader organizational responsibilities.
 
@@ -84,4 +84,112 @@ Translator can add translations and vote on suggestions made by others. They do 
 ## Vendor
 
 Vendors are separate organizations that provide professional translation services. After you invite a vendor to your project, their organization receives a copy of the assigned workflow step in the *Incoming Projects* section of their workspace. This setup is commonly used when outsourcing translations to external teams while keeping the workflow and quality control within Crowdin Enterprise.
+
+## Permissions
+
+The tables below summarize what each role can do, grouped by area of the product:
+
+- ✓ — the role can perform the action
+- ✗ — the role can't perform the action
+- A superscript number (for example, ✓¹) marks a conditional permission explained in the **Notes** under each table.
+
+### Workspace
+
+| Action                                                                         | Owner / Admin | Workspace Manager | Group Manager |
+| ------------------------------------------------------------------------------ | :-----------: | :---------------: | :-----------: |
+| Delete the organization or transfer ownership                                  |      ✓¹       |         ✗         |       ✗       |
+| Manage organization settings (branding, security, SSO, plan & billing)         |       ✓       |         ✗         |       ✗       |
+| Invite organization members                                                    |       ✓       |        ✓²         |      ✓²       |
+| Edit member data / grant or revoke Admin                                       |      ✓³       |         ✗         |       ✗       |
+| Invite vendors and clients                                                     |       ✓       |         ✗         |       ✗       |
+| Create and manage groups / subgroups                                           |       ✓       |        ✓⁴         |      ✓⁵       |
+| Delete or transfer a group                                                     |       ✓       |        ✓⁴         |      ✓⁶       |
+| Create projects in a group                                                     |       ✓       |        ✓⁴         |      ✓⁵       |
+| Manage group resources (TMs, glossaries, MT, style guides, workflow templates) |       ✓       |        ✓⁴         |      ✓⁷       |
+| View organization and group reports                                            |       ✓       |        ✓⁴         |      ✓⁸       |
+
+**Notes**
+
+1. Owner-only.
+2. Also available to anyone who manages at least one group or project; the **Admin-Managed Invitations** setting can restrict inviting to admins.
+3. Except for the Organization Owner or themselves.
+4. Workspace Manager covers the whole organization (all groups and projects), regardless of **Permission granularity mode**.
+5. Group Manager requires **Permission granularity mode** and acts only within the assigned group and its subgroups.
+6. Only as a manager of the group's **parent** group, not the group they manage directly.
+7. Group Managers can **edit** resources in their group and subgroups, and **read** resources that live in a group above them.
+8. Own scope only; also depends on the plan. See [Organization Reports](/enterprise/organization-reports/).
+
+### Project
+
+In Crowdin Enterprise, Organization Owners and Admins have full access to every project, and an in-scope Group Manager has the same project access as a Manager within their group.
+
+| Action                                                        | Manager | Developer | Language Coordinator | Proofreader | Translator |
+| ------------------------------------------------------------- | :-----: | :-------: | :------------------: | :---------: | :--------: |
+| View project dashboard and activity                           |    ✓    |     ✓     |          ✓           |      ✓      |     ✓      |
+| View reports¹                                                 |    ✓    |     ✓     |          ✓           |      ✓      |     ✓      |
+| Participate in discussions (view, create topics, reply)       |    ✓    |     ✓     |          ✓           |      ✓      |     ✓      |
+| Moderate discussions (edit / delete others' topics & replies) |    ✓    |     ✗     |          ✗           |      ✗      |     ✗      |
+| Auto-Translate content (via TM, MT, or AI)                    |    ✓    |     ✓     |          ✓³          |      ✗      |     ✗      |
+| View tasks / open an assigned task                            |    ✓    |     ✓     |          ✓²          |     ✓²      |     ✓²     |
+| Manage tasks (create / edit / delete)                         |    ✓    |     ✗     |          ✓³          |      ✗      |     ✗      |
+| Change task status                                            |    ✓    |    ✓⁴     |          ✓⁴          |     ✓⁴      |     ✓⁴     |
+| Download a full project build (all target languages)          |    ✓    |     ✓     |          ✗           |      ✗      |     ✗      |
+| Download translations for a single target language            |    ✓    |     ✓     |          ✗           |     ✓⁵      |     ✓⁵     |
+
+**Notes**
+
+1. Every role can view reports, but the available set depends on the role and the plan. See [Project Reports](/enterprise/project-reports/) and [Contributor Reports](/enterprise/contributor-reports/).
+2. Limited to tasks they're assigned to (Language Coordinators — tasks in their assigned languages).
+3. Only for their assigned languages.
+4. A user assigned to a task can advance its status but can't close it; Managers are unrestricted.
+5. Available only when **Allow offline translation** is enabled and the role has access to that language; with **task-based access** on, downloads happen through assigned tasks.
+
+### Project Settings
+
+The same hierarchy applies here as in the Project zone: Organization Owners/Admins and in-scope Group Managers can perform these actions.
+
+| Action                                                                         | Manager | Developer | Language Coordinator | Proofreader | Translator |
+| ------------------------------------------------------------------------------ | :-----: | :-------: | :------------------: | :---------: | :--------: |
+| Edit project settings (name, languages, privacy, QA checks, branch protection) |    ✓    |     ✗     |          ✗           |      ✗      |     ✗      |
+| View members and their permissions                                             |    ✓    |     ✗     |          ✓           |      ✗      |     ✗      |
+| Invite members / assign roles                                                  |   ✓¹    |     ✗     |          ✓²          |      ✗      |     ✗      |
+| Manage members (remove / block / change status)                                |   ✓¹    |     ✗     |          ✗           |      ✗      |     ✗      |
+| Manage source files, branches, integrations, and webhooks                      |    ✓    |     ✓     |          ✗           |      ✗      |     ✗      |
+| Assign a TM, glossary, or style guide to the project                           |    ✓    |     ✗     |          ✗           |      ✗      |     ✗      |
+| Delete or transfer the project                                                 |   ✗³    |     ✗     |          ✗           |      ✗      |     ✗      |
+
+**Notes**
+
+1. Managers can't edit the project Owner or themselves.
+2. Language Coordinators can invite and assign only the **Translator** or **Proofreader** role, and only within their assigned languages.
+3. Deleting or transferring a project is available to the project Owner (its creator), Organization Owners/Admins, Group Owners, and in-scope Group Managers, but not a regular Manager.
+
+### Editor
+
+Organization Owners/Admins and in-scope Group Managers act as Managers in the Editor.
+
+| Action                                         | Manager | Developer | Language Coordinator | Proofreader | Translator |
+| ---------------------------------------------- | :-----: | :-------: | :------------------: | :---------: | :--------: |
+| Add / save translation                         |    ✓    |     ✓     |          ✓¹          |     ✓¹      |     ✓¹     |
+| Approve / unapprove translation                |    ✓    |     ✓     |          ✓¹          |     ✓¹      |     ✗²     |
+| Vote on suggestions (+/−)                      |   ✗³    |    ✗³     |          ✗³          |     ✗³      |     ✓³     |
+| Delete own translation                         |    ✓    |     ✓     |          ✓¹          |     ✓¹      |     ✓⁴     |
+| Delete others' translations                    |    ✓    |     ✓     |          ✓¹          |     ✓¹      |     ✗      |
+| Access hidden strings                          |    ✓    |     ✓     |          ✗           |     ✓⁵      |     ✗      |
+| Add comments & issues                          |    ✓    |     ✓     |          ✓¹          |     ✓¹      |     ✓¹     |
+| Resolve issues                                 |    ✓    |     ✓     |          ✓¹          |     ✓¹      |     ✓⁶     |
+| Edit source strings (context, key, max length) |    ✓    |     ✓     |          ✗           |      ✗      |     ✗      |
+| Enter Review mode (source text review)⁷        |    ✓    |     ✓     |          ✗           |      ✗      |     ✗      |
+| Add / edit glossary terms                      |   ✓⁸    |    ✓⁸     |          ✓⁸          |     ✓⁸      |     ✓⁸     |
+
+**Notes**
+
+1. Limited to the language(s) the role is assigned to (in multi-step workflows, also the workflow step).
+2. Approving is reserved for Proofreaders and above; Translators can't approve.
+3. In the Editor, voting and approving are mutually exclusive: vote controls appear only for Translators, who can vote only in their assigned languages and not on their own suggestion.
+4. Translators can delete only their own translations, within their assigned languages, and only when task-based access is off.
+5. Proofreaders can access hidden strings only when **Allow proofreaders to access hidden strings** is enabled; Managers and Developers always can.
+6. Translators can resolve only issues they opened.
+7. Review mode is available only in projects that include a **Source Text Review** workflow step; it's for reviewing and editing source strings, so it's limited to Managers and Developers.
+8. Depends on the project's **Glossary access** setting (Full / Drafts / Read-only); Managers always can.
 
