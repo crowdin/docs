@@ -12861,6 +12861,82 @@ paths:
                 $ref: '#/components/schemas/InternalServerErrorExceptionResource'
       x-doc-sections:
         - string-based
+  /search/strings:
+    get:
+      tags:
+        - Search
+      summary: 'Search Source Strings'
+      description: "**Required scopes:** `project.source.string` (Read only).\n\nSearches source strings by text/context/key across up to 50 caller-supplied projects."
+      operationId: api.search.strings.getMany
+      parameters:
+        -
+          name: query
+          in: query
+          description: 'Search strings by the fields selected in `scope`'
+          required: true
+          schema:
+            type: string
+            maxLength: 128
+        -
+          name: projectIds
+          in: query
+          description: 'Project identifiers to search across. Get via [List Projects](#operation/api.projects.getMany). It can be one project or a list of comma-separated ones (max 50)'
+          required: true
+          schema:
+            type: string
+          example: '1,2,3'
+        -
+          name: scope
+          in: query
+          description: 'Specify field to be the target of filtering. One of: `all`, `text`, `context`, `key`. Default is `all`'
+          schema:
+            type: string
+            default: all
+            enum:
+              - all
+              - text
+              - context
+              - key
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Matched source strings'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseStringSearchCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+              example:
+                errors:
+                  - { error: { key: query, errors: [{ code: isEmpty, message: "Value is required and can't be empty" }] } }
+        '404':
+          description: 'One of the requested projects was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+              example:
+                error:
+                  message: 'Project Not Found'
+                  code: 404
+        '422':
+          description: 'The search was too broad to complete within the time limit'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
+              example:
+                error:
+                  message: 'The search was too broad to complete within the time limit'
+                  code: 422
   '/projects/{projectId}/comments/{commentId}/attachments/{attachmentId}':
     delete:
       tags:
@@ -14656,6 +14732,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+  /search/translations:
+    get:
+      tags:
+        - Search
+      summary: 'Search Translations'
+      description: "**Required scopes:** `project.translation` (Read only).\n\nSearches target-language translations by text across up to 50 caller-supplied projects."
+      operationId: api.search.translations.getMany
+      parameters:
+        -
+          name: query
+          in: query
+          description: 'Search translations by `text`'
+          required: true
+          schema:
+            type: string
+            maxLength: 128
+        -
+          name: projectIds
+          in: query
+          description: 'Project identifiers to search across. Get via [List Projects](#operation/api.projects.getMany). It can be one project or a list of comma-separated ones (max 50)'
+          required: true
+          schema:
+            type: string
+          example: '1,2,3'
+        -
+          name: languageIds
+          in: query
+          description: 'Filter by target language identifier. Get via [Project Target Languages](#operation/api.projects.get). It can be one language or a list of comma-separated ones'
+          schema:
+            type: string
+          example: 'uk,de'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Matched translations'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseTranslationSearchCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+              example:
+                errors:
+                  - { error: { key: query, errors: [{ code: isEmpty, message: "Value is required and can't be empty" }] } }
+        '404':
+          description: 'One of the requested projects was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+              example:
+                error:
+                  message: 'Project Not Found'
+                  code: 404
+        '422':
+          description: 'The search was too broad to complete within the time limit'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
+              example:
+                error:
+                  message: 'The search was too broad to complete within the time limit'
+                  code: 422
   '/projects/{projectId}/votes':
     get:
       tags:
@@ -17660,6 +17807,66 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorCollectionResource'
+        '404':
+          description: 'TM with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+    patch:
+      tags:
+        - 'Translation Memory'
+      summary: 'TM Segment Batch Operations'
+      description: "**Required scopes:** `tm` (Read and Write).\n\nPerform batch operations on translation memory segments. Supports `add` (create new segment or append a record to an existing segment), `remove` (delete segment or delete a single record from a segment), and `replace` (update record text)."
+      operationId: api.tms.segments.patchBatch
+      parameters:
+        -
+          $ref: '#/components/parameters/TmId'
+      requestBody:
+        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                anyOf:
+                  - { $ref: '#/components/schemas/TmSegmentMassOperationAdd' }
+                  - { $ref: '#/components/schemas/TmSegmentMassOperationAddRecord' }
+                  - { $ref: '#/components/schemas/TmSegmentMassOperationRemove' }
+                  - { $ref: '#/components/schemas/TmSegmentMassOperationRemoveRecord' }
+                  - { $ref: '#/components/schemas/TmSegmentMassOperationReplace' }
+      responses:
+        '200':
+          description: 'TM segments were successfully updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TmSegmentUpdatedCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorPatchCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
         '404':
           description: 'TM with specified id was not found'
           content:
@@ -22581,6 +22788,36 @@ components:
         providerId:
           type: integer
           example: 1
+          nullable: true
+        contextWindow:
+          description: "Context window size in tokens. For custom_ai providers reported by the Marketplace application; for other providers derived from Crowdin's internal catalog. `null` when the value is not available."
+          type: integer
+          example: 128000
+          nullable: true
+        maxOutputTokens:
+          description: "Maximum output tokens. For custom_ai providers reported by the Marketplace application; for other providers derived from Crowdin's internal catalog. `null` when the value is not available."
+          type: integer
+          example: 16384
+          nullable: true
+        supportsStreaming:
+          description: "Whether the model supports streaming responses. For custom_ai providers reported by the Marketplace application; for other providers derived from Crowdin's internal catalog. `null` when the value is not available."
+          type: boolean
+          example: true
+          nullable: true
+        supportsFunctionCalling:
+          description: "Whether the model supports function/tool calling. For custom_ai providers reported by the Marketplace application; for other providers derived from Crowdin's internal catalog. `null` when the value is not available."
+          type: boolean
+          example: true
+          nullable: true
+        supportsJsonMode:
+          description: "Whether the model supports JSON mode (guaranteed JSON output without schema validation). For custom_ai providers reported by the Marketplace application; for other providers derived from Crowdin's internal catalog. `null` when the value is not available."
+          type: boolean
+          example: true
+          nullable: true
+        supportsJsonSchema:
+          description: "Whether the model supports structured output via JSON Schema. For custom_ai providers reported by the Marketplace application; for other providers derived from Crowdin's internal catalog. `null` when the value is not available."
+          type: boolean
+          example: true
           nullable: true
       type: object
     AiProvider:
@@ -33077,6 +33314,7 @@ components:
             - /notificationSettings/managerLanguageCompleted
             - /defaultTmId
             - /defaultGlossaryId
+            - /assignedStyleGuides
             - /assignedGlossaries
             - /assignedTms
             - '/assignedTms/{tmId}'
@@ -42047,6 +42285,25 @@ components:
               items:
                 $ref: '#/components/schemas/EnterpriseStringBasedStringResource'
           type: object
+    EnterpriseStringSearchCollectionResource:
+      description: 'A list of matched source strings across projects.'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                oneOf:
+                  - { $ref: '#/components/schemas/EnterpriseFileBasedStringResource' }
+                  - { $ref: '#/components/schemas/EnterpriseStringBasedStringResource' }
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+          type: object
+        -
+          $ref: '#/components/schemas/CollectionResource'
     StringBasedStringUploadResource:
       description: 'String Upload Resource'
       type: object
@@ -43676,6 +43933,30 @@ components:
                   $ref: '#/components/schemas/EnterpriseStringTranslation'
                 -
                   $ref: '#/components/schemas/EnterpriseAssetTranslation'
+    EnterpriseTranslationSearchCollectionResource:
+      description: 'A list of matched translations across projects.'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/EnterpriseTranslationSearchResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    EnterpriseTranslationSearchResource:
+      description: 'Enterprise Translation Search Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/EnterpriseSearchTranslation'
     PlainLanguageTranslationCollectionResource:
       title: 'Plain language translations'
       description: 'Plain Language Translation Collection Resource'
@@ -44148,6 +44429,28 @@ components:
               description: 'Workflow Step Identifier'
               type: integer
               example: 77
+    EnterpriseSearchTranslation:
+      title: 'Search Translation'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/EnterpriseStringTranslation'
+        -
+          $ref: '#/components/schemas/EnterpriseStringTranslation'
+        -
+          properties:
+            projectId:
+              description: 'Project Identifier'
+              type: integer
+              example: 8
+            stringId:
+              description: 'Source String Identifier'
+              type: integer
+              example: 35
+            languageId:
+              description: 'Target Language Identifier'
+              type: string
+              example: uk
     EnterpriseStringApproval:
       title: 'Enterprise String Approval with workflow step'
       type: object
@@ -47310,6 +47613,102 @@ components:
               oneOf:
                 -
                   type: string
+    TmSegmentMassOperationAdd:
+      description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.1)'
+      required:
+        - value
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - add
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - /-
+        value:
+          $ref: '#/components/schemas/TmSegmentCreateForm'
+      type: object
+    TmSegmentMassOperationAddRecord:
+      description: 'A JSON Patch `Add` operation that appends a new record (translation in a previously absent language) to an existing TM segment'
+      required:
+        - value
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - add
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - '/{segmentId}/records/-'
+        value:
+          properties:
+            languageId:
+              description: 'Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany)'
+              type: string
+              example: it
+            text:
+              type: string
+              example: 'Ciao, mondo!'
+          type: object
+      type: object
+    TmSegmentMassOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.2)'
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - remove
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - '/{segmentId}'
+      type: object
+    TmSegmentMassOperationRemoveRecord:
+      description: 'A JSON Patch `Remove` operation that deletes a single record (translation in a specific language) from an existing TM segment'
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - remove
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - '/{segmentId}/records/{recordId}'
+      type: object
+    TmSegmentMassOperationReplace:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - '/{segmentId}/records/{recordId}/text'
+        value:
+          type: string
+          example: 'Testo tradotto'
+      type: object
     TmSegmentRecordOperationAdd:
       description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       properties:
@@ -47631,6 +48030,20 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/TmSegment'
+    TmSegmentUpdatedCollectionResource:
+      description: 'Tm Segment Updated Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/TmSegmentResource'
     Tm:
       title: Tm
       properties:
@@ -52067,6 +52480,9 @@ tags:
   -
     name: 'Source Strings'
     description: "\nSource strings are the text units for translation. Instead of modifying source files, you can manage source strings one by one.\n\nUse API to add, edit, or delete some specific strings  in the source-based and files-based projects (available only for the following file formats: CSV, RESX, JSON, Android XML, iOS strings, PROPERTIES, XLIFF).\n"
+  -
+    name: Search
+    description: 'Search across multiple projects in your organization in a single request.'
   -
     name: 'String Translations'
     description: 'Use API to add or remove strings translations, approvals, and votes.'
