@@ -15203,6 +15203,66 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+    patch:
+      tags:
+        - 'Translation Memory'
+      summary: 'TM Segment Batch Operations'
+      description: "**Required scopes:** `tm` (Read and Write).\n\nPerform batch operations on translation memory segments. Supports `add` (create new segment or append a record to an existing segment), `remove` (delete segment or delete a single record from a segment), and `replace` (update record text)."
+      operationId: api.tms.segments.patchBatch
+      parameters:
+        -
+          $ref: '#/components/parameters/TmId'
+      requestBody:
+        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                anyOf:
+                  - { $ref: '#/components/schemas/TmSegmentMassOperationAdd' }
+                  - { $ref: '#/components/schemas/TmSegmentMassOperationAddRecord' }
+                  - { $ref: '#/components/schemas/TmSegmentMassOperationRemove' }
+                  - { $ref: '#/components/schemas/TmSegmentMassOperationRemoveRecord' }
+                  - { $ref: '#/components/schemas/TmSegmentMassOperationReplace' }
+      responses:
+        '200':
+          description: 'TM segments were successfully updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TmSegmentUpdatedCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorPatchCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'TM with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
   '/tms/{tmId}/exports':
     post:
       tags:
@@ -19190,6 +19250,36 @@ components:
         providerId:
           type: integer
           example: 1
+          nullable: true
+        contextWindow:
+          description: "Context window size in tokens. For custom_ai providers reported by the Marketplace application; for other providers derived from Crowdin's internal catalog. `null` when the value is not available."
+          type: integer
+          example: 128000
+          nullable: true
+        maxOutputTokens:
+          description: "Maximum output tokens. For custom_ai providers reported by the Marketplace application; for other providers derived from Crowdin's internal catalog. `null` when the value is not available."
+          type: integer
+          example: 16384
+          nullable: true
+        supportsStreaming:
+          description: "Whether the model supports streaming responses. For custom_ai providers reported by the Marketplace application; for other providers derived from Crowdin's internal catalog. `null` when the value is not available."
+          type: boolean
+          example: true
+          nullable: true
+        supportsFunctionCalling:
+          description: "Whether the model supports function/tool calling. For custom_ai providers reported by the Marketplace application; for other providers derived from Crowdin's internal catalog. `null` when the value is not available."
+          type: boolean
+          example: true
+          nullable: true
+        supportsJsonMode:
+          description: "Whether the model supports JSON mode (guaranteed JSON output without schema validation). For custom_ai providers reported by the Marketplace application; for other providers derived from Crowdin's internal catalog. `null` when the value is not available."
+          type: boolean
+          example: true
+          nullable: true
+        supportsJsonSchema:
+          description: "Whether the model supports structured output via JSON Schema. For custom_ai providers reported by the Marketplace application; for other providers derived from Crowdin's internal catalog. `null` when the value is not available."
+          type: boolean
+          example: true
           nullable: true
       type: object
     AiProvider:
@@ -28575,6 +28665,7 @@ components:
             - /pseudoLanguageId
             - /defaultTmId
             - /defaultGlossaryId
+            - /assignedStyleGuides
             - /assignedGlossaries
             - /assignedTms
             - '/assignedTms/{tmId}'
@@ -39894,6 +39985,102 @@ components:
               oneOf:
                 -
                   type: string
+    TmSegmentMassOperationAdd:
+      description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.1)'
+      required:
+        - value
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - add
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - /-
+        value:
+          $ref: '#/components/schemas/TmSegmentCreateForm'
+      type: object
+    TmSegmentMassOperationAddRecord:
+      description: 'A JSON Patch `Add` operation that appends a new record (translation in a previously absent language) to an existing TM segment'
+      required:
+        - value
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - add
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - '/{segmentId}/records/-'
+        value:
+          properties:
+            languageId:
+              description: 'Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany)'
+              type: string
+              example: it
+            text:
+              type: string
+              example: 'Ciao, mondo!'
+          type: object
+      type: object
+    TmSegmentMassOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.2)'
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - remove
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - '/{segmentId}'
+      type: object
+    TmSegmentMassOperationRemoveRecord:
+      description: 'A JSON Patch `Remove` operation that deletes a single record (translation in a specific language) from an existing TM segment'
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - remove
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - '/{segmentId}/records/{recordId}'
+      type: object
+    TmSegmentMassOperationReplace:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - '/{segmentId}/records/{recordId}/text'
+        value:
+          type: string
+          example: 'Testo tradotto'
+      type: object
     TmSegmentRecordOperationAdd:
       description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       properties:
@@ -40210,6 +40397,20 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/TmSegment'
+    TmSegmentUpdatedCollectionResource:
+      description: 'Tm Segment Updated Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/TmSegmentResource'
     Tm:
       title: Tm
       properties:
