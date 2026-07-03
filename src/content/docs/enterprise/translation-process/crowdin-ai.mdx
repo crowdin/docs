@@ -11,7 +11,7 @@ import { Icon } from 'astro-icon/components';
 import { Badge } from '@astrojs/starlight/components';
 import ReadMore from '~/components/ReadMore.astro';
 
-Crowdin Enterprise integrates with top AI providers, including OpenAI, Google Gemini, Microsoft Azure OpenAI, and more, allowing you to leverage advanced AI-powered translations that consider additional context at different levels. These translations can be applied to your content with a few clicks using [auto-translation via AI](#auto-translation-via-ai). Additionally, AI in Crowdin Enterprise can be used for [AI suggestions in the Editor](#using-ai-in-the-editor) and [AI QA checks](#ai-qa-check).
+Crowdin Enterprise integrates with top AI providers, including OpenAI, Google Gemini, Microsoft Azure OpenAI, and more, allowing you to leverage advanced AI-powered translations that consider additional context at different levels. These translations can be applied to your content with a few clicks using [auto-translation via AI](#auto-translation-via-ai). Additionally, AI in Crowdin Enterprise can be used for [AI suggestions in the Editor](#using-ai-in-the-editor), [AI Alignment](#ai-alignment), [AI QA checks](#ai-qa-check), and [reviewing the quality of string context](#advisor-string-context-review).
 
 You can expand your AI provider options by installing respective applications from the Crowdin [Store](https://store.crowdin.com/tags/ai).
 
@@ -37,7 +37,7 @@ To configure AI prompts, follow these steps:
   1. Open your organization's **Workspace** and select **AI** on the left sidebar.
   2. In the **Prompts** tab, click **New prompt**. Alternatively, you can go ahead with creating prompt samples clicking **Try a sample**. Crowdin allows you to quickly set up pre-configured prompts that are ready to perform effectively from the moment they are created. While these samples are designed to work good initially, you can customize them to your personal preferences.
   3. In the appeared dialog, set the prompt parameters:
-      * Select the prompt type (i.e., [Auto-Translation & AI Suggestion](#auto-translation-via-ai), [Alignment](#ai-alignment), [QA check](#ai-qa-check), or Create custom type)
+      * Select the prompt type (i.e., [Auto-Translation & AI Suggestion](#auto-translation-via-ai), [Alignment](#ai-alignment), [QA check](#ai-qa-check), [Advisor string context review](#advisor-string-context-review), or Create custom type)
       * Custom type name (Specific to the custom prompt type)
       * Use this prompt as the default prompt for AI Suggestion in editor (Specific to Auto-Translation & AI Suggestion prompt type)
       * Title
@@ -67,8 +67,9 @@ To configure AI prompts, follow these steps:
           * `%targetLanguages%` &ndash; A list of all the project’s target languages.
           * `%targetLanguage%` &ndash; The language the content is translated into.
           * `%pluralForms%` &ndash; A list of plural forms for the target language.
-          * `%json%` &ndash; A collection of strings for the current segment, including the string identifier (key), context, text, maximum length, and translations to other languages (if the translations placeholder is specified).
+          * `%strings%` &ndash; A collection of strings for the current segment, including the string identifier (key), context, text, maximum length, and translations to other languages (if the translations placeholder is specified).
           * `%translationUnits%` &ndash; A list of translation units (source and translation) for the AI to evaluate during QA checks.
+          * `%alignmentPairs%` &ndash; A list of source and target translation pairs for the AI to analyze during AI Alignment.
           * `%fileName%` &ndash; The file name of the current segment.
           * `%fileContext%` &ndash; The file context of the current segment (provided via the file settings modal in the 'Files' section).
           * `%siblingsStrings%` &ndash; The previous and next segments in the file, allowing for contextual translation.
@@ -84,6 +85,17 @@ To configure AI prompts, follow these steps:
       </Aside>
   4. Click **Create**.
 </Steps>
+
+<Aside type="tip">
+  Besides **Basic** and **Advanced**, a third **External** mode becomes available when you install an app that provides prompts. In this mode, the prompt is built and processed by the app rather than by Crowdin, enabling custom prompt logic beyond the built-in options.
+</Aside>
+
+<LinkCard
+  title="AI Pipeline App"
+  description="Run translations through a sequence of focused AI steps (translation, verification, and self-correction) to maximize quality."
+  href="https://store.crowdin.com/ai-pipeline"
+  target="_blank"
+/>
 
 #### Creating Prompts in Project Settings
 
@@ -196,7 +208,8 @@ Currently, Crowdin Enterprise supports the following AI providers:
 * OpenAI <Badge text="System" variant="note" size="small" />
 * Microsoft Azure OpenAI <Badge text="System" variant="note" size="small" />
 * Microsoft Foundry <Badge text="System" variant="note" size="small" />
-* Google Gemini <Badge text="System" variant="note" size="small" />
+* Google Gemini (Vertex AI) <Badge text="System" variant="note" size="small" />
+* Google Gemini (AI Studio) <Badge text="System" variant="note" size="small" />
 * Mistral AI <Badge text="System" variant="note" size="small" />
 * Anthropic <Badge text="System" variant="note" size="small" />
 * xAI <Badge text="System" variant="note" size="small" />
@@ -246,9 +259,9 @@ To configure an AI provider, follow these steps:
 
 Some AI providers require additional information beyond a standard API key for authentication when you use your own credentials.
 
-##### Google Gemini
+##### Google Gemini (Vertex AI)
 
-When configuring Google Gemini, you will need to provide the following credentials:
+When configuring Google Gemini (Vertex AI), you will need to provide the following credentials:
 
 * **Project ID**: Your unique Google Cloud Project ID. You can find this on the dashboard of your Google Cloud Console.
 * **Region**: The region where your model is hosted. Ensure the model you plan to use is available in the selected region. You can find this on your Vertex AI dashboard. See the official Google Cloud documentation for a list of [available Gemini models and regions](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations).
@@ -354,6 +367,10 @@ When enabled, [AI Alignment](#ai-alignment) automatically generates bilingual dr
 #### AI QA Check {#ai-qa-check-organization-settings}
 
 Select the default **QA check** type prompt to be used for AI-powered quality assurance across all projects in your Crowdin Enterprise organization. If no organization-wide prompt is configured, the AI-powered check will not be applied unless a prompt is selected in a specific project's Settings.
+
+#### Advisor String Context Review {#advisor-string-context-review-organization-settings}
+
+Select a default **Advisor string context review** type prompt used to review the quality of the context provided for source strings across all projects in your organization. It flags strings whose context is missing or won't help translators understand how a string is used.
 
 <LinkCard
   title="AI Prompts in the Project Settings"
@@ -494,6 +511,16 @@ To enable AI QA Check in your projects, follow these steps:
 </Steps>
 
 Once set, the AI continuously checks submitted translations, ensuring consistent compliance with your project's quality guidelines.
+
+## Advisor String Context Review
+
+Advisor String Context Review uses AI to evaluate the quality of the context provided for your source strings and flags those whose context is missing or won't help translators understand how a string is used. It powers the **Low string context coverage** check on the project's **Advisors** tab.
+
+<LinkCard
+  title="Advisors"
+  description="Run automated background checks on your localization setup, including the AI-powered string context review."
+  href="/enterprise/advisors/"
+/>
 
 ## See Also
 
