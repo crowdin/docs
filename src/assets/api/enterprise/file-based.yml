@@ -6447,72 +6447,6 @@ paths:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
       x-doc-sections:
         - file-based
-  /search/files:
-    get:
-      tags:
-        - Search
-      summary: 'Search Files'
-      description: "**Required scopes:** `project.source.file` (Read only).\n\nSearches source files by name/title across up to 50 caller-supplied projects."
-      operationId: api.search.files.getMany
-      parameters:
-        -
-          name: query
-          in: query
-          description: 'Search files by `name` or `title`'
-          required: true
-          schema:
-            type: string
-            maxLength: 128
-        -
-          name: projectIds
-          in: query
-          description: 'Project identifiers to search across. Get via [List Projects](#operation/api.projects.getMany). It can be one project or a list of comma-separated ones (max 50)'
-          required: true
-          schema:
-            type: string
-          example: '1,2,3'
-        -
-          $ref: '#/components/parameters/PaginationLimit'
-        -
-          $ref: '#/components/parameters/PaginationOffset'
-      responses:
-        '200':
-          description: 'Matched files'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EnterpriseFileCollectionResource'
-        '400':
-          description: 'Invalid Request Parameters'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorCollectionResource'
-              example:
-                errors:
-                  - { error: { key: query, errors: [{ code: isEmpty, message: "Value is required and can't be empty" }] } }
-        '404':
-          description: 'One of the requested projects was not found'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundExceptionResource'
-              example:
-                error:
-                  message: 'Project Not Found'
-                  code: 404
-        '422':
-          description: 'The search was too broad to complete within the time limit'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
-              example:
-                error:
-                  message: 'The search was too broad to complete within the time limit'
-                  code: 422
-      x-doc-sections:
-        - file-based
   /glossaries:
     get:
       tags:
@@ -14377,82 +14311,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
-  /search/strings:
-    get:
-      tags:
-        - Search
-      summary: 'Search Source Strings'
-      description: "**Required scopes:** `project.source.string` (Read only).\n\nSearches source strings by text/context/key across up to 50 caller-supplied projects."
-      operationId: api.search.strings.getMany
-      parameters:
-        -
-          name: query
-          in: query
-          description: 'Search strings by the fields selected in `scope`'
-          required: true
-          schema:
-            type: string
-            maxLength: 128
-        -
-          name: projectIds
-          in: query
-          description: 'Project identifiers to search across. Get via [List Projects](#operation/api.projects.getMany). It can be one project or a list of comma-separated ones (max 50)'
-          required: true
-          schema:
-            type: string
-          example: '1,2,3'
-        -
-          name: scope
-          in: query
-          description: 'Specify field to be the target of filtering. One of: `all`, `text`, `context`, `key`. Default is `all`'
-          schema:
-            type: string
-            default: all
-            enum:
-              - all
-              - text
-              - context
-              - key
-        -
-          $ref: '#/components/parameters/PaginationLimit'
-        -
-          $ref: '#/components/parameters/PaginationOffset'
-      responses:
-        '200':
-          description: 'Matched source strings'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EnterpriseStringSearchCollectionResource'
-        '400':
-          description: 'Invalid Request Parameters'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorCollectionResource'
-              example:
-                errors:
-                  - { error: { key: query, errors: [{ code: isEmpty, message: "Value is required and can't be empty" }] } }
-        '404':
-          description: 'One of the requested projects was not found'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundExceptionResource'
-              example:
-                error:
-                  message: 'Project Not Found'
-                  code: 404
-        '422':
-          description: 'The search was too broad to complete within the time limit'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
-              example:
-                error:
-                  message: 'The search was too broad to complete within the time limit'
-                  code: 422
   '/projects/{projectId}/comments/{commentId}/attachments/{attachmentId}':
     delete:
       tags:
@@ -16324,77 +16182,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
-  /search/translations:
-    get:
-      tags:
-        - Search
-      summary: 'Search Translations'
-      description: "**Required scopes:** `project.translation` (Read only).\n\nSearches target-language translations by text across up to 50 caller-supplied projects."
-      operationId: api.search.translations.getMany
-      parameters:
-        -
-          name: query
-          in: query
-          description: 'Search translations by `text`'
-          required: true
-          schema:
-            type: string
-            maxLength: 128
-        -
-          name: projectIds
-          in: query
-          description: 'Project identifiers to search across. Get via [List Projects](#operation/api.projects.getMany). It can be one project or a list of comma-separated ones (max 50)'
-          required: true
-          schema:
-            type: string
-          example: '1,2,3'
-        -
-          name: languageIds
-          in: query
-          description: 'Filter by target language identifier. Get via [Project Target Languages](#operation/api.projects.get). It can be one language or a list of comma-separated ones'
-          schema:
-            type: string
-          example: 'uk,de'
-        -
-          $ref: '#/components/parameters/PaginationLimit'
-        -
-          $ref: '#/components/parameters/PaginationOffset'
-      responses:
-        '200':
-          description: 'Matched translations'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EnterpriseTranslationSearchCollectionResource'
-        '400':
-          description: 'Invalid Request Parameters'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorCollectionResource'
-              example:
-                errors:
-                  - { error: { key: query, errors: [{ code: isEmpty, message: "Value is required and can't be empty" }] } }
-        '404':
-          description: 'One of the requested projects was not found'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundExceptionResource'
-              example:
-                error:
-                  message: 'Project Not Found'
-                  code: 404
-        '422':
-          description: 'The search was too broad to complete within the time limit'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
-              example:
-                error:
-                  message: 'The search was too broad to complete within the time limit'
-                  code: 422
   '/projects/{projectId}/votes':
     get:
       tags:
@@ -55331,9 +55118,6 @@ tags:
   -
     name: 'Source Strings'
     description: "\nSource strings are the text units for translation. Instead of modifying source files, you can manage source strings one by one.\n\nUse API to add, edit, or delete some specific strings  in the source-based and files-based projects (available only for the following file formats: CSV, RESX, JSON, Android XML, iOS strings, PROPERTIES, XLIFF).\n"
-  -
-    name: Search
-    description: 'Search across multiple projects in your organization in a single request.'
   -
     name: 'String/Asset Translations'
     description: 'Use API to add or remove strings/asset translations, approvals, and votes.'
