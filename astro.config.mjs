@@ -289,15 +289,15 @@ const config = defineConfig({
         targets: [
           {
             src: 'src/scripts',
-            dest: 'src'
+            dest: ''
           },
           {
             src: 'node_modules/redoc/bundles/redoc.standalone.js',
-            dest: 'node_modules/redoc/bundles'
+            dest: ''
           },
           {
             src: 'src/assets/api',
-            dest: 'src/assets'
+            dest: ''
           }
         ]
       })
