@@ -23022,9 +23022,10 @@ components:
           type: string
           enum:
             - replace
+            - remove
             - test
         path:
-          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>. The `/perUserOverrides/{userId}` and `/perUserOverrides/{userId}/*` paths accept any positive integer for `{userId}`. Creating a new override requires `{userId}` to be an organization member; this requirement does not apply when editing or removing an existing one. The `remove` operation is supported for the `/perUserOverrides/{userId}` path (removes the entire per-user override) and for `/perUserOverrides/{userId}/*` field paths (removes that field; the resulting override is re-validated).'
           type: string
           format: json-pointer
           enum:
@@ -23033,11 +23034,20 @@ components:
             - /alignmentActionAiPromptId
             - /qaCheckActionAiPromptId
             - /contextReviewAiPromptId
+            - /dailyCostLimit
+            - /monthlyCostLimit
+            - /userDailyCostLimit
+            - /userMonthlyCostLimit
+            - '/perUserOverrides/{userId}'
+            - '/perUserOverrides/{userId}/costLimitMode'
+            - '/perUserOverrides/{userId}/dailyCostLimit'
+            - '/perUserOverrides/{userId}/monthlyCostLimit'
       type: object
       discriminator:
         propertyName: op
         mapping:
           replace: '#/components/schemas/AiSettingsOperationReplace'
+          remove: '#/components/schemas/AiSettingsOperationRemove'
           test: '#/components/schemas/AiSettingsOperationTest'
     AiSettingsOperationReplace:
       description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
@@ -23053,8 +23063,21 @@ components:
               oneOf:
                 -
                   type: integer
+                -
+                  type: number
+                  format: float
+                -
+                  type: string
+                -
+                  nullable: true
+    AiSettingsOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.2). Supported for the `/perUserOverrides/{userId}` path (removes the entire per-user override) and `/perUserOverrides/{userId}/*` field paths (removes that field). The `costLimitMode` field cannot be removed as the override always requires it.'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AiSettingsOperation'
     AiSettingsOperationTest:
-      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      description: 'A JSON Patch `Test` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.6)'
       required:
         - value
       type: object
@@ -23067,6 +23090,13 @@ components:
               oneOf:
                 -
                   type: integer
+                -
+                  type: number
+                  format: float
+                -
+                  type: string
+                -
+                  nullable: true
     EnterpriseAiSettingsResource:
       description: 'AI Settings Resource'
       type: object
@@ -23077,7 +23107,7 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/EnterpriseAiSettings'
-    EnterpriseAiSettings:
+    AiSettings:
       title: 'AI Settings'
       properties:
         preTranslationAiPromptId:
@@ -23086,10 +23116,6 @@ components:
         editorSuggestionAiPromptId:
           type: integer
           example: 5
-        alignmentActionAiPromptId:
-          type: integer
-          example: 2
-          nullable: true
         qaCheckActionAiPromptId:
           type: integer
           example: 8
@@ -23098,7 +23124,84 @@ components:
           type: integer
           example: 11
           nullable: true
+        dailyCostLimit:
+          description: 'Maximum total AI cost the organization can spend per day. `null` means no daily limit.'
+          type: number
+          format: float
+          example: 100
+          nullable: true
+        monthlyCostLimit:
+          description: 'Maximum total AI cost the organization can spend per month. `null` means no monthly limit.'
+          type: number
+          format: float
+          example: 2000
+          nullable: true
+        userDailyCostLimit:
+          description: 'Default maximum AI cost a single user can spend per day. Applies to every user unless overridden in `perUserOverrides`. `null` means no per-user daily limit.'
+          type: number
+          format: float
+          example: 10
+          nullable: true
+        userMonthlyCostLimit:
+          description: 'Default maximum AI cost a single user can spend per month. Applies to every user unless overridden in `perUserOverrides`. `null` means no per-user monthly limit.'
+          type: number
+          format: float
+          example: 200
+          nullable: true
+        perUserOverrides:
+          description: 'Per-user cost limit overrides that take precedence over `userDailyCostLimit` and `userMonthlyCostLimit`.'
+          type: array
+          items:
+            $ref: '#/components/schemas/AiUserCostLimit'
       type: object
+    AiUserCostLimit:
+      title: 'AI User Cost Limit'
+      properties:
+        userId:
+          description: 'ID of the user this cost limit override applies to'
+          type: integer
+          example: 123
+        costLimitMode:
+          description: "User AI cost limit mode\n\nValues available:\n- custom - Custom daily and monthly cost limits are applied\n- blocked - User is blocked from using AI\n- unlimited - User has no AI cost limit"
+          type: string
+          enum:
+            - custom
+            - blocked
+            - unlimited
+          example: custom
+        dailyCostLimit:
+          description: 'Maximum AI cost this user can spend per day. Applies when `costLimitMode` is `custom`. `null` for `blocked` and `unlimited` modes.'
+          type: number
+          format: float
+          example: 5
+          nullable: true
+        monthlyCostLimit:
+          description: 'Maximum AI cost this user can spend per month. Applies when `costLimitMode` is `custom`. `null` for `blocked` and `unlimited` modes.'
+          type: number
+          format: float
+          example: 100
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-05-23T11:26:54+00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-05-23T11:26:54+00:00'
+      type: object
+    EnterpriseAiSettings:
+      title: 'AI Settings'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AiSettings'
+        -
+          properties:
+            alignmentActionAiPromptId:
+              type: integer
+              example: 2
+              nullable: true
     AiTranslateFormBase:
       required:
         - strings
@@ -23623,12 +23726,12 @@ components:
           description: 'Lifecycle event URLs that changed (installed/uninstall/status)'
           type: object
           additionalProperties:
-            type: object
             properties:
               from:
                 type: string
               to:
                 type: string
+            type: object
         baseUrlChanged:
           description: 'baseUrl change (host that serves the app)'
           properties:
