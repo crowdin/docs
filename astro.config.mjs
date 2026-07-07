@@ -1,7 +1,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import sitemap from '@astrojs/sitemap';
-import starlightUtils from '@lorenzo_lewis/starlight-utils';
+import starlightSidebarTopics from 'starlight-sidebar-topics';
 import starlightLinksValidator from 'starlight-links-validator';
 import starlightHeadingBadges from 'starlight-heading-badges';
 import starlightLlmsTxt from 'starlight-llms-txt';
@@ -36,7 +36,10 @@ if (process.env.VERCEL_ENV === 'production' && process.env.VERCEL_PROJECT_PRODUC
 // https://astro.build/config
 const config = defineConfig({
   site: site,
-  trailingSlash: 'always',
+  // 'ignore' works around an Astro 7 bug where 'always' breaks starlight-llms-txt's
+  // extensioned `/_llms-txt/[slug].txt` route. Output is unchanged: the 'directory' build
+  // format and Vercel (`trailingSlash: true`) keep URLs trailing-slashed regardless.
+  trailingSlash: 'ignore',
   integrations: [
     starlight({
       title: 'Crowdin Docs',
@@ -47,33 +50,6 @@ const config = defineConfig({
         light: './src/assets/logo/dark.svg',
         dark: './src/assets/logo/light.svg',
       },
-      sidebar: [
-        {
-          label: 'Crowdin Help',
-          items: [...crowdinSidebar],
-        },
-        {
-          label: 'Enterprise Help',
-          items: [...enterpriseSidebar],
-        },
-        {
-          label: 'Developer Portal',
-          items: [...developerSidebar],
-        },
-        // Navigation links
-        {
-          label: "leading",
-          items: [
-            { label: "Crowdin Help", slug: "introduction", attrs: { id: "crowdin-nav-button", class: "nav-link" } },
-            { label: "Enterprise Help", slug: "enterprise/introduction", attrs: { id: "enterprise-nav-button", class: "nav-link" } },
-            { label: "Developer Portal", slug: "developer/crowdin-apps-about", attrs: { id: "developer-nav-button", class: "nav-link" } },
-            { label: "Store", link: "https://store.crowdin.com", attrs: { target: "_blank", class: "nav-link" } },
-            { label: "Blog", link: "https://crowdin.com/blog", attrs: { target: "_blank", class: "nav-link" } },
-            { label: "Community", link: "https://community.crowdin.com/", attrs: { target: "_blank", class: "nav-link" } },
-            { label: "Crowdin.com", link: "https://crowdin.com/", attrs: { target: "_blank", class: "nav-link" } },
-          ],
-        }
-      ],
       head: [
         // Custom consent mode https://www.cookieyes.com/documentation/implementing-google-consent-mode-using-cookieyes/
         {
@@ -136,6 +112,8 @@ const config = defineConfig({
         SocialIcons: './src/components/SocialIcons.astro',
         EditLink: './src/components/EditLink.astro',
         FallbackContentNotice: './src/components/FallbackContentNotice.astro',
+        SiteTitle: './src/components/SiteTitle.astro',
+        Sidebar: './src/components/Sidebar.astro',
       },
       customCss: [
         './src/style/global.css',
@@ -148,14 +126,39 @@ const config = defineConfig({
         baseUrl: 'https://github.com/crowdin/docs/edit/main',
       },
       plugins: [
-        starlightUtils({
-          multiSidebar: {
-            switcherStyle: "hidden",
+        starlightSidebarTopics(
+          [
+            {
+              label: 'hero.crowdinHelp',
+              id: 'crowdin',
+              link: '/introduction/',
+              icon: 'open-book',
+              items: [...crowdinSidebar],
+            },
+            {
+              label: 'hero.enterpriseHelp',
+              id: 'enterprise',
+              link: '/enterprise/introduction/',
+              icon: 'information',
+              items: [...enterpriseSidebar],
+            },
+            {
+              label: 'hero.developerPortal',
+              id: 'developer',
+              link: '/developer/crowdin-apps-about/',
+              icon: 'puzzle',
+              items: [...developerSidebar],
+            },
+          ],
+          {
+            exclude: [
+              '/ai-fine-tuning',
+              '/enterprise/ai-fine-tuning',
+              '/*/ai-fine-tuning',
+              '/*/enterprise/ai-fine-tuning',
+            ],
           },
-          navLinks: {
-            leading: { useSidebarLabelled: "leading" },
-          }
-        }),
+        ),
         starlightLinksValidator({
           errorOnFallbackPages: false,
           errorOnInvalidHashes: false,

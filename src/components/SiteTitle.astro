@@ -1,0 +1,99 @@
+---
+/**
+ * Override SiteTitle to render the header navigation next to the logo, reproducing the
+ * previous @lorenzo_lewis/starlight-utils navLinks layout:
+ *   - Topic switcher links (Crowdin Help / Enterprise / Developer) with the current
+ *     section highlighted, sourced from starlight-sidebar-topics route data.
+ *   - External links (Store, Blog, Community, Crowdin.com).
+ *
+ * Structure and base styles are adapted from starlight-utils' SiteTitle.astro + NavLinks.astro
+ * (flex wrapper + `<ul>` of links, gray links turning white on hover, bold current link,
+ * smaller text on wide viewports), with the site's original `.nav-link` pill styling
+ * (padding/rounded/white active button) layered on top.
+ */
+import Default from '@astrojs/starlight/components/SiteTitle.astro';
+
+const topics = Astro.locals.starlightSidebarTopics?.topics ?? [];
+
+const externalLinks = [
+    { label: 'Store', href: 'https://store.crowdin.com' },
+    { label: 'Blog', href: 'https://crowdin.com/blog' },
+    { label: 'Community', href: 'https://community.crowdin.com/' },
+    { label: 'Crowdin.com', href: 'https://crowdin.com/' },
+];
+---
+
+<div class="site-title-with-nav">
+    <Default />
+    <ul class="nav-links">
+        {topics.map((topic) => (
+            <li>
+                <a
+                    href={topic.link}
+                    class="nav-link"
+                    aria-current={topic.isCurrent ? 'page' : undefined}
+                >{Astro.locals.t(topic.label, { defaultValue: topic.label })}</a>
+            </li>
+        ))}
+        {externalLinks.map((link) => (
+            <li>
+                <a href={link.href} class="nav-link" target="_blank" rel="noopener">{link.label}</a>
+            </li>
+        ))}
+    </ul>
+</div>
+
+<style>
+    .site-title-with-nav {
+        display: flex;
+        align-items: center;
+        gap: var(--sl-nav-gap);
+    }
+
+    .nav-links {
+        display: none;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        gap: var(--sl-nav-gap);
+    }
+
+    .nav-link {
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        white-space: nowrap;
+        text-decoration: none;
+        color: var(--sl-color-gray-1);
+    }
+
+    .nav-link:hover,
+    .nav-link:focus {
+        color: var(--sl-color-white);
+        background-color: rgba(var(--crowdin-cards-color), 0.05);
+    }
+
+    .nav-link[aria-current='page'],
+    .nav-link[aria-current='page']:hover,
+    .nav-link[aria-current='page']:focus {
+        font-weight: 600;
+        color: var(--sl-color-black);
+        background-color: var(--sl-color-white);
+    }
+
+    @media (min-width: 640px) {
+        .nav-links {
+            display: flex;
+        }
+
+        /* Let the nav sit beside the logo without being clipped by the title wrapper. */
+        :global(.title-wrapper) {
+            overflow: visible;
+        }
+    }
+
+    @media (min-width: 50rem) {
+        .nav-link {
+            font-size: var(--sl-text-sm);
+        }
+    }
+</style>

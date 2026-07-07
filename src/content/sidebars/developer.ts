@@ -16,8 +16,8 @@ export default [
       { slug: path('crowdin-apps-user-interface') },
       {
         ...sidebarLabel('publishing'),
-        autogenerate: { directory: path('crowdin-apps', 'publishing') },
         collapsed: true,
+        items: [{ autogenerate: { directory: path('crowdin-apps', 'publishing'), collapsed: true } }],
       },
     ],
   },
@@ -26,31 +26,31 @@ export default [
     items: [
       {
         ...sidebarLabel('uiModules'),
-        autogenerate: { directory: path('modules', 'ui-modules') },
         collapsed: true,
+        items: [{ autogenerate: { directory: path('modules', 'ui-modules'), collapsed: true } }],
       },
       {
         ...sidebarLabel('aiModules'),
-        autogenerate: { directory: path('modules', 'ai-modules') },
         collapsed: true,
+        items: [{ autogenerate: { directory: path('modules', 'ai-modules'), collapsed: true } }],
       },
       {
         ...sidebarLabel('fileProcessingModules'),
-        autogenerate: { directory: path('modules', 'file-processing-modules') },
         collapsed: true,
+        items: [{ autogenerate: { directory: path('modules', 'file-processing-modules'), collapsed: true } }],
       },
       {
         ...sidebarLabel('other'),
-        autogenerate: { directory: path('modules', 'other') },
         collapsed: true,
+        items: [{ autogenerate: { directory: path('modules', 'other'), collapsed: true } }],
       }
     ],
     collapsed: true,
   },
   {
     ...sidebarLabel('capabilities'),
-    autogenerate: { directory: path('capabilities') },
     collapsed: true,
+    items: [{ autogenerate: { directory: path('capabilities'), collapsed: true } }],
   },
   {
     ...sidebarLabel('api'),
@@ -137,13 +137,13 @@ export default [
   },
   {
     ...sidebarLabel('security'),
-    autogenerate: { directory: path('security') },
     collapsed: true,
+    items: [{ autogenerate: { directory: path('security'), collapsed: true } }],
   },
   {
     ...sidebarLabel('guides'),
-    autogenerate: { directory: path('guides') },
     collapsed: true,
+    items: [{ autogenerate: { directory: path('guides'), collapsed: true } }],
   }
 ]
 
