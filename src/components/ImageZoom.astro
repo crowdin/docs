@@ -1,0 +1,49 @@
+---
+// Click-to-zoom for UI screenshots inside article content.
+// Attaches medium-zoom to images in `.sl-markdown-content`, skipping images
+// that are wrapped in a link (those stay clickable).
+---
+
+<script>
+    import mediumZoom from 'medium-zoom';
+
+    let zoom: ReturnType<typeof mediumZoom> | undefined;
+
+    function setupImageZoom() {
+        const images = [...document.querySelectorAll<HTMLImageElement>('.sl-markdown-content img')]
+            .filter((img) => !img.closest('a'));
+
+        if (!images.length) return;
+
+        if (!zoom) {
+            zoom = mediumZoom(images, {
+                margin: 24,
+                background: 'rgba(0, 0, 0, 0.8)',
+            });
+        } else {
+            zoom.detach();
+            zoom.attach(images);
+        }
+    }
+
+    // Module scripts are deferred, so the content is already in the DOM.
+    setupImageZoom();
+
+    // Re-attach after client-side navigation (if View Transitions get enabled).
+    document.addEventListener('astro:page-load', setupImageZoom);
+</script>
+
+<style is:global>
+    .sl-markdown-content .medium-zoom-image {
+        cursor: zoom-in;
+    }
+
+    .medium-zoom-overlay,
+    .medium-zoom-image--opened {
+        z-index: 1000;
+    }
+
+    .medium-zoom-image--opened {
+        cursor: zoom-out;
+    }
+</style>
