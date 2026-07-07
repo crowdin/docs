@@ -1,19 +1,19 @@
 type StarlightRouteLike = {
-  slug: string;
+  id: string;
   locale?: string;
   lang: string;
 };
 
 export function isStarlightHomepage(route: StarlightRouteLike): boolean {
   return (
-    route.slug === '' ||
+    route.id === '' ||
     (route.locale !== undefined &&
-      (route.slug === route.locale || route.slug === `${route.locale}/index`))
+      (route.id === route.locale || route.id === `${route.locale}/index`))
   );
 }
 
 export function getCurrentProduct(route: StarlightRouteLike): string | undefined {
-  const slugSegments = route.slug.split('/').filter(Boolean);
+  const slugSegments = route.id.split('/').filter(Boolean);
   const nonLocaleSegments =
     route.locale && slugSegments[0] === route.locale
       ? slugSegments.slice(1)

@@ -15,16 +15,16 @@ export default [
       { slug: 'additional-support-services' },
       {
         ...sidebarLabel('account'),
-        autogenerate: { directory: path('getting-started', 'account') },
         collapsed: true,
+        items: [{ autogenerate: { directory: path('getting-started', 'account'), collapsed: true } }],
       },
     ],
     collapsed: true,
   },
   {
     ...sidebarLabel('translationProcess'),
-    autogenerate: { directory: path('translation-process') },
     collapsed: true,
+    items: [{ autogenerate: { directory: path('translation-process'), collapsed: true } }],
   },
   {
     ...sidebarLabel('projectManagement'),
@@ -37,56 +37,56 @@ export default [
       { slug: 'webhooks' },
       {
         ...sidebarLabel('sources'),
-        autogenerate: { directory: path('project-management', 'sources') },
         collapsed: true,
+        items: [{ autogenerate: { directory: path('project-management', 'sources'), collapsed: true } }],
       },
       {
         ...sidebarLabel('translations'),
-        autogenerate: { directory: path('project-management', 'translations') },
         collapsed: true,
+        items: [{ autogenerate: { directory: path('project-management', 'translations'), collapsed: true } }],
       },
       {
         ...sidebarLabel('projectSettings'),
-        autogenerate: { directory: path('project-management', 'project-settings') },
         collapsed: true,
+        items: [{ autogenerate: { directory: path('project-management', 'project-settings'), collapsed: true } }],
       }
     ],
     collapsed: true,
   },
   {
     ...sidebarLabel('teamManagement'),
-    autogenerate: { directory: path('team-management') },
     collapsed: true,
+    items: [{ autogenerate: { directory: path('team-management'), collapsed: true } }],
   },
   {
     ...sidebarLabel('integrations'),
-    autogenerate: { directory: path('integrations') },
     collapsed: true,
+    items: [{ autogenerate: { directory: path('integrations'), collapsed: true } }],
   },
   {
     ...sidebarLabel('localizationResources'),
-    autogenerate: { directory: path('localization-resources') },
     collapsed: true,
+    items: [{ autogenerate: { directory: path('localization-resources'), collapsed: true } }],
   },
   {
     ...sidebarLabel('onlineEditor'),
-    autogenerate: { directory: path('online-editor') },
     collapsed: true,
+    items: [{ autogenerate: { directory: path('online-editor'), collapsed: true } }],
   },
   {
     ...sidebarLabel('tasks'),
-    autogenerate: { directory: path('tasks') },
     collapsed: true,
+    items: [{ autogenerate: { directory: path('tasks'), collapsed: true } }],
   },
   {
     ...sidebarLabel('reports'),
-    autogenerate: { directory: path('reports') },
     collapsed: true,
+    items: [{ autogenerate: { directory: path('reports'), collapsed: true } }],
   },
   {
     ...sidebarLabel('billingAndPayments'),
-    autogenerate: { directory: path('billing') },
     collapsed: true,
+    items: [{ autogenerate: { directory: path('billing'), collapsed: true } }],
   }
 ]
 

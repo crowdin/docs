@@ -12,7 +12,6 @@ const pages = Object.fromEntries(entries.map(({ data, id }) => [id, { data }]));
 
 export const { getStaticPaths, GET } = await OGImageRoute({
     pages,
-    param: 'slug',
     // See https://github.com/delucis/astro-og-canvas/tree/latest/packages/astro-og-canvas#image-options
     getImageOptions: (_path, page: (typeof pages)[number]) => {
         return {
