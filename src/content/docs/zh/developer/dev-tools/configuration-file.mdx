@@ -1,0 +1,878 @@
+---
+title: 配置文件
+description: 探索 crowdin.yml 配置文件的各种可能性
+slug: developer/configuration-file
+---
+
+import { Aside, CardGrid, LinkCard, FileTree } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+
+各种 Crowdin 工具使用 `crowdin.yml` 配置文件来指定要管理的资源，包括要上传到 Crowdin 的文件以及相应译文的存储位置。
+
+<CardGrid>
+  <LinkCard title="VCS 集成" description="GitHub、GitLab、Bitbucket、Azure Repos。" href="/zh/integrations/#vcs-集成" target="_blank" />
+  <LinkCard title="控制台客户端 (CLI)" description="跨平台命令行工具。" href="https://crowdin.github.io/crowdin-cli/" target="_blank" />
+  <LinkCard title="Visual Studio Code 插件" href="https://marketplace.visualstudio.com/items?itemName=Crowdin.vscode-crowdin" target="_blank" />
+  <LinkCard title="Android Studio 插件" href="https://github.com/crowdin/android-studio-plugin#readme" target="_blank" />
+</CardGrid>
+
+## 配置文件结构
+
+有效的 `crowdin.yml` 配置文件具有以下结构，请确保填写所有所需信息：
+
+* 文件头部包含项目凭据、偏好设置和访问信息。
+* 一个 files 数组元素，描述您将管理的一组源文件和译文文件。
+* files 数组中的必填字段：`source` 用于定义源文件的过滤器，`translation` 用于指定译文文件的存储位置，或在设置 CLI 时指定已有译文的查找位置。
+
+## 编写简单配置文件
+
+典型的配置文件如下所示：
+
+```yml title="crowdin.yml"
+"project_id": "projectId"
+"api_token": "personal-access-token"
+"base_path": "."
+"base_url": "https://api.crowdin.com"
+
+"preserve_hierarchy": true
+
+"files": [
+  {
+    "source": "/locale/en/folder1/[0-2].txt",
+    "translation": "/locale/%two_letters_code%/folder1/%original_file_name%"
+  },
+]
+```
+
+<table>
+  <thead>
+  <tr>
+    <th><div class="w-44" />名称</th>
+    <th>描述</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>project_id</code></td>
+    <td>Crowdin 项目数字 ID</td>
+  </tr>
+  <tr>
+    <td><code>api_token</code></td>
+    <td>Crowdin 个人访问令牌。 令牌所有者在项目中至少应具有管理员权限</td>
+  </tr>
+  <tr>
+    <td><code>base_path</code><div class="text-gray-400">可选</div></td>
+    <td>本地计算机上项目目录相对于 `crowdin.yml` 配置文件的路径</td>
+  </tr>
+  <tr>
+    <td><code>base_url</code><br /><div class="text-gray-400">可选</div></td>
+    <td>Crowdin API 基础 URL。 crowdin.com 可选填。 Crowdin 企业版请使用 `https://{organization-name}.api.crowdin.com`</td>
+  </tr>
+  <tr>
+    <td><code>preserve_hierarchy</code><div class="text-gray-400">可选</div></td>
+    <td>如果设置为 <code>true</code>，则目录结构将在服务器上保留。 如果设置为 `false`，目录结构将被展平。</td>
+  </tr>
+  <tr>
+    <td><code>source</code></td>
+    <td>源文件的过滤器。 支持通配符。</td>
+  </tr>
+  <tr>
+    <td><code>translation</code></td>
+    <td>译文文件的存储路径。 支持通配符。</td>
+  </tr>
+  </tbody>
+</table>
+
+## 从环境变量中加载 API 凭据
+
+您可以从环境变量中加载 API 凭据，例如：
+
+```yml title="crowdin.yml"
+"project_id_env": "CROWDIN_PROJECT_ID"
+"api_token_env": "CROWDIN_PERSONAL_TOKEN"
+"base_path_env": "CROWDIN_BASE_PATH"
+"base_url_env": "CROWDIN_BASE_URL"
+```
+
+如果混合使用，*api_token* 和 *project_id* 将被优先考虑：
+
+```yml title="crowdin.yml"
+"project_id_env": "CROWDIN_PROJECT_ID"     # 低优先级
+"api_token_env": "CROWDIN_PERSONAL_TOKEN"  # 低优先级
+"base_path_env": "CROWDIN_BASE_PATH"       # 低优先级
+"base_url_env": "CROWDIN_BASE_PATH"        # 低优先级
+"project_id": "projectId"                  # 高优先级
+"api_token": "personal-access-token"       # 高优先级
+"base_path": "."                           # 高优先级
+"base_url": "https://api.crowdin.com"      # 高优先级
+```
+
+## 通用配置
+
+上面提供的示例配置中，source 和 translation 属性包含标准通配符（也称为 globbing 模式），以便更轻松地处理多个文件。
+
+以下是您可以使用的模式：
+
+---
+
+**\*** （星号）
+
+匹配文件或目录名称中的任意字符。 如果您指定 `*.json`，它将包含所有如 `messages.json`、`about_us.json` 以及任何以 `.json` 结尾的文件。
+
+---
+
+**\*\*** （双星号）
+
+递归匹配任意字符串（包括子目录）。 请注意，您可以在 source 和 translation 模式中同时使用 `**`。 在 translation 模式中使用 `**` 时，它始终包含给定文件在 source 中的子路径。 例如，您可以使用 source: `/en/**/*.po` 来递归地将所有 `*.po` 文件上传到 Crowdin。 translation 模式将为 `/%two_letters_code%/**/%original_file_name%`。
+
+---
+
+**?** （问号）
+
+匹配任意单个字符。
+
+---
+
+**[set]**
+
+匹配集合中的任意单个字符。 行为与正则表达式中的字符集完全相同，包括集合取反（`[^a-z]`）。
+
+---
+
+**\** （反斜杠）
+
+转义下一个元字符。
+
+## 占位符
+
+Crowdin CLI 允许使用以下占位符，将适当的变量放置在生成的文件名中：
+
+<Include file="placeholders.mdx" />
+
+您还可以通过在模式开头加斜杠（`/`）来定义生成压缩包中文件的路径。
+
+## 通配符的使用
+
+本地计算机上的文件和目录结构：
+
+<FileTree>
+* base_path
+  * folder
+    * 1.xml
+    * 1.txt
+    * 123.txt
+    * 123_test.txt
+    * a.txt
+    * a1.txt
+    * crowdin?test.txt
+    * crowdin_test.txt
+  * 1.xml
+  * 1.txt
+  * 123.txt
+  * 123_test.txt
+  * a.txt
+  * a1.txt
+  * crowdin?test.txt
+  * crowdin_test.txt
+  * 3.txt
+</FileTree>
+
+示例 1。 在源文件路径中使用通配符：
+
+```yml title="crowdin.yml" wrap
+"files": [
+  {
+      "source": "/**/?[0-9].txt", # upload a1.txt, folder/a1.txt
+      "translation": "/**/%two_letters_code%_%original_file_name%"
+  },
+  {
+      "source": "/**/*\?*.txt", # upload crowdin?test.txt, folder/crowdin?test.txt
+      "translation": "/**/%two_letters_code%_%original_file_name%"
+  },
+  {
+      "source": "/**/[^0-2].txt", # upload 3.txt, folder/3.txt, a.txt, folder/a.txt (ignore 1.txt, folder/1.txt)
+      "translation": "/**/%two_letters_code%_%original_file_name%"
+  }
+]
+```
+
+示例 2。 在忽略文件时使用通配符：
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/**/*.*", #upload all files that  the base_path contains
+    "translation": "/**/%two_letters_code%_%original_file_name%",
+    "ignore": [
+      "/**/%two_letters_code%_%original_file_name%", #ignore the translated files
+      "/**/?.txt",                 #ignore 1.txt, a.txt, folder/1.txt, folder/a.txt
+      "/**/[0-9].txt",             #ignore 1.txt, folder/1.txt
+      "/**/*\?*.txt",             #ignore crowdin?test.txt, folder/crowdin?test.txt
+      "/**/[0-9][0-9][0-9].txt",   #ignore 123.txt , folder/123.txt
+      "/**/[0-9]*_*.txt"           #ignore 123_test.txt, folder/123_test.txt
+    ]
+  }
+]
+```
+
+## 重命名译文文件
+
+如果您需要重命名含译文的文件或在导出后替换路径中的部分内容，可以使用 `translation_replace` 参数。
+
+例如，如果文件名为 `strings_en.po`，可以将其重命名为 `strings.po`，或者替换译文路径中的文件夹名：
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/locale/**/*_en.po",
+    "translation": "/locale/**/%original_file_name%_%two_letters_code%",
+    "translation_replace": {
+      "_en": "",
+      "de/locale": "de/lokalisierung",
+      "fr/locale": "fr/paramètres"
+    }
+  }
+]
+```
+
+在这种情况下，`_en` 将从文件名中删除，文件夹名 `de/locale` 和 `fr/locale` 将分别替换为 `de/lokalisierung` 和 `fr/paramètres`。
+
+## 忽略文件和目录
+
+有时，项目中存在一些无需在 Crowdin 中翻译的文件和目录。 在这种情况下，可以在项目的配置文件中添加局部的逐文件规则。
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/**/*.properties",
+    "translation": "/**/%file_name%_%two_letters_code%.%file_extension%",
+    "ignore": [
+      "/test/file.properties",
+      "/example.properties"
+    ]
+  },
+  {
+    "source": "/locale/en/**/*.po",
+    "translation": "/locale/%two_letters_code%/**/%original_file_name%",
+    "ignore": [
+      "/locale/en/templates",
+      "/locale/en/workflow"
+    ]
+  }
+]
+```
+
+您也可以使用[通配符](#usage-of-wildcards)来忽略文件。
+
+## 排除源文件的目标语言
+
+默认情况下，源文件可翻译为项目的所有目标语言。 如果某些源文件不需要翻译成特定的目标语言，可以使用 `excluded_target_languages` 参数将其排除。
+
+配置文件示例：
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/resources/en/*.json",
+    "translation": "/resources/%two_letters_code%/%original_file_name%",
+    "excluded_target_languages": [
+      "uk",
+      "fr"
+    ]
+  }
+]
+```
+
+## 导出语言
+
+默认情况下，所有语言都会被导出。 如果您需要导出特定语言，请使用 `export_languages` 参数来指定它们。
+
+```yml title="crowdin.yml"
+"export_languages": [
+  "uk",
+  "ja"
+]
+```
+
+## 多语言电子表格
+
+如果 CSV 或 XLS/XLSX 文件包含所有目标语言的译文，则应在方案中指定相应的语言代码。
+
+CSV 文件示例：
+
+```csv
+identifier,source_phrase,context,Ukrainian,Spanish (Mexico),French
+ident1,Source 1,Context 1,,,
+ident2,Source 2,Context 2,,,
+ident3,Source 3,Context 3,,,
+```
+
+配置文件示例：
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "multicolumn.csv",
+    "translation": "multicolumn.csv",
+    "first_line_contains_header": true,
+    "scheme": "identifier,source_phrase,context,uk,es-MX,fr"
+  }
+]
+```
+
+如果您的 CSV 或 XLS/XLSX 文件包含在导入时应跳过的列，请在方案中对这些列使用 `none`，例如：
+
+```yml title="crowdin.yml"
+"scheme" : "identifier,source_phrase,context,uk,none,es-MX,none,fr"
+```
+
+##### 模式常量
+
+要为您的 CSV 或 XLS/XLSX 文件构建方案，请使用以下常量：
+
+* `identifier` &ndash; 列包含字符串标识符。
+* `source_phrase` &ndash; 列包含源字符串。
+* `source_or_translation` &ndash; 列包含源字符串，但导出文件时同一列将填充译文。 上传现有译文时，此列的值将用作译文。
+* `translation` &ndash; 列包含译文。
+* `context` &ndash; 列包含源字符串的注释或上下文信息。
+* `max_length` &ndash; 列包含字符串译文的最大长度限制值。
+* `labels` &ndash; 列包含源字符串的标签。
+* `none` &ndash; 导入时将跳过的列。
+
+## 在服务器上保存目录结构
+
+您可以使用 `preserve_hierarchy` 选项来保留或展平 Crowdin 项目中源文件的目录结构。
+
+使用 `preserve_hierarchy` 选项的配置文件示例：
+
+```yml title="crowdin.yml"
+"preserve_hierarchy": true
+
+"files": [
+  {
+    "source": "/locale/en/**/*.po",
+    "translation": "/locale/%two_letters_code%/**/%original_file_name%"
+  }
+]
+```
+
+假设您计算机上的文件/文件夹结构如下所示：
+
+<FileTree>
+* locale
+  * en
+    * emails/
+    * app
+      * foo.po
+      * bar.po
+</FileTree>
+
+如果您在配置文件中完全不使用 `"preserve_hierarchy": true` 选项，或将其设置为 `false`，则所有共享目录将被跳过，Crowdin 中的文件结构将如下所示：
+
+<FileTree>
+* (root)/
+  * foo.po
+  * bar.po
+</FileTree>
+
+<Aside>
+  对于 VCS 集成，preserve hierarchy 选项的默认值为 `true`。 `false` 值仅在源文件具有共享根目录时有效。
+</Aside>
+
+使用 `"preserve_hierarchy": true` 选项时，Crowdin 中的文件结构将如下所示：
+
+<FileTree>
+* locale
+  * en
+    * app
+      * foo.po
+      * bar.po
+</FileTree>
+
+不包含任何待翻译文件的目录不会在 Crowdin 中创建（即上述示例中的 `emails` 目录）。
+
+## 将文件上传至指定路径并指定类型
+
+此功能在 yml 文件部分中添加了两个可选参数的支持：`dest` 和 `type`。 通常用于上传文件名必须不同以便 Crowdin 能正确检测类型的项目。
+
+`dest` 参数允许您在 Crowdin 中指定文件名。 它支持同时处理多个文件，并支持以下占位符：`%original_file_name%`、`%original_path%`、`%file_extension%`、`%file_name%`。
+
+<Aside type="caution">
+  如果您使用 `dest` 参数，配置文件应包含值为 `true` 的 `preserve_hierarchy` 参数。
+</Aside>
+
+同时包含以上参数的配置文件示例：
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/conf/**/*.txt",
+    "dest": "/conf/**/%file_name%.properties",
+    "translation": "/conf/**/%two_letters_code%/%file_name%.properties",
+    "type": "properties"
+  },
+  {
+    "source": "/app/*.txt",
+    "dest": "/app/%file_name%.xml",
+    "translation": "/res/values-%android_code%/%original_file_name%",
+    "type": "android"
+  }
+]
+```
+
+## 更新已更改的字符串
+
+您可以使用 `update_option` 参数在文件更新过程中保留已更改字符串的译文。 如果未设置该参数，已更改字符串的译文将会丢失。 适用于修正错别字和对源字符串进行微小改动的情况。
+
+根据值的不同，`update_option` 用于在文件更新期间保留译文以及保留/移除已更改字符串的审核状态。
+
+可接受的值：
+
+* `update_as_unapproved` - 保留已更改字符串的译文，并在存在审核时移除这些译文的审核
+* `update_without_changes` - 保留已更改字符串的译文和审核
+
+包含 `update_option` 参数的配置示例：
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/*.csv",
+    "translation": "/%three_letters_code%/%file_name%.csv",
+    "first_line_contains_header": true,
+    "scheme": "identifier,source_phrase,translation,context",
+    "update_option": "update_as_unapproved"
+  },
+  {
+    "source": "/**/*.xlsx",
+    "translation": "/%three_letters_code%/folder/%file_name%.xlsx",
+    "update_option": "update_without_changes"
+  }
+]
+```
+
+## 自定义分段
+
+使用您自己的分割规则上传 XML、HTML、MD 或其他没有键值结构的源文件。
+如果未指定，将使用预定义的分割规则（SRX 2.0）进行自动内容分割。
+
+配置文件自定义分割示例：
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/emails/sample1.html",
+    "translation": "/emails/%locale%/%original_file_name%",
+    "custom_segmentation": "/rules/sample.srx.xml"
+  }
+]
+```
+
+## 导入选项
+
+您可以使用额外参数来自定义特定文件类型的导入流程。
+
+### XML 文件导入选项
+
+<table>
+  <thead>
+    <tr>
+      <th>选项</th>
+      <th>类型</th>
+      <th>描述</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">translate_content</code><br /><div class="text-gray-400">可选</div></td>
+    <td>bool</td>
+    <td>定义是否翻译标签内的文本内容。<br />可接受的值为 0 或 1。 默认值为 1。</td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">translate_attributes</code><div class="text-gray-400">可选</div></td>
+    <td>bool</td>
+    <td>定义是否翻译标签的属性。<br />可接受的值为 0 或 1。 默认值为 1。</td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">content_segmentation</code><div class="text-gray-400">可选</div></td>
+    <td>bool</td>
+    <td>
+      <div>
+        定义是否将长文本拆分为较小的文本片段。<br />可接受的值为 0 或 1。 默认值为 1。<br /><br />
+        <b>注意！</b> 启用内容分段后，译文上传由实验性机器学习技术处理。
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">translatable_elements</code><br /><div class="text-gray-400">可选</div></td>
+    <td>array</td>
+    <td>
+      <div>
+        这是一个字符串数组，其中每个条目是应导入的 DOM 元素的 XPath。<br />
+        示例路径：<code>/path/to/node</code> 或 <code>/path/to/attribute[@attr]</code><br /><br />
+        <b>注意！</b> 如果已定义，导入时将不考虑 <code>translate_content</code> 和 <code>translate_attributes</code> 参数。
+      </div>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+包含附加参数的配置示例：
+
+```yml title="crowdin.yml" wrap
+"files": [
+  {
+    "source": "/app/sample1.xml",
+    "translation": "/app/%locale%/%original_file_name%",
+    "translate_attributes": 1,
+    "translate_content": 0
+  },
+  {
+    "source": "/app/sample2.xml",
+    "translation": "/app/%locale%/%original_file_name%",
+    "translatable_elements": [
+      "/content/text",        # translatable texts are stored in 'text' nodes of parent node 'content'
+      "/content/text[@value]" # translatable texts are stored in 'value' attribute of 'text' nodes
+    ]
+  }
+]
+```
+
+### 其他文件导入选项
+
+<table>
+  <thead>
+    <tr>
+      <th>选项</th>
+      <th>类型</th>
+      <th>描述</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">content_segmentation</code><br /><div class="text-gray-400">可选</div></td>
+    <td>bool</td>
+    <td>
+      <div>
+        定义是否将长文本拆分为较小的文本片段。 仅适用于 TXT、DOCX、DITA、IDML、MEDIAWIKI、HTML、Front Matter HTML、Markdown、Front Matter Markdown、XML、XLIFF、XLIFF 2.0<br />
+        可接受的值为 0 或 1。 默认值为 1。<br /><br />
+        <b>注意：</b>启用内容分割后，译文上传由实验性机器学习技术处理。
+      </div>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+包含附加参数的配置示例：
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/emails/sample1.html",
+    "translation": "/emails/%locale%/%original_file_name%",
+    "content_segmentation": 1
+  }
+]
+```
+
+## 导出选项
+
+您可以使用额外参数来自定义特定文件类型的导出流程。
+
+### Java .properties 文件格式
+
+##### 转义引号
+
+定义在导出的译文中单引号是否应由另一个单引号或反斜杠转义。 您可以添加逐文件的 `escape_quotes` 选项。
+
+可接受的值：
+
+* `0` - 不转义单引号
+* `1` - 用另一个单引号转义单引号
+* `2` - 用反斜杠转义单引号
+* `3` - 仅在包含变量的字符串中用另一个单引号转义单引号（默认）
+
+##### 转义特殊字符
+
+定义在导出的译文中特殊字符（`=`、`:`、`!` 和 `#`）是否应由反斜杠转义。
+您可以添加逐文件的 `escape_special_characters` 选项。
+
+可接受的值：
+
+* `0` - 不转义特殊字符
+* `1` - 用反斜杠转义特殊字符（默认）
+
+配置示例：
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/en/strings.properties",
+    "translation": "/%two_letters_code%/%original_file_name%",
+    "escape_quotes": 1,
+    "escape_special_characters": 0
+  }
+]
+```
+
+## VCS 集成的配置文件
+
+VCS 集成需要与 CLI 工具相同的配置文件，即支持相同的结构。 唯一的区别是出于安全原因，您不应将项目凭据存储在文件头部。 此外，您还可以使用一些额外参数。
+
+### 拉取请求标题和标签
+
+默认的拉取请求标题为 `New Crowdin updates`。 要指定自定义拉取请求标题并为拉取请求添加标签，可以在配置文件中使用以下参数：`pull_request_title`、`pull_request_labels`。
+
+```yml title="crowdin.yml"
+"pull_request_title": "Custom PR title"
+
+"pull_request_labels": [
+  "crowdin",
+  "l10n"
+]
+```
+
+<Aside type="caution" title="限制">
+  Bitbucket 集成不支持拉取请求标签。
+</Aside>
+
+### 提交消息
+
+每次集成提交翻译时，都会使用以下默认提交消息：
+
+```
+新译文 {fileName} ({languageName})
+[ci skip]
+```
+
+默认添加 `[ci skip]` 标签，以避免同时同步多个文件时为每个文件单独触发 CI 构建。 通过拉取请求将这些更改合并到主分支后，您的 CI 仍会按预期运行。
+
+如需在提交消息中添加自定义文本，请使用 `commit_message` 参数。 默认情况下，您的文本会附加在默认消息下方（等同于将 `append_commit_message` 设置为 `true`）：
+
+```yml title="crowdin.yml"
+"commit_message": "Fix: 来自 Crowdin 的新译文"
+```
+
+最终的提交消息如下所示：
+
+```
+新译文 {fileName} ({languageName})
+[ci skip]
+Fix: 来自 Crowdin 的新译文
+```
+
+若要仅使用自定义消息而不使用默认消息，请将 `append_commit_message` 设置为 `false`：
+
+```yml title="crowdin.yml"
+"commit_message": "Fix: New translations %original_file_name% from Crowdin"
+"append_commit_message": false
+```
+
+您可以在提交消息中使用 `%original_file_name%` 和 `%language%` 占位符来插入文件名和语言。
+
+<Aside type="caution">
+  当您替换默认消息（`append_commit_message: false`）时，`[ci skip]` 标签将不再自动添加。 如果仍希望跳过中间的 CI 构建，请在自定义消息中手动包含该标签。
+</Aside>
+
+### 拉取请求指派人
+
+如果您需要将拉取请求指派给特定用户，请使用 `pull_request_assignees` 参数来指定他们。
+
+**GitHub/GitHub Server：**
+
+```yml title="crowdin.yml"
+"pull_request_assignees": [
+  "login1",
+  "login2"
+]
+```
+
+**GitLab/GitLab Self-Managed：**
+
+```yml title="crowdin.yml"
+"base_path": "."
+"pull_request_assignees": [
+  "user_id1", # numeric ID
+  "user_id2"  # numeric ID
+]
+```
+
+<Aside type="caution" title="限制">
+  Bitbucket、Bitbucket Server 和 Azure Repos 集成不支持拉取请求指派人参数。
+</Aside>
+
+### 拉取请求审阅者
+
+如果您需要请求特定用户审阅拉取请求，请使用 `pull_request_reviewers` 参数来指定他们。
+
+**GitHub/GitHub Server：**
+
+```yml title="crowdin.yml"
+"pull_request_reviewers": [
+  "login1",
+  "login2"
+]
+```
+
+**GitLab/GitLab Self-Managed：**
+
+```yml title="crowdin.yml"
+"pull_request_reviewers": [
+  "user_id1", # numeric ID
+  "user_id2"  # numeric ID
+]
+```
+
+**Bitbucket：**
+
+```yml title="crowdin.yml"
+"pull_request_reviewers": [
+  "uuid1", # user uuid
+  "uuid2"  # user uuid
+]
+```
+
+**Bitbucket Server：**
+
+```yml title="crowdin.yml"
+"pull_request_reviewers": [
+  "username1",
+  "username2"
+]
+```
+
+**Azure Repos：**
+
+```yml title="crowdin.yml"
+"pull_request_reviewers": [
+  "guid1", # user ID
+  "guid2"  # user ID
+]
+```
+
+## 向源字符串添加标签
+
+要向源字符串添加现有标签或新标签，请使用 `labels` 参数。
+标签仅在首次上传到 Crowdin 项目时添加到源字符串。
+
+在使用 `labels` 参数之前上传到 Crowdin 项目的字符串将不会被标记。
+如果您直接在 Crowdin 中移除了首次上传时添加的标签，下次同步时不会重新添加。
+
+示例：
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source" : "/resources/en/*.json",
+    "translation" : "/resources/%two_letters_code%/%original_file_name%",
+    "labels" : [
+      "android",
+      "emails"
+    ]
+  }
+]
+```
+
+<Aside type="caution" title="限制">
+  标签名称可以包含除 `,` 以外的任何特殊字符。
+</Aside>
+
+<ReadMore>
+  详细了解[标签](/zh/project-settings/labels/)。
+</ReadMore>
+
+## 语言映射
+
+软件项目通常会为语言区域目录使用自定义名称。 Crowdin 允许您映射自己的语言，以便在项目中识别它们。
+
+假设您的语言区域目录命名为 `en`、`uk`、`fr`、`de`。 所有这些都可以用 `%two_letters_code%` 占位符来表示。 不过，您有一个名为 `zh_CH` 的目录。 您还可以覆盖其他占位符的语言代码，如 `%android_code%`、`%locale%` 等。
+
+<ReadMore>
+  详细了解 [CLI 的语言映射配置](https://crowdin.github.io/crowdin-cli/advanced#languages-mapping-configuration)。
+</ReadMore>
+
+要在不更改项目的情况下使其与 Crowdin 配合使用，您可以通过 UI 设置语言映射。
+
+* [Crowdin 中的语言映射](/zh/project-settings/languages/#添加自定义语言代码)
+* [Crowdin 企业版中的语言映射](/zh/enterprise/project-settings/languages/#语言映射)
+
+## 对 VCS 集成和 CLI 使用同一个配置文件
+
+有时需要在同一个项目中同时使用 VCS 集成和 CLI。 通常在这种情况下，您需要两个独立的配置文件，一个用于 VCS 集成，另一个用于 CLI。 但是，您可以对两种情况使用同一个配置文件。
+
+由于 VCS 集成配置文件不包含 CLI 所需的 `project_id` 和 `api_token` 凭据，您可以在命令中使用以下参数直接传递它们：`-i/--project-id`、`-T/--token`。
+
+因此，通过 CLI 下载译文的命令将如下所示：
+
+```shell
+crowdin download -i {your-project-id} -T {your-token}
+```
+
+<ReadMore>
+  或者，您可以使用[环境变量](#api-credentials-from-environment-variables)或[拆分项目配置与 API 凭据](https://crowdin.github.io/crowdin-cli/configuration#split-project-configuration-and-api-credentials)。
+</ReadMore>
+
+## 示例配置
+
+##### 上传 CSV 文件
+
+```yml title="crowdin.yml"
+"project_id": "projectId"
+"api_token": "personal-access-token"
+"base_path": "."
+"base_url": "https://api.crowdin.com"
+
+"files": [
+  {
+    "source": "/*.csv",
+    "translation": "/%two_letters_code%/%original_file_name%",
+     # Specifies whether first line should be imported or it contains columns headers
+    "first_line_contains_header": true,
+     # Used only when uploading CSV file to define data columns mapping
+    "scheme": "identifier,source_phrase,translation,context,max_length"
+  }
+]
+```
+
+##### GetText 项目
+
+```yml title="crowdin.yml"
+"project_id": "projectId"
+"api_token": "personal-access-token"
+"base_path": "."
+"base_url": "https://api.crowdin.com"
+
+"files" : [
+  {
+    "source" : "/locale/en/**/*.po",
+    "translation" : "/locale/%two_letters_code%/LC_MESSAGES/%original_file_name%",
+    "languages_mapping" : {
+      "two_letters_code" : {
+        "zh-CN" : "zh_CH",
+        "fr-QC": "fr"
+      }
+    }
+  }
+]
+```
+
+##### Android 项目
+
+```yml title="crowdin.yml"
+"project_id": "projectId"
+"api_token": "personal-access-token"
+"base_path": "."
+"base_url": "https://api.crowdin.com"
+
+"files" : [
+  {
+    "source" : "/res/values/*.xml",
+    "translation" : "/res/values-%android_code%/%original_file_name%",
+    "languages_mapping" : {
+      "android_code" : {
+      "de" : "de"
+      }
+    }
+  }
+]
+```

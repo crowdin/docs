@@ -1,0 +1,441 @@
+---
+title: Webhook 事件
+description: 浏览事件列表和负载示例
+slug: developer/webhooks
+sidebar:
+  order: 1
+---
+
+import { Aside, Tabs, TabItem, Code, Card, CardGrid } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+import fileTranslated from '/src/assets/code/webhooks/file.translated.json?raw';
+import fileApproved from '/src/assets/code/webhooks/file.approved.json?raw';
+import fileAdded from '/src/assets/code/webhooks/file.added.json?raw';
+import fileUpdated from '/src/assets/code/webhooks/file.updated.json?raw';
+import fileReverted from '/src/assets/code/webhooks/file.reverted.json?raw';
+import fileDeleted from '/src/assets/code/webhooks/file.deleted.json?raw';
+import branchTranslated from '/src/assets/code/webhooks/branch.translated.json?raw';
+import branchApproved from '/src/assets/code/webhooks/branch.approved.json?raw';
+import projectTranslated from '/src/assets/code/webhooks/project.translated.json?raw';
+import projectApproved from '/src/assets/code/webhooks/project.approved.json?raw';
+import projectBuilt from '/src/assets/code/webhooks/project.built.json?raw';
+import translationUpdated from '/src/assets/code/webhooks/translation.updated.json?raw';
+import translationUpdatedSb from '/src/assets/code/webhooks/sb/translation.updated.json?raw';
+import stringAdded from '/src/assets/code/webhooks/string.added.json?raw';
+import stringAddedSb from '/src/assets/code/webhooks/sb/string.added.json?raw';
+import stringUpdated from '/src/assets/code/webhooks/string.updated.json?raw';
+import stringUpdatedSb from '/src/assets/code/webhooks/sb/string.updated.json?raw';
+import stringDeleted from '/src/assets/code/webhooks/string.deleted.json?raw';
+import stringDeletedSb from '/src/assets/code/webhooks/sb/string.deleted.json?raw';
+import suggestionAdded from '/src/assets/code/webhooks/suggestion.added.json?raw';
+import suggestionAddedSb from '/src/assets/code/webhooks/sb/suggestion.added.json?raw';
+import suggestionUpdated from '/src/assets/code/webhooks/suggestion.updated.json?raw';
+import suggestionUpdatedSb from '/src/assets/code/webhooks/sb/suggestion.updated.json?raw';
+import suggestionDeleted from '/src/assets/code/webhooks/suggestion.deleted.json?raw';
+import suggestionDeletedSb from '/src/assets/code/webhooks/sb/suggestion.deleted.json?raw';
+import suggestionApproved from '/src/assets/code/webhooks/suggestion.approved.json?raw';
+import suggestionApprovedSb from '/src/assets/code/webhooks/sb/suggestion.approved.json?raw';
+import suggestionDisapproved from '/src/assets/code/webhooks/suggestion.disapproved.json?raw';
+import suggestionDisapprovedSb from '/src/assets/code/webhooks/sb/suggestion.disapproved.json?raw';
+import stringCommentCreated from '/src/assets/code/webhooks/stringComment.created.json?raw';
+import stringCommentCreatedSb from '/src/assets/code/webhooks/sb/stringComment.created.json?raw';
+import stringCommentUpdated from '/src/assets/code/webhooks/stringComment.updated.json?raw';
+import stringCommentUpdatedSb from '/src/assets/code/webhooks/sb/stringComment.updated.json?raw';
+import stringCommentDeleted from '/src/assets/code/webhooks/stringComment.deleted.json?raw';
+import stringCommentDeletedSb from '/src/assets/code/webhooks/sb/stringComment.deleted.json?raw';
+import stringCommentRestored from '/src/assets/code/webhooks/stringComment.restored.json?raw';
+import stringCommentRestoredSb from '/src/assets/code/webhooks/sb/stringComment.restored.json?raw';
+import taskAdded from '/src/assets/code/webhooks/task.added.json?raw';
+import taskAddedSb from '/src/assets/code/webhooks/sb/task.added.json?raw';
+import taskStatusChanged from '/src/assets/code/webhooks/task.statusChanged.json?raw';
+import taskStatusChangedSb from '/src/assets/code/webhooks/sb/task.statusChanged.json?raw';
+import taskUpdated from '/src/assets/code/webhooks/task.updated.json?raw';
+import taskUpdatedSb from '/src/assets/code/webhooks/sb/task.updated.json?raw';
+import taskDeleted from '/src/assets/code/webhooks/task.deleted.json?raw';
+import taskDeletedSb from '/src/assets/code/webhooks/sb/task.deleted.json?raw';
+import projectCreated from '/src/assets/code/webhooks/project.created.json?raw';
+import projectDeleted from '/src/assets/code/webhooks/project.deleted.json?raw';
+import groupCreated from '/src/assets/code/webhooks/group.created.json?raw';
+import groupDeleted from '/src/assets/code/webhooks/group.deleted.json?raw';
+
+您可以添加 webhook 以与第三方服务或后端建立集成。 当您针对项目配置 webhook 后，Crowdin 将开始通过 HTTP 发送带有数据的 POST 或 GET 请求。
+
+<Aside title="响应超时">
+  您的端点应在 **30 秒**内返回 `2XX` 响应。 如果处理时间较长，请异步处理。
+</Aside>
+
+## 配置 Webhook
+
+Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
+
+<CardGrid stagger>
+  <Card title="项目" icon="down-caret">
+    Configure webhooks for a specific project to receive notifications about events in the project such as file translation, review, and more.
+
+    See [Crowdin Webhooks](/webhooks/) and [Crowdin Enterprise Webhooks](/enterprise/webhooks/) for more details.
+  </Card>
+  <Card title="组织" icon="down-caret">
+    为您的 Crowdin Enterprise 组织配置 webhook，以便在创建或删除项目和群组时接收通知。
+
+    See [Organization Settings](/enterprise/organization-settings/#webhooks) for more details.
+  </Card>
+  <Card title="账户" icon="down-caret">
+    为您的 Crowdin 账户配置 webhook，以便在创建或删除项目时接收通知。
+
+    See [Account Settings](/account-settings/#webhooks) for more details.
+  </Card>
+</CardGrid>
+
+根据您的 webhook 管理方式，您可能需要将专用的 Crowdin IP 地址添加到防火墙，以允许 Crowdin 打开预配置的 webhook URL。
+
+<ReadMore>
+  详细了解 [IP 地址](/zh/developer/ip-addresses/#webhooks-ai-providers-and-mt-engines)。
+</ReadMore>
+
+## 事件
+
+您可以为项目、账户或组织中发生的不同事件配置 webhook。
+
+#### 文件
+
+* [文件已完全翻译](#文件已完全翻译) &ndash; 文件已翻译成目标语言之一
+* [文件已完全审核](#文件已完全审核) &ndash; 文件中的译文已被批准为目标语言之一
+* [文件已添加](#文件已添加) &ndash; 新文件已添加到项目中
+* [文件已更新](#文件已更新) &ndash; 文件已更新
+* [文件已还原](#文件已还原) &ndash; 文件已还原到之前的版本
+* [文件已删除](#文件已删除) &ndash; 文件已删除
+
+#### 分支
+
+* [分支已完全翻译](#branch-fully-translated) &ndash; 分支中的所有内容均已翻译成其中一种目标语言
+* [分支已完全审阅](#branch-fully-reviewed) &ndash; 分支中的所有翻译均已针对其中一种目标语言获得批准
+
+#### 项目
+
+* [项目已完全翻译](#项目已完全翻译) &ndash; 所有文件已翻译成目标语言之一
+* [项目已完全审核](#项目已完全审核) &ndash; 所有文件中的译文已被批准为目标语言之一
+* [项目已成功构建](#项目已成功构建) &ndash; 项目已成功构建
+* [导出的译文已更新](#导出的译文已更新) &ndash; 字符串的最终译文已更新
+
+#### 源字符串
+
+* [源字符串已添加](#源字符串已添加) &ndash; 新字符串已添加到项目中
+* [源字符串已更新](#源字符串已更新) &ndash; 项目中的字符串已更新
+* [源字符串已删除](#源字符串已删除) &ndash; 字符串已删除
+
+#### 建议译文
+
+* [建议译文已添加](#建议译文已添加) &ndash; 项目中的字符串已被翻译
+* [建议译文已更新](#建议译文已更新) &ndash; 项目中某字符串的译文已更新
+* [建议译文已删除](#建议译文已删除) &ndash; 某条译文已被删除
+* [建议译文已批准](#建议译文已批准) &ndash; 某字符串的译文已被批准
+* [建议译文已驳回](#建议译文已驳回) &ndash; 之前添加的译文的批准已被撤销
+
+#### 字符串评论/问题
+
+* [字符串评论/问题已创建](#字符串评论问题已创建) &ndash; 评论或问题已添加到字符串
+* [字符串评论/问题已更新](#字符串评论问题已更新) &ndash; 评论或问题已更新
+* [字符串评论/问题已删除](#字符串评论问题已删除) &ndash; 评论或问题已删除
+* [字符串评论/问题已恢复](#字符串评论问题已恢复) &ndash; 评论或问题已恢复
+
+#### 任务
+
+* [任务已添加](#任务已添加) &ndash; 任务已添加到项目中
+* [任务状态已更改](#任务状态已更改) &ndash; 任务状态已更改
+* [任务已更新](#任务已更新) &ndash; 任务已更新
+* [任务已删除](#任务已删除) &ndash; 任务已删除
+
+#### 账户和组织
+
+* [项目已创建](#项目已创建) &ndash; 项目已创建
+* [项目已删除](#项目已删除) &ndash; 项目已删除
+* [群组已创建](#群组已创建) &ndash; 群组已创建（仅限 Crowdin Enterprise）
+* [群组已删除](#群组已删除) &ndash; 群组已删除（仅限 Crowdin Enterprise）
+
+## Webhook 负载示例
+
+查看不同事件的 webhook 负载示例。
+
+### 文件已完全翻译
+
+<Code code={fileTranslated} lang="json" wrap />
+
+### 文件已完全审核
+
+<Code code={fileApproved} lang="json" wrap />
+
+### 文件已添加
+
+<Code code={fileAdded} lang="json" wrap />
+
+### 文件已更新
+
+<Code code={fileUpdated} lang="json" wrap />
+
+### 文件已还原
+
+<Code code={fileReverted} lang="json" wrap />
+
+### 文件已删除
+
+<Code code={fileDeleted} lang="json" wrap />
+
+### 分支已完全翻译
+
+<Code code={branchTranslated} lang="json" wrap />
+
+### 分支已完全审阅
+
+<Code code={branchApproved} lang="json" wrap />
+
+### 项目已完全翻译
+
+<Code code={projectTranslated} lang="json" wrap />
+
+### 项目已完全审核
+
+<Code code={projectApproved} lang="json" wrap />
+
+### 项目已成功构建
+
+<Code code={projectBuilt} lang="json" wrap />
+
+### 导出的译文已更新
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={translationUpdated} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={translationUpdatedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 源字符串已添加
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={stringAdded} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={stringAddedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 源字符串已更新
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={stringUpdated} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={stringUpdatedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 源字符串已删除
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={stringDeleted} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={stringDeletedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 建议译文已添加
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={suggestionAdded} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={suggestionAddedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 建议译文已更新
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={suggestionUpdated} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={suggestionUpdatedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 建议译文已删除
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={suggestionDeleted} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={suggestionDeletedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 建议译文已批准
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={suggestionApproved} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={suggestionApprovedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 建议译文已驳回
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={suggestionDisapproved} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={suggestionDisapprovedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 字符串评论/问题已创建
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={stringCommentCreated} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={stringCommentCreatedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 字符串评论/问题已更新
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={stringCommentUpdated} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={stringCommentUpdatedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 字符串评论/问题已删除
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={stringCommentDeleted} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={stringCommentDeletedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 字符串评论/问题已恢复
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={stringCommentRestored} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={stringCommentRestoredSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 任务已添加
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={taskAdded} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={taskAddedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 任务状态已更改
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={taskStatusChanged} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={taskStatusChangedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 任务已更新
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={taskUpdated} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={taskUpdatedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 任务已删除
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={taskDeleted} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={taskDeletedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 项目已创建
+
+<Code code={projectCreated} lang="json" wrap />
+
+### 项目已删除
+
+<Code code={projectDeleted} lang="json" wrap />
+
+### 群组已创建
+
+<Code code={groupCreated} lang="json" wrap />
+
+### 群组已删除
+
+<Code code={groupDeleted} lang="json" wrap />
+
+## Crowdin 和 Crowdin Enterprise 事件负载
+
+Crowdin 和 Crowdin Enterprise 事件的负载结构基本相同。 唯一的区别在于 `project` 对象。 对于 Crowdin Enterprise 事件，`project` 对象包含额外字段。
+
+```diff del={"Crowdin:":18-20} ins={"Crowdin Enterprise:":22-24} lang="json"
+{
+  "project": {
+    "id": "777",
+    "userId": "1",
+    "sourceLanguageId": "en",
+    "targetLanguageIds": [
+      "uk",
+      "pl"
+    ],
+    "identifier": "umbrella",
+    "name": "Project Name",
+    "createdAt": "2022-04-20T11:05:24+00:00",
+    "updatedAt": "2022-04-21T11:07:29+00:00",
+    "lastActivity": "2022-04-21T11:07:29+00:00",
+    "description": "Project Description",
+    "url": "https://crowdin.com/project/umbrella",
+    "cname": null,
+
+-    "languageAccessPolicy": "moderate",
+-    "visibility": "private",
+-    "publicDownloads": true,
+
++    "logo": ""data:image/png;base64,iVBORw0KGgoAAAANSU....",
++    "isExternal": false,
++    "externalType": null,
++    "hasCrowdsourcing": true,
++    "groupId": 1
+  }
+}
+```

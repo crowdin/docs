@@ -4,13 +4,14 @@ description: 了解如何在 Crowdin 中创建、管理和共享术语库
 slug: glossary
 ---
 
-import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { Steps, Aside, LinkCard, CardGrid, Badge } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
 import KBD from '~/components/KBD.astro';
 import { Image } from 'astro:assets';
 import termHover from '!/crowdin/localization-resources/glossary_term_hover.png';
 import addConceptDialog from '!/crowdin/localization-resources/glossary_add_concept_dialog.png';
 import addConceptEditor from '!/crowdin/localization-resources/glossary_add_concept_editor.png';
+import downloadUpload from '!/crowdin/localization-resources/glossary_upload_download.png';
 import configureImport from '!/crowdin/localization-resources/glossary_configure_import.png';
 
 通过使用术语库，您可以在一个地方创建、存储和管理所有项目术语。 术语的主要目的是解释一些特定的术语或项目中经常使用的术语，以便正确、一致地翻译。
@@ -27,7 +28,7 @@ import configureImport from '!/crowdin/localization-resources/glossary_configure
 
 <Steps>
   1. 打开您的个人资料主页，然后在左侧栏中选择**术语库**。
-  2. 单击**创建术语库**。
+  2. 在右上角，点击**创建术语库**。
   3. 在出现的对话框中，命名您的术语库并选择将在术语库记录表中首先显示的默认语言。
   4. \*（可选）\*将术语库分配给所需的项目。 您可以跳过此步骤并稍后分配术语库。
   5. 单击 **创建**。
@@ -65,24 +66,41 @@ import configureImport from '!/crowdin/localization-resources/glossary_configure
 * 类型 &ndash; 对术语功能的分类（例如全称、首字母缩写词、缩写、短语、变体）。
 * 状态 &ndash; 定义术语的批准级别（例如首选、已接受、不推荐）。
 * 性别 &ndash; 术语的语法性别（例如阳性、阴性、中性）。
-* 描述 &ndash; 对特定术语的简短解释或语境说明（与概念定义有所区别）。
+* Description (context) &ndash; A brief explanation or context for the specific term (distinct from the concept's definition).
 * 备注 &ndash; 关于术语的简短说明，可能对译员有所帮助。
 * URL &ndash; 包含术语相关信息的网页链接。
+
+The concept dialog opens as a full-screen view with two panes:
+
+* The left pane contains concept-level details: the **Primary term** (filled in automatically from the source-language term), **Subject**, **Definition**, and the **Translatable** toggle. The expandable **Concept details** section holds the concept **Note**, **URL**, and **Figure**.
+* The right pane lists all terms across languages, grouped by language. The source language is pinned at the top and marked with a <Badge text="SOURCE" variant="success" /> badge. Each term row shows its **Part of speech**, **Gender**, **Type**, and **Status**, along with the **desc**, **url**, and **note** badges that expand the term's **Description (context)**, **URL**, and **Note** fields.
 
 要添加一个新的术语库概念，请遵循以下步骤：
 
 <Steps>
   1. 打开您的个人资料主页，然后在左侧栏中选择**术语库**。 或者，打开您的项目并转到 **设置 > 术语库**。
   2. 单击所需术语库上的**查看记录**。
-  3. 点击 **添加概念**。
-  4. 在出现的对话框中，从下拉菜单中选择语言，并指定术语和所有相关详细信息。 点击 <Icon name="mdi:auto-fix" class="inline-icon" /> 自动检测词性。
+  3. Click **Add term**.
+  4. In the source-language row, enter the term and set its **Part of speech**, **Gender**, **Type**, and **Status**. Hover over the row and click <Icon name="mdi:auto-fix" class="inline-icon" /> to detect the part of speech automatically.
      <Aside>
              词性仅支持以下语言的自动检测：英语、法语、西班牙语、德语、挪威语、波兰语、瑞典语、俄语、意大利语和中文。
      </Aside>
-  5. *（可选）* 点击 **添加术语** 以添加术语变体（例如首字母缩写词、简称等）
-  6. 指定概念详细信息。
-  7. 单击 **创建**。 <Image src={addConceptDialog} alt="添加概念对话框" class="crowdin-modal" />
+  5. *(Optional)* Click **Add term** below the language to add a term variation (e.g., acronym, short form, etc.)
+  6. *(Optional)* Click **Add language** and search for a language to add its translation.
+  7. Specify the concept details in the left pane (**Subject**, **Definition**, and the **Concept details** section).
+  8. 单击 **创建**。 <Image src={addConceptDialog} alt="Add Term as New Concept dialog" />
 </Steps>
+
+<Aside title="Adding a new concept vs. a new term">
+  Use **Add term** to define a new meaning from scratch. To add a synonym or translation to an existing entry, search for the concept first and add the term there.
+</Aside>
+
+<Aside type="tip">
+  A few things that speed up working with concepts:
+  * Click the **desc**, **url**, or **note** badge in a term row to expand it and jump straight to that field.
+  * Click the link icon (**Open URL**) next to the **URL** field to open the link in a new browser tab.
+  * Turn off the **Translatable** toggle to collapse a concept to its source language only; turning it back on restores the previously added languages.
+</Aside>
 
 要通过编辑器添加术语库概念，请按照以下步骤操作：
 
@@ -105,11 +123,11 @@ import configureImport from '!/crowdin/localization-resources/glossary_configure
 
 ### 查看、搜索和筛选术语库概念和术语
 
-打开术语库后，您可以使用 **概念** 或 **术语** 选项卡查看和筛选其术语库概念和术语。
+Once you open a glossary, you can switch between two views using the **Group by concept** toggle.
 
-在 **概念** 选项卡中，您可以查看按概念分组的术语库内容（每行一个概念，每个术语显示在单独的语言列中）。
+With **Group by concept** enabled, glossary content is grouped as concepts (one concept per row), with each term's translations shown in separate language columns. Under each term, its part of speech, status, gender, and type appear as badges.
 
-在 **术语** 选项卡中，您可以将术语库内容作为单独的术语（每行一个术语）查看，详细信息如下：
+With **Group by concept** disabled, glossary content is shown as individual terms (one term per row) with the following details:
 
 * **术语**：包含源语言或目标语言文本。
 * **语言**：术语的语言（例如法语、西班牙语）。
@@ -122,13 +140,12 @@ import configureImport from '!/crowdin/localization-resources/glossary_configure
 * **概念主题**：来自父概念的主题字段。
 * **概念定义**：来自父概念的定义。
 
-默认情况下，所有术语库概念和术语均会显示。 要查找特定概念或术语，可以使用 **搜索** 字段。
+默认情况下，所有术语库概念和术语均会显示。 To find a specific concept or term, type in the **Search** field. In both views, the search matches against the following fields:
 
-在 **概念** 选项卡中，您可以按以下详情搜索：
-
-* **术语**
-* **概念定义**
-* **概念主题**
+* **Term text**
+* **Term description (context)**
+* **Concept definition**
+* **Concept subject**
 
 要细化搜索结果，可以使用以下选项：
 
@@ -136,26 +153,24 @@ import configureImport from '!/crowdin/localization-resources/glossary_configure
 * **匹配整个短语**
 * **精确匹配**
 
-要筛选概念或术语列表，点击 **筛选** <Icon name="mdi:filter-variant" class="inline-icon" /> 并使用以下可用选项：
+要筛选概念或术语列表，点击**筛选** <Icon name="mdi:filter-variant" class="inline-icon" /> 并使用可用选项：
 
-* **语言**（仅限 **术语** 选项卡）：按 **所有语言** 或 **特定语言** 筛选。
-* **修改日期**：按修改日期筛选（**全部**、**自定义范围**）。
+* **Languages** (available when **Group by concept** is disabled): Filter by **All languages** or a **Specific language**.
+* **最后修改时间**：按修改日期筛选（**全部**、**自定义范围**）。
 * **词性**：按语法类别筛选（**全部**、**名词**、**动词**等）。
 * **类型**：按分类筛选（**全部**、**全称**、**首字母缩写词**等）。
 * **状态**：按批准状态筛选（**全部**、**首选**、**草稿**等）。
 * **性别**：按语法性别筛选（**全部**、**阳性**、**阴性**等）。
 * **作者**：按 **全部** 或特定用户筛选。
 
-要对概念或术语进行排序，点击 **排序方式** 并选择以下可用选项之一：
-
-* **文本**
-* **上次修改于**
-* **创建于**
+To sort concepts or terms, click a column header. By default, the list is sorted by the source-language terms. You can also sort by the **Created** or **Last modified** column. Click a column header once to sort in ascending order and click again to sort in descending order.
 
 要自定义查看体验，可以使用顶部工具栏上的以下选项：
 
 * **自动换行**：点击 <Icon name="mdi:wrap" class="inline-icon" /> 切换自动换行功能。 这对于查看长文本（例如定义、主题或备注）而无需扩展列宽非常有用。
-* **列设置**：单击 <Icon name="mdi:view-column" class="inline-icon" /> 配置表格中显示的列。 您可以显示或隐藏*定义*、*主题*、*可翻译*和*备注*等列，以及语言列。
+* **列设置**：单击 <Icon name="mdi:view-column" class="inline-icon" /> 配置表格中显示的列。 使用**所有列**可一次显示或隐藏所有列。
+  * **Concepts** view: You can show or hide columns such as *Definition*, *Subject*, *Translatable*, *Note*, *Created*, and *Last modified*, as well as the language columns. All columns and languages are shown by default, except *Translatable* and *Note*.
+  * **Terms** view: You can show or hide columns like *Language*, *Part of speech*, *Type*, *Status*, *Gender*, *Description (context)*, *Note*, *Concept subject*, and *Concept definition*.
 
 ### 编辑术语库概念和术语
 
@@ -166,20 +181,29 @@ import configureImport from '!/crowdin/localization-resources/glossary_configure
 <Steps>
   1. 打开您的个人资料主页，然后在左侧栏中选择**术语库**。 或者，打开您的项目并转到 **设置 > 术语库**。
   2. 单击所需术语库上的**查看记录**。
-  3. 双击或单击**编辑**以打开术语库概念。
-  4. 在出现的对话框中，对概念或术语进行必要的编辑，然后点击 **保存**。
+  3. 双击打开术语库概念，或点击其所在行的 <Icon name="mdi:dots-horizontal" class="inline-icon" /> 并选择**编辑**。
+  4. In the **Edit concept** dialog, make the necessary edits to the concept or its terms. The dialog uses the same two-pane layout described in [Creating Glossary Concepts and Terms](#creating-glossary-concepts-and-terms), with an added **Metadata** section that lists the concept **ID**, creation date, and last modification details.
+  5. 点击**保存**。
 </Steps>
 
-### 删除术语库概念
+<Aside>
+  If you close the dialog with unsaved changes, you'll be asked to confirm: select **Discard** to close without saving or **Cancel** to keep editing.
+</Aside>
 
-您可以一次删除一个、多个或所有术语库概念。
+### Deleting Glossary Concepts and Terms
 
-要从术语库中删除所有概念，请按照以下步骤操作：
+You can delete a single term, an entire concept, or several concepts at once.
+
+When [editing a concept](#editing-glossary-concepts-and-terms), you can delete individual terms or the entire concept directly in the dialog:
+
+* Delete a single term &ndash; expand the term's row and click **Delete term**.
+* Delete the entire concept &ndash; click **Delete concept** in the bottom-left corner of the dialog.
+
+To delete several concepts at once, follow these steps:
 
 <Steps>
-  1. 选择概念列表上方的顶部复选框。
-  2. 确认选择所有概念。
-  3. 单击 <Icon name="mdi:delete" class="inline-icon" />。
+  1. Select the checkboxes next to the concepts you want to delete. To delete all concepts, select the top checkbox and confirm the selection of all concepts.
+  2. 单击 <Icon name="mdi:delete" class="inline-icon" />。
 </Steps>
 
 ## 管理术语库
@@ -205,7 +229,7 @@ import configureImport from '!/crowdin/localization-resources/glossary_configure
   3. 点击 <Icon name="mdi:swap-vertical" class="inline-icon" /> 并选择以下选项之一：
      * **上传** – 上传新的术语库内容。
      * **下载** – 下载完整术语库。
-     * **筛选下载** – 仅下载符合已应用筛选条件或搜索条件的术语库概念。
+     * **筛选下载** – 仅下载符合已应用筛选条件或搜索条件的术语库概念。 <Image src={downloadUpload} alt="下载和上传术语库" />
 </Steps>
 
 项目所有者和管理员可以上传和下载以下文件格式的术语库：TBX (v2)、TBX (v3)、CSV、XLSX。
@@ -276,7 +300,7 @@ import configureImport from '!/crowdin/localization-resources/glossary_configure
 
 <Steps>
   1. 打开您的个人资料主页，然后在左侧栏中选择**术语库**。
-  2. 选择 **共享术语库**。
+  2. 在**术语库**页面左上角，勾选**共享术语库**复选框。
 </Steps>
 
 <Aside>

@@ -1,0 +1,141 @@
+---
+title: Import Settings
+description: Configure how placeholders, duplicates, and word counts are handled
+slug: project-settings/import
+sidebar:
+  order: 11
+  label: İçe aktar
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+In the **Import** section of the Project Settings, you can configure how Crowdin should handle placeholders, duplicate strings, and word counts in your project.
+
+## Kaynak Dizgiler
+
+Improve the translation consistency and streamline your workflow by unifying placeholders and handling duplicate strings.
+
+### Yer Tutucuları Birleştirin
+
+Enable this option to transform placeholders into a unified format within the Editor (e.g., displaying both Android `%s` and iOS `%@` as `[%s]`). This improves Translation Memory efficiency by making suggestions completely interchangeable across platforms.
+
+On export, placeholders are converted back to the original syntax. This feature applies only to Android XML, iOS strings, iOS XLIFF, and Apple Strings Catalog.
+
+### Kopya Dizgiler
+
+You can save time by translating all duplicates with the same translation and hiding these instances from translators. This can affect accuracy.
+
+Crowdin's localization process is based on translating source strings to the defined target languages. Kaynak dizgiler, yerelleştirme dosyalarındaki sisteme yüklenir. Crowdin’de ilk kez yüklenen veya eklenen her benzersiz kaynak dizgi (CSV ve [dizgi düzenlemeyi](/tr/string-management/#dizgi-düzenleme) destekleyen diğer biçimler için), bir asıl dizgi olarak kabul edilir. Asıl dizgi ile aynı olan ancak daha sonra yüklenmiş veya oluşturulmuş diğer tüm dizgiler kopya dizgiler olarak kabul edilir.
+
+<Aside>
+  [Dizgi tabanlı](/tr/creating-project/#dizgi-tabanlı-proje) projelerde, kopya dizgiler, varsayılan olarak etkin olan ve değiştirilemeyen **Sürüm dalı içinde göster (düzenli algılama)** seçeneği kullanılarak yönetilir.
+</Aside>
+
+#### Kopya Dizgiler Yönetimi
+
+If your project contains duplicated strings, you can choose how the system should treat them. The available options combine three dimensions: detection basis, visibility, and translation sharing.
+
+| Option                                               | Detection basis                                | Visibility in the Editor                       | Translation sharing |
+| ---------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------- | ------------------- |
+| **Show**                                             | Regular (source text)                          | Duplicates stay visible                        | No                  |
+| **Show, but auto-translate them**                    | Regular (source text)                          | Duplicates stay visible                        | Yes                 |
+| **Show within a version branch (regular detection)** | Regular + branch path scope                    | Duplicates are hidden between version branches | Yes                 |
+| **Show within a version branch (strict detection)**  | Strict (source text + key) + branch path scope | Duplicates are hidden between version branches | Yes                 |
+| **Hide (regular detection)**                         | Regular (source text)                          | Duplicates are hidden                          | Yes                 |
+| **Hide (strict detection)**                          | Strict (source text + key)                     | Duplicates are hidden                          | Yes                 |
+
+<Aside>
+  Translation is shared from the master string only while a duplicate has no translation of its own.
+</Aside>
+
+The detection basis determines what counts as a duplicate:
+
+* **Regular duplicate detection** &ndash; when comparing strings, Crowdin considers only source texts.
+* **Strict duplicate detection** &ndash; when comparing strings, Crowdin considers both string identifiers (keys) and source texts.
+
+<Aside type="tip">
+  If your source files contain strings with apparent identifiers (keys), it's better to use a **strict** version of the Duplicate Strings options. In other cases, feel free to use a **regular** one.
+</Aside>
+
+#### How Translation Sharing Works
+
+When translation sharing is enabled, duplicates inherit the master string's translation as long as they don't have their own.
+
+If a unique translation is saved for a duplicate (even a hidden one), it stops inheriting the master translation and uses its own instead.
+
+If that unique translation is later removed, sharing is restored automatically, and the duplicate will inherit the master translation again.
+
+#### When Shared Translation Won't Apply
+
+Shared translation will not apply in the following cases:
+
+* **Show** is selected (automatic sharing is disabled).
+* The duplicate already has its own unique translation.
+* In **Show within a version branch** modes, strings are outside the branch or path matching scope used for duplicate detection.
+
+#### Show All Duplicates
+
+When the **Show – translators will translate each instance separately** option is selected, all duplicate strings will be visible to translators. Her kopya ayrı bir çeviri gerektirecektir.
+
+💡 **Use case**: works perfectly for projects where the same words might have various meanings depending on the context.
+
+#### Show, but Auto-Translate Duplicates
+
+When the **Show, but auto-translate them** option is selected, all duplicate strings are shown and automatically inherit translations from their master strings. Bu, çevirmenlerin gerekirse kopya dizgileri incelemesini ve yeniden çevirmesini sağlar.
+
+💡 **Use case**: works excellently if you want to save time but still require automatic translations to be reviewed.
+
+To better illustrate how the **Show, but auto-translate them** option works, consider the following five-string JSON file: two strings are unique, and three strings have identical source text.
+
+```json
+{
+    "hello": "Hello",
+    "welcome": "Welcome!",
+    "save1": "Save",
+    "save2": "Save",
+    "save3": "Save"
+}
+```
+
+Upon importing this file, the system designates the first of these identical strings (`"save1": "Save"`) as the master string with a "Master" marker, while the subsequent two identical strings (`"save2": "Save"` and `"save3": "Save"`) are designated as duplicates of this master string with a "Duplicate" marker.
+
+Once you set the **Duplicate Strings** option to **Show, but auto-translate them**, the system keeps all five strings visible to translators and enables automatic translation sharing.
+
+Aşağıdaki senaryoları ele alalım:
+
+* *Master string is translated first* &ndash; the system immediately shares the translation of the master string with its duplicates. Sonuç olarak, üç özdeş dizginin tümü (asıl dizgi ve onun iki kopyası) çevirilerle birlikte görüntülenir. Translators can still review and replace the shared translation with a unique one for any specific duplicate. Doing so overrides the shared translation for that string alone, allowing for precise, context-specific translations without affecting the other duplicates.
+* *One of the duplicates is translated first* &ndash; the system does not share the translation of the duplicate with the master string or the other duplicate. Consequently, one duplicate string is displayed with a translation, while the master string and the other duplicate remain untranslated until the master string is translated (which will then allow the remaining duplicate to inherit the translation), or they are translated individually.
+
+#### Show Within a Version Branch
+
+When the **Show within a version branch** options (regular or strict detection) are selected, only the master strings that were originally uploaded to the system will be available for translation. Tüm kopya dizgiler, asıl dizgilerin çevirilerini otomatik olarak devralacak ve tüm [sürüm dallarında](/tr/version-management/) gizlenecektir.
+
+Akılda tutulması gereken birkaç şey:
+
+* Sistem her zaman dallar boyunca dizginin yolunu denetler. For example, even if the strings are the same in different version branches (`branch1` and `branch2`), but their paths are different (branch1 - `/localization/android.xml` and branch2 - `/localization/apps/android.xml`), they won't be recognized as duplicates.
+* Bu seçenek sadece aynı biçime sahip dosyalarda bulunan dizgilerde çalışır. For example, if there is the same string in `android.xml` and `ios.strings` files, it won't be recognized as a duplicate.
+
+💡 **Use case**: works perfectly for continuous projects with various version branches. Çevirmenlerin ayrı dallarda benzersiz dizgilerle çalışmasına izin verir.
+
+#### Hide All Duplicates
+
+When the **Hide** options (regular or strict detection) are selected, the system spots the duplicate strings in all files. Sadece orijinal olarak yüklenmiş asıl dizgiler görünür ve çevrilmelidir. The hidden duplicate strings will automatically inherit the translations from the corresponding master strings.
+
+💡 **Use case**: works great for projects with narrow scopes where all duplicates share the same context.
+
+## Word and Character Count
+
+Crowdin’in projenizdeki kelimeleri ve karakterleri nasıl saymasını istediğinizi yapılandırın. Specifically, this setting determines whether HTML tags should be counted as regular words or ignored. Varsayılan olarak Crowdin, HTML etiketlerini şunlar hariç, desteklenen biçimlerin çoğu için normal kelimeler olarak değerlendirir: HTML, Front Matter HTML, HAML, MD, Front Matter MD, XML, WEBXML, IDML, XLIFF, XLIFF 2.0, ADOC, DOCX ve DITA.
+
+* **Auto** (default) &ndash; counts words and characters based on the default format-specific rules. Depending on the source file format, HTML tags will either be counted as regular words or skipped.
+* **Count tags** &ndash; always considers tags. All HTML tags will be counted as regular words.
+* **Skip tags** &ndash; always skips tags. HTML tags won't be counted.
+
+<Aside>
+  Once you change the option, only newly uploaded words will be counted according to the new settings. It is highly recommended to configure this setting before uploading source files to your project.
+</Aside>
+
+<ReadMore>
+  Crowdin [Kelime Sayacı](/tr/word-counter/) hakkında daha fazla bilgi.
+</ReadMore>
