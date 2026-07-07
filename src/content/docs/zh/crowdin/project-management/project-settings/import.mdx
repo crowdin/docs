@@ -1,0 +1,141 @@
+---
+title: 导入设置
+description: 配置占位符、重复项和字数统计的处理方式
+slug: project-settings/import
+sidebar:
+  order: 11
+  label: 导入
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+在项目设置的**导入**部分，您可以配置 Crowdin 应如何处理项目中的占位符、重复字符串和字数统计。
+
+## 源字符串
+
+通过统一占位符和处理重复字符串来提高翻译一致性并简化工作流程。
+
+### 统一占位符
+
+启用此选项可在编辑器中将占位符转换为统一格式（例如，将 Android `%s` 和 iOS `%@` 均显示为 `[%s]`）。 这通过使建议在各平台之间完全通用来提高翻译记忆库的效率。
+
+导出时，占位符将转换回原始语法。 此功能仅适用于 Android XML、iOS strings、iOS XLIFF 和 Apple Strings Catalog。
+
+### 重复的字符串
+
+您可以通过使用相同的翻译来翻译所有重复项并对翻译人员隐藏这些实例来节省时间。 这可能会影响准确性。
+
+Crowdin 的本地化流程基于将源字符串翻译为所定义的目标语言。 源字符串以本地化文件形式上传到系统。 在 Crowdin 中首次上传或添加（对于 CSV 和其他支持[字符串编辑](/zh/string-management/#字符串编辑)的格式）的每个唯一源字符串都被视为主字符串。 所有其他与主字符串相同，但上传或创建时间较晚的字符串都被视为重复字符串。
+
+<Aside>
+  在[基于字符串](/zh/creating-project/#基于字符串的项目)的项目中，重复字符串使用\*\*在版本分支内显示（常规检测）\*\*选项进行管理，该选项默认启用且无法更改。
+</Aside>
+
+#### 重复字符串管理
+
+If your project contains duplicated strings, you can choose how the system should treat them. The available options combine three dimensions: detection basis, visibility, and translation sharing.
+
+| Option                                               | Detection basis                                | Visibility in the Editor                       | Translation sharing |
+| ---------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------- | ------------------- |
+| **Show**                                             | Regular (source text)                          | Duplicates stay visible                        | No                  |
+| **Show, but auto-translate them**                    | Regular (source text)                          | Duplicates stay visible                        | Yes                 |
+| **Show within a version branch (regular detection)** | Regular + branch path scope                    | Duplicates are hidden between version branches | Yes                 |
+| **Show within a version branch (strict detection)**  | Strict (source text + key) + branch path scope | Duplicates are hidden between version branches | Yes                 |
+| **Hide (regular detection)**                         | Regular (source text)                          | Duplicates are hidden                          | Yes                 |
+| **Hide (strict detection)**                          | Strict (source text + key)                     | Duplicates are hidden                          | Yes                 |
+
+<Aside>
+  Translation is shared from the master string only while a duplicate has no translation of its own.
+</Aside>
+
+The detection basis determines what counts as a duplicate:
+
+* **Regular duplicate detection** &ndash; when comparing strings, Crowdin considers only source texts.
+* **Strict duplicate detection** &ndash; when comparing strings, Crowdin considers both string identifiers (keys) and source texts.
+
+<Aside type="tip">
+  如果您的源文件包含具有明显标识符（键）的字符串，则最好使用**严格**版本的重复字符串选项。 在其他情况下，请随意使用**常规**版本。
+</Aside>
+
+#### How Translation Sharing Works
+
+When translation sharing is enabled, duplicates inherit the master string's translation as long as they don't have their own.
+
+If a unique translation is saved for a duplicate (even a hidden one), it stops inheriting the master translation and uses its own instead.
+
+If that unique translation is later removed, sharing is restored automatically, and the duplicate will inherit the master translation again.
+
+#### When Shared Translation Won't Apply
+
+Shared translation will not apply in the following cases:
+
+* **Show** is selected (automatic sharing is disabled).
+* The duplicate already has its own unique translation.
+* In **Show within a version branch** modes, strings are outside the branch or path matching scope used for duplicate detection.
+
+#### Show All Duplicates
+
+When the **Show – translators will translate each instance separately** option is selected, all duplicate strings will be visible to translators. 每个重复项都需要单独翻译。
+
+💡 **使用案例**：非常适用于相同单词可能根据语境具有多种含义的项目。
+
+#### Show, but Auto-Translate Duplicates
+
+When the **Show, but auto-translate them** option is selected, all duplicate strings are shown and automatically inherit translations from their master strings. 这样，翻译人员就可以在必要时检查并重新翻译重复的字符串。
+
+💡 **使用案例**：如果您想节省时间但仍需要审核自动翻译，那么这种方法非常有效。
+
+为了更好地说明**显示，但自动翻译**选项的工作原理，请考虑以下五字符串 JSON 文件：两个字符串是唯一的，三个字符串具有相同的源文本。
+
+```json
+{
+    "hello": "您好",
+    "welcome": "欢迎！",
+    "save1": "保存",
+    "save2": "保存",
+    "save3": "保存"
+}
+```
+
+Upon importing this file, the system designates the first of these identical strings (`"save1": "Save"`) as the master string with a "Master" marker, while the subsequent two identical strings (`"save2": "Save"` and `"save3": "Save"`) are designated as duplicates of this master string with a "Duplicate" marker.
+
+Once you set the **Duplicate Strings** option to **Show, but auto-translate them**, the system keeps all five strings visible to translators and enables automatic translation sharing.
+
+让我们考虑以下情景：
+
+* *Master string is translated first* &ndash; the system immediately shares the translation of the master string with its duplicates. 结果，所有三个相同的字符串（主字符串及其两个重复字符串）都显示有译文。 Translators can still review and replace the shared translation with a unique one for any specific duplicate. Doing so overrides the shared translation for that string alone, allowing for precise, context-specific translations without affecting the other duplicates.
+* *One of the duplicates is translated first* &ndash; the system does not share the translation of the duplicate with the master string or the other duplicate. Consequently, one duplicate string is displayed with a translation, while the master string and the other duplicate remain untranslated until the master string is translated (which will then allow the remaining duplicate to inherit the translation), or they are translated individually.
+
+#### Show Within a Version Branch
+
+When the **Show within a version branch** options (regular or strict detection) are selected, only the master strings that were originally uploaded to the system will be available for translation. 所有重复字符串将自动继承主字符串的翻译，并在所有[版本分支](/zh/version-management/)中隐藏。
+
+这里有几点需要注意：
+
+* 系统始终检查整个分支中字符串的路径。 For example, even if the strings are the same in different version branches (`branch1` and `branch2`), but their paths are different (branch1 - `/localization/android.xml` and branch2 - `/localization/apps/android.xml`), they won't be recognized as duplicates.
+* 此选项仅适用于位于具有相同格式的文件中的字符串。 For example, if there is the same string in `android.xml` and `ios.strings` files, it won't be recognized as a duplicate.
+
+💡 **使用案例**：非常适合具有各种版本分支的持续性项目。 允许翻译员在不同的分支中使用唯一的字符串。
+
+#### Hide All Duplicates
+
+When the **Hide** options (regular or strict detection) are selected, the system spots the duplicate strings in all files. 只有最初上传的主字符串才可见并且应被翻译。 The hidden duplicate strings will automatically inherit the translations from the corresponding master strings.
+
+💡 **使用案例**：适用于范围较窄的项目，在这些项目中，所有重复字符串都共享相同的上下文。
+
+## Word and Character Count
+
+配置您希望 Crowdin 如何统计项目中的单词和字符数。 Specifically, this setting determines whether HTML tags should be counted as regular words or ignored. 默认情况下，Crowdin 将 HTML 标签视为大多数受支持格式的常规单词，但以下格式除外：HTML、Front Matter HTML、HAML、MD、Front Matter MD、XML、WEBXML、IDML、XLIFF、XLIFF 2.0、ADOC、DOCX 和 DITA。
+
+* **Auto** (default) &ndash; counts words and characters based on the default format-specific rules. Depending on the source file format, HTML tags will either be counted as regular words or skipped.
+* **Count tags** &ndash; always considers tags. All HTML tags will be counted as regular words.
+* **Skip tags** &ndash; always skips tags. HTML tags won't be counted.
+
+<Aside>
+  Once you change the option, only newly uploaded words will be counted according to the new settings. It is highly recommended to configure this setting before uploading source files to your project.
+</Aside>
+
+<ReadMore>
+  有关 Crowdin [字数统计器](/zh/word-counter/)的更多信息。
+</ReadMore>

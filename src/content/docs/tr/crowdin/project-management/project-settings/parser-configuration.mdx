@@ -1,0 +1,82 @@
+---
+title: Parser Configuration Settings
+description: Configure import and export behavior for supported file formats
+slug: project-settings/parser-configuration
+sidebar:
+  order: 14
+  label: Ayrıştırıcı Yapılandırması
+---
+
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import Include from '~/components/Include.astro';
+import { Image } from 'astro:assets';
+import ReadMore from '~/components/ReadMore.astro';
+import parsersConfiguration from '!/crowdin/project-management/settings/parser_configuration.png';
+
+Varsayılan olarak Crowdin, desteklenen her dosya biçimi için ön tanımlı bir dizi içe ve dışa aktarma parametresi kullanır.
+
+Ayrıştırıcı yapılandırması özelliği, Crowdin tarafından desteklenen dosya biçimleri için önceden tanımlanmış varsayılan içe ve dışa aktarma davranışını değiştirmenize izin verir. Belirli bir projedeki ayrıştırıcı yapılandırması, sadece bu projede depolanan dosyalara uygulanır.
+
+Ayrıştırıcı yapılandırmasını belirli bir biçimdeki tüm dosyalar veya tek dosyalar için ayarlayabilirsiniz. Bir dosya biçimi için ayrıştırıcı yapılandırmasını kaydettikten sonra, kaynak dosyaları projenize yükleyebilirsiniz ve Crowdin ayarlarınızı buna göre uygulayacaktır.
+
+Şu biçimler için içe ve dışa aktarma davranışını yapılandırabilirsiniz: Java Properties, Genel XML, DITA, AsciiDoc, Düz metin, MadCap Flare, HTML, Office belgeleri, Adobe FrameMaker, Adobe InDesign, Markdown ve MediaWiki.
+
+<Image src={parsersConfiguration} alt="Ayrıştırıcı yapılandırması" />
+
+<Aside type="caution">
+  Bazı ayrıştırıcı ayarları [dizgi tabanlı](/tr/creating-project/#dizge-tabanlı-proje) projelerde kullanılamayabilir.
+</Aside>
+
+## Ayrıştırıcı Yapılandırma Parametreleri
+
+Bazı parametreler tüm biçimlerde ortakken diğerleri biçime özgüdür. Aşağıdaki tabloda, kullanılabilir ayrıştırıcı parametrelerini ve yapılandırılabilecekleri biçimleri görebilirsiniz.
+
+<Include file="parser-configuration-parameters.mdx" />
+
+## Belirli Bir Biçimdeki Tüm Proje Dosyaları için Ayrıştırıcı Yapılandırması
+
+Belirli bir biçimdeki tüm dosyalar için tercih edilen ayrıştırıcı yapılandırmasını ayarlamak için şu adımları izleyin:
+
+<Steps>
+  1. Open your project and go to **Settings > Parser configuration**.
+  2. Choose the needed file format and click Edit.
+  3. Tercih edilen ayarları ayarlayın.
+  4. **Kaydet**’e tıklayın.
+</Steps>
+
+Alternatif olarak, yapılandırılabilir ayrıştırıcı ayarlarına sahip biçimler için aynı ayarları [**Paket oluştur**](/tr/bundles/#paketleri-yapılandırma) veya [**Paketi düzenle**](/tr/bundles/#paketleri-düzenleme) ileti öğesinde hedef biçimin yanındaki <Icon name="mdi:cog" class="inline-icon" /> simgesine tıklayarak açabilirsiniz.
+
+To add a new file format, click **Add Apps** and install the required format.
+
+## Tek Dosya için Ayrıştırıcı Yapılandırması
+
+Bazı durumlarda, ayrıştırıcı yapılandırmasını bazı dosya biçimlerindeki tüm dosyalar için değil, sadece tek bir dosya için ayarlamanız gerekebilir. Tek bir dosya için ayrıştırıcı yapılandırmasını ayarlamak için şu adımları izleyin:
+
+<Steps>
+  1. Open your project and go to **Sources > Files**.
+  2. Gerekli dosyaya çift tıklayın.
+  3. In the appeared dialog, switch to the **Parser configuration** tab.
+  4. Tercih edilen ayarları ayarlayın.
+  5. **Kaydet**’e tıklayın.
+</Steps>
+
+Dosya ayrıştırıcı yapılandırmasını kaydettikten sonra, Crowdin bu dosyayı yeniden içe aktaracak ve ayarlarınızı uygulayacaktır.
+
+<ReadMore>
+  Crowdin’de [dosya yönetimi](/tr/file-management/) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+## Post-processing Files with Nested Content
+
+Sometimes, you might work with files that contain strings in a different format. A common example is a JSON file where some string values contain HTML content. The standard parser configuration isn't designed for these nested or cascading scenarios.
+
+To properly process such files, you need to implement a custom Crowdin App that uses the File Post-Import Processing Module. Bazen basamaklı işleme olarak da adlandırılan bu yöntem, uygulamanızın içe aktarılan dizgilere müdahale etmesine ve Crowdin’e belirli dizgileri farklı bir ayrıştırıcı kullanarak yeniden işlemesi talimatını vermesini sağlar. Örneğin, Crowdin’e bir JSON dosyasındaki bir dizgiyi HTML olarak ayrıştırmasını söyleyebilir, böylece HTML etiketlerinin doğru bir şekilde işlendiğinden ve çevirmenlere düz metin olarak gösterilmediğinden emin olabilirsiniz.
+
+To handle files with nested content, you can install the Cascade Importer from the Crowdin Store or, for more custom scenarios, build your own.
+
+<CardGrid>
+  <LinkCard title="Cascade Importer App" description="Automatically detect and re-process strings with nested content. The recommended solution for most projects." href="https://store.crowdin.com/cascade-importer" />
+  <LinkCard title="Crowdin Apps Quick Start" description="A step-by-step guide for creating custom Crowdin apps. Covers environment setup and initial development." href="/developer/crowdin-apps-quick-start/" />
+  <LinkCard title="File Post-Import Processing Module" description="Technical documentation on how to build an app that can intercept and modify strings after the initial file import." href="/developer/crowdin-apps-module-file-post-import-processing/" />
+</CardGrid>
