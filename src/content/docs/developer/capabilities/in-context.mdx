@@ -314,6 +314,10 @@ Crowdin will replace the previous screenshot in your project with the new one an
   As long as the texts that are displayed on the website page come from one Crowdin project, In-Context will handle them just fine. The key point is that the texts on your website must be in the regular DOM, not in the shadow DOM.
 </QuestionAnswer>
 
+<QuestionAnswer title="Can I use the same pseudo-language across multiple Crowdin projects?">
+  A pseudo-language can be used only with the project it was generated for. It encodes that project's string identifiers, and In-Context matches those identifiers back to the same project. If your content is split across several projects, consolidate the source files into one project to use In-Context.
+</QuestionAnswer>
+
 <QuestionAnswer title="Ability of extracting In-Context strings from Shadow DOM">
   This is technically impossible. The Shadow DOM is invisible to our scripts. It can only be manipulated by the code that created the Shadow DOM.
 </QuestionAnswer>
@@ -325,4 +329,13 @@ Crowdin will replace the previous screenshot in your project with the new one an
 <QuestionAnswer title="Recently added new source strings on the website displayed as `unrecognized text`">
   The "Unrecognized text" label is displayed on the website if in the Crowdin project strings have been deleted or string keys have been changed in the source files, but the same strings are still present in the pseudo-language that is integrated into the website.
     To fix this, you just need to update the source files in the Crowdin project again, download the pseudo-language, and update it on the website.
+</QuestionAnswer>
+
+<QuestionAnswer title="Why pseudo-language identifiers (e.g., `crwdns...crwdne...`) are displayed instead of text">
+  The pseudo-language replaces each source string with a special identifier (for example, `crwdns123456:0crwdne123456:0`) that the In-Context script swaps for editable text when it scans the page. Any text the script hasn't processed keeps showing the raw identifier — usually while the page is still loading, or when the text is out of the script's reach (for example, in the Shadow DOM or re-rendered by a framework after the initial scan).
+
+  To mitigate this:
+    * Ensure the In-Context script loads on every page and finishes initializing before you interact with the content.
+    * Keep translatable text in the regular DOM rather than the Shadow DOM.
+    * For dynamic content and single-page applications, enable [Texts Preloading](#texts-preloading) and control initialization with [Start Type](#start-type) and the [start/stop methods](#start-and-stop-methods).
 </QuestionAnswer>
