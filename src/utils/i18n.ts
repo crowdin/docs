@@ -9,6 +9,13 @@ import es from '../content/i18n/es-ES.json';
 import tr from '../content/i18n/tr-TR.json';
 import zh from '../content/i18n/zh-CN.json';
 
+export const englishOnlyPages: readonly string[] = [
+  'terms',
+  'privacy-policy',
+  'security-policy',
+  'sub-processors',
+];
+
 export const starlightLocales = {
   root: { label: 'English',  lang: 'en' },
   'de': { label: 'Deutsch', lang: 'de' },
@@ -74,4 +81,11 @@ export function localizeDocId(
   }
 
   return id;
+}
+
+// Whether a route id (e.g. `terms` or the `zh/terms` fallback) is an English-only page.
+export function isEnglishOnlyPage(routeId: string): boolean {
+  const [first, ...rest] = routeId.split('/');
+  const base = first in starlightLocales ? rest.join('/') : routeId;
+  return englishOnlyPages.includes(base);
 }

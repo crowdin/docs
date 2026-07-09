@@ -1,18 +1,26 @@
 ---
 import DefaultFallbackContentNotice from '@astrojs/starlight/components/FallbackContentNotice.astro';
+import ContentNotice from '@astrojs/starlight/components/ContentNotice.astro';
+import { isEnglishOnlyPage } from '~/utils/i18n';
+
+const englishOnly = isEnglishOnlyPage(Astro.locals.starlightRoute.id);
 ---
 
-<div class="fallback-notice-wrap sl-flex">
-  <DefaultFallbackContentNotice />
-  <a
-    class="translate-link"
-    href="https://crowdin.com/project/crowdin-support"
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    {Astro.locals.t('translateInCrowdin')}
-  </a>
-</div>
+{englishOnly ? (
+  <ContentNotice icon="information" label={Astro.locals.t('englishOnlyContent')} />
+) : (
+  <div class="fallback-notice-wrap sl-flex">
+    <DefaultFallbackContentNotice />
+    <a
+      class="translate-link"
+      href="https://crowdin.com/project/crowdin-support"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {Astro.locals.t('translateInCrowdin')}
+    </a>
+  </div>
+)}
 
 <style>
   .fallback-notice-wrap {

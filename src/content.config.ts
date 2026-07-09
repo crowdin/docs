@@ -47,6 +47,7 @@ export const collections = {
         'social.spotifyPodcast': z.string().optional(),
         'modal.header': z.string().optional(),
         'translateInCrowdin': z.string().optional(),
+        'englishOnlyContent': z.string().optional(),
       }),
     }),
   }),
