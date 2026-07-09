@@ -2,6 +2,7 @@ function initRedoc(apiSpecUrl) {
   Redoc.init(apiSpecUrl, {
     menuToggle: true,
     sortOperationsAlphabetically: true,
+    sortTagsAlphabetically: true,
     theme: {
       logo: {
         gutter: '4px',
