@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { slugFromPath, getBaseDocId, localizeDocId, starlightLocales } from './i18n';
+import { slugFromPath, getBaseDocId, localizeDocId, isEnglishOnlyPage, starlightLocales } from './i18n';
 
 const LOCALES = Object.keys(starlightLocales).filter(locale => locale !== 'root');
 
@@ -44,6 +44,31 @@ describe('getBaseDocId', () => {
 
   it('falls back to the path for an empty-string slug (matches the glob loader)', () => {
     expect(getBaseDocId('tr/foo.md', '')).toBe('tr/foo');
+  });
+});
+
+describe('isEnglishOnlyPage', () => {
+  it('matches an English-only page by its root route id', () => {
+    expect(isEnglishOnlyPage('terms')).toBe(true);
+    expect(isEnglishOnlyPage('privacy-policy')).toBe(true);
+    expect(isEnglishOnlyPage('security-policy')).toBe(true);
+    expect(isEnglishOnlyPage('sub-processors')).toBe(true);
+  });
+
+  it('matches a locale-prefixed fallback route id', () => {
+    expect(isEnglishOnlyPage('zh/terms')).toBe(true);
+    expect(isEnglishOnlyPage('de/sub-processors')).toBe(true);
+  });
+
+  it('does not match localized pages', () => {
+    expect(isEnglishOnlyPage('cookies')).toBe(false);
+    expect(isEnglishOnlyPage('zh/cookies')).toBe(false);
+    expect(isEnglishOnlyPage('crowdin/billing/plans')).toBe(false);
+  });
+
+  it('does not treat a non-locale first segment as a locale', () => {
+    // `developer/terms` would be a different page, not the root `terms`.
+    expect(isEnglishOnlyPage('developer/terms')).toBe(false);
   });
 });
 
