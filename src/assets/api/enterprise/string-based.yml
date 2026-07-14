@@ -3566,9 +3566,23 @@ paths:
           $ref: '#/components/parameters/ProjectId'
         -
           $ref: '#/components/parameters/BranchId'
+        -
+          name: Prefer
+          in: header
+          description: '**[Recommended]** Set to `respond-async` (RFC 7240) to delete asynchronously. The endpoint then returns 202 with a delete operation to poll.'
+          required: false
+          schema:
+            type: string
+            example: respond-async
       responses:
         '204':
           description: 'Branch was successfully deleted'
+        '202':
+          description: 'Accepted for asynchronous processing (when `Prefer: respond-async` is sent)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeDeleteResource'
         '404':
           description: 'Project or branch with specified id was not found'
           content:
@@ -3676,6 +3690,59 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
       x-doc-sections:
+        - string-based
+  '/projects/{projectId}/branches/{branchId}/jobs/{jobIdentifier}':
+    get:
+      tags:
+        - 'Source Files'
+      summary: 'Check Delete Branch Job Status'
+      description: '**Required scopes:** `project.source.file` (Read only).'
+      operationId: api.projects.branches.jobs.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/BranchId'
+        -
+          name: identifier
+          in: path
+          description: 'Delete operation identifier (UUID). Returned by the async DELETE (Prefer: respond-async).'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'Branch delete status'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeDeleteResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or delete operation with specified identifier was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+      x-doc-sections:
+        - file-based
         - string-based
   '/projects/{projectId}/branches/{branchId}/merges':
     post:
@@ -29184,6 +29251,16 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/EnterpriseFile'
+    NodeDeleteResource:
+      description: 'Node Delete Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/NodeDeleteResponseModel'
     AdocFileImportOptionsResponseModel:
       title: 'Adoc File Import Options'
       properties:
@@ -29614,6 +29691,68 @@ components:
             - keywords
             - internal.description
             - tag
+      type: object
+    NodeDeleteResponseModel:
+      properties:
+        identifier:
+          type: string
+          example: 50fb3506-4127-4ba8-8296-f97dc7e3e0c3
+        status:
+          type: string
+          enum:
+            - created
+            - in_progress
+            - finished
+            - failed
+          example: finished
+        progress:
+          description: 'in percentages'
+          type: integer
+          example: 100
+        attributes:
+          description: 'The deleted node identifier, keyed by resource type.'
+          type: object
+          oneOf:
+            -
+              required:
+                - branchId
+              properties:
+                branchId:
+                  type: integer
+                  example: 12000
+              type: object
+            -
+              required:
+                - directoryId
+              properties:
+                directoryId:
+                  type: integer
+                  example: 12000
+              type: object
+            -
+              required:
+                - fileId
+              properties:
+                fileId:
+                  type: integer
+                  example: 12000
+              type: object
+        createdAt:
+          type: string
+          format: date-time
+          example: '2019-09-23T11:26:54+00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2019-09-23T11:26:54+00:00'
+        startedAt:
+          type: string
+          format: date-time
+          example: '2019-09-23T11:26:54+00:00'
+        finishedAt:
+          type: string
+          format: date-time
+          example: '2019-09-23T11:26:54+00:00'
       type: object
     PropertyFileExportOptionsResponseModel:
       title: 'Property File Export Options'
