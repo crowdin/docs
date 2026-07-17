@@ -345,9 +345,9 @@ Properties:
     <tr>
       <td><code>previewId</code></td>
       <td>
-        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Type:</strong> <code>string</code> or <code>number</code></p>
         <p><strong>Required:</strong> yes (only for the <code>parse-file</code> job when the HTML preview of the file is generated)</p>
-        <p><strong>Description:</strong> Numeric identifier of the string in the HTML Preview file. Used for <code>parse-file</code> job type only.</p>
+        <p><strong>Description:</strong> Unique identifier that links the string to its element in the HTML Preview file. Its value must exactly match the <code>\{previewId}</code> token used in the corresponding element's <code>id="string_preview_id_\{previewId}"</code> (see <a href="/developer/crowdin-apps-module-custom-file-format/#html-preview-of-the-file">HTML Preview of the File</a>). Set both from the same value so they can't drift apart. Used for <code>parse-file</code> job type only.</p>
       </td>
     </tr>
     <tr>
@@ -376,6 +376,13 @@ Properties:
 
 ## HTML Preview of the File
 
+The HTML preview renders a [WYSIWYG view of the file](/online-editor/#wysiwyg-file-preview) in the Editor. Wrap each translatable string in an element that carries both of the following:
+
+* `id="string_preview_id_{previewId}"`, where `{previewId}` matches the `previewId` of the corresponding string from the `parse-file` response. Use double quotes and make the value match exactly.
+* `class="crowdin_phrase"`, so the Editor can highlight the string in the preview and edit it inline. Without this class, the string is highlighted only when selected from the strings list, and inline editing in the preview doesn't work.
+
+The HTML preview is generated only during source file import. It's not produced when uploading translations (including multilingual uploads), and it's not displayed when the app passes strings with plurals.
+
 HTML Preview of the file example:
 
 ```html
@@ -397,11 +404,11 @@ HTML Preview of the file example:
       </tr>
       <tr>
         <td>Key 1</td>
-        <td><span id="string_preview_id_1">Source Text 1</span></td> <!-- 1 is previewId in strings json -->
+        <td><span id="string_preview_id_1" class="crowdin_phrase">Source Text 1</span></td> <!-- 1 is previewId in strings json -->
       </tr>
       <tr>
         <td>Key 2</td>
-        <td><span id="string_preview_id_2">Source Text 2</span></td> <!-- 2 is previewId in strings json -->
+        <td><span id="string_preview_id_2" class="crowdin_phrase">Source Text 2</span></td> <!-- 2 is previewId in strings json -->
       </tr>
     </table>
   </body>
