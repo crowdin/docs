@@ -1,0 +1,154 @@
+---
+title: CSV / XLSX Dosyası Yapılandırması
+description: İçeriklerini içe aktarmadan önce CSV veya XLSX dosyalarını yapılandırın
+slug: csv-xlsx-configuration
+---
+
+import { Steps, Aside, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import csvFileConfigure from '!/crowdin/project-management/sources/csv_file_configure.png';
+import csvFileConfigureSb from '!/crowdin/project-management/sources/csv_file_configure_sb.png';
+import xlsxInitialOptions from '!/crowdin/project-management/sources/xlsx_initial_options.png';
+import csvFileConfiguration from '!/crowdin/project-management/sources/csv_file_configuration.png';
+
+CSV veya XLSX dosyaları projeye yüklendikten sonra, sistemin içerikleri doğru şekilde ayrıştırmadan ve içe aktarmadan önce bunları yapılandırmayı gerektiriler.
+
+## Dosya Yapılandırması
+
+Yapılandırmayı başlatmak için şu adımları izleyin:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dosya tabanlı proje">
+    <Steps>
+      1. Open your project and go to **Sources > Files**.
+      2. Yapılandırma ileti öğesini açmak için dosyanın yanındaki **Yapılandır**’a tıklayın.
+    </Steps>
+    <Image src={csvFileConfigure} alt="Dosyayı Yapılandırın" />
+    <Aside type="tip">
+      Birden çok dosyayı aynı anda birkaç yöntemle yapılandırabilirsiniz:
+      * **Belirli dosyaları yapılandırmak için:** İstediğiniz dosyaları seçin, sağ tıklayın ve **Dosyaları Yapılandır**’ı seçin.
+      * **Tek türdeki tüm dosyaları yapılandırmak için:** Tüm CSV veya tüm XLSX dosyalarını aynı anda ayarlamak için **Tümünü Yapılandır**’a tıklayın.
+    </Aside>
+  </TabItem>
+  <TabItem label="Dizgi tabanlı proje">
+    <Steps>
+      1. Projenizi açın ve **Yükleme** sekmesine gidin.
+      2. Dosyalarınızı sürükleyin ve bırakın ya da **Dosyaları Seçin**’e tıklayın.
+      3. Ayarlamak istediğiniz dosyanın yanındaki **Yapılandır**’a tıklayın.
+    </Steps>
+    <Image src={csvFileConfigureSb} alt="Dosyayı Yapılandırın (Dizgi Tabanlı)" />
+  </TabItem>
+</Tabs>
+
+Bu makalede bahsedilen yapılandırmaların aynısı TSV dosya biçimi için de uygulanabilir. CSV ve TSV dosyaları arasındaki temel fark, sütunlar arasında farklı sınırlayıcılar kullanmalarıdır (CSV’de virgüller ve TSV’de sekmeler).
+
+### XLSX Dosyaları için İlk Ayarlama
+
+Bir XLSX dosyasını yapılandırırken, öncelikle dosyanın nasıl işleneceğini belirleyen iki ana seçeneğin bulunduğu bir ileti öğesi göreceksiniz:
+
+* **Tüm hücreleri içe aktar** - Her hücrenin içeriğini ayrı bir kaynak dizgi olarak içe aktarır. Eğer bu seçeneği seçerseniz, ayrıca metni otomatik olarak cümleler veya kısa paragraflar gibi daha küçük çeviri birimlerine bölmek için **İçerik bölümleme**’yi de etkinleştirebilirsiniz. Bu, birkaç cümleden oluşan içerik birimlerini çevirirken faydalıdır çünkü daha küçük metin parçalarını çevirmek daha kolay olacaktır. Bölümleme Kuralları Değiştirme (SRX), otomatik içerik bölümleme için kullanılır.
+* **İçe aktarma için sütunları yapılandır** - Bu seçenek, ayrıntılı yapılandırma ileti öğesini açarak kaynaklar, çeviriler, bağlam ve daha fazlası için sütunları el ile eşlemenizi sağlar.
+
+<Image src={xlsxInitialOptions} alt="XLSX dosyaları için başlangıç ​​yapılandırma seçenekleri" />
+
+Ayrıntılı yapılandırma ileti öğesi, CSV dosyaları için hemen veya XLSX dosyaları için **İçe aktarma için sütunları yapılandır**’ı seçtikten sonra görüntülenir.
+
+### Sütunlar Yapılandırması
+
+İleti öğesinin ana alanı, dosyanızdaki sütunları Crowdin’deki uygun veri türüyle eşlemek içindir. Arayüz, doğrudan sütun eşlemesinin üzerinde aşağıdaki denetimleri içerir:
+
+* **Algıla** - İlk satırdaki başlıklara dayanarak [sütun şemasının otomatik algılanması](#otomatik-sütun-algılama) işlevini yeniden çalıştırır.
+* **Sıfırla** - Şu anki sütun yapılandırmasını temizler ve tüm sütunları **Seçilmedi** olarak sıfırlar.
+* <Icon name="mdi:plus" class="inline-icon" /> ve <Icon name="mdi:minus" class="inline-icon" /> - Yeni bir dil sütunu eklemek veya seçileni kaldırmak için bu düğmeleri kullanın. Çok dilli kaynak dosyanızda projenizin hedef dillerinden bazılarının sütunları eksikse bu kullanışlıdır. Bu düğmeler sadece **İçe Aktarma Seçenekleri** bölümünde **Çok dilli elektronik tablo** seçeneğini seçtiğinizde etkin olur.
+
+Her sütunun amacını, üstündeki açılır menüden bir tür atayarak tanımlayabilirsiniz. Kullanılabilir sütun türleri şunlardır:
+
+* *Anahtar* – Sütun, dizgi tanımlayıcıları içerir. Tipik olarak, bir alfasayısal değer.
+* *Kaynak dizgi* – Sütun, çevrilmesi gereken kaynak dizgileri içerir.
+* *Kaynak dizgi/Çeviri* – Sütun, kaynak dizgiler içerir, ancak dosya dışa aktarıldığında aynı sütun çevirilerle doldurulacaktır. Varolan çevirileri yüklerken, bu sütundaki değerler çeviriler olarak kullanılacaktır.
+* *Çeviri* – Dışa aktarmada eklenen ortaya çıkan çeviriler için sütun. İçe aktarıldığında ve varolan çevirileri yüklerken, sistem bu sütunu varolan çeviriler için denetleyecek ve bunları projeye yükleyecek.
+* *Bağlam* – Sütun, kaynak dizgiler için yorumları veya bağlam bilgilerini içerir.
+* *Etiketler* – Sütun, kaynak dizgiler için etiketleri içerir. Her dizgiye birden çok etiket ekleyebilir, onları virgülle ayırabilirsiniz.
+* *En fazla uzunluk* – Sütun, dizgilerin çevirileri için en fazla uzunluk sınır değerlerini içerir.
+* *Seçilmedi* – Sütun, içe aktarma sırasında atlanacaktır.
+
+<Image src={csvFileConfiguration} alt="CSV dosyası için ayrıntılı yapılandırma ileti öğesi" />
+
+#### Otomatik Sütun Algılama
+
+Yapılandırma ileti öğesini açtığınızda sistem, ilk satırdaki sütun adlarına göre dosya şemasını otomatik olarak algılar. The detection is case-insensitive. Otomatik olarak algılanmayan sütunlar, elle yapılandırma için **Seçilmedi** olarak bırakılacaktır.
+
+Otomatik sütun algılama, özellikle birçok dil ve ek sütun (örn. Bağlam, Etiketler, En fazla Uzunluk) içeren birden çok çok dilli elektronik tablolar yüklediğinizde yararlıdır.
+
+Varsayılan olarak sistem başlangıçta elektronik tabloları tek dilli olarak ele alır. Birden çok dilin çevirilerini içeren sütunları doğru bir şekilde otomatik olarak algılamak için [**İçe Aktarma Seçenekleri**](#içe-aktarma-seçenekleri) bölümünde **Çok dilli elektronik tablo**’yu seçin ve ardından **Algıla**’ya tıklayın.
+
+Otomatik sütun algılamadan en iyi şekilde yararlanmak için CSV veya XLSX dosyalarınızdaki sütunları aşağıdaki tablodan değerleri kullanarak adlandırın:
+
+| Sütun türü                    | Beklenen değer                                                                                                                                                                    |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Anahtar                       | `identifier`, `key`                                                                                                                                                               |
+| Kaynak Dizgi                  | `source phrase`, `source_phrase`, `source string`, `source_string`                                                                                                                |
+| Kaynak Dizgi/Çeviri           | `source or translation`, `source_or_translation`, `source/translation`                                                                                                            |
+| Çeviri                        | `translation`                                                                                                                                                                     |
+| Bağlam                        | `context`                                                                                                                                                                         |
+| Etiketler                     | `labels`                                                                                                                                                                          |
+| En Fazla Uzunluk              | `max. length`, `max_length`                                                                                                                                                       |
+| Dil (çok dilli dosyalar için) | Dil adı (örn. Türkçe), Crowdin dil kodu (örn. tr-TR), Yerel ayar (örn. tr-TR), Alt çizgili yerel ayar (örn. tr_TR), Dil kodu ISO 639-1 (örn. tr), Dil kodu ISO 639-2/T (örn. tur) |
+
+<Aside type="tip">
+  Desteklenen tüm dilleri ve bunların çeşitli kodlarını (örn. Yerel Ayarı, İki harfli, Üç harfli) bulmak için [Crowdin Dil Kodları](/developer/language-codes/) sayfasını ziyaret edin.
+</Aside>
+
+### Import Options
+
+Sağdaki kenar çubuğu, dosya yapısının nasıl işleneceğini tanımlamanızı sağlar.
+
+* **İlk satırı (başlığı) içe aktarma** - Dosyanızın ilk satırı çeviri için içe aktarılmaması gereken sütun başlıkları içeriyorsa bu seçeneği seçin.
+* **Çok dilli elektronik tablo** - Dosyanızın bir sütununda kaynak metinler, diğer sütunlarında ise farklı dillere çeviriler varsa bu seçeneği seçin. Bu, sistemin dilleri uygun sütunlarla doğru şekilde eşleştirmesini sağlar ve **Çeviriler** bölümünün kilidini açar.
+* **Gizli sayfaları içe aktar** (sadece XLSX) - XLSX dosyanızdaki gizli sayfalardan içeriği içe aktarın.
+* **Gizli satırları içe aktar** (sadece XLSX) - XLSX dosyanızdaki gizli satırlardan içeriği içe aktarın.
+
+### Çeviriler
+
+Yine sağ kenar çubuğunda bulunan bu seçenek kümesi, dosyanızdaki varolan çevirilerin nasıl işleneceğine ince ayar yapmanızı sağlar. Bu seçenekler **Çok dilli elektronik tablo** seçildiğinde kullanılabilir olur.
+
+* **Çevirileri içe aktar** - Varsayılan olarak Crowdin, dosyada bulunan tüm çevirileri içe aktarır. Sadece kaynak dizgileri içe aktarmak istiyorsanız bu onay kutusunun işaretini kaldırın.
+* **Çevirinin kaynakla eşleşmesine izin ver** - Bir çeviri kasıtlı olarak kaynak metinle aynıysa (örn. ürün adları, markalar veya kod terimleri için) bunu etkinleştirin.
+* **Eklenen çevirileri onayla** – Yüklenen çevirileri otomatik olarak onaylayın. Bu, dosyanızdaki çevirilerin doğruluğundan emin olduğunuzda kullanışlıdır.
+* **Gizli dizgileri çevir** – Crowdin’de gizli olarak işaretlenen dizgilerin çevirilerini içe aktarın. Gizli dizgiler genellikle Düzenleyicide çevirmenlere görünür değildir ve sistem amaçları veya yer tutucular için kullanılır.
+* **ÇB’ye ekle** – İçe aktarılan çevirileri projenin birincil Çeviri Belleğine (ÇB) ekleyin.
+
+<Aside>
+  Dizgi tabanlı projelerde, yukarıda açıklanan çeviri ayarlarından bazıları (**Çevirinin kaynakla eşleşmesine izin ver**, **Eklenen çevirileri onayla** ve **Gizli dizgileri çevir**), yapılandırma ileti öğesinin kendisi yerine Yükleme sekmesinin sağ kenar çubuğunda bulunur.
+</Aside>
+
+### Yapılandırma Şablonları
+
+İleti öğesinin alt kısmında yer alan bu seçenek, aynı sütun yapısına sahip dosyalar için yapılandırmaları yönetmenizi sağlar.
+
+* Şu anki ayarlamanızı şablon olarak kaydetmek için **Şablonlar** > **Şablon olarak kaydet**’e tıklayın, bir şablon adı belirleyin ve **Kaydet**’e tıklayın.
+* Daha sonra bu şablonu yeni içe aktarılan dosyalara uygulayabilirsiniz. Uzun bir listeden belirli bir şablonu bulmak için şablonlar açılır menüsünde bulunan **Arama** alanını kullanın.
+
+## CSV ve XLSX Dosyaları için Şema Değiştirme
+
+CSV veya XLSX dosyalarını güncellemek ve başlangıçta yapılandırılan şemayı değiştirmek isteyebilirsiniz. Crowdin projenize yeni bir hedef dil eklediğinizde şema güncellemesi gerekebilir.
+
+Kaynak dosyanızın şemasını değiştirmek için şu adımları izleyin:
+
+<Steps>
+  1. Gerekli dosyalara sağ tıklayın ve **Şemayı değiştir**’i seçin.
+  2. Makinenizdeki yeni dosyayı seçin.
+  3. Dosyanın yeni yapılandırmasını/şablonını buna göre ayarlayın.
+</Steps>
+
+<Aside type="caution" title="Limitations">
+  Varolan yapılandırma şablonlarını düzenleyemezsiniz. Bunun yerine, kaldırabilir veya yeni bir tane oluşturabilirsiniz.
+</Aside>
+
+## Ayrıca Bakınız
+
+<CardGrid>
+  <LinkCard title="Kaynak Dosyaları Yükleme" description="Çeviri için kaynak dosyaları projenize nasıl yükleyeceğinizi öğrenin." href="/uploading-files/" />
+  <LinkCard title="Dosya Yönetimi" description="Projenizdeki kaynak dosyaları yönetin ve yapılandırın." href="/file-management/" />
+</CardGrid>
