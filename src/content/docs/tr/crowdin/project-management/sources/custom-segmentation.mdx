@@ -1,0 +1,85 @@
+---
+title: Özel Bölümleme
+description: Her kaynak dosya için kendi bölümleme kurallarınızı ayrı ayrı tanımlayın
+slug: custom-segmentation
+sidebar:
+  order: 5
+---
+
+import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import Include from '~/components/Include.astro';
+import fileContextMenuSettings from '!/crowdin/project-management/sources/files_context_menu_settings.png';
+import fileParserConfiguration from '!/crowdin/project-management/sources/files_parser_configuration.png';
+
+XML, HTML, MD veya anahtar-değer yapısı olmayan diğer kaynak dosyaları her yüklediğinizde, otomatik içerik bölümleme için ön tanımlı bölümleme kuralları (SRX 2.0) kullanılır. Bununla birlikte, varsayılan bölümleme kurallarının kaynak dosyaları istenen beklentilerin aksine bölümlere ayırdığı durumlar olabilir.
+
+Bu durumda, [SRX 2.0 standardını](https://www.gala-global.org/srx-20-april-7-2008) kullanarak her kaynak dosya için kendi bölümleme kurallarınızı ayrı ayrı tanımlayabilirsiniz.
+
+## Bölümlemeyi Değiştirin
+
+**Kaynaklar > Dosyalar**’da bölümlemeyi değiştirebilirsiniz.
+
+<Steps>
+  1. Bölümleme kurallarını ayarlamak istediğiniz projeyi açın ve **Kaynaklar > Dosyalar**’a gidin.
+  2. Gerekli dosyada <Icon name="mdi:dots-horizontal" class="inline-icon" /> simgesine tıklayın (veya sağ tıklayın) ve **Ayarlar**’ı seçin. <Image src={fileContextMenuSettings} alt="Dosya Bağlam Menüsü" />
+  3. Görünen ileti öğesinde, **Ayrıştırıcı yapılandırması** sekmesine geçin.
+  4. **İçerik bölümlemeyi etkinleştir**’i ve **Özel bölümleme kurallarını kullan**’ı seçin.
+  5. SRX bölümleme kurallarınızı yapıştırın ve **Kaydet**’e tıklayın. <Image src={fileParserConfiguration} alt="Dosya Bölümleme Kuralları" class="width-xl crowdin-modal" />
+</Steps>
+
+Yeni bölümleme kurallarınızı kaydetmenizden sonra, kaynak dosyanız otomatik olarak yeniden içe aktarılacak ve bu yeni kurallara göre bölümlenecektir.
+
+## Bölümleme Örnekleri
+
+<Aside>
+  SRX kurallarında kullanılan düzenli ifadeleri, PHP (PCRE2) ve Node.js ile uyumlu olmak zorundadır.
+</Aside>
+
+Tipik bir SRX dosyası aşağıdakine benzer:
+
+<Include file="srx-file-example.mdx" />
+
+### Asya Dilleri için Cümle Ayırıcısını Değiştirin
+
+Genellikle, nokta işareti bir cümle ayırıcısı olarak kullanılır. Bununla birlikte, bazı Asya dilleri için durum böyle değildir. Örneğin, Çincedeki tipik cümle ayırıcı ideografik bir nokta işaretidir (`。`). Bu gibi durumlarda, aşağıdaki kural grubunu kullanmak isteyebilirsiniz:
+
+```xml
+<rule break="yes">
+  <beforebreak>[\x3002]+</beforebreak>
+  <afterbreak></afterbreak>
+</rule>
+```
+
+### Metni Daha Küçük Parçalara Ayırın
+
+Aşağıdaki basit cümlede, bir metin parçasını iki (veya daha fazla) dizgiye bölmenin gerekli olduğu bir durumda ayıracağız.
+
+Varsayılan bölümleme kurallarına sahip metin:
+
+`Bu örnek cümlenin birinci kısmı ve bu ikinci kısmıdır.`
+
+Yeni bölümleme kurallarına sahip metin:
+
+`Bu örnek cümlenin birinci kısmı`
+
+<code>&#32;ve bu ikinci kısmıdır.</code>
+
+Bu özel durum için aşağıdaki kural grubu, ilk cümleyi iki bölüme ayıracaktır:
+
+```xml
+<rule break="yes">
+  <beforebreak>sentence</beforebreak>
+  <afterbreak>\u0020</afterbreak>
+</rule>
+```
+
+## SRX Düzenleyicileri ile Bölümleme Kuralları Oluşturun
+
+SRX bölümleme kuralları, [Ratel](http://okapiframework.org/wiki/index.php?title=Ratel) gibi araçların yardımıyla oluşturulabilir ve bakımı yapılabilir. Bölümleme kurallarını sıfırdan oluşturabileceğiniz veya varolanlarınızı düzenleyebileceğiniz görsel bir arayüze sahiptir.
+
+<CardGrid>
+  <LinkCard title="Bölümleme Kuralları Oluşturucu" description="Crowdin projelerinizde yeni bölümleme kurallarını oluşturun ve deneyin." href="https://store.crowdin.com/segmentation" target="_blank" />
+  <LinkCard title="SRX Playground" description="YZ Destekli SRX Kuralları Düzenleyicisi." href="https://store.crowdin.com/srx-playground" target="_blank" />
+</CardGrid>

@@ -1,0 +1,123 @@
+---
+title: Kaynak Dosyaları Yükleme
+description: Learn how to upload source files to your project for translation
+slug: uploading-files
+sidebar:
+  order: 0
+---
+
+import { Aside, Tabs, TabItem, Steps, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import uploadFiles from '!/crowdin/project-management/sources/upload_files.png';
+import uploadFilesSB from '!/crowdin/project-management/sources/upload_files_sb.png';
+import baseHtmlEditor from '!/crowdin/project-management/sources/base_html_editor.png';
+
+[Bir proje oluşturduktan](/creating-project/) sonra bir sonraki adım, kaynak dosyaları yükleme için hazırlamak olacaktır. Crowdin, Android XML, iOS Strings, JSON vb. dahil olmak üzere çok çeşitli [dosya biçimlerini](/supported-formats/) destekler. Dosyalarınızı hazırladığınızda, çeviri için Crowdin projenize ekleyebilirsiniz.
+
+Crowdin, bir projeye içerik eklemek için birkaç seçenek sunar:
+
+* Web arayüzü (KA) aracılığıyla el ile.
+* Crowdin projenizi zaten kullandığınız araçlarla bütünleştirin. Explore available integrations on the [Crowdin Store](https://store.crowdin.com/).
+* Use the [API](/developer/api/) or [Developer Tool](/developer/dev-tools/) of your choice.
+
+Genellikle, bu görev geliştiriciler tarafından gerçekleştirilir. Bu adımda size yardımcı olması için [meslektaş geliştiricinizi davet edebilirsiniz](/inviting-people/).
+
+Projenize asıl kaynak dosyalarla başlamadan önce çeviri iş akışlarını denemek için Crowdin örnek dosyalarını da kullanabilirsiniz.
+
+<Aside type="tip">
+  Add support for more formats by installing the corresponding apps in the [Crowdin Store](https://store.crowdin.com/categories/file-formats).
+</Aside>
+
+## Dosyaları Yükleme
+
+Dosyaları web arayüzü aracılığıyla yüklemek için şu adımları izleyin:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dosya tabanlı proje">
+    <Steps>
+      1. Open your project and go to **Sources > Files**.
+      2. Dosyaları makinenizden **Dosyalar** sekmesinin herhangi bir yerine sürükleyin ve bırakın — projenin köküne veya doğrudan varolan bir klasöre. You can upload ZIP archives if you want to add a structured set of folders and files.
+      3. *(İsteğe bağlı)* Dosya eklemek için **Dosya Yükle** veya **Dosya Ekle**’ye, çeviri iş akışlarını denemek için **Örnekler Kullan**’a, içeriği otomatik olarak eşitlemek için **Bütünleştirmeyi Ayarla**’ya veya içerik yüklemeleri geliştirici takım arkadaşınız tarafından gerçekleştirilecekse **Geliştirici / Çeviri İstiyen Davet Et**’e tıklayın. **Dizgi Kasası Oluştur** (boş bir CSV dosyası ekler) veya başka bir **Bütünleştirmeyi Ayarla** kısayolu gibi ek seçeneklere erişmek için **Dosya Ekle** düğmesinin yanındaki açılır oka da tıklayabilirsiniz. <Image src={uploadFiles} alt="Files tab in the project settings" />
+    </Steps>
+  </TabItem>
+  <TabItem label="Dizgi tabanlı proje">
+    <Steps>
+      1. Projenizi açın ve **Yükleme** sekmesine gidin.
+      2. Kaynak dosyalarını yüklediğiniz hedef dalı seçin. Varsayılan olarak `ana` dal seçilidir. Gerekirse yeni dallar oluşturun.
+      3. Dosyaları makinenizden sürükleyin ve bırakın ya da **Dosyaları Seçin**’e tıklayın. Bir dizi dosyanın eklenmesini istiyorsanız ZIP arşivlerini yükleyebilirsiniz.
+      4. Crowdin, kaynak içeriği mi yoksa çevirileri mi yüklediğinizi otomatik olarak algılamaya çalışır. Verify the detection is correct and adjust the language settings if needed (e.g., English (source) should be selected for source files if the project's source language is English).
+      5. *(Optional)* In the **Source files** section, to the right of the uploaded file list, configure [advanced source file import settings](#advanced-import-settings).
+      6. Kaynak içeriğini yüklemeyi tamamlamak için **Yükle**’ye tıklayın. <Image src={uploadFilesSB} alt="Files tab in the project settings" />
+    </Steps>
+    <Aside>
+      When uploading translatable content to a string-based project, you can use the following file formats:
+
+      <details>
+        <summary>View File Formats</summary>
+        <Include file="sb-file-formats.mdx" />
+      </details>
+    </Aside>
+  </TabItem>
+</Tabs>
+
+<ReadMore>
+  [Proje türleri](/creating-project/#proje-türleri) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+<Aside type="caution" title="Limitations">
+  The maximum file size is 100 MB. If your file exceeds this limit, it is recommended to split it into several smaller files, and upload them one at a time.
+</Aside>
+
+### XML, CSV ve XLSX Dosyaları
+
+XML, CSV, XLSX ve diğerleri gibi bazı dosya biçimleri ek yapılandırma gerektirebilir.
+
+* [CSV/XLSX Dosya Yapılandırması](/csv-xlsx-configuration/)
+* [XML Dosya Yapılandırması](/xml-configuration/)
+* [Ayrıştırıcı Yapılandırması](/project-settings/parser-configuration/)
+
+<Aside type="caution" title="Limitations">
+  The XLSX/XLS file size is limited to 2 000 000 cells.
+</Aside>
+
+### Göreceli URL’lere Sahip HTML Dosyaları
+
+To display images and styles in the HTML file used outside of the website, where it belongs, add the `<base>` tag to specify the base URL/target for all relative URLs in a document.
+
+```html wrap
+<html>
+  <head>
+    <base href="https://www.w3schools.com/images/">
+  </head>
+  <body>
+    <p><img src="stickman.gif" width="24" height="39" alt="Stickman">Please note that we only specified a relative address for the image. Since we specified a base URL in the head section, the browser will look for the image at "https://www.w3schools.com/images/stickman.gif".</p>
+  </body>
+</html>
+```
+
+Once you add the `<base>` tag, translators will see images in the HTML files when translating in the Editor.
+
+<Image src={baseHtmlEditor} alt="HTML file with a base tag displayed in the Editor" />
+
+<Aside type="caution" title="Limitations">
+  HTML dosyaları [dizgi tabanlı](/creating-project/#dizgi-tabanlı-proje) projelerde desteklenmez.
+</Aside>
+
+## Gelişmiş İçe Aktarma Ayarları
+
+You can configure the desired system behavior for uploaded source files in string-based projects using the available options:
+
+* **Update strings** &ndash; update strings with the same identifiers. Varsayılan olarak, bu seçenek seçilidir.
+* **Cleanup mode** &ndash; remove previously uploaded strings not present in the newly uploaded file. Varsayılan olarak, bu seçenek işaretli değildir.
+* **Add labels** &ndash; tag uploaded strings with the selected labels. When uploading source files, Crowdin also adds system labels that include the source file name.
+
+## Ayrıca Bakınız
+
+<CardGrid>
+  <LinkCard title="Varolan Çevirileri Yükleme" description="Learn how to upload existing translations to your project." href="/uploading-translations/" />
+  <LinkCard title="Dosya Yönetimi" description="Projenizdeki kaynak dosyaları yönetin ve yapılandırın." href="/file-management/" />
+  <LinkCard title="Sürümler Yönetimi" description="Learn how to manage different versions of your project." href="/version-management/" />
+  <LinkCard title="Import Settings" description="Configure how placeholders, duplicates, and word counts are handled." href="/project-settings/import/" />
+</CardGrid>
