@@ -443,6 +443,142 @@ This method returns a plain **`string`** which is the JWT token, or **`null`**.
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw...SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
 ```
 
+### Making API Requests
+
+You can call the Crowdin REST API from your app on behalf of the current user, either directly or through the official API client.
+
+#### AP.apiRequest(payload, callback) {#api-request}
+
+Your app can call the Crowdin REST API directly from the iframe. Crowdin executes each request on behalf of the current user and limits it to the scopes declared in the app manifest, so no tokens are needed in your code.
+
+**Example:**
+
+```js
+AP.apiRequest(
+  { method: "get", path: "projects?limit=25", headers: {} },
+  (res) => {
+    if (res.status >= 200 && res.status < 300) {
+      console.log(res.body.data);
+    }
+  },
+);
+```
+
+##### Parameters
+
+<table>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">payload</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> The request definition. See the payload fields below.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">callback</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>function</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> A function that receives the response envelope with the status, statusText, and body properties.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+##### Payload Fields
+
+<table>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">method</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> HTTP method: <code>get</code>, <code>post</code>, <code>put</code>, <code>patch</code>, <code>delete</code>, or <code>head</code>.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">path</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> Path relative to <code>/api/v2</code>, including the query string. For example, <code>projects?limit=25</code>.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">headers</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> Additional request headers. Pass an empty object when none are needed.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">body</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object | string | ArrayBuffer</code></p>
+      <p><strong>Required:</strong> no</p>
+      <p><strong>Description:</strong> Request body: a JSON-serializable value, a string, or an <code>ArrayBuffer</code> for binary data. <code>FormData</code> is not supported (no API v2 endpoint requires multipart). To upload a file, read it into an <code>ArrayBuffer</code> first.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+##### Response
+
+The callback receives a response envelope with three properties: `status`, `statusText`, and `body`. Crowdin returns this envelope for every completed request, whether it succeeded or not, so a non-2xx response does not throw. A `status` of `0` indicates a network failure.
+
+The `body` is a parsed JSON value for JSON responses, a string for text responses, and an `ArrayBuffer` for binary ones. It is absent when the response has no body.
+
+##### Uploading a File
+
+```js
+const buffer = await file.arrayBuffer();
+
+AP.apiRequest(
+  {
+    method: "post",
+    path: "storages",
+    headers: { "Crowdin-API-FileName": file.name },
+    body: buffer,
+  },
+  (res) => console.log(res.body.data),
+);
+```
+
+#### Using the Official API Client {#api-client}
+
+Instead of calling `AP.apiRequest` directly, you can use the official [`@crowdin/crowdin-api-client`](https://www.npmjs.com/package/@crowdin/crowdin-api-client) with the `@crowdin/apps-api-adapter` package. The adapter implements the client's HTTP layer on top of `AP.apiRequest`, so you get the full typed API surface while every request still runs under the current user's session and manifest scopes.
+
+```bash
+npm install @crowdin/apps-api-adapter @crowdin/crowdin-api-client
+```
+
+```js
+import { AppsApiAdapter } from "@crowdin/apps-api-adapter";
+import { Client } from "@crowdin/crowdin-api-client";
+
+const crowdin = new Client(
+  { token: "unused" },
+  { httpClient: new AppsApiAdapter() },
+);
+
+const { data: projects } = await crowdin.projectsGroupsApi.listProjects();
+
+const file = document.querySelector("#file").files[0];
+await crowdin.uploadStorageApi.addStorage(file.name, file);
+```
+
+<Aside type="note">
+  The `token` is required by the client constructor but never used. The host authenticates every request with the current user's session.
+</Aside>
+
+* Binary uploads accept a `Blob`, `File`, `ArrayBuffer`, or typed array; the adapter converts them automatically.
+* Failed requests reject with the client's usual `CrowdinError` / `CrowdinValidationError`.
+* GraphQL is not available through the bridge; only the REST API (`/api/v2`) is.
+
 ### Viewport and Sizing
 
 This group of methods allows your app to get information about the size and position of its `iframe` and to request size changes.

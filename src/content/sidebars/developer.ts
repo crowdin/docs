@@ -9,6 +9,7 @@ export default [
     items: [
       { slug: path('crowdin-apps-about') },
       { slug: path('crowdin-apps-quick-start') },
+      { slug: path('crowdin-apps-serverless') },
       { slug: path('crowdin-apps-app-descriptor') },
       { slug: path('crowdin-apps-js') },
       { slug: path('crowdin-apps-installation') },
