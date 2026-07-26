@@ -1,0 +1,277 @@
+---
+title: Hedef Dosya Paketleri
+description: Dizgi veya dosya kümelerini seçtiğiniz herhangi bir biçimde dışa aktarın
+slug: bundles
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Image } from 'astro:assets';
+import createBundle from '!/crowdin/project-management/translations/bundles_create_bundle.png';
+import createBundleSb from '!/crowdin/project-management/translations/bundles_create_bundle_sb.png';
+import downloadBundles from '!/crowdin/project-management/translations/bundles_download.png';
+import downloadBundlesSb from '!/crowdin/project-management/translations/bundles_download_sb.png';
+import bundlesVcs from '!/crowdin/project-management/translations/bundles_vcs.png';
+
+Hedef dosya paketleri (veya basitçe Paketler) orijinal dosya biçiminden bağımsız olarak, seçtiğiniz biçimlerde dizgi veya dosya kümelerini dışa aktarmanızı sağlar. Varsayılan olarak şu üç biçim arasından seçim yapabilirsiniz: XLIFF, Android XML ve iOS Strings. Crowdin [Mağazası](https://store.crowdin.com/tags/string-exporter)’ndan ilgili uygulamaları yükleyerek daha fazla hedef dosya biçimi ekleyebilirsiniz.
+
+Paketlerle birkaç şekilde çalışabilirsiniz:
+
+* Paketleri, projenin **İndirmeler** bölümü aracılığıyla el ile yönetin.
+* **Hedef dosya paketleri kipi**’nde bir VCS bütünleştirmesi bağlayın.
+* **CDN Dağıtımları**’nı kullanarak paketleri yönetin.
+* Crowdin CLI ve API kullanarak paketleri yönetin.
+
+## Kullanım Durumları
+
+En yaygın kullanım durumları şunları içerir:
+
+* **Platformlar Arası Dışa Aktarma:** Paketleri kullanarak tek bir kaynak dosyayı (örn. Android XML) yükleyin, çevirin ve birden çok platform (örn. iOS için iOS Strings, Web için JSON) için çevirileri dışa aktarın.
+* **Birleşik Kaynak Yönetimi:** Tüm platformlar için kaynak dizgileri içeren birleştirilmiş bir elektronik tablo (örn. XLSX veya CSV) yükleyin. Dizgileri etiketlere veya yollara dayalı süzerek her platform için ayrı dosyaları dışa aktarmak amacıyla paketleri kullanın.
+* **Tasarım Araçları Bütünleştirme:** Tasarım araçlarından (Figma, Sketch, Adobe XD) dizgileri doğrudan Crowdin’e gönderin ve paketleri kullanarak çevirileri geliştirmeye hazır biçimlerde dışa aktarın.
+* **Çevrimdışı Çeviri:** Çevrimdışı çeviri için belirli dizgi kümelerini XLIFF biçiminde dışa aktarın ve Crowdin’e [tamamlanmış çevirileri geri yükleyin](/offline-translation/#çevirileri-yükleme).
+
+<CardGrid>
+  <LinkCard title="Custom Bundle Generator" description="Uygulama, çevrilmiş Crowdin dizgilerinden kaynak dosyaları oluşturmanızı sağlar." href="https://store.crowdin.com/custom-bundle-generator" target="_blank" />
+  <LinkCard title="Custom Bundle Builder" description="Paketlerden dosya oluşturmak için kendi komut kodunuzu oluşturun." href="https://store.crowdin.com/custom-export" target="_blank" />
+</CardGrid>
+
+## KA içinde Paketleri Yönetme
+
+Paketlerle el ile çalışmak için bunları projenizin **İndirmeler** bölümünden yapılandırabilir ve indirebilirsiniz.
+
+### Paketleri Yapılandırma
+
+Bir paket yapılandırmak için şu adımları izleyin:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dosya tabanlı proje">
+    <Steps>
+      1. Projenizi açın ve **Çeviriler** sekmesine gidin.
+      2. **İndirmeler** bölümünü genişletin ve **Ekle**’ye tıklayın.
+      3. **Paket oluştur** ileti öğesinde bir **Paket adı** girin.
+      4. **İçeriği** yapılandırın (Sol Panel):
+         * **Dosyaları/dizinleri seç**: Proje ağacınıza göz atın. Projenin tamamını dahil etmek için belirli dosyaları, klasörleri veya **Kök klasörü** seçebilirsiniz. Gelecekteki dosyaları otomatik olarak dahil etmek için **Seçilen klasörlere eklenen yeni dosyaları dahil et**’i seçin.
+         * **Model kullan (Gelişmiş)**: Dosyaları değişken olarak dahil etmek için bir **Kaynak dosya yolu** modeli (örn. `*.xml`) tanımlayın. Belirli öğeleri hariç tutmak için **Dosyaları veya klasörleri yoksay** seçeneğini de belirleyebilirsiniz.
+      5. *(İsteğe bağlı)* **Dizgi süzgeçlerini** ayarlayın:
+         * **Etiketleri dahil et**: Sadece belirli etiketleri içeren dizgileri dışa aktarın.
+         * **Etiketleri hariç tut**: Belirli etiketleri içeren dizgileri atlayın.
+         * Birden çok etiketin mantığını ayarlayabilirsiniz (örn. *Seçilen herhangi bir etiket* (VEYA) karşı *Seçilen tüm etiketler* (VE)).
+      6. **Dilleri** yapılandırın:
+         * **Tüm hedef diller**: Varsayılan olarak seçilidir. Bu seçenek değişkendir ve gelecekte projeye eklenen tüm yeni dilleri otomatik olarak içerecektir.
+         * **Kaynak dil**: Kaynak dil içeriğini pakete dahil etmek için seçin.
+         * **Bağlam-içi sözde dil**: Dosyalarınızı [Bağlam-İçi](/developer/in-context-localization/) bütünleştirmesi için gereken üstverilerle dışa aktarmak için seçin.
+         * **Belirli diller**: Belirli dilleri el ile seçmek için *Tüm hedef diller* çentiğini kaldırın.
+      7. **Hedef dosyalar**’ı yapılandırın (Sağ Panel):
+         * **Dosya biçimi**: Dışa aktarmak istediğiniz biçimi seçin. Dosyaları olduğu gibi dışa aktarmak için **Orijinal biçimi** seçebilir veya iOS Strings, XLIFF vb. gibi bir hedef biçimi seçebilirsiniz.
+         * **Daha fazla biçim ekle**: Diğer hedef biçimleri eklemek için ilgili uygulamaları [Crowdin Mağazası](https://store.crowdin.com/tags/string-exporter)’ndan yükleyin.
+         * *(Optional)* **Format configuration**: Some formats (e.g., XLIFF, Android XML) support advanced options. Click <Icon name="mdi:cog" class="inline-icon" /> next to a format to configure them directly in the bundle dialog. You can also manage the same settings globally in **[Settings > Parser configuration](#configuring-format-settings)**.
+         * **Dışa aktarma modeli**:
+           * **Orijinal biçim için**: Bu alan isteğe bağlıdır. Dosya ayarlarınızda tanımlanan varsayılan dışa aktarma modelini kullanmak için bu alanı boş bırakın. Varsayılan yolu veya adı geçersiz kılmak için bir model girin.
+           * **Diğer biçimler için**: Bu alan zorunludur.
+             * *Dil başına tek dosya*: Her dil için bir çeviri dosyası oluşturmak amacıyla dil yer tutucularını (örn. `%two_letters_code%.xliff`) kullanın.
+             * *Çoklu dosya dışa aktarma*: Çevirileri dosyalara göre ayrılmış ve kaynak dosya yapısıyla eşleşen şekilde dışa aktarmak için `%file_name%` veya`%original_path%` gibi yer tutucuları kullanın.
+         * *(İsteğe bağlı)* **Kaynak dil dışa aktarma şekli**’ni ayarlayın.
+      8. Yapının doğru göründüğünden emin olmak için **Önizleme** panelini gözden geçirin.
+      9. **Kaydet**’e tıklayın. <Image src={createBundle} alt="Paket Oluşturun" />
+    </Steps>
+  </TabItem>
+  <TabItem label="Dizgi tabanlı proje">
+    <Steps>
+      1. Projenizi açın ve **İndirme** sekmesine gidin.
+      2. **İndirmeler** bölümünü genişletin ve **Ekle**’ye tıklayın.
+      3. **Paket oluştur** ileti öğesinde bir **Paket adı** girin.
+      4. **İçeriği** yapılandırın (Sol Panel):
+         * **Dalları seç**: Dahil edilecek belirli kaynak dallarını seçin. Gelecekteki dalları otomatik olarak dahil etmek için **Yeni dalları dahil et**’i seçin.
+         * **Model kullan (Gelişmiş)**: Dalları değişken olarak dahil etmek için bir **Kaynak dal yolu** modeli (örn. `main`, `feat/*`) tanımlayın.
+      5. *(İsteğe bağlı)* **Dizgi süzgeçlerini** ayarlayın:
+         * **Etiketleri dahil et**: Sadece belirli etiketleri içeren dizgileri dışa aktarın.
+         * **Etiketleri hariç tut**: Belirli etiketleri içeren dizgileri atlayın.
+         * Birden çok etiketin mantığını ayarlayabilirsiniz (örn. *Seçilen herhangi bir etiket* (VEYA) karşı *Seçilen tüm etiketler* (VE)). <ReadMore>[Etiketler](/string-management/#etiketler) hakkında daha fazlasını okuyun.</ReadMore>
+      6. **Dilleri** yapılandırın:
+         * **Tüm hedef diller**: Varsayılan olarak seçilidir. Bu seçenek değişkendir ve gelecekte projeye eklenen tüm yeni dilleri otomatik olarak içerecektir.
+         * **Kaynak dil**: Kaynak dil içeriğini pakete dahil etmek için seçin.
+         * **Bağlam-içi sözde dil**: Dosyalarınızı [Bağlam-İçi](/developer/in-context-localization/) bütünleştirmesi için gereken üstverilerle dışa aktarmak için seçin.
+         * **Belirli diller**: Belirli dilleri el ile seçmek için *Tüm hedef diller* çentiğini kaldırın.
+      7. **Hedef dosyalar**’ı yapılandırın (Sağ Panel):
+         * **Dosya biçimi**: Dışa aktarmak istediğiniz biçimi seçin (örn. Android XML, iOS Strings).
+         * **Daha fazla biçim ekle**: Diğer hedef biçimleri eklemek için ilgili uygulamaları [Crowdin Mağazası](https://store.crowdin.com/tags/string-exporter)’ndan yükleyin.
+         * *(Optional)* **Format configuration**: Some formats (e.g., XLIFF, Android XML) support advanced options. Click <Icon name="mdi:cog" class="inline-icon" /> next to a format to configure them directly in the bundle dialog. You can also manage the same settings globally in **[Settings > Parser configuration](#configuring-format-settings)**.
+         * **Dışa aktarma modeli**: Dil yer tutucularını (örn. `%two_letters_code%.strings`) kullanarak ortaya çıkan dosya adını tanımlayın. Bu, dil başına bir dosya oluşturacaktır.
+         * *(İsteğe bağlı)* **Kaynak dil dışa aktarma şekli**’ni ayarlayın.
+      8. Yapının doğru göründüğünden emin olmak için **Önizleme** panelini gözden geçirin.
+      9. **Kaydet**’e tıklayın. <Image src={createBundleSb} alt="Paket Oluşturun" />
+    </Steps>
+  </TabItem>
+</Tabs>
+
+<Aside type="caution" title="Sınırlamalar">
+  * **Tek Biçim Seçimi:** Tek bir paket içinde aynı anda sadece bir biçim seçebilirsiniz.
+  * **Orijinal Biçim Kısıtlamaları:** Eğer **Orijinal biçimi** seçerseniz, **Dizgi süzgeçleri** (Etiketleri dahil et/hariç tut) etkisizleştirilecektir. İçeriği etiketlere göre süzmek için belirli bir hedef biçim seçmek zorundasınız (örn. Android XML, iOS Strings).
+</Aside>
+
+### Biçim Ayarlarını Yapılandırma
+
+Bazı dosya biçimleri (örn. XLIFF, Android XML), **Kaynağı boş hedefe kopyala** veya **Yer tutucuları dönüştür** gibi ek yapılandırma seçeneklerine sahiptir. You can configure these settings directly in the bundle dialog by clicking <Icon name="mdi:cog" class="inline-icon" /> next to the format. Alternatively, you can manage the same settings globally in the **Parser configuration**.
+
+To configure these options in the bundle dialog, follow these steps:
+
+<Steps>
+  1. In the [**Create bundle**](#configuring-bundles) or [**Edit bundle**](#editing-bundles) dialog, click <Icon name="mdi:cog" class="inline-icon" /> next to the format you want to configure.
+  2. Gerekli seçenekleri seçerek dosya biçimi dışa aktarıcı ayarlarını ayarlayın.
+  3. **Kaydet**’e tıklayın.
+</Steps>
+
+If you prefer to manage the same settings globally for the project, follow these steps:
+
+<Steps>
+  1. Projenizi açın ve **Ayarlar > Ayrıştırıcı yapılandırması**’na gidin.
+  2. **Dışa Aktarıcı** rozetiyle işaretlenmiş biçimi bulun (örn. **Android XML** veya **XLIFF**). Bunlar paket oluşturmak için kullanılan belirli biçimlerdir.
+  3. Yapılandırmak istediğiniz biçimin yanındaki <Icon name="mdi:dots-horizontal" class="inline-icon" /> simgesine tıklayın ve **Düzenle**’yi seçin. Alternatif olarak, sadece gerekli biçime çift tıklayın.
+  4. Gerekli seçenekleri seçerek dosya biçimi dışa aktarıcı ayarlarını ayarlayın.
+  5. **Kaydet**’e tıklayın.
+</Steps>
+
+### Paketleri Arama, Süzme ve Sıralama
+
+Varsayılan olarak tüm paketler **İndirmeler** bölümünde görüntülenir. Belirli bir paketi bulmak için **Paketleri ara** alanını kullanabilirsiniz.
+
+Paketler listesini süzmek için **Süzgeçler**’e <Icon name="mdi:filter-variant" class="inline-icon" /> tıklayın ve mevcut seçenekleri kullanın:
+
+* **Biçim**: Dosya biçimine göre süzün (**Tümü**, **Orijinal biçim** veya **macosx**, **xml** vb. gibi belirli hedef biçimler).
+* **Son değiştirilme**: Değiştirilme tarihine göre süzün (**Tümü**, **Bugün**, **Dün**, **Son 7 gün**, **Son 30 gün**, **Bu ay**, **Geçen ay**, **Özel Aralık**).
+
+Paketleri sıralamak için sıralamak istediğiniz şekle göre sütun başlığına tıklayın:
+
+* **Paket adı**
+* **Biçim**
+* **Son değiştirme**
+
+Artan düzende sıralamak için bir kez tıklayın, azalan düzende sıralamak için tekrar tıklayın.
+
+Eğer bir paket bir veya daha fazla [CDN Dağıtımında](#cdn-dağıtımlarındaki-paketler) kullanılıyorsa, adının yanında bir **bulut** <Icon name="mdi:cloud" class="inline-icon" /> simgesi görünür. Sadece bu paketi içeren dağıtımları gösterecek bir süzgecin uygulandığı **CDN Dağıtımları** bölümüne otomatik olarak gitmek için bu simgeye tıklayın.
+
+### Paketleri İndirme
+
+Paketleri indirmek için şu adımları izleyin:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dosya tabanlı proje">
+    <Steps>
+      1. Projenizi açın ve **Çeviriler** sekmesine gidin.
+      2. **İndirmeler** bölümünü genişletin.
+      3. *(İsteğe bağlı)* İhtiyacınız olan paketleri bulmak için aramayı veya süzgeçleri kullanın.
+      4. Aşağıdaki yöntemlerden birini kullanarak paketleri indirin:
+         * **Tekli paket**: Belirli bir paketin yanındaki **İndir** <Icon name="mdi:download" class="inline-icon" /> simgesine tıklayın.
+         * **Çoklu paket**: İndirmek istediğiniz paketlerin yanındaki onay kutularını işaretleyin ve ardından listenin sağ üst köşesindeki **İndir**’e tıklayın. <Image src={downloadBundles} alt="Paketi İndirin" />
+    </Steps>
+  </TabItem>
+  <TabItem label="Dizgi tabanlı proje">
+    <Steps>
+      1. Projenizi açın ve **İndirme** sekmesine gidin.
+      2. **İndirmeler** bölümünü genişletin.
+      3. *(İsteğe bağlı)* İhtiyacınız olan paketleri bulmak için aramayı veya süzgeçleri kullanın.
+      4. Aşağıdaki yöntemlerden birini kullanarak paketleri indirin:
+         * **Tekli paket**: Belirli bir paketin yanındaki **İndir** <Icon name="mdi:download" class="inline-icon" /> simgesine tıklayın.
+         * **Çoklu paket**: İndirmek istediğiniz paketlerin yanındaki onay kutularını işaretleyin ve ardından listenin sağ üst köşesindeki **İndir**’e tıklayın. <Image src={downloadBundlesSb} alt="Paketi İndirin" />
+    </Steps>
+  </TabItem>
+</Tabs>
+
+Sistem, seçtiğiniz biçimdeki çeviri dosyalarına sahip seçilen her dil için klasörler içeren bir ZIP arşivi oluşturacak ve indirecek.
+
+<Aside>
+  Paket indirmeleri, tam proje derlemesi indirmesinden bağımsız olarak çalışır.
+</Aside>
+
+### Paketleri Düzenleme
+
+Bir paketi düzenlemek için şu adımları izleyin:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dosya tabanlı proje">
+    <Steps>
+      1. Projenizi açın ve **Çeviriler** sekmesine gidin.
+      2. **İndirmeler** bölümünü genişletin.
+      3. Paketin yanındaki <Icon name="mdi:dots-horizontal" class="inline-icon" /> simgesine tıklayın ve **Düzenle**’yi seçin. Alternatif olarak, sadece gerekli pakete çift tıklayın.
+      4. Yapılandırma ileti öğesinde değişikliklerinizi yapın ve **Kaydet**’e tıklayın.
+    </Steps>
+  </TabItem>
+  <TabItem label="Dizgi tabanlı proje">
+    <Steps>
+      1. Projenizi açın ve **İndirme** sekmesine gidin.
+      2. **İndirmeler** bölümünü genişletin.
+      3. Paketin yanındaki <Icon name="mdi:dots-horizontal" class="inline-icon" /> simgesine tıklayın ve **Düzenle**’yi seçin. Alternatif olarak, sadece gerekli pakete çift tıklayın.
+      4. Yapılandırma ileti öğesinde değişikliklerinizi yapın ve **Kaydet**’e tıklayın.
+    </Steps>
+  </TabItem>
+</Tabs>
+
+### Paketleri Silme
+
+Paketleri silmek için şu adımları izleyin:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dosya tabanlı proje">
+    <Steps>
+      1. Projenizi açın ve **Çeviriler** sekmesine gidin.
+      2. **İndirmeler** bölümünü genişletin.
+      3. Aşağıdaki yöntemlerden birini kullanarak paketleri silin:
+         * **Tekli paket**: Paketin yanındaki <Icon name="mdi:dots-horizontal" class="inline-icon" /> simgesine tıklayın ve **Sil**’i seçin.
+         * **Çoklu paket**: Silmek istediğiniz paketlerin yanındaki onay kutularını işaretleyin ve ardından listenin sağ üst köşesindeki **Sil**’e tıklayın.
+      4. Onay ileti öğesinde silme işlemini onaylayın.
+    </Steps>
+  </TabItem>
+  <TabItem label="Dizgi tabanlı proje">
+    <Steps>
+      1. Projenizi açın ve **İndirme** sekmesine gidin.
+      2. **İndirmeler** bölümünü genişletin.
+      3. Aşağıdaki yöntemlerden birini kullanarak paketleri silin:
+         * **Tekli paket**: Paketin yanındaki <Icon name="mdi:dots-horizontal" class="inline-icon" /> simgesine tıklayın ve **Sil**’i seçin.
+         * **Çoklu paket**: Silmek istediğiniz paketlerin yanındaki onay kutularını işaretleyin ve ardından listenin sağ üst köşesindeki **Sil**’e tıklayın.
+      4. Onay ileti öğesinde silme işlemini onaylayın.
+    </Steps>
+  </TabItem>
+</Tabs>
+
+## VCS Bütünleştirmelerindeki Paketler
+
+Dosya tabanlı projelerde, VCS bütünleştirmeleri, **Hedef dosya paketleri kipi**’ni kullanarak paketlerle çalışmanızı sağlar.
+
+**Hedef dosya paketleri kipi** içinde bir VCS bütünleştirmesi yapılandırmak için şu adımları izleyin:
+
+<Steps>
+  1. VCS bütünleştirmenizi ayarlarken **Hedef dosya paketleri kipi**’ni seçin ve bağlantıyı yetkilendirin.
+  2. Çevirileri göndermek istediğiniz depoyu ve dalları seçin.
+  3. Seçilen dalı yapılandırmak için <Icon name="mdi:pencil" class="inline-icon" /> simgesine tıklayın.
+  4. **Dal Yapılandırması** ileti öğesinde, yapılandırma dosyanız için tercih ettiğiniz adı girin veya varsayılanı koruyun. **Devam**’a tıklayın.
+  5. Listeden eşitlemek istediğiniz paketleri seçin. Belirli paketleri bulmak için **Paketleri ara** alanını kullanabilir veya yeni bir paket oluşturmak için **Yeni oluştur**’a tıklayabilirsiniz.
+  6. **Dal Yapılandırması** ileti öğesinde **Kaydet**’e tıklayın.
+  7. VCS bütünleştirmesi ayarlamasını tamamlamak için ana bütünleştirme ileti öğesinde **Kaydet**’e tıklayın. <Image src={bundlesVcs} alt="VCS Hedef Dosya Paketleri Kipi" />
+</Steps>
+
+<Aside type="caution">
+  Dizgi tabanlı projelerde, VCS bütünleştirmeleri özellikle **Hedef dosya paketleri kipinde** çalışır.
+</Aside>
+
+<ReadMore>
+  [VCS bütünleştirmelerini çevrimiçi yapılandırma](/configuring-vcs-integrations-online/) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+## CDN Dağıtımlarındaki Paketler
+
+Hem dosya tabanlı hem de dizgi tabanlı projelerde, **CDN Dağıtımları**, çevrilmiş içeriği İçerik Dağıtım Ağı (CDN) aracılığıyla uygulamanıza sunmanızı sağlar. Dağıtımlar, dosyalarınızı paketlemek ve sunmak için paketler kullanılarak çalışır.
+
+<LinkCard title="CDN Dağıtımlarını Yapılandırma" description="Dağıtımları nasıl oluşturacağınızı, yayımları nasıl yöneteceğinizi ve kullanım istatistiklerini nasıl gözden geçireceğinizi öğrenin." href="/cdn-distributions/" />
+
+## CLI/API’deki Paketler
+
+Crowdin CLI ve API ile çalışırken paketleri kullanarak çevirileri de dışa aktarabilirsiniz.
+
+<CardGrid>
+  <LinkCard title="CLI’deki Paketler" href="https://crowdin.github.io/crowdin-cli/commands/crowdin-bundle/" target="_blank" />
+  <LinkCard title="API’deki Paketler" href="/developer/api/v2/#tag/Bundles" />
+</CardGrid>
