@@ -8211,7 +8211,7 @@ paths:
     get:
       tags:
         - Translations
-      summary: 'List Pre-Translations'
+      summary: 'List Auto-Translations'
       description: '**Required scopes:** `project.translation` (Read only).'
       operationId: api.projects.pre-translations.getMany
       parameters:
@@ -8234,7 +8234,7 @@ paths:
           $ref: '#/components/parameters/PaginationOffset'
       responses:
         '200':
-          description: 'Pre-translation list'
+          description: 'Auto-translation list'
           content:
             application/json:
               schema:
@@ -8278,7 +8278,7 @@ paths:
     post:
       tags:
         - Translations
-      summary: 'Apply Pre-Translation'
+      summary: 'Apply Auto-Translation'
       description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.pre-translations.post
       parameters:
@@ -8291,7 +8291,7 @@ paths:
               $ref: '#/components/schemas/PreTranslationForm'
       responses:
         '202':
-          description: 'Pre-translation was successfully started'
+          description: 'Auto-translation was successfully started'
           content:
             application/json:
               schema:
@@ -8347,7 +8347,7 @@ paths:
     patch:
       tags:
         - Translations
-      summary: 'Pre-Translation Batch Operations'
+      summary: 'Auto-Translation Batch Operations'
       description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.pre-translations.patchBatch
       parameters:
@@ -8361,7 +8361,7 @@ paths:
               $ref: '#/components/schemas/PreTranslationMassPatch'
       responses:
         '200':
-          description: 'Pre-translations were successfully updated'
+          description: 'Auto-translations were successfully updated'
           content:
             application/json:
               schema:
@@ -8402,11 +8402,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
-  '/projects/{projectId}/pre-translations/{preTranslationId}':
+  '/projects/{projectId}/pre-translations/{jobIdentifier}':
     get:
       tags:
         - Translations
-      summary: 'Pre-Translation Status'
+      summary: 'Auto-Translation Status'
       description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.pre-translations.get
       parameters:
@@ -8416,7 +8416,7 @@ paths:
           $ref: '#/components/parameters/PreTranslationId'
       responses:
         '200':
-          description: 'Pre-translation status'
+          description: 'Auto-translation status'
           content:
             application/json:
               schema:
@@ -8434,7 +8434,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
         '404':
-          description: 'Project or pre-translation with specified id was not found'
+          description: 'Project or auto-translation with specified id was not found'
           content:
             application/json:
               schema:
@@ -8454,7 +8454,7 @@ paths:
     patch:
       tags:
         - Translations
-      summary: 'Edit Pre-Translation'
+      summary: 'Edit Auto-Translation'
       description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.pre-translations.patch
       parameters:
@@ -8470,7 +8470,7 @@ paths:
               $ref: '#/components/schemas/PreTranslationPatch'
       responses:
         '200':
-          description: 'Pre-translation was successfully updated'
+          description: 'Auto-translation was successfully updated'
           content:
             application/json:
               schema:
@@ -8494,7 +8494,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
         '404':
-          description: 'Project or pre-translation with specified id was not found'
+          description: 'Project or auto-translation with specified id was not found'
           content:
             application/json:
               schema:
@@ -8517,11 +8517,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
-  '/projects/{projectId}/pre-translations/{preTranslationId}/report':
+  '/projects/{projectId}/pre-translations/{jobIdentifier}/report':
     get:
       tags:
         - Translations
-      summary: 'Pre-Translation Report'
+      summary: 'Auto-Translation Report'
       description: '**Required scopes:** `project.translation` (Read and Write).'
       operationId: api.projects.pre-translations.report.getReport
       parameters:
@@ -8531,7 +8531,7 @@ paths:
           $ref: '#/components/parameters/PreTranslationId'
       responses:
         '200':
-          description: 'Pre-translation report'
+          description: 'Auto-translation report'
           content:
             application/json:
               schema:
@@ -8549,7 +8549,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
         '404':
-          description: 'Project or pre-translation with specified id was not found'
+          description: 'Project or auto-translation with specified id was not found'
           content:
             application/json:
               schema:
@@ -20936,7 +20936,6 @@ components:
       required:
         - project
         - region
-        - serviceAccountKey
       properties:
         project:
           description: Project
@@ -20945,8 +20944,14 @@ components:
           description: Region
           type: string
         serviceAccountKey:
-          description: 'Service account key'
+          description: 'Service account key. Required if `workloadIdentityFederationAudience` is not provided.'
           type: object
+        workloadIdentityFederationAudience:
+          description: 'Workload Identity Federation audience. Required if `serviceAccountKey` is not provided.'
+          type: string
+        serviceAccountEmail:
+          description: 'Optional service account email to impersonate when using Workload Identity Federation.'
+          type: string
         baseUrl:
           description: 'Override the provider API base URL (e.g. a self-hosted proxy or third-party gateway)'
           type: string
@@ -30500,9 +30505,9 @@ components:
           type: string
           format: json-pointer
           enum:
-            - '/{preTranslationId}/status'
-            - '/{preTranslationId}/priority'
-          example: '/{preTranslationId}/status'
+            - '/{jobIdentifier}/status'
+            - '/{jobIdentifier}/priority'
+          example: '/{jobIdentifier}/status'
       type: object
       discriminator:
         propertyName: op
@@ -30582,7 +30587,7 @@ components:
                   type: string
     FallbackLanguagesScheme:
       title: 'Fallback Languages'
-      description: "Defines fallback languages mapping. The passed value should be an associative array containing both language id and array of fallback language ids:\n\n - `{languageId}` – Crowdin id for the specified language. Get via [List Supported Languages](#operation/api.languages.getMany)\n - `Array of strings` – an array containing fallback language ids. Get via [List Supported Languages](#operation/api.languages.getMany)\n\n__Note:__ Available only for TM Pre-Translation"
+      description: "Defines fallback languages mapping. The passed value should be an associative array containing both language id and array of fallback language ids:\n\n - `{languageId}` – Crowdin id for the specified language. Get via [List Supported Languages](#operation/api.languages.getMany)\n - `Array of strings` – an array containing fallback language ids. Get via [List Supported Languages](#operation/api.languages.getMany)\n\n__Note:__ Available only for TM Auto-Translation"
       properties:
         languageId:
           type: array
@@ -30596,7 +30601,7 @@ components:
         - fileIds
       properties:
         languageIds:
-          description: 'Set of languages to which pre-translation should be applied. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          description: 'Set of languages to which auto-translation should be applied. Get via [List Supported Languages](#operation/api.languages.getMany)'
           type: array
           items:
             type: string
@@ -30609,7 +30614,7 @@ components:
           x-doc-sections:
             - file-based
         method:
-          description: "Defines pre-translation method. Available values:\n- 'tm' – pre-translation via Translation Memory\n- 'mt' – pre-translation via Machine Translation. 'mt' should be used with `engineId` parameter\n- 'ai' – pre-translation via AI. 'ai' should be used with `aiPromptId` parameter"
+          description: "Defines auto-translation method. Available values:\n- 'tm' – auto-translation via Translation Memory\n- 'mt' – auto-translation via Machine Translation. 'mt' should be used with `engineId` parameter\n- 'ai' – auto-translation via AI. 'ai' should be used with `aiPromptId` parameter"
           type: string
           default: tm
           enum:
@@ -30631,7 +30636,7 @@ components:
           description: 'AI Prompt Identifier. Get via [List AI Prompts](#operation/api.ai.prompts.getMany)'
           type: integer
         autoApproveOption:
-          description: "Defines which translations added by TM pre-translation should be auto-approved. Available values:\n- 'all' – all\n- 'perfectMatchOnly' – with perfect TM match\n- 'exceptAutoSubstituted' – all (skip auto-substituted suggestions)\n- 'perfectMatchApprovedOnly' - with perfect TM match (approved previously)\n- 'none' – no auto-approve"
+          description: "Defines which translations added by TM auto-translation should be auto-approved. Available values:\n- 'all' – all\n- 'perfectMatchOnly' – with perfect TM match\n- 'exceptAutoSubstituted' – all (skip auto-substituted suggestions)\n- 'perfectMatchApprovedOnly' - with perfect TM match (approved previously)\n- 'none' – no auto-approve"
           type: string
           default: none
           enum:
@@ -30649,12 +30654,12 @@ components:
           type: boolean
           default: false
         translateUntranslatedOnly:
-          description: "**Deprecated.** Use the `scope` parameter instead:\n- pass `scope: \"untranslated\"` to apply pre-translation to untranslated strings only (equivalent to the legacy `true`),\n- pass `scope: \"all\"` to apply pre-translation to both untranslated and translated strings (equivalent to the legacy `false`).\n\nKept for backward compatibility with existing API integrations. Cannot be used together with `scope` in the same request."
+          description: "**Deprecated.** Use the `scope` parameter instead:\n- pass `scope: \"untranslated\"` to apply auto-translation to untranslated strings only (equivalent to the legacy `true`),\n- pass `scope: \"all\"` to apply auto-translation to both untranslated and translated strings (equivalent to the legacy `false`).\n\nKept for backward compatibility with existing API integrations. Cannot be used together with `scope` in the same request."
           type: boolean
           default: true
           deprecated: true
         scope:
-          description: "Which strings to apply pre-translation to. Default is `untranslated`. Available values:\n- 'untranslated' – strings without an existing translation (default)\n- 'translated' – strings that already have a translation (re-translation)\n- 'all' – both untranslated and translated strings\n\n__Note:__ Cannot be used together with the deprecated `translateUntranslatedOnly`."
+          description: "Which strings to apply auto-translation to. Default is `untranslated`. Available values:\n- 'untranslated' – strings without an existing translation (default)\n- 'translated' – strings that already have a translation (re-translation)\n- 'all' – both untranslated and translated strings\n\n__Note:__ Cannot be used together with the deprecated `translateUntranslatedOnly`."
           type: string
           default: untranslated
           enum:
@@ -30668,7 +30673,7 @@ components:
           example: '2026-01-01T00:00:00+00:00'
           nullable: true
         replaceTranslationsOption:
-          description: "Defines whether to replace existing translations with new pre-translations. Default is `none`. Available values:\n- 'none' – add the new translation alongside existing ones (default)\n- 'autoTranslated' – replace auto-generated translations (TM, MT, AI). Human translations are kept\n- 'all' – replace all existing translations\n\n__Note:__ Values other than `none` require `scope` to be `translated` or `all` (cannot be combined with `scope: \"untranslated\"` or `translateUntranslatedOnly: true`)."
+          description: "Defines whether to replace existing translations with new auto-translations. Default is `none`. Available values:\n- 'none' – add the new translation alongside existing ones (default)\n- 'autoTranslated' – replace auto-generated translations (TM, MT, AI). Human translations are kept\n- 'all' – replace all existing translations\n\n__Note:__ Values other than `none` require `scope` to be `translated` or `all` (cannot be combined with `scope: \"untranslated\"` or `translateUntranslatedOnly: true`)."
           type: string
           default: none
           enum:
@@ -30676,11 +30681,11 @@ components:
             - autoTranslated
             - all
         resetApprovalStatus:
-          description: "Removes approval on existing translations when applying pre-translations. Default is `false`.\n\n__Note:__ Requires `scope` to be `translated` or `all`. Cannot be used together with `skipApprovedTranslations`, `autoApproveOption` (any value other than `none`), or when `replaceTranslationsOption` is `all` (replaced translations lose approval automatically). Cannot be used with `scope: \"untranslated\"` or `translateUntranslatedOnly: true`."
+          description: "Removes approval on existing translations when applying auto-translations. Default is `false`.\n\n__Note:__ Requires `scope` to be `translated` or `all`. Cannot be used together with `skipApprovedTranslations`, `autoApproveOption` (any value other than `none`), or when `replaceTranslationsOption` is `all` (replaced translations lose approval automatically). Cannot be used with `scope: \"untranslated\"` or `translateUntranslatedOnly: true`."
           type: boolean
           default: false
         translateWithPerfectMatchOnly:
-          description: "Applies pre-translation only for the strings with perfect match (source text and contextual information are identical)\n\n__Note:__ Works only with TM pre-translation method"
+          description: "Applies auto-translation only for the strings with perfect match (source text and contextual information are identical)\n\n__Note:__ Works only with TM auto-translation method"
           type: boolean
           default: false
         fallbackLanguages:
@@ -30700,12 +30705,12 @@ components:
           type: string
           example: en
         customInstruction:
-          description: "Custom instruction for AI pre-translation. This instruction will be appended to the AI prompt text.\n\n__Note:__ Available only for AI pre-translation method"
+          description: "Custom instruction for AI auto-translation. This instruction will be appended to the AI prompt text.\n\n__Note:__ Available only for AI auto-translation method"
           type: string
           maxLength: 10000
       type: object
     CrowdinPreTranslationCollectionResource:
-      description: 'Pre-Translation Collection Resource'
+      description: 'Auto-Translation Collection Resource'
       type: object
       allOf:
         -
@@ -30719,7 +30724,7 @@ components:
             pagination:
               $ref: '#/components/schemas/Pagination'
     EnterprisePreTranslationCollectionResource:
-      description: 'Pre-Translation Collection Resource'
+      description: 'Auto-Translation Collection Resource'
       type: object
       allOf:
         -
@@ -30733,7 +30738,7 @@ components:
             pagination:
               $ref: '#/components/schemas/Pagination'
     PreTranslationReportResource:
-      description: 'Pre-Translation Report Resource'
+      description: 'Auto-Translation Report Resource'
       type: object
       allOf:
         -
@@ -30743,7 +30748,7 @@ components:
             data:
               $ref: '#/components/schemas/PreTranslationReport'
     CrowdinPreTranslationResource:
-      description: 'Pre-Translation Resource'
+      description: 'Auto-Translation Resource'
       type: object
       allOf:
         -
@@ -30753,7 +30758,7 @@ components:
             data:
               $ref: '#/components/schemas/CrowdinPreTranslation'
     EnterprisePreTranslationResource:
-      description: 'Pre-Translation Resource'
+      description: 'Auto-Translation Resource'
       type: object
       allOf:
         -
@@ -30763,7 +30768,7 @@ components:
             data:
               $ref: '#/components/schemas/EnterprisePreTranslation'
     CrowdinPreTranslationUpdatedCollectionResource:
-      description: 'Pre-Translation Updated Collection Resource'
+      description: 'Auto-Translation Updated Collection Resource'
       properties:
         data:
           type: array
@@ -30771,7 +30776,7 @@ components:
             $ref: '#/components/schemas/CrowdinPreTranslationResource'
       type: object
     EnterprisePreTranslationUpdatedCollectionResource:
-      description: 'Pre-Translation Updated Collection Resource'
+      description: 'Auto-Translation Updated Collection Resource'
       properties:
         data:
           type: array
@@ -30779,7 +30784,7 @@ components:
             $ref: '#/components/schemas/EnterprisePreTranslationResource'
       type: object
     PreTranslationReport:
-      description: 'Pre-Translation Report'
+      description: 'Auto-Translation Report'
       properties:
         languages:
           type: array
@@ -31757,7 +31762,7 @@ components:
                 $ref: '#/components/schemas/PromptAiPreTranslateProjectSettings'
           type: object
         preTranslationAiPromptId:
-          description: 'AI Prompt ID to be used as prompt for AI pre-translation as default value'
+          description: 'AI Prompt ID to be used as prompt for AI auto-translation as default value'
           type: integer
           example: 11
           deprecated: true
@@ -39761,7 +39766,7 @@ components:
           type: integer
           example: 123
         isPreTranslated:
-          description: 'Defines whether this is a pre-translated translation'
+          description: 'Defines whether this is an auto-translated translation'
           type: boolean
           default: false
           example: true
@@ -47178,9 +47183,9 @@ components:
       schema:
         type: string
     PreTranslationId:
-      name: preTranslationId
+      name: jobIdentifier
       in: path
-      description: 'Pre-translation Identifier. Get via [Apply Pre-Translation](#operation/api.projects.pre-translations.post)'
+      description: 'Auto-translation Identifier. Get via [Apply Auto-Translation](#operation/api.projects.pre-translations.post)'
       required: true
       schema:
         type: string
@@ -47536,7 +47541,7 @@ tags:
     description: "\nSource strings are the text units for translation. Instead of modifying source files, you can manage source strings one by one.\n\nUse API to add, edit, or delete some specific strings in the source-based and file-based projects (available only for the following file formats: CSV, RESX, JSON, Android XML, iOS strings, PROPERTIES, XLIFF).\n"
   -
     name: Translations
-    description: "\nTranslators can work with entirely untranslated project or you can pre-translate the files to ease the translations process.\n\nUse API to pre-translate files via Machine Translation (MT) or Translation Memory (TM), upload your existing translations, and download translations correspondingly. Pre-translate and build are [asynchronous operations](#section/Introduction/Asynchronous-Operations) and shall be completed with sequence of API methods.\n\n__Note:__ If there are no new translations or changes in build parameters, Crowdin will return the current build for such requests.\n"
+    description: "\nTranslators can work with entirely untranslated project or you can auto-translate the files to ease the translations process.\n\nUse API to auto-translate files via Machine Translation (MT) or Translation Memory (TM), upload your existing translations, and download translations correspondingly. Auto-translate and build are [asynchronous operations](#section/Introduction/Asynchronous-Operations) and shall be completed with sequence of API methods.\n\n__Note:__ If there are no new translations or changes in build parameters, Crowdin will return the current build for such requests.\n"
   -
     name: 'String/Asset Translations'
     description: 'Use API to add or remove strings/asset translations, approvals, and votes.'
@@ -47566,7 +47571,7 @@ tags:
     description: "\nStyle Guides help to provide additional context for the translators.\n\nUse API to manage style guides.\n"
   -
     name: 'Machine Translation Engines'
-    description: "\nMachine Translation Engines (MTE) are the sources for pre-translations. You can currently connect Google Translate, Microsoft Translator, Crowdin Translate, DeepL Pro and Amazon Translate engines.\n\nUse API to add, update, and delete specific MTE.\n"
+    description: "\nMachine Translation Engines (MTE) are the sources for auto-translations. You can currently connect Google Translate, Microsoft Translator, Crowdin Translate, DeepL Pro and Amazon Translate engines.\n\nUse API to add, update, and delete specific MTE.\n"
   -
     name: Screenshots
     description: "\nScreenshots provide translators with additional context for the source strings. Screenshot tags allow specifying which source strings are displayed on each screenshot.\n\nUse API to manage screenshots and their tags.\n"
