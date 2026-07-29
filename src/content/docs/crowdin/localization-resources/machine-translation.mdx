@@ -9,8 +9,6 @@ import QuestionAnswer from '~/components/QuestionAnswer.astro';
 import { Icon } from 'astro-icon/components';
 import { Image } from 'astro:assets';
 import machineTranslationSuggestions from '!/crowdin/localization-resources/mt_suggestions.png';
-import deeplGlossaryConfiguration from '!/crowdin/localization-resources/deepl_glossary_configuration.png';
-import automlCustomGlossaryConfiguration from '!/crowdin/localization-resources/automl_custom_glossary_configuration.png';
 
 Machine translation engines integrated with Crowdin provide translation suggestions from services like Google Translate and AutoML Translation, Microsoft Translate, and others.
 
@@ -68,20 +66,36 @@ DeepL API is accessible only with the DeepL API Free and Pro subscription plans 
 
 If you’re subscribed to a different subscription plan, you can switch to the DeepL API plan in your [personal account settings](https://www.deepl.com/pro-account.html). DeepL also provides a [simulator](https://www.deepl.com/docs-api/simulator) that allows you to check your Authentication Key in action.
 
-#### DeepL Glossary Configuration
+#### DeepL Translation Settings
 
-The DeepL Translator supports multilingual glossaries, allowing you to ensure consistent translation of your domain-specific terminology. In Crowdin, you can configure multiple glossaries and assign specific language pairs to each.
+When configuring the DeepL Translator, you can adjust the following settings:
 
-To configure your DeepL glossaries, follow these steps:
+* **Tone**: Sets the level of formality DeepL uses. Applies only to the languages that support formality.
+* **Model type**: Selects the DeepL models used for translation. **Latency optimized** is the fastest. **Prefer quality optimized** and **Quality optimized** use next-generation models, which are slower and cover fewer languages. For a language pair those models do not cover, you still get a translation from the classic models.
+* **Tag handling**: Defines how DeepL processes markup in the source text. Select **XML** or **HTML** to match your source files. Read more about [Inline Tags and Machine Translation](#inline-tags-and-machine-translation).
+* **Tag handling version**: Controls how DeepL positions tags in the translation. **Version 2** improves tag placement.
+* **Use context**: Sends additional context, such as the file or string context, to DeepL to improve translations of short texts like product names, article headlines, or UI elements.
+* **Style rule**: Applies a writing style defined in your DeepL account. Works only when the target language matches the language of the style rule.
+* **Translation memory**: Reuses previously approved translations from a DeepL translation memory for matching segments.
+* **Translation memory match threshold**: Sets the minimum match percentage a segment must reach to be reused, from 0 to 100. Defaults to 75.
+* **Custom instructions**: Steers the translation with your own guidance, for example *Keep brand names untranslated*. Enter one instruction per line, up to 10 instructions of 300 characters each. Applies to these target languages: German, English, Spanish, French, Italian, Japanese, Korean, and Chinese.
+
+<Aside type="note">
+  The **Tag handling version**, **Style rule**, **Translation memory**, and **Custom instructions** options appear once you select the **Prefer quality optimized** or **Quality optimized** model type. Style rules, translation memories, and custom instructions also require a DeepL API Pro key and apply only to the language pairs that next-generation models cover. Translations that fall back to the classic models do not use them.
+</Aside>
+
+#### DeepL Resource Configuration
+
+The DeepL Translator can use glossaries, style rules, and translation memories from your connected DeepL account to keep your terminology and translations consistent. In Crowdin, you can configure several resources of each type and assign specific languages or language pairs to each one.
+
+To configure a DeepL resource, follow these steps:
 
 <Steps>
-  1. Select a glossary from the **Glossaries** drop-down menu. This list is automatically populated from your connected DeepL account.
-  2. From the **Glossary language pairs** drop-down menu, select one or more language pairs the chosen glossary should apply to.
-  3. *(Optional)* To configure another glossary, click <Icon name="mdi:plus" class="inline-icon" /> and repeat the steps above. To remove a glossary configuration, click <Icon name="mdi:minus" class="inline-icon" />.
+  1. Select a glossary, style rule, or translation memory from the respective drop-down menu. These lists are automatically populated from your connected DeepL account.
+  2. From the drop-down menu next to it, select the languages or language pairs the chosen resource should apply to.
+  3. *(Optional)* To configure another resource of the same type, click <Icon name="mdi:plus" class="inline-icon" /> and repeat the steps above. To remove a resource configuration, click <Icon name="mdi:minus" class="inline-icon" />.
   4. Click **Update**.
 </Steps>
-
-<Image src={deeplGlossaryConfiguration} alt="DeepL Glossary Configuration" />
 
 <Aside type="tip" title="Mapping Language Variants">
   Crowdin allows you to map different language variants. For example, if your glossary in DeepL uses a generic source language like "English," you can map it to a specific variant in your Crowdin project, such as "English, United States." This ensures the glossary is applied correctly even if your project’s source language is a specific dialect (e.g., English, Canada; Spanish, Mexico).
@@ -200,12 +214,10 @@ To configure your Google Cloud AutoML custom glossary, follow these steps:
   1. Open your profile home page and select **MT** on the left sidebar.
   2. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> next to the **Google AutoML Translation** engine and select **Edit**.
   3. Upload your JSON credentials.
-  4. Specify your Resource Location (e.g., us-central1).
-  5. Select your Glossary from the respective drop-down menu.
-  6. *(Optional)* Specify your Custom Model. If needed, configure language mapping between Custom Model and Crowdin languages.
+  4. *(Optional)* Specify your **Resource Location** (e.g., us-central1). The **Glossary** and **Custom Model** drop-down menus are populated once your credentials and resource location are in place.
+  5. *(Optional)* Select your **Glossary** from the respective drop-down menu.
+  6. *(Optional)* Select your **Custom Model** and, if needed, configure the language mapping between the custom model and Crowdin languages.
 </Steps>
-
-<Image src={automlCustomGlossaryConfiguration} alt="Google Cloud AutoML Custom Glossary Configuration" />
 
 ## MT Engine IDs
 
