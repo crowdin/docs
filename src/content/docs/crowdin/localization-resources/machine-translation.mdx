@@ -6,11 +6,12 @@ slug: machine-translation
 
 import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
 import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import Include from '~/components/Include.astro';
 import { Icon } from 'astro-icon/components';
 import { Image } from 'astro:assets';
 import machineTranslationSuggestions from '!/crowdin/localization-resources/mt_suggestions.png';
 
-Machine translation engines integrated with Crowdin provide translation suggestions from services like Google Translate and AutoML Translation, Microsoft Translate, and others.
+Machine translation engines integrated with Crowdin provide translation suggestions from services like Google Translate and AutoML Translation, Microsoft Translator, and others.
 
 MT suggestions are displayed in the Editor’s **Automated Suggestions** section in the order of the engines' configuration dates. To prioritize a specific engine's suggestions, configure that engine first.
 
@@ -27,32 +28,47 @@ Also, you can perform [Auto-Translation](/auto-translation/) using MT engines.
 
 By default, machine translations are enabled for each project, but it is required to configure the translation engines before the project members can use them. If you want to disable this option for specific projects, clear **Show machine translation suggestions** in [Project Settings](/project-settings/machine-translation/).
 
-### Configuring Machine Translation Engines
+## Configuring Machine Translation Engines
 
 To configure the machine translation engines, follow these steps:
 
 <Steps>
   1. Open your profile home page and select **MT** on the left sidebar.
   2. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> next to the MT engine you want to configure and select **Edit**. Alternatively, just double-click on the needed MT engine.
-  3. Select **Enabled**.
-  4. Enter the credentials for the selected translation engine.
-  5. *(Optional)* In the **Advanced settings** section, you can configure the following options:
-      * Select the languages for which the MT engine should provide translations. Alternatively, leave empty to enable all languages.
-      * Select the projects in which you want to use the MT engine. Alternatively, leave empty to enable it for all projects.
-  6. Click **Update**.
+  3. Enter the credentials for the selected translation engine.
+  4. *(Optional)* Expand **Advanced settings** and configure the **Use in projects and languages** options:
+      * **Limit MT Availability to Languages**: Select the languages for which the MT engine should provide translations. Alternatively, leave empty to enable all supported languages.
+      * **Limit MT Availability to Projects**: Select the projects in which you want to use the MT engine. Alternatively, leave empty to enable it for all projects.
+  5. Click **Update**.
 </Steps>
 
 <Aside type="caution">
   Machine translation engines must be configured using the project owner's account.
 </Aside>
 
+### Crowdin Translate
+
+Crowdin Translate is Crowdin's own machine translation engine, so it works without an API key or a third-party account. It draws on the Global Translation Memory to produce its suggestions, and is available for projects with [**Use global Translation Memory**](/project-settings/translation-memories/) enabled or during the trial period.
+
+When configuring Crowdin Translate, you can adjust the following setting:
+
+* **Multiple Translations**: Generates four translation suggestions for each string instead of one.
+
+<Aside type="caution" title="Limitations">
+  Currently available for specific language pairs only.
+  <details>
+    <Include file="crowdin-translate-supported-languages.mdx" />
+  </details>
+</Aside>
+
 ### Microsoft Translator
 
 Go to [Windows Azure](https://portal.azure.com/#blade/HubsExtension/BrowseAll) to access your Microsoft Translator API subscription key. Translator Text API offers a free tier with 2,000,000 translated characters.
 
-<Aside>
-  If the *Resource Location* associated with your Microsoft Translator Text API key is other than *global*, please make sure to specify it along with other credentials while configuring the Microsoft Translator MT engine in your Crowdin account.
-</Aside>
+When configuring the Microsoft Translator, you can adjust the following settings:
+
+* **Custom Model**: Produces translations with your own Microsoft Translator model instead of the general one. Enter the model identifier.
+* **Resource Location**: Sets the region associated with your API key. Specify it when the location is other than `global`.
 
 <LinkCard
   title="How to sign up for the Microsoft Translator Text API"
@@ -111,12 +127,10 @@ The free version of Amazon Translate is available for 12 months. Afterward, you 
 
 Read more about [obtaining your access key](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys) needed for Amazon Translate integration.
 
-To use your [Custom Terminology](https://docs.aws.amazon.com/translate/latest/dg/how-custom-terminology.html), follow these steps:
+When configuring Amazon Translate, you can adjust the following settings:
 
-<Steps>
-  1. Specify your AWS Region (e.g., us-east-2).
-  2. Select your Custom Terminology from the respective drop-down menu.
-</Steps>
+* **AWS Region**: Sets the region of your Amazon Translate resources (for example, `us-east-2`). Specify it first to load your terminologies.
+* **Terminologies**: Applies your [custom terminology](https://docs.aws.amazon.com/translate/latest/dg/how-custom-terminology.html) to the translations. Select a terminology, then select the **Languages** it applies to. To configure another terminology, click <Icon name="mdi:plus" class="inline-icon" />.
 
 <QuestionAnswer title="What are the minimal scopes for an IAM user required to set up Amazon Translate to be used in Crowdin?">
   The minimal IAM scopes required depend on whether you're using terminologies or not:
@@ -248,6 +262,21 @@ To clear the cache for your configured MT engine, follow these steps:
   2. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> on the needed MT engine in the list.
   3. Click **Clear cache**.
 </Steps>
+
+Alternatively, open the needed MT engine and click **Clear cache** at the bottom left of its settings.
+
+## Disabling MT Engines
+
+If you need to pause or stop using any of the configured MT engines, follow these steps:
+
+<Steps>
+  1. Open your profile home page and select **MT** on the left sidebar.
+  2. Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> next to the needed MT engine and select **Edit**. Alternatively, just double-click on the needed MT engine.
+  3. At the top right, turn off the **Enabled** toggle.
+  4. Click **Update**.
+</Steps>
+
+The engine's credentials stay in place, so you can turn the toggle back on at any time to start using the engine again.
 
 ## See Also
 
