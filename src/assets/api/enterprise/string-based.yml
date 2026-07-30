@@ -4016,6 +4016,72 @@ paths:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
       x-doc-sections:
         - string-based
+  /branches:
+    get:
+      tags:
+        - Branches
+      summary: 'Search Branches'
+      description: "**Required scopes:** `project.source.file` (Read only).\n\nSearches branches by name/title. Provide up to 50 `projectIds`, or omit them to search all projects you can access in the organization."
+      operationId: api.branches.getMany
+      parameters:
+        -
+          name: filter
+          in: query
+          description: 'Search branches by `name` or `title`'
+          required: true
+          schema:
+            type: string
+            maxLength: 128
+        -
+          name: projectIds
+          in: query
+          description: 'Project identifiers to search across. Get via [List Projects](#operation/api.projects.getMany). It can be one project or a list of comma-separated ones (max 50). Optional — omit to search all projects you can access in the organization.'
+          required: false
+          schema:
+            type: string
+          example: '1,2,3'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Matched branches'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseBranchSearchCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+              example:
+                errors:
+                  - { error: { key: filter, errors: [{ code: isEmpty, message: "Value is required and can't be empty" }] } }
+        '404':
+          description: 'One of the requested projects was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+              example:
+                error:
+                  message: 'Project Not Found'
+                  code: 404
+        '422':
+          description: 'The search was too broad to complete within the time limit'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
+              example:
+                error:
+                  message: 'The search was too broad to complete within the time limit'
+                  code: 422
+      x-doc-sections:
+        - string-based
   '/projects/{projectId}/bundles':
     get:
       tags:
@@ -5624,6 +5690,12 @@ paths:
           schema:
             type: integer
         -
+          name: filter
+          in: query
+          description: 'Filter glossaries by `name`'
+          schema:
+            type: string
+        -
           $ref: '#/components/parameters/PaginationLimit'
         -
           $ref: '#/components/parameters/PaginationOffset'
@@ -6092,11 +6164,64 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
-  '/projects/{projectId}/glossaries/concordance':
+  /glossaries/concordance:
     post:
       tags:
         - Glossaries
       summary: 'Concordance search in Glossaries'
+      description: '**Required scopes:** `glossary` (Read only).'
+      operationId: api.glossaries.concordance.post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationGlossaryConcordanceForm'
+      responses:
+        '200':
+          description: 'Concordance Result Collection'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlossaryConcordanceResultCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Organization was not found, or you have no glossaries to search'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+              example:
+                error:
+                  message: "You don't have any glossaries to search."
+                  code: 404
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/projects/{projectId}/glossaries/concordance':
+    post:
+      tags:
+        - Glossaries
+      summary: 'Concordance search in project Glossaries'
       description: '**Required scopes:** `glossary` (Read and Write).'
       operationId: api.projects.glossaries.concordance.post
       parameters:
@@ -6166,6 +6291,12 @@ paths:
               - createdAt
               - updatedAt
           example: 'createdAt desc,name'
+        -
+          name: filter
+          in: query
+          description: 'Filter groups by `name`'
+          schema:
+            type: string
         -
           $ref: '#/components/parameters/QueryNotRequiredParentId'
         -
@@ -8842,6 +8973,12 @@ paths:
               - updatedAt
               - lastActivity
           example: 'createdAt desc,name,id'
+        -
+          name: filter
+          in: query
+          description: 'Filter projects by `name`'
+          schema:
+            type: string
         -
           $ref: '#/components/parameters/QueryNotRequiredGroupId'
         -
@@ -12983,6 +13120,92 @@ paths:
                 $ref: '#/components/schemas/InternalServerErrorExceptionResource'
       x-doc-sections:
         - string-based
+  /strings:
+    get:
+      tags:
+        - 'Source Strings'
+      summary: 'Search Strings'
+      description: "**Required scopes:** `project.source.string` (Read only).\n\nSearches source strings by text/context/key. Provide up to 50 `projectIds`, or omit them to search all projects you can access in the organization."
+      operationId: api.strings.getMany
+      parameters:
+        -
+          name: filter
+          in: query
+          description: 'Search strings by the fields selected in `scope`'
+          required: true
+          schema:
+            type: string
+            maxLength: 128
+        -
+          name: projectIds
+          in: query
+          description: 'Project identifiers to search across. Get via [List Projects](#operation/api.projects.getMany). It can be one project or a list of comma-separated ones (max 50). Optional — omit to search all projects you can access in the organization.'
+          required: false
+          schema:
+            type: string
+          example: '1,2,3'
+        -
+          name: scope
+          in: query
+          description: 'Specify field to be the target of filtering. One of: `all`, `text`, `context`, `key`. Default is `all`'
+          schema:
+            type: string
+            default: all
+            enum:
+              - all
+              - text
+              - context
+              - key
+        -
+          name: denormalizePlaceholders
+          in: query
+          description: 'Enable denormalize placeholders'
+          schema:
+            type: integer
+            default: 0
+            enum:
+              - 0
+              - 1
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Matched source strings'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseStringSearchCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+              example:
+                errors:
+                  - { error: { key: filter, errors: [{ code: isEmpty, message: "Value is required and can't be empty" }] } }
+        '404':
+          description: 'One of the requested projects was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+              example:
+                error:
+                  message: 'Project Not Found'
+                  code: 404
+        '422':
+          description: 'The search was too broad to complete within the time limit'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
+              example:
+                error:
+                  message: 'The search was too broad to complete within the time limit'
+                  code: 422
   '/projects/{projectId}/comments/{commentId}/attachments/{attachmentId}':
     delete:
       tags:
@@ -14778,6 +15001,89 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+  /translations:
+    get:
+      tags:
+        - 'String Translations'
+      summary: 'Search Translations'
+      description: "**Required scopes:** `project.translation` (Read only).\n\nSearches target-language translations by text. Provide up to 50 `projectIds`, or omit them to search all projects you can access in the organization."
+      operationId: api.translations.getMany
+      parameters:
+        -
+          name: filter
+          in: query
+          description: 'Search translations by `text`'
+          required: true
+          schema:
+            type: string
+            maxLength: 128
+        -
+          name: projectIds
+          in: query
+          description: 'Project identifiers to search across. Get via [List Projects](#operation/api.projects.getMany). It can be one project or a list of comma-separated ones (max 50). Optional — omit to search all projects you can access in the organization.'
+          required: false
+          schema:
+            type: string
+          example: '1,2,3'
+        -
+          name: languageIds
+          in: query
+          description: 'Filter by target language identifier. Get via [Project Target Languages](#operation/api.projects.get). It can be one language or a list of comma-separated ones'
+          schema:
+            type: string
+          example: 'uk,de'
+        -
+          name: denormalizePlaceholders
+          in: query
+          description: 'Enable denormalize placeholders'
+          schema:
+            type: integer
+            default: 0
+            enum:
+              - 0
+              - 1
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Matched translations'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseTranslationSearchCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+              example:
+                errors:
+                  - { error: { key: filter, errors: [{ code: isEmpty, message: "Value is required and can't be empty" }] } }
+        '404':
+          description: 'One of the requested projects was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+              example:
+                error:
+                  message: 'Project Not Found'
+                  code: 404
+        '422':
+          description: 'The search was too broad to complete within the time limit'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
+              example:
+                error:
+                  message: 'The search was too broad to complete within the time limit'
+                  code: 422
+      x-doc-sections:
+        - string-based
   '/projects/{projectId}/votes':
     get:
       tags:
@@ -17476,6 +17782,12 @@ paths:
               - createdAt
           example: 'createdAt desc,name'
         -
+          name: filter
+          in: query
+          description: 'Filter TMs by `name`'
+          schema:
+            type: string
+        -
           name: groupId
           in: query
           description: "Group Identifier. Get via [List Groups](#operation/api.groups.getMany)\n\n* __Note__: Set 0 to see TMs of root group"
@@ -17956,11 +18268,64 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
-  '/projects/{projectId}/tms/concordance':
+  /tms/concordance:
     post:
       tags:
         - 'Translation Memory'
       summary: 'Concordance search in TMs'
+      description: '**Required scopes:** `tm` (Read only).'
+      operationId: api.tms.concordance.post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationTmConcordanceForm'
+      responses:
+        '200':
+          description: 'Concordance Result Collection'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TmConcordanceResultCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Organization was not found, or you have no translation memories to search'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+              example:
+                error:
+                  message: "You don't have any translation memories to search."
+                  code: 404
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/projects/{projectId}/tms/concordance':
+    post:
+      tags:
+        - 'Translation Memory'
+      summary: 'Concordance search in project TMs'
       description: '**Required scopes:** `tm` (Read and Write).'
       operationId: api.projects.tms.concordance.post
       parameters:
@@ -25798,6 +26163,25 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/CloneBranchResponseModel'
+    EnterpriseBranchSearchCollectionResource:
+      description: 'A list of matched branches across projects.'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                oneOf:
+                  - { $ref: '#/components/schemas/FileBasedBranchResource' }
+                  - { $ref: '#/components/schemas/StringBasedBranchResource' }
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+          type: object
+        -
+          $ref: '#/components/schemas/CollectionResource'
     FileBasedBranchCollectionResource:
       description: 'Branch Collection Resource'
       type: object
@@ -30717,6 +31101,31 @@ components:
           description: "Defines whether file includes first row header that should not be imported\n\n__Note:__  Used for upload of CSV or XLS/XLSX files only"
           type: boolean
           default: false
+      type: object
+    OrganizationGlossaryConcordanceForm:
+      required:
+        - sourceLanguageId
+        - targetLanguageId
+        - expressions
+      properties:
+        sourceLanguageId:
+          description: 'Source Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: en
+        targetLanguageId:
+          description: 'Target Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: de
+        expressions:
+          description: 'Expressions to search'
+          type: array
+          items:
+            type: string
+          example:
+            - Welcome!
+            - 'Save as...'
+            - View
+            - About...
       type: object
     EnterpriseGlossaryCollectionResource:
       description: 'Glossary Collection Resource'
@@ -48482,6 +48891,40 @@ components:
           type: integer
           default: 0
           example: 2
+      type: object
+    OrganizationTmConcordanceForm:
+      required:
+        - sourceLanguageId
+        - targetLanguageId
+        - autoSubstitution
+        - minRelevant
+        - expressions
+      properties:
+        sourceLanguageId:
+          description: 'Source Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: en
+        targetLanguageId:
+          description: 'Target Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany)'
+          type: string
+          example: de
+        autoSubstitution:
+          description: 'Improves TM suggestions'
+          type: boolean
+        minRelevant:
+          description: 'Show TM suggestions with specified minimum match'
+          type: integer
+          example: 60
+        expressions:
+          description: 'Expressions to search'
+          type: array
+          items:
+            type: string
+          example:
+            - Welcome!
+            - 'Save as...'
+            - View
+            - About...
       type: object
     TmExportForm:
       properties:
