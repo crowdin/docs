@@ -2642,6 +2642,90 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+  '/users/{userId}/ai/request-logs':
+    get:
+      tags:
+        - AI
+      summary: 'List AI Request Logs'
+      description: '**Required scopes:** `ai.request-log` (Read only).'
+      operationId: api.ai.requestLogs.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/UserId'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+        -
+          $ref: '#/components/parameters/AiRequestLogCollectionRequestId'
+        -
+          $ref: '#/components/parameters/AiRequestLogCollectionProjectId'
+        -
+          name: userId
+          in: query
+          description: 'Filter by the user attributed to the AI request (not the `userId` path parameter). Get via [List Users](#operation/api.users.getMany)'
+          required: false
+          schema:
+            type: integer
+        -
+          $ref: '#/components/parameters/AiRequestLogCollectionAiProviderId'
+        -
+          $ref: '#/components/parameters/AiRequestLogCollectionModel'
+        -
+          $ref: '#/components/parameters/AiRequestLogCollectionSourceAction'
+        -
+          name: promptAction
+          in: query
+          description: 'Filter by prompt action, e.g. `pre_translate`, `qa_check`, `advisor_context_review`, or a `custom:`-prefixed value'
+          required: false
+          schema:
+            type: string
+          example: qa_check
+        -
+          $ref: '#/components/parameters/AiRequestLogCollectionStatuses'
+        -
+          $ref: '#/components/parameters/AiRequestLogCollectionSystemCredentials'
+        -
+          $ref: '#/components/parameters/AiRequestLogCollectionIsAutoTriggered'
+        -
+          $ref: '#/components/parameters/AiRequestLogCollectionTokenName'
+        -
+          $ref: '#/components/parameters/AiRequestLogCollectionOauthClientId'
+        -
+          $ref: '#/components/parameters/AiRequestLogCollectionCreatedAfter'
+        -
+          $ref: '#/components/parameters/AiRequestLogCollectionCreatedBefore'
+      responses:
+        '200':
+          description: 'AI request logs list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiRequestLogCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
   '/users/{userId}/ai/settings':
     get:
       tags:
@@ -20290,6 +20374,162 @@ components:
         eta:
           type: string
           example: '1 second'
+      type: object
+    AiRequestLogCollectionResource:
+      description: 'AI Request Log Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/AiRequestLogResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    AiRequestLogResource:
+      description: 'AI Request Log Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AiRequestLog'
+    AiRequestLog:
+      title: 'AI Request Log'
+      properties:
+        id:
+          description: 'ID of the log entry'
+          type: integer
+          example: 12345
+        requestId:
+          description: 'Unique identifier of the request'
+          type: string
+          example: 9d3b1c4e-2f3a-4b5c-8d6e-7f8a9b0c1d2e
+        createdAt:
+          description: 'Date the request was logged, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-01-01T10:00:00+00:00'
+        status:
+          description: 'Request status. One of: `pending`, `success`, `error`, `timeout`'
+          type: string
+          enum:
+            - pending
+            - success
+            - error
+            - timeout
+          example: success
+        httpStatus:
+          description: 'HTTP status code returned by the AI provider. `null` when no HTTP response was recorded'
+          type: integer
+          example: 200
+          nullable: true
+        model:
+          description: 'Name of the AI model used for the request'
+          type: string
+          example: gpt-5.6-sol
+        sourceAction:
+          description: 'Feature or channel that produced the request'
+          type: string
+          enum:
+            - ai_proxy
+            - ai_gateway
+            - ai_translate_strings
+            - ai_file_translate
+            - ai_prompt_completion
+            - 'pre_translate:manual'
+            - 'pre_translate:workflow'
+            - ai_alignment
+            - qa_check
+            - ai_suggestion
+            - advisor
+          example: ai_gateway
+        promptAction:
+          description: 'Prompt action associated with the request. `null` when the request has no associated action'
+          type: string
+          example: pre_translate
+          nullable: true
+        systemCredentials:
+          description: "Whether the request used system-provided credentials rather than the organization's own"
+          type: boolean
+        isAutoTriggered:
+          description: 'Whether the request was triggered automatically (e.g. by a workflow) rather than by an interactive user action'
+          type: boolean
+        durationMs:
+          description: 'Request duration in milliseconds. `null` while the request is still `pending`'
+          type: integer
+          example: 842
+          nullable: true
+        inputTokens:
+          description: 'Number of input tokens consumed. `null` until usage is recorded for the request'
+          type: integer
+          example: 512
+          nullable: true
+        outputTokens:
+          description: 'Number of output tokens generated. `null` until usage is recorded for the request'
+          type: integer
+          example: 128
+          nullable: true
+        totalCost:
+          description: 'Cost of the request in USD as recorded at billing time; null when no price is known for the model'
+          type: number
+          format: float
+          example: 0.012345
+          nullable: true
+        userId:
+          description: 'The user attributed to the request; null for system/automated requests'
+          type: integer
+          example: 42
+          nullable: true
+        projectId:
+          description: 'ID of the project the request was made in. `null` for requests not tied to a specific project'
+          type: integer
+          example: 8
+          nullable: true
+        promptId:
+          description: "ID of the AI prompt used for the request. `null` when the request didn't use a saved prompt"
+          type: integer
+          example: 5
+          nullable: true
+        aiProviderId:
+          description: 'ID of the AI provider used for the request'
+          type: integer
+          example: 3
+        tokenName:
+          description: 'Name of the personal access token used for authentication, if the request was token-authenticated'
+          type: string
+          example: 'Token name'
+          nullable: true
+        oauthClientId:
+          description: 'OAuth `client_id` of the application that authenticated the request. `null` when the request was not authenticated via an OAuth application.'
+          type: string
+          example: gpbccUFxAKZDrLm5Nq8t
+          nullable: true
+        oauthClientName:
+          description: 'Display name of the OAuth application, resolved from `oauthClientId`. `null` when not app-authenticated or the application no longer exists.'
+          type: string
+          example: 'AI Pipeline'
+          nullable: true
+        ip:
+          description: 'IP address the request originated from. `null` for automated requests with no HTTP origin'
+          type: string
+          example: 203.0.113.42
+          nullable: true
+        userAgent:
+          description: 'User agent of the client that made the request. `null` when not recorded'
+          type: string
+          example: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+          nullable: true
+        error:
+          description: 'Error message, present only for failed requests'
+          type: string
+          example: null
+          nullable: true
       type: object
     AiSettingsPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
@@ -44923,6 +45163,119 @@ components:
         type: string
         minLength: 1
         example: chat/completions
+    AiRequestLogCollectionRequestId:
+      name: requestId
+      in: query
+      description: 'Filter by request identifier'
+      required: false
+      schema:
+        type: string
+      example: 9d3b1c4e-2f3a-4b5c-8d6e-7f8a9b0c1d2e
+    AiRequestLogCollectionProjectId:
+      name: projectId
+      in: query
+      description: 'Filter by project. Get via [List Projects](#operation/api.projects.getMany)'
+      required: false
+      schema:
+        type: integer
+    AiRequestLogCollectionAiProviderId:
+      name: aiProviderId
+      in: query
+      description: 'Filter by AI provider. Get via [List AI Providers](#operation/api.ai.providers.getMany)'
+      required: false
+      schema:
+        type: integer
+    AiRequestLogCollectionModel:
+      name: model
+      in: query
+      description: 'Filter by model name'
+      required: false
+      schema:
+        type: string
+      example: claude-fable-5
+    AiRequestLogCollectionSourceAction:
+      name: sourceAction
+      in: query
+      description: "Filter by the feature or channel that produced the request. One of:\n\n * `ai_gateway` - AI Gateway API\n * `ai_proxy` - AI Proxy API\n * `ai_translate_strings` - AI Translate Strings API\n * `ai_file_translate` - AI File Translations API\n * `ai_prompt_completion` - AI Prompt Completion API\n * `pre_translate:manual` - Auto-Translation (manual)\n * `pre_translate:workflow` - Auto-Translation (workflow)\n * `ai_alignment` - Glossary Alignment (Enterprise only)\n * `qa_check` - QA Check\n * `ai_suggestion` - AI suggestion\n * `advisor` - Context Advisor"
+      required: false
+      schema:
+        type: string
+        enum:
+          - ai_proxy
+          - ai_gateway
+          - ai_translate_strings
+          - ai_file_translate
+          - ai_prompt_completion
+          - 'pre_translate:manual'
+          - 'pre_translate:workflow'
+          - ai_alignment
+          - qa_check
+          - ai_suggestion
+          - advisor
+      example: ai_gateway
+    AiRequestLogCollectionStatuses:
+      name: statuses
+      in: query
+      description: 'Filter by status, comma-separated'
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+            - pending
+            - success
+            - error
+            - timeout
+      example: 'success,error'
+    AiRequestLogCollectionSystemCredentials:
+      name: systemCredentials
+      in: query
+      description: 'Filter by whether the request used system-provided credentials'
+      required: false
+      schema:
+        type: boolean
+    AiRequestLogCollectionIsAutoTriggered:
+      name: isAutoTriggered
+      in: query
+      description: 'Filter by whether the request was triggered automatically (e.g. by a workflow) rather than by an interactive user action'
+      required: false
+      schema:
+        type: boolean
+    AiRequestLogCollectionTokenName:
+      name: tokenName
+      in: query
+      description: 'Filter by the name of the personal access token used to authenticate the request'
+      required: false
+      schema:
+        type: string
+    AiRequestLogCollectionOauthClientId:
+      name: oauthClientId
+      in: query
+      description: 'Filter by the OAuth application that authenticated the request, matched on its `client_id`. Returned as `oauthClientId` on each log entry.'
+      required: false
+      schema:
+        type: string
+    AiRequestLogCollectionCreatedAfter:
+      name: createdAfter
+      in: query
+      description: 'Return logs created after this date (ISO 8601)'
+      required: false
+      schema:
+        type: string
+        format: date-time
+      example: '2026-07-01T10:41:33+00:00'
+    AiRequestLogCollectionCreatedBefore:
+      name: createdBefore
+      in: query
+      description: 'Return logs created before this date (ISO 8601)'
+      required: false
+      schema:
+        type: string
+        format: date-time
+      example: '2026-07-31T23:59:59+00:00'
     PaginationLimit:
       name: limit
       in: query
