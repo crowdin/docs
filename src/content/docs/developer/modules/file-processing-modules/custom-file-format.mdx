@@ -38,6 +38,7 @@ For Crowdin Enterprise:
         "type": "type-xyz",
         "url": "/process",
         "multilingual": true,
+        "customSrxSupported": true,
         "signaturePatterns": {
           "fileName": "^.+\\.xyz$",
           "fileContent": "<properties>\\s*<property\\s+name=.*value=.*/>"
@@ -83,6 +84,15 @@ For Crowdin Enterprise:
         <p><strong>Required:</strong> no</p>
         <p><strong>Allowed values:</strong> <code>true</code>, <code>false</code>. Default is <code>false</code></p>
         <p><strong>Description:</strong> This parameter is used to combine the content of multiple languages into one request when uploading and downloading translations in your Crowdin project.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">customSrxSupported</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>bool</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Allowed values:</strong> <code>true</code>, <code>false</code>. Default is <code>false</code></p>
+        <p><strong>Description:</strong> Defines whether the app supports custom segmentation rules (SRX 2.0) for its file format. When enabled, segmentation rules can be defined for the files processed by this module, and Crowdin passes them to the app in the <code>customSrxContents</code> parameter. See <a href="/developer/crowdin-apps-module-custom-file-format/#content-segmentation">Content Segmentation</a>.</p>
       </td>
     </tr>
     <tr>
@@ -145,7 +155,8 @@ Request payload example:
     }
   ],
   "strings": [...], // for the build-file jobs, array of segments
-  "stringsUrl": "https://tmp.downloads.crowdin.com/strings.ndjson" // for the build-file jobs, file with segments, in new-line delimited json format
+  "stringsUrl": "https://tmp.downloads.crowdin.com/strings.ndjson", // for the build-file jobs, file with segments, in new-line delimited json format
+  "customSrxContents": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>..." // segmentation rules defined for the file, null if there are none
 }
 ```
 
@@ -178,6 +189,13 @@ Properties:
         <p><strong>Type(stringsUrl):</strong> <code>string</code></p>
         <p><strong>Description:</strong> Parameters used for translations download (for <code>build-file</code> job type only). <code>strings</code> - translation strings array. <code>stringsUrl</code> - public URL to a <a href="https://github.com/ndjson/ndjson-spec" target="_blank">new-line delimited json</a> with translation strings.<br/>
         Either of these two parameters can be used.<Aside title="Limitations">Maximum request payload limit is 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">customSrxContents</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Content of the SRX 2.0 segmentation rules file defined for the source file. Passed for both <code>parse-file</code> and <code>build-file</code> jobs when the module has the <code>customSrxSupported</code> property enabled. If no segmentation rules are defined for the file, the parameter is <code>null</code>. See <a href="/developer/crowdin-apps-module-custom-file-format/#content-segmentation">Content Segmentation</a>.</p>
       </td>
     </tr>
   </tbody>
@@ -379,11 +397,40 @@ Properties:
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Allowed values:</strong> Mostly match the <code>type</code> values accepted by the <a href="/developer/api/v2/#operation/api.projects.files.post">Add File API method</a>, excluding the following: <code>auto</code>, <code>xml</code>, <code>csv</code>, <code>docx</code>, <code>xlsx</code>, <code>dita</code>, <code>idml</code>, <code>mif</code>, <code>svg</code>. Additionally, custom values defined via the <a href="/developer/crowdin-apps-module-custom-file-format/#custom-file-format-type-example"><code>type</code> property</a> of this module are also supported.</p>
-        <p><strong>Description:</strong> Used to specify the file format type for a string when post-processing is needed. For example, if a string returned by the app contains embedded HTML, setting <code>crowdinType</code> to <code>html</code> allows to re-parse the string using the HTML parser. Crowdin parses and segments such content the same way as a file of that format, and merges the translations back into the original string when generating the translation file.</p>
+        <p><strong>Description:</strong> Used to specify the file format type for a string when post-processing is needed. For example, if a string returned by the app contains embedded HTML, setting <code>crowdinType</code> to <code>html</code> allows to re-parse the string using the HTML parser. Crowdin parses and segments such content the same way as a file of that format, and merges the translations back into the original string when generating the translation file. See <a href="/developer/crowdin-apps-module-custom-file-format/#content-segmentation">Content Segmentation</a>.</p>
       </td>
     </tr>
   </tbody>
 </table>
+
+## Content Segmentation
+
+The content of a custom file format can be split into smaller segments in two ways: your app segments the content itself with the rules that Crowdin passes to it, or Crowdin segments the content with one of its own parsers. Segment it in the app when only your app can parse the content, and leave it to a Crowdin parser when a string contains content in a format that Crowdin already supports, such as HTML or Markdown.
+
+### Segmenting Content in Your App
+
+Set the `customSrxSupported` property to `true` in the module configuration. [Segmentation rules (SRX 2.0)](/custom-segmentation/) can then be set for the files processed by this module, for example via the `importOptions.srxStorageId` parameter of the [Add File](/developer/api/v2/#operation/api.projects.files.post) and [Update File](/developer/api/v2/#operation/api.projects.files.put) API methods.
+
+Crowdin passes the content of the rules defined for a file in the `customSrxContents` parameter of both `parse-file` and `build-file` requests. The app does the segmentation itself:
+
+* For the `parse-file` job, the app splits the text by those rules and returns each segment as a separate string with its own `identifier` (and its own `previewId` if the app generates the HTML preview of the file).
+* For the `build-file` job, the app receives those segments with their translations and joins them back when generating the translation file.
+
+If no rules are defined for a file, `customSrxContents` is `null`.
+
+Translation upload uses the `parse-file` job as well, so return the same per-segment identifiers when parsing a translation file. Otherwise the uploaded translations won't match the existing segments.
+
+### Segmenting Content with a Crowdin Parser
+
+Set the [`attributes.crowdinType`](#strings-array-structure) attribute of a string to the format of its content. Crowdin then parses such a string the same way as a file of that format, so the content is segmented by the project's settings for that format, or by that format's default segmentation.
+
+Each segment becomes a separate string in the project. For the `build-file` job, Crowdin merges the translations back into the original string, so the app receives the same string it returned during file parsing.
+
+Strings with plurals aren't re-parsed, and in string-based projects the attribute has no effect.
+
+<Aside title="Limitations">
+  Each segment counts as a separate string, so segmented files reach the 5 MB request and response payload limits faster.
+</Aside>
 
 ## HTML Preview of the File
 
@@ -391,6 +438,8 @@ The HTML preview renders a [WYSIWYG view of the file](/online-editor/#wysiwyg-fi
 
 * `id="string_preview_id_{previewId}"`, where `{previewId}` matches the `previewId` of the corresponding string from the `parse-file` response. Use double quotes and make the value match exactly.
 * `class="crowdin_phrase"`, so the Editor can highlight the string in the preview and edit it inline. Without this class, the string is highlighted only when selected from the strings list, and inline editing in the preview doesn't work.
+
+If the app splits a string into several segments, give each segment its own `previewId` and element in the preview. If several segments share a `previewId`, only the last one is linked to the element.
 
 The HTML preview is generated only during source file import. It's not produced when uploading translations (including multilingual uploads), and it's not displayed when the app passes strings with plurals.
 
