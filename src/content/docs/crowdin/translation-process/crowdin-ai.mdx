@@ -262,16 +262,38 @@ When configuring Google Gemini (Vertex AI), you will need to provide the followi
 
 * **Project ID**: Your unique Google Cloud Project ID. You can find this on the dashboard of your Google Cloud Console.
 * **Region**: The region where your model is hosted. Ensure the model you plan to use is available in the selected region. You can find this on your Vertex AI dashboard. See the official Google Cloud documentation for a list of [available Gemini models and regions](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations).
+* **Authorization method**: The way Crowdin gets access to Vertex AI:
+    * **Service account**: Uses a JSON key file that you upload in the **Service Account Key** field.
+    * **Workload Identity Federation**: Uses short-lived access tokens issued by Google Cloud instead of a stored key file. Requires the **Workload Identity Federation Audience** and, optionally, the **Workload Identity Federation Service Account Email** for Crowdin to impersonate.
 
-* **Service Account Key**: A JSON file used for authentication. To get this file:
+###### Setting Up a Service Account Key
+
+To create the JSON key file and add it to Crowdin, follow these steps:
 
 <Steps>
   1. In your Google Cloud project, go to **IAM & Admin > Service Accounts**.
   2. Create a new service account or select an existing one.
-  3. Grant it the **Vertex AI User** role (`roles/aiplatform.user`).
+  3. Grant it the **Vertex AI User** role (`roles/aiplatform.user`). To use screenshots as prompt context, also grant the **Storage Admin** role (`roles/storage.admin`). Crowdin uploads the screenshots to a temporary bucket in your Google Cloud project.
   4. Go to the **Keys** tab for that service account, click **Add Key > Create new key**, select **JSON**, and click **Create**. The key will be downloaded automatically.
   5. In Crowdin, click **Choose file** to upload this JSON key.
 </Steps>
+
+###### Setting Up Workload Identity Federation
+
+Workload Identity Federation requires a workload identity pool in your Google Cloud project that trusts Crowdin's AWS role. Follow the Google Cloud guide on [configuring Workload Identity Federation with AWS](https://cloud.google.com/iam/docs/workload-identity-federation-with-other-clouds) and use these values:
+
+* **AWS account ID**: `459083373173`. Enter it when you [create the workload identity pool and provider](https://cloud.google.com/iam/docs/workload-identity-federation-with-other-clouds#create-the-workload-identity-pool-and-provider).
+* **Attribute condition**: `assertion.arn.startsWith('arn:aws:sts::459083373173:assumed-role/crowdin-federated-identity/')`. This limits the trust to Crowdin's role.
+* **Roles**: **Vertex AI User** (`roles/aiplatform.user`), plus **Storage Admin** (`roles/storage.admin`) to use screenshots as prompt context. Grant them through either [direct resource access](https://cloud.google.com/iam/docs/workload-identity-federation-with-other-clouds#direct-resource-access) or [service account impersonation](https://cloud.google.com/iam/docs/workload-identity-federation-with-other-clouds#service-account-impersonation).
+* **APIs**: The Vertex AI API (`aiplatform.googleapis.com`), along with the APIs the guide enables.
+
+When the provider is ready, enter its audience in the **Workload Identity Federation Audience** field in Crowdin:
+
+```text
+//iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID
+```
+
+If you granted access through service account impersonation, also enter that account's email in the **Workload Identity Federation Service Account Email** field.
 
 ##### Microsoft Azure OpenAI
 
