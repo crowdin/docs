@@ -9,15 +9,13 @@ import { Steps, Aside } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
 import storeInstall from '!/developer/crowdin_apps_store_install.png';
 import storeInstallEnterprise from '!/developer/crowdin_apps_store_install_e.png';
-import installPermissions from '!/developer/crowdin_apps_app_permissions.png';
-import installPermissionsEnterprise from '!/developer/crowdin_apps_app_permissions_e.png';
 import communicationFlow from '!/developer/crowdin_apps_communication_crowdin.png';
 
-You can install Crowdin Apps either from the [Crowdin Store](https://store.crowdin.com) or manually, depending on whether the app is already published or not.
+You can install Crowdin Apps either from the [Crowdin Store](https://store.crowdin.com) or manually, depending on whether the app is already published.
 
 ## Installation in Crowdin
 
-To install the app that is already published on the Crowdin Store, follow these steps:
+To install an app that is already published on the Crowdin Store, follow these steps:
 
 <Steps>
   1. Open your profile home page and select **Store** on the left sidebar.
@@ -40,7 +38,7 @@ To install a private app, follow these steps:
 
 ## Installation in Crowdin Enterprise
 
-To install the app that is already published on the Crowdin Store, follow these steps:
+To install an app that is already published on the Crowdin Store, follow these steps:
 
 <Steps>
   1. Open your organization's **Workspace** and select **Store** on the left sidebar.
@@ -63,81 +61,79 @@ To install a private app, follow these steps:
 
 ## Crowdin Apps Permission Configuration
 
-Configure preferred permissions for each app during the installation process. This step allows you to define who can access and use the app across its various modules and specifying in which projects of your Crowdin account (for Crowdin) or Crowdin organization (for Crowdin Enterprise) it can be used.
+Configure preferred permissions for each app during installation. In this step, you define who can access and use the app across its modules, and in which projects of your Crowdin account (for Crowdin) or Crowdin organization (for Crowdin Enterprise) it can be used.
 
-If you restrict access to certain projects by using the **Selected projects** option, the app will not be able to communicate via the API with projects that are not included in the selected list. Also, the app will only be displayed in the UI of the selected projects. This ensures that the app's functionality and access are precisely tailored to the specific needs and security requirements of your organization.
+If you restrict access to certain projects by using the **Selected projects** option, the app cannot communicate via the API with projects outside that list. The app is also displayed only in the UI of the selected projects.
 
-You can configure these access permissions at the time of installation or adjust them at any time for already installed apps. This flexibility allows you to respond to changes in your project requirements or security policies by updating the access settings to either expand or restrict the app's functionality and visibility within your Crowdin projects.
+You can configure these access permissions during installation or adjust them at any time for already installed apps: go to **Account Settings > Apps** (for Crowdin) or **Organization Settings > Apps** (for Crowdin Enterprise) and select **Edit** on the app.
 
 ### User Access Categories
 
-You can define which user categories are allowed to use the app. This setting is applied to each app module independently.
+You can define which user categories can use the app. Configure this setting separately for each app module, so a module can have different access from the others.
+
+<Aside>
+  The options a module offers depend on its type, so an app may show only some of them.
+</Aside>
 
 Available options for Crowdin:
 
-* Only me (i.e., project owner)
-* Me, project managers and developers
+* Only me &ndash; the user who installed the app.
+* Me, project managers and developers / translation requestors
 * All project members
-* Custom Access (selected users)
-* Guests (unauthenticated users)
-
-<Image src={installPermissions} alt="Permissions" class="width-md m-auto crowdin-modal" />
+* All users, including guests (unauthenticated users)
+* Custom Access &ndash; the users you pick with **Select users**. The module switches to this option automatically once you pick users.
 
 <Aside>
-  Project owner will always have access to all modules of the app.
+  The project owner will always have access to all modules of the app.
 </Aside>
 
 Available options for Crowdin Enterprise:
 
-* Only organization admins
-* Organization admins, project managers and developers
+* Only admins
+* Admins, managers and developers / translation requestors
 * All project members
-* Custom Access (selected users)
-* Guests (unauthenticated users)
-
-<Image src={installPermissionsEnterprise} alt="Permissions" class="width-md m-auto" />
+* All users, including guests (unauthenticated users)
+* Custom Access &ndash; the users you pick with **Select users**. The module switches to this option automatically once you pick users.
 
 <Aside>
-  Organization owner will always have access to all modules of the app.
+  The organization owner will always have access to all modules of the app.
 </Aside>
 
 ### Project Access Configuration
 
-In addition to user access, you can also specify the projects in which the app can be used (these settings apply across all app modules).
+You can also specify the projects in which the app can be used (these settings apply across all app modules).
 
 Project access options:
 
-* Projects you own (for Crowdin) or All projects (for Crowdin Enterprise)
+* All projects I have access to (for Crowdin) or All projects (for Crowdin Enterprise)
 * Selected projects
-
-This targeted approach allows for enhanced security and customization, ensuring that the app is only used where it's really needed.
 
 ## Installed Event Communication Flow
 
-When a Crowdin App is installed in the Account Settings the authorization flow takes place during which Crowdin and Crowdin App exchange the authorization data (the authorization code is being exchanged for an access token). In the following illustration, you can see the events that take place during this process.
+When a Crowdin App is installed in the Account Settings, an authorization flow takes place, during which Crowdin and the Crowdin App exchange the authorization data (the authorization code is exchanged for an access token). The following illustration shows the events in this process.
 
 <Image src={communicationFlow} alt="Communication between Crowdin and Crowdin App" />
 
 <Aside>
-  Installed Event is used only for `authorization.type: "crowdin_app"`.
+  The Installed event is used only for `authorization.type: "crowdin_app"`.
 </Aside>
 
-Let's examine in detail each step that happens in the illustration:
+Let's examine each step in the illustration in detail:
 
 <Steps>
-  1. Installation of the Manifest URL - the user pastes in the Manifest URL in the *Account Settings* > *Crowdin Applications* and clicks **Install**.
-  2. Fetching content from the Manifest URL - the request is sent to Crowdin App.
-  3. Response: manifest JSON - Crowdin App returns the Manifest JSON that contains the data about the app.
-  4. Manifest Data Validation - the received content is validated according to the structure and data of the Manifest JSON.
-  5. Prompt to install - the information about the Crowdin App, as well as the list of permissions and the **Install** button is displayed to the user.
+  1. Installation of the Manifest URL - the user pastes in the Manifest URL in **Account Settings > Apps** and clicks **Install**.
+  2. Fetching content from the Manifest URL - the request is sent to the Crowdin App.
+  3. Response: manifest JSON - the Crowdin App returns the Manifest JSON that contains data about the app.
+  4. Manifest Data Validation - the received content is validated against the structure and data of the Manifest JSON.
+  5. Prompt to install - Crowdin displays the information about the Crowdin App, the list of permissions, and the **Install** button to the user.
   6. Confirmation of the installation - the user confirms the installation of the Crowdin App.
-  7. The Installed event - Crowdin sends the Installed event with the authorization code to the Crowdin App for API token generation.
-  8. Token request - Crowdin App sends the request for API token acquiring:
+  7. The Installed event - Crowdin sends the Installed event with the authorization code to the Crowdin App so it can generate an API token.
+  8. Token request - the Crowdin App sends a request to acquire an API token:
       ```
       POST https://accounts.crowdin.com/oauth/token
       ```
-  9. Access Token - authorization service returns the API access token and the refresh token.
-  10. Success Code Response - Crowdin App returns the success status code (2xx) which confirms that the application installation was successfully finished. In case the status code is different, the application will be removed from the Crowdin account.
+  9. Access Token - the authorization service returns the API access token and the refresh token.
+  10. Success Code Response - the Crowdin App returns the success status code (2xx), which confirms that the app installation finished. If the status code is different, the app will be removed from the Crowdin account.
 </Steps>
 
 **Token request parameters (step 8):**
@@ -149,7 +145,7 @@ Let's examine in detail each step that happens in the illustration:
     <td>
       <p><strong>Type:</strong> <code>string</code></p>
       <p><strong>Required:</strong> yes</p>
-      <p><strong>Description:</strong> The parameter is used for the flow specification of an OAuth app.</p>
+      <p><strong>Description:</strong> Specifies the flow for an OAuth app.</p>
     </td>
   </tr>
   <tr>
@@ -157,7 +153,7 @@ Let's examine in detail each step that happens in the illustration:
     <td>
       <p><strong>Type:</strong> <code>string</code></p>
       <p><strong>Required:</strong> yes</p>
-      <p><strong>Description:</strong> Client ID for the app is received when the app is registered.</p>
+      <p><strong>Description:</strong> The Client ID for the app is received when the app is registered.</p>
     </td>
   </tr>
   <tr>
@@ -165,7 +161,7 @@ Let's examine in detail each step that happens in the illustration:
     <td>
       <p><strong>Type:</strong> <code>string</code></p>
       <p><strong>Required:</strong> yes</p>
-      <p><strong>Description:</strong> Client Secret for the app is received when the app is registered.</p>
+      <p><strong>Description:</strong> The Client Secret for the app is received when the app is registered.</p>
     </td>
   </tr>
   <tr>
@@ -181,7 +177,7 @@ Let's examine in detail each step that happens in the illustration:
     <td>
       <p><strong>Type:</strong> <code>string</code></p>
       <p><strong>Required:</strong> yes</p>
-      <p><strong>Description:</strong> The unique secret used for authorization of your Crowdin app. This value is retrieved from the installed event.</p>
+      <p><strong>Description:</strong> The unique secret used to authorize your Crowdin app. This value is retrieved from the installed event.</p>
     </td>
   </tr>
   <tr>
