@@ -7,7 +7,183 @@ sidebar:
   badge: New
 ---
 
-This module allows you to create custom workflow step types to extend the default list of workflow steps in Crowdin Enterprise. With this app installed, the new workflow steps type become available in the workflow editor, where they can be added to workflows and templates, enabling greater customization and flexibility.
+import { Steps, Aside } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+This module allows you to create custom workflow step types to extend the default list of workflow steps in Crowdin Enterprise. With this app installed, the new workflow step types become available in the workflow editor, where they can be added to workflows and templates, enabling greater customization and flexibility.
+
+A custom workflow step acts as an external processing stage in a workflow: Crowdin Enterprise handles the routing of strings, status tracking, and progress counters, while your app implements the step's **condition of done** – the custom logic that decides when a string is considered complete on the step and which output it leaves through. Typical use cases include AI-based review, integration with an external review or MT system, compliance gates, or delay/scheduling steps.
+
+## How It Works
+
+The Workflow Step Type module follows an asynchronous, event-driven integration model:
+
+<Steps>
+  1. An organization admin installs the app. The custom step types provided by the app become available in the workflow editor.
+  2. A project manager adds the custom step to a workflow or workflow template and configures it via the settings UI provided by the app.
+  3. When strings reach the custom step, Crowdin Enterprise sends the `string.status_on_step.recalculation_triggered` webhook event to the app.
+  4. The app evaluates its condition of done for the received strings. Processing is asynchronous and can take as long as needed.
+  5. The app updates the status of each processed string via the API, assigning it to one of the step's declared output ports according to its routing logic.
+  6. Crowdin Enterprise routes the strings to the next workflow step connected to that output.
+</Steps>
+
+## Requirements
+
+Apps that include the `workflow-step-type` module must meet all of the following requirements. An app descriptor that doesn't meet them will fail validation during installation:
+
+* **`crowdin_agent` authentication** – the app must use the `crowdin_agent` authentication type and declare an `agent` in the app descriptor. Other authentication types (e.g., `crowdin_app` or `none`) are not allowed for this module. Read more about [Authentication](#authentication).
+* **Companion Webhook module** – the same app must also declare a [Webhook module](/developer/crowdin-apps-module-webhook/) subscribed to the `string.status_on_step.recalculation_triggered` event. Without it, the custom step cannot receive strings for processing.
+* **App backend** – all module URLs are relative to the app's `baseUrl`, so the module is not compatible with [serverless apps](/developer/crowdin-apps-serverless/).
+* **Crowdin Enterprise only** – custom workflow steps are available only in Crowdin Enterprise projects with workflows.
+
+## Authentication
+
+The `workflow-step-type` module requires the `crowdin_agent` authentication type. If the app descriptor uses any other authentication type (or omits the `authentication` object), the installation fails with the following error:
+
+> Only crowdin_agent authentication type is allowed for workflow-step-type module type
+
+### Why the Agent Authentication Type
+
+A custom workflow step is a long-lived participant in your projects rather than a UI extension. It processes strings asynchronously, triggered by webhooks, without any user session involved. To support this, Crowdin Enterprise creates a dedicated **agent** – a bot user that represents your app in the organization:
+
+* The agent user is created automatically when the app is installed and removed when the app is uninstalled.
+* All API calls the app makes to process strings on the custom step are authenticated as the agent user.
+* The agent must have manager access to every project where the custom step is used. A project manager invites the agent to the project as a manager as part of setting up the workflow step. Alternatively, the agent can be assigned as a manager to all existing projects during the app installation.
+* All actions performed by the app are attributed to the agent user in the project activity, providing a clear audit trail.
+
+### Agent Declaration
+
+When using the `crowdin_agent` authentication type, the app descriptor must include a top-level `agent` object that describes the agent user:
+
+```json title="manifest.json"
+{
+  "authentication": {
+    "type": "crowdin_agent",
+    "clientId": "your-client-id"
+  },
+  "agent": {
+    "name": "Custom Step",
+    "username": "custom-step-agent",
+    "avatarUrl": "/assets/agent-avatar.png"
+  }
+}
+```
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>agent.username</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The username for the agent user created in the organization.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>agent.name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> The display name of the agent user. If omitted, the app name is used.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">agent.avatarUrl</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> The relative URL to the agent user's avatar. If omitted, the app logo is used.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Obtaining an API Token
+
+The token flow for `crowdin_agent` is similar to the [`crowdin_app` flow](/developer/crowdin-apps-installation/#installed-event-communication-flow). When the app is installed, Crowdin sends the [Installed event](/developer/crowdin-apps-app-descriptor/#installed-event-payload) to the app. For apps with the `crowdin_agent` authentication type, the Installed event payload additionally contains the `agentId` property – the numeric identifier of the agent user created for your app.
+
+To obtain an API access token, the app sends the following request:
+
+```shell
+POST https://accounts.crowdin.com/oauth/token
+```
+
+**Token request parameters:**
+
+<table>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">grant_type: crowdin_agent</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> Specifies the token flow for an agent app.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>client_id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> The Client ID for the app is received when the app is registered.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>client_secret</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> The Client Secret for the app is received when the app is registered.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>app_id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> Crowdin app identifier from the app descriptor.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>app_secret</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> The unique secret used to authorize your Crowdin app. This value is retrieved from the Installed event.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>domain</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> The name of the organization the app is installed to. This value is retrieved from the Installed event.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user_id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> The identifier of the user who installed the app. This value is retrieved from the Installed event.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>agent_id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Required:</strong> yes</p>
+      <p><strong>Description:</strong> The identifier of the agent user created for your app. This value is retrieved from the Installed event (<code>agentId</code> property).</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+The resulting access token is issued for the agent user. Use it in the `Authorization: Bearer` header for the [API methods](#api-methods) that manage string statuses on the custom step.
+
+<Aside>
+  The scopes requested in the app descriptor must not exceed the scopes configured in the OAuth app. To manage string statuses on a custom workflow step, the app needs the `project` scope.
+</Aside>
 
 ## Access
 
@@ -19,8 +195,30 @@ You can grant access to this module to one of the following user categories:
 
 ## Structure
 
+The example below shows a complete app descriptor for an app that provides a custom workflow step. Note the `crowdin_agent` authentication type, the `agent` object, and the companion `webhook` module subscribed to the `string.status_on_step.recalculation_triggered` event – all three are required:
+
 ```json title="manifest.json"
 {
+  "identifier": "custom-workflow-step-app",
+  "name": "Custom Workflow Step App",
+  "description": "A sample app that provides a custom workflow step",
+  "logo": "/logo.png",
+  "baseUrl": "https://example.com",
+  "authentication": {
+    "type": "crowdin_agent",
+    "clientId": "your-client-id"
+  },
+  "agent": {
+    "name": "Custom Step",
+    "username": "custom-step-agent",
+    "avatarUrl": "/assets/agent-avatar.png"
+  },
+  "events": {
+    "installed": "/hooks/installed"
+  },
+  "scopes": [
+    "project"
+  ],
   "modules": {
     "workflow-step-type": [
       {
@@ -61,6 +259,15 @@ You can grant access to this module to one of the following user categories:
           "crowdin-enterprise"
         ]
       }
+    ],
+    "webhook": [
+      {
+        "key": "workflow-step-webhook",
+        "url": "/hooks/workflow",
+        "events": [
+          "string.status_on_step.recalculation_triggered"
+        ]
+      }
     ]
   }
 }
@@ -83,15 +290,15 @@ You can grant access to this module to one of the following user categories:
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Required:</strong> yes</p>
-        <p><strong>Description:</strong> The human-readable name of the module.</p>
+        <p><strong>Description:</strong> The human-readable name of the workflow step type shown in the workflow editor.</p>
       </td>
     </tr>
     <tr>
       <td><code>logo</code></td>
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
-        <p><strong>Required:</strong> yes</p>
-        <p><strong>Description:</strong> The relative URL to the custom AI's logo that will be displayed in the Crowdin Enterprise UI.<br/>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> The relative URL to the workflow step type's logo that will be displayed in the workflow editor.<br/>
          The recommended resolution is 48x48 pixels.</p>
       </td>
     </tr>
@@ -99,8 +306,8 @@ You can grant access to this module to one of the following user categories:
       <td><code>description</code></td>
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
-        <p><strong>Required:</strong> yes</p>
-        <p><strong>Description:</strong> The human-readable description of what the module does.<br/>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Description:</strong> The human-readable description of what the workflow step does.<br/>
          The description will be visible in the Crowdin Enterprise UI.</p>
       </td>
     </tr>
@@ -109,7 +316,7 @@ You can grant access to this module to one of the following user categories:
       <td>
         <p><strong>Type:</strong> <code>object</code></p>
         <p><strong>Required:</strong> yes</p>
-        <p><strong>Description:</strong> Defines the input and output ports for the workflow step, determining how strings enter and exit the step.</p>
+        <p><strong>Description:</strong> Defines the input and output ports for the workflow step, determining how strings enter and exit the step. Read more about <a href="#boundaries-and-ports">Boundaries and Ports</a>.</p>
       </td>
     </tr>
     <tr>
@@ -117,7 +324,7 @@ You can grant access to this module to one of the following user categories:
       <td>
         <p><strong>Type:</strong> <code>object</code></p>
         <p><strong>Required:</strong> yes</p>
-        <p><strong>Description:</strong> Specifies the properties of the input data for the workflow step, including available ports.</p>
+        <p><strong>Description:</strong> Specifies the properties of the input data for the workflow step, including available ports. Exactly one input group is allowed.</p>
       </td>
     </tr>
     <tr>
@@ -125,7 +332,7 @@ You can grant access to this module to one of the following user categories:
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Required:</strong> yes</p>
-        <p><strong>Description:</strong> The title for the input section of the workflow step.</p>
+        <p><strong>Description:</strong> The title for the input section of the workflow step (3–30 characters).</p>
       </td>
     </tr>
     <tr>
@@ -142,7 +349,7 @@ You can grant access to this module to one of the following user categories:
       <td>
         <p><strong>Type:</strong> <code>array</code></p>
         <p><strong>Required:</strong> yes</p>
-        <p><strong>Description:</strong> Specifies the possible outputs of the workflow step, determining how processed strings move forward.</p>
+        <p><strong>Description:</strong> Specifies the possible outputs of the workflow step, determining how processed strings move forward. A step can declare one or two outputs.</p>
       </td>
     </tr>
     <tr>
@@ -150,10 +357,11 @@ You can grant access to this module to one of the following user categories:
       <td>
         <p><strong>Type:</strong> <code>object</code></p>
         <p><strong>Required:</strong> yes</p>
+        <p><strong>Allowed values for <code>port</code>:</strong> <code>untranslated</code>, <code>translated</code>, <code>approved</code>, <code>all</code>, <code>false</code>, <code>true</code>, <code>skipped</code></p>
         <p><strong>Description:</strong> Defines the outputs of the workflow step. Each object in the array contains:</p>
         <ul>
-          <li><code>title</code> (<strong>string</strong>) – The title for the output section of the workflow step.</li>
-          <li><code>port</code> (<strong>string</strong>) – The port type used for connecting outputs.</li>
+          <li><code>title</code> (<strong>string</strong>) – The title for the output section of the workflow step (3–30 characters).</li>
+          <li><code>port</code> (<strong>string</strong>) – The port type used for connecting outputs. The <code>initial</code> port cannot be used as an output.</li>
         </ul>
       </td>
     </tr>
@@ -163,7 +371,7 @@ You can grant access to this module to one of the following user categories:
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Required:</strong> no</p>
         <p><strong>Allowed values:</strong> <code>side-by-side</code>, <code>comfortable</code>, <code>multilingual</code></p>
-        <p><strong>Description:</strong> Defines the Crowdin Enterprise Editor mode for this workflow step.</p>
+        <p><strong>Description:</strong> Defines the default Crowdin Enterprise Editor mode used when a user opens the Editor for this workflow step.</p>
       </td>
     </tr>
     <tr>
@@ -179,7 +387,7 @@ You can grant access to this module to one of the following user categories:
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Required:</strong> no</p>
-        <p><strong>Description:</strong> The relative URL for deleting the workflow step in the workflow editor.</p>
+        <p><strong>Description:</strong> The relative URL notified when the workflow step is deleted in the workflow editor.</p>
       </td>
     </tr>
     <tr>
@@ -187,7 +395,7 @@ You can grant access to this module to one of the following user categories:
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Required:</strong> no</p>
-        <p><strong>Description:</strong> The relative URL to the iframe for configuring the workflow step settings.</p>
+        <p><strong>Description:</strong> The relative URL to the iframe with the settings UI for the workflow step. The page is loaded in the workflow editor when a user configures the step.</p>
       </td>
     </tr>
     <tr>
@@ -202,15 +410,64 @@ You can grant access to this module to one of the following user categories:
   </tbody>
 </table>
 
+### Boundaries and Ports
+
+The `boundaries` object declares the step's connectors in the workflow graph. Ports describe the state of the content that flows through them, not the steps they connect. An output of one step can be connected to an input of the next step if both use the same port, or if either side uses the `all` port.
+
+<table>
+  <thead>
+    <tr>
+      <th>Port</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>initial</code></td>
+      <td>The string arrived directly from the workflow's Start point without prior processing. Can be used only as an <strong>input</strong>.</td>
+    </tr>
+    <tr>
+      <td><code>untranslated</code></td>
+      <td>The string has no translation yet.</td>
+    </tr>
+    <tr>
+      <td><code>translated</code></td>
+      <td>The string has a translation.</td>
+    </tr>
+    <tr>
+      <td><code>approved</code></td>
+      <td>The string's translation has been approved.</td>
+    </tr>
+    <tr>
+      <td><code>skipped</code></td>
+      <td>The string was bypassed by a previous step (e.g., pre-translation found no match).</td>
+    </tr>
+    <tr>
+      <td><code>true</code> / <code>false</code></td>
+      <td>A generic boolean pair for branching logic. These are the same connectors used by Custom Code steps.</td>
+    </tr>
+    <tr>
+      <td><code>all</code></td>
+      <td>A wildcard that can be connected to any port on the other side.</td>
+    </tr>
+  </tbody>
+</table>
+
+A common configuration is one "success" output (e.g., `translated`, `approved`, or `true`) and one "failure" or "bypass" output (e.g., `untranslated`, `skipped`, or `false`), letting the workflow route processed and unprocessed strings down different paths.
+
 ## Communication Between App and Crowdin
 
 The Workflow Step Type module relies on webhooks and API methods to communicate with Crowdin Enterprise. Apps that include this module must also define the [Webhook module](/developer/crowdin-apps-module-webhook/) to receive string-related events (i.e., `string.status_on_step.recalculation_triggered`) and process them accordingly.
 
 ### Receiving Webhook Events from Crowdin
 
-Crowdin Enterprise periodically sends a batched webhook payload to the app’s Webhook module whenever strings reach a custom workflow step provided by the app.
+Crowdin Enterprise sends a batched webhook payload to the app's Webhook module whenever strings reach a custom workflow step provided by the app. When a string lands on the custom step (e.g., it was just added, moved there by a previous step, or re-triggered), its status on the step becomes **Need Process**, and the webhook event is queued for delivery.
 
 This payload contains the `string.status_on_step.recalculation_triggered` event and includes all relevant strings that need external processing (e.g., AI-based proofreading).
+
+<Aside>
+  Webhook events are delivered in batches and may arrive with a short delay (typically about a minute) after strings reach the step. Your app should respond with a `2xx` status code as quickly as possible and process the strings asynchronously. Read more about [Delivery Guarantees](#delivery-guarantees-and-reconciliation).
+</Aside>
 
 Example webhook payload for the `string.status_on_step.recalculation_triggered` event:
 
@@ -331,14 +588,53 @@ Example webhook payload for the `string.status_on_step.recalculation_triggered` 
 }
 ```
 
+### String Statuses on a Custom Step
+
+Each string on a custom workflow step has a status per target language. The statuses you will encounter when working with the [API methods](#api-methods):
+
+<table>
+  <thead>
+    <tr>
+      <th>Status</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>NEED_PROCESS</code></td>
+      <td>The string reached the step and is waiting for the app's decision. Counted as "to do" in the project's progress.</td>
+    </tr>
+    <tr>
+      <td><code>TODO</code></td>
+      <td>The app explicitly parked the string on the step by setting an empty output (<code>""</code>).</td>
+    </tr>
+    <tr>
+      <td><code>DONE</code></td>
+      <td>The app assigned the string to one of the step's output ports, and the string moved on in the workflow.</td>
+    </tr>
+    <tr>
+      <td><code>FAILED</code></td>
+      <td>Webhook delivery to the app failed. Strings in this status are shown as failed words in the project and are not resent automatically. Read more about <a href="#delivery-guarantees-and-reconciliation">Delivery Guarantees</a>.</td>
+    </tr>
+    <tr>
+      <td><code>INCOMPLETE</code></td>
+      <td>The string was excluded from processing (e.g., hidden).</td>
+    </tr>
+  </tbody>
+</table>
+
 ### Processing Strings and Updating Their Status
 
-1. **App Logic** - The app processes the received strings according to its internal logic (e.g., sending them to an AI service or performing custom validations).
-2. [**Updating String Status via API**](#api-methods) - After processing, the app calls Crowdin Enterprise’s private API to update each string’s status on the custom workflow step. This action routes the strings to the appropriate workflow step outputs.
+1. **Condition of Done** - The app evaluates its condition of done for the received strings according to its internal logic (e.g., sending them to an AI service or performing custom validations).
+2. [**Updating String Status via API**](#api-methods) - After processing, the app calls the Crowdin Enterprise API to update each string's status on the custom workflow step. This action routes the strings to the appropriate workflow step outputs.
 
 #### API Methods
 
 Below are the API methods for managing string statuses on a custom workflow step. The **Update String Status** method is mandatory, as it finalizes string statuses and routes them to the correct workflow outputs. Another available method **Get Current String Status** is optional, but can help manage edge cases or advanced logic in your app.
+
+<Aside type="caution">
+  These endpoints must be called with an access token obtained via the [`crowdin_agent` grant type](#obtaining-an-api-token). Requests authenticated as a regular user or with a token obtained via other grant types are rejected with a `403 Forbidden` error. The agent user must have manager access to the project.
+</Aside>
 
 <details>
   <summary><strong>Update String Status</strong></summary>
@@ -381,10 +677,15 @@ Below are the API methods for managing string statuses on a custom workflow step
         <td><code>languageId</code></td>
         <td>Yes</td>
         <td><code>string</code></td>
-        <td>Target language code.</td>
+        <td>Target language code. Must be one of the step's target languages (see the <code>workflowStep.languages</code> property in the webhook payload).</td>
       </tr>
     </tbody>
   </table>
+
+  The request body is a JSON Patch array. Only the `replace` operation is supported. The `path` has the format `/{stringId}/output`, and `value` must be either one of the output ports declared in the module's `boundaries.outputs` or an empty string:
+
+  * A declared output port (e.g., `translated`) – the string is marked as **Done** on the step and immediately routed to the workflow step connected to that output.
+  * An empty string (`""`) – the string is parked on the step with the **To Do** status. Use this to keep strings pending (e.g., visible as remaining work) until your app finishes processing them.
 
   **Request Body (example)**:
   ```json
@@ -475,6 +776,45 @@ Below are the API methods for managing string statuses on a custom workflow step
     </tbody>
   </table>
 
+  **Query parameters:**
+
+  <table>
+    <thead>
+      <tr>
+        <th>Parameter</th>
+        <th>Required</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>stringIds</code></td>
+        <td>No</td>
+        <td><code>string</code></td>
+        <td>Filter by string identifiers (comma-separated, up to 500 per request).</td>
+      </tr>
+      <tr>
+        <td><code>status</code></td>
+        <td>No</td>
+        <td><code>string</code></td>
+        <td>Filter by status: <code>TODO</code>, <code>DONE</code>, <code>INCOMPLETE</code>, <code>NEED_PROCESS</code>, or <code>FAILED</code>.</td>
+      </tr>
+      <tr>
+        <td><code>limit</code></td>
+        <td>No</td>
+        <td><code>integer</code></td>
+        <td>Maximum number of items to retrieve.</td>
+      </tr>
+      <tr>
+        <td><code>offset</code></td>
+        <td>No</td>
+        <td><code>integer</code></td>
+        <td>Starting offset in the collection.</td>
+      </tr>
+    </tbody>
+  </table>
+
   **Response Example**:
   ```json
   {
@@ -502,17 +842,35 @@ Below are the API methods for managing string statuses on a custom workflow step
   ```
 </details>
 
+### Delivery Guarantees and Reconciliation
+
+Treat the webhook as a notification, not a reliable queue:
+
+* **Batching and delay** – events are delivered in batches and may arrive with a short delay after strings reach the step.
+* **Limited retries** – if the app is unreachable or responds with an error, delivery is retried a limited number of times. After that, the affected strings are marked as **Failed** on the step and are not resent automatically.
+* **Recovery from failures** – strings in the **Failed** status are shown as failed words in the project. A project manager can re-trigger their processing from the workflow step in Crowdin Enterprise, which resets them to **Need Process** and resends the webhook event.
+* **No processing deadline** – strings can wait in the **Need Process** status indefinitely. Crowdin Enterprise does not expire or reassign them, so your app is responsible for eventually processing every string it receives.
+
+Because delivery is not guaranteed, we recommend that your app periodically reconciles its state with Crowdin Enterprise: call the **Get Current String Status** endpoint with the `status=NEED_PROCESS` filter for each active step and language to pick up strings whose webhook events your app may have missed, and process them as usual.
+
 ### Configuring the Workflow Step in the Workflow Editor
 
-Users can configure or delete a custom workflow step in the Crowdin Enterprise workflow editor:
+Users can configure or delete a custom workflow step in the Crowdin Enterprise workflow editor. Crowdin Enterprise notifies your app about these changes via the `updateSettingsUrl` and `deleteSettingsUrl` callbacks. These notifications are your app's source of truth about which of its steps exist and how they are configured, so we recommend persisting the received data.
 
 * **Updating Settings (`updateSettingsUrl`)**
-   - When a user clicks **Save** after changing step settings in the workflow editor, Crowdin Enterprise sends a **POST** request to the `updateSettingsUrl` defined in the manifest.
+   - When a user clicks **Save** after adding or changing the step in the workflow editor, Crowdin Enterprise sends a **POST** request to the `updateSettingsUrl` defined in the app descriptor.
+   - For a step in a project workflow, the request body contains `organizationId`, `projectId`, `workflowId`, `stepId`, and `settings` (the step's condition of done configuration saved by the settings UI).
+   - For a step in a workflow template, the request body contains `organizationId`, `templateId`, `stepId`, and `settings`.
    - The app responds with a **2XX status** to confirm successful handling of the updated configuration.
 
 * **Deleting a Step (`deleteSettingsUrl`)**
    - When a user deletes the step in the workflow editor, Crowdin Enterprise sends a **DELETE** request to the `deleteSettingsUrl`.
+   - For a step in a project workflow, the request body contains `organizationId`, `projectId`, `workflowId`, and `stepId`. For a step in a workflow template, it contains `organizationId`, `templateId`, and `stepId`.
    - The app can safely remove any stored settings related to the deleted workflow step and respond with a **2XX status** to confirm success.
+
+<Aside>
+  Uninstalling the app deactivates all workflow steps based on its modules. Treat the app uninstallation ([Uninstall event](/developer/crowdin-apps-app-descriptor/#uninstall-event-payload)) as the deletion of all related steps and clean up the stored data accordingly.
+</Aside>
 
 ### Implementing the Settings UI in Your App
 
@@ -541,3 +899,103 @@ To save the workflow step's configuration, use the following method:
 window.currentFormData = settings;
 AP.formDataUpdated(settings);
 ```
+
+The saved settings are delivered back to your app via the `updateSettingsUrl` callback when the user saves the workflow.
+
+## Recommended Implementation Flow
+
+<Steps>
+  1. **Register an OAuth app** with the scopes your app needs (at least `project`). Read more about [Creating an OAuth application](/developer/authorizing-oauth-apps/).
+  2. **Prepare the app descriptor**: set `authentication.type` to `crowdin_agent` with your `clientId`, declare the `agent` object, one or more `workflow-step-type` modules, and a `webhook` module subscribed to the `string.status_on_step.recalculation_triggered` event. Declare `updateSettingsUrl` and `deleteSettingsUrl` if your step has per-step configuration, and a `url` settings iframe so managers can edit it.
+  3. **Handle the Installed event**: store the received credentials, including the `agentId`, and obtain an API token via the `crowdin_agent` grant type when needed.
+  4. **Handle the settings callbacks**: persist the data received on `updateSettingsUrl` – it identifies each live step (`projectId`/`templateId`, `workflowId`, `stepId`) together with its settings.
+  5. **Handle the webhook**: acknowledge quickly with a `2xx` response and queue the strings for processing. Remember that payloads arrive batched (`{"events": [...]}`), and verify the `X-Crowdin-Signature` header.
+  6. **Process the strings** by evaluating your condition of done, and report the results with the **Update String Status** endpoint, assigning each string to an output port that reflects your decision, or `""` to keep it parked on the step.
+  7. **Reconcile periodically**: query the **Get Current String Status** endpoint with the `status=NEED_PROCESS` filter to pick up strings whose webhook events your app may have missed.
+  8. **Handle deletions**: drop the stored per-step state on `deleteSettingsUrl` requests, and treat app uninstallation as the deletion of all steps.
+</Steps>
+
+## Limitations
+
+* The module is available in Crowdin Enterprise only and works in projects that use workflows.
+* The app must use the `crowdin_agent` authentication type and declare an `agent` object in the app descriptor.
+* The app must include a Webhook module subscribed to the `string.status_on_step.recalculation_triggered` event. Otherwise, the step cannot receive strings for processing.
+* The module is not available for serverless apps – an app backend (`baseUrl`) is required.
+* A step declares exactly one input group and at most two outputs. Input and output titles are 3–30 characters long. The `initial` port can be used only as an input.
+* The **Update String Status** endpoint supports only the `replace` operation, and the output value must be one of the step's declared output ports or an empty string.
+* The **Get Current String Status** endpoint accepts up to 500 string identifiers per request.
+* Webhook delivery is best-effort: events are batched, may arrive with a delay, and are retried a limited number of times. Implement periodic reconciliation to guarantee all strings get processed.
+* The agent user must be invited as a manager to every project where the step is used. If the access is revoked, workflow validation fails and the app's API calls are rejected.
+
+## Troubleshooting
+
+<table>
+  <thead>
+    <tr>
+      <th>Symptom</th>
+      <th>Cause</th>
+      <th>Solution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Installation fails with <em>Only crowdin_agent authentication type is allowed for workflow-step-type module type</em></td>
+      <td>The app descriptor uses <code>crowdin_app</code> or <code>none</code> authentication, or the <code>authentication</code> object is missing</td>
+      <td>Set <code>authentication.type</code> to <code>crowdin_agent</code>, specify the <code>clientId</code>, and add the <code>agent</code> object</td>
+    </tr>
+    <tr>
+      <td>Installation fails with <em>Serverless apps allow only UI module types</em></td>
+      <td>The app descriptor has no <code>baseUrl</code></td>
+      <td>Add a <code>baseUrl</code> – this module requires an app backend</td>
+    </tr>
+    <tr>
+      <td>Installation fails with <em>Requested scopes exceed the access level specified in the OAuth app</em></td>
+      <td>The scopes in the app descriptor are broader than the scopes of the OAuth app</td>
+      <td>Align the app descriptor scopes with the OAuth app configuration</td>
+    </tr>
+    <tr>
+      <td>The step type doesn't appear in the workflow editor</td>
+      <td>The app is installed in Crowdin instead of Crowdin Enterprise; the current user has no access to the module; or the app has no Webhook module subscribed to the required event</td>
+      <td>Install the app in Crowdin Enterprise, check the module access settings, and add the Webhook module for <code>string.status_on_step.recalculation_triggered</code></td>
+    </tr>
+    <tr>
+      <td>Workflow validation error about manager permissions for the agent</td>
+      <td>The agent user doesn't have manager access to the project</td>
+      <td>Invite the agent user to the project as a manager</td>
+    </tr>
+    <tr>
+      <td><code>403 Forbidden</code> on the string status endpoints</td>
+      <td>The access token was not obtained via the <code>crowdin_agent</code> grant type (e.g., it belongs to a regular user), or the agent is not a manager of the project</td>
+      <td>Obtain the token via the <code>crowdin_agent</code> grant type with the <code>agent_id</code> parameter and verify the agent's project role</td>
+    </tr>
+    <tr>
+      <td><code>404 Not Found</code> on the string status endpoints</td>
+      <td>The <code>languageId</code> is not among the step's target languages, or the step is not an active custom workflow step</td>
+      <td>Use the language codes from the webhook's <code>workflowStep.languages</code> property and verify the step identifier</td>
+    </tr>
+    <tr>
+      <td><code>400 Bad Request</code> when updating the string status</td>
+      <td>The output value is not one of the step's declared output ports</td>
+      <td>Send one of the module's <code>boundaries.outputs[].port</code> values or an empty string</td>
+    </tr>
+    <tr>
+      <td>Strings are stuck as failed words on the step</td>
+      <td>Webhook delivery to the app failed</td>
+      <td>Fix the app availability, then re-trigger the failed strings from the workflow step in Crowdin Enterprise</td>
+    </tr>
+    <tr>
+      <td>The webhook never arrives</td>
+      <td>The webhook module is subscribed to a wrong event, or it belongs to a different app than the step</td>
+      <td>Subscribe the Webhook module of the <strong>same</strong> app to the <code>string.status_on_step.recalculation_triggered</code> event</td>
+    </tr>
+    <tr>
+      <td>The webhook arrives with a delay</td>
+      <td>Events are queued and delivered in batches by design</td>
+      <td>Design your app for asynchronous processing</td>
+    </tr>
+  </tbody>
+</table>
+
+<ReadMore>
+  Read more about [App-based Workflow Steps](/enterprise/app-based-workflow-step/) from the organization management perspective.
+</ReadMore>
