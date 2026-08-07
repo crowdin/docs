@@ -61,10 +61,6 @@ import groupDeleted from '/src/assets/code/webhooks/group.deleted.json?raw';
 
 You can add webhooks to build integrations with the third-party services or with your backend. After you configure a webhook for the project, Crowdin will start sending POST or GET requests with data to the webhook URL via HTTP.
 
-<Aside title="Response timeout">
-  Your endpoint should return a `2XX` response within **30 seconds**. If processing takes longer, handle it asynchronously.
-</Aside>
-
 ## Configuring Webhooks
 
 Webhook integration can be implemented at different levels, including Project, Account, or Organization level.
@@ -91,6 +87,22 @@ Depending on your approach to webhooks management, you might need to add dedicat
 
 <ReadMore>
   Read more about [IP Addresses](/developer/ip-addresses/#webhooks-ai-providers-and-mt-engines).
+</ReadMore>
+
+## Delivery
+
+Crowdin sends each queued event to your endpoint once. A delivery counts as successful when your endpoint responds with a `2XX` status before the request times out. Any other response, a timeout, or a connection error is recorded as a failed call, and Crowdin doesn't send that event again. If the webhook has **Batch webhooks** enabled, Crowdin combines several events into one request with an `events` array, and the response applies to every event in that request.
+
+<Aside title="Response timeout">
+  Your endpoint should return a `2XX` response within **30 seconds**. If processing takes longer, handle it asynchronously.
+</Aside>
+
+Treat every request as the only notification you'll get for an event. Respond first, do the processing afterward, and use the API to catch up on anything your service missed while it was unavailable.
+
+Each request names the event in the `event` field and carries the payload of the object it describes. If your service needs to recognize a request it has already handled, build an idempotency key from these values, for example the event name plus the object ID and its timestamp.
+
+<ReadMore>
+  Read more about Failing Webhooks in [Crowdin](/webhooks/#failing-webhooks) and [Crowdin Enterprise](/enterprise/webhooks/#failing-webhooks).
 </ReadMore>
 
 ## Events
