@@ -36,7 +36,8 @@ These methods allow your app to get essential information about its environment,
 Retrieves a `ContextDataObject` containing key information about the environment where the app is currently running (e.g., project ID, user, and file data).
 
 <Aside>
-  The payload of this method is dynamic. Depending on the page where your app is loaded (e.g., Editor vs. Project Tools), it may contain a different set of properties.
+  - The payload of this method is dynamic. Depending on the page where your app is loaded (e.g., Editor vs. Project Tools), it may contain a different set of properties.
+  - When a value is unavailable, its key is omitted from the context object rather than set to `null`.
 </Aside>
 
 **Example:**
@@ -69,10 +70,14 @@ AP.getContext(function(contextData) {
 
 ##### Response Payload Example
 
-```json collapse={12-21,25-59,62-64}
+```json collapse={16-25,29-63,66-68}
 {
+  "user_id": 15,
+  "user_login": "john.smith",
   "project_id": 123,
+  "project_identifier": "docs-portal",
   "organization_id": 100001,
+  "organization_domain": "acme",
   "editor": {
     "mode": "translate",
     "theme": "dark",
@@ -145,6 +150,20 @@ AP.getContext(function(contextData) {
 <table>
   <tbody>
     <tr>
+      <td><code>user_id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The unique numeric ID of the user the app is currently displayed to. Present only for authenticated users.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>user_login</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The username of the user the app is currently displayed to. Present only for authenticated users.</p>
+      </td>
+    </tr>
+    <tr>
       <td><code>project_id</code></td>
       <td>
         <p><strong>Type:</strong> <code>integer</code></p>
@@ -152,10 +171,24 @@ AP.getContext(function(contextData) {
       </td>
     </tr>
     <tr>
+      <td><code class="whitespace-nowrap">project_identifier</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The identifier of the project the module is opened in. Present when the module runs in a project context and the identifier is available.</p>
+      </td>
+    </tr>
+    <tr>
       <td><code>organization_id</code></td>
       <td>
         <p><strong>Type:</strong> <code>integer</code></p>
         <p><strong>Description:</strong> The unique numeric ID of the organization (Crowdin Enterprise only).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">organization_domain</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The domain of the organization the app is installed in (Crowdin Enterprise only).</p>
       </td>
     </tr>
     <tr>
