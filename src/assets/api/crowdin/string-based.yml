@@ -8953,7 +8953,7 @@ paths:
       tags:
         - Projects
       summary: 'Edit Project Strings Exporter Settings'
-      description: '**Required scopes:** `project.settings` (Read and Write).'
+      description: "**Required scopes:** `project.settings` (Read and Write).\n\nEdit project strings exporter settings\n\n__Note:__ Replacing `/format` requires replacing `/settings` in the same request — settings are format-specific"
       operationId: api.projects.strings-exporter-settings.patch
       parameters:
         -
@@ -14150,7 +14150,7 @@ paths:
         -
           name: sourceLanguageIds
           in: query
-          description: 'Filter by source language IDs. It can be one ID or a list of comma-separated ID values. Cannot be used together with projectIds'
+          description: 'Filter by source language IDs. It can be one ID or a list of comma-separated ID values'
           schema:
             type: string
           example: en
@@ -16365,13 +16365,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                type: object
-                anyOf:
-                  - { $ref: '#/components/schemas/TmSegmentRecordOperationAdd' }
-                  - { $ref: '#/components/schemas/TmSegmentRecordOperationReplace' }
-                  - { $ref: '#/components/schemas/TmSegmentRecordOperationRemove' }
+              $ref: '#/components/schemas/TmSegmentPatch'
       responses:
         '200':
           description: 'TM segment record was successfully updated'
@@ -30508,12 +30502,15 @@ components:
         -
           properties:
             value:
+              description: 'A format name for the `/format` path, or a settings object for the `/settings` path'
               oneOf:
                 -
                   type: string
+                  enum: [android, macosx, xliff]
+                  example: android
                 -
-                  type: array
-                  items: { type: string }
+                  type: object
+                  oneOf: [{ $ref: '#/components/schemas/AndroidSystemStringsExporterSettings.settings' }, { $ref: '#/components/schemas/MacOSXSystemStringsExporterSettings.settings' }, { $ref: '#/components/schemas/XliffSystemStringsExporterSettings.settings' }]
     SystemStringsExporterSettingsOperationTest:
       description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
@@ -30525,12 +30522,15 @@ components:
         -
           properties:
             value:
+              description: 'A format name for the `/format` path, or a settings object for the `/settings` path'
               oneOf:
                 -
                   type: string
+                  enum: [android, macosx, xliff]
+                  example: android
                 -
-                  type: array
-                  items: { type: string }
+                  type: object
+                  oneOf: [{ $ref: '#/components/schemas/AndroidSystemStringsExporterSettings.settings' }, { $ref: '#/components/schemas/MacOSXSystemStringsExporterSettings.settings' }, { $ref: '#/components/schemas/XliffSystemStringsExporterSettings.settings' }]
     ProjectCreateForm:
       title: 'Project Form'
       required:
@@ -31730,20 +31730,26 @@ components:
           example: android
         settings:
           description: 'Defines strings exporter settings'
-          properties:
-            convertPlaceholders:
-              description: 'Convert placeholders to Android format.'
-              type: boolean
-              default: false
-            convertLineBreaks:
-              description: 'Сonvert simple line breaks (Enter) to \n (e.g. New\nLine).'
-              type: boolean
-              default: false
-            useCdataForStringsWithTags:
-              description: 'Encloses strings with HTML tags in CDATA sections (e.g., `<b>Name</b>` > `<![CDATA[<b>Name</b>]]>`). Does not apply to strings with only `<xliff:g>` tags.'
-              type: boolean
-              default: false
           type: object
+          allOf:
+            -
+              $ref: '#/components/schemas/AndroidSystemStringsExporterSettings.settings'
+      type: object
+    AndroidSystemStringsExporterSettings.settings:
+      title: 'Android Strings Exporter Settings'
+      properties:
+        convertPlaceholders:
+          description: 'Convert placeholders to Android format.'
+          type: boolean
+          default: false
+        convertLineBreaks:
+          description: 'Сonvert simple line breaks (Enter) to \n (e.g. New\nLine).'
+          type: boolean
+          default: false
+        useCdataForStringsWithTags:
+          description: 'Encloses strings with HTML tags in CDATA sections (e.g., `<b>Name</b>` > `<![CDATA[<b>Name</b>]]>`). Does not apply to strings with only `<xliff:g>` tags.'
+          type: boolean
+          default: false
       type: object
     MacOSXSystemStringsExporterSettings:
       title: 'MacOSX Strings Exporter Settings'
@@ -31757,16 +31763,22 @@ components:
           example: macosx
         settings:
           description: 'Defines strings exporter settings'
-          properties:
-            convertPlaceholders:
-              description: 'Convert placeholders to MacOSX format.'
-              type: boolean
-              default: false
-            convertLineBreaks:
-              description: 'Сonvert simple line breaks (Enter) to \n (e.g. New\nLine).'
-              type: boolean
-              default: false
           type: object
+          allOf:
+            -
+              $ref: '#/components/schemas/MacOSXSystemStringsExporterSettings.settings'
+      type: object
+    MacOSXSystemStringsExporterSettings.settings:
+      title: 'MacOSX Strings Exporter Settings'
+      properties:
+        convertPlaceholders:
+          description: 'Convert placeholders to MacOSX format.'
+          type: boolean
+          default: false
+        convertLineBreaks:
+          description: 'Сonvert simple line breaks (Enter) to \n (e.g. New\nLine).'
+          type: boolean
+          default: false
       type: object
     XliffSystemStringsExporterSettings:
       title: 'Xliff Strings Exporter Settings'
@@ -31780,18 +31792,24 @@ components:
           example: xliff
         settings:
           description: 'Defines strings exporter settings'
-          properties:
-            languagePairMapping:
-              $ref: '#/components/schemas/LanguagePairMapping'
-            copySourceToEmptyTarget:
-              description: 'Copy source to empty target.'
-              type: boolean
-              default: true
-            exportTranslatorsComment:
-              description: 'Export comments added by translators.'
-              type: boolean
-              default: true
           type: object
+          allOf:
+            -
+              $ref: '#/components/schemas/XliffSystemStringsExporterSettings.settings'
+      type: object
+    XliffSystemStringsExporterSettings.settings:
+      title: 'Xliff Strings Exporter Settings'
+      properties:
+        languagePairMapping:
+          $ref: '#/components/schemas/LanguagePairMapping'
+        copySourceToEmptyTarget:
+          description: 'Copy source to empty target.'
+          type: boolean
+          default: true
+        exportTranslatorsComment:
+          description: 'Export comments added by translators.'
+          type: boolean
+          default: true
       type: object
     CrowdinFileBasedProjectResource:
       title: 'Project Settings'
@@ -33826,15 +33844,17 @@ components:
           items:
             $ref: '#/components/schemas/post-edit-report-settings-template-form.net-rate-schemes.tm-match.net-rate'
         mtMatch:
+          description: 'Must include the `100` match type.'
           type: array
           items:
             $ref: '#/components/schemas/post-edit-report-settings-template-form.net-rate-schemes.mt-match.net-rate'
         aiMatch:
-          description: "\n\n __Note:__ The `aiMatch` field is optional. If this field is not filled in, the schema will be taken from the `mtMatch` field."
+          description: "\n\n __Note:__ The `aiMatch` field is optional. If this field is not filled in, the schema will be taken from the `mtMatch` field. When filled in, it must include the `100` match type."
           type: array
           items:
             $ref: '#/components/schemas/post-edit-report-settings-template-form.net-rate-schemes.ai-match.net-rate'
         suggestionMatch:
+          description: 'Must include the `100` match type.'
           type: array
           items:
             $ref: '#/components/schemas/post-edit-report-settings-template-form.net-rate-schemes.suggestion-match.net-rate'
@@ -34498,10 +34518,9 @@ components:
     costs-estimation-pe.report.net-rate-schemes:
       required:
         - tmMatch
-        - mtMatch
-        - suggestionMatch
       properties:
         tmMatch:
+          description: 'Must include the `perfect` and `100` match types.'
           type: array
           items:
             $ref: '#/components/schemas/costs-estimation-pe.report.net-rate-schemes.tm-match.net-rate'
@@ -34846,15 +34865,17 @@ components:
           items:
             $ref: '#/components/schemas/translation-costs-pe.report.net-rate-schemes.tm-match.net-rate'
         mtMatch:
+          description: 'Must include the `100` match type.'
           type: array
           items:
             $ref: '#/components/schemas/translation-costs-pe.report.net-rate-schemes.mt-match.net-rate'
         aiMatch:
-          description: "\n\n __Note:__ The `aiMatch` field is optional. If this field is not filled in, the schema will be taken from the `mtMatch` field."
+          description: "\n\n __Note:__ The `aiMatch` field is optional. If this field is not filled in, the schema will be taken from the `mtMatch` field. When filled in, it must include the `100` match type."
           type: array
           items:
             $ref: '#/components/schemas/translation-costs-pe.report.net-rate-schemes.ai-match.net-rate'
         suggestionMatch:
+          description: 'Must include the `100` match type.'
           type: array
           items:
             $ref: '#/components/schemas/translation-costs-pe.report.net-rate-schemes.suggestion-match.net-rate'
@@ -35729,7 +35750,39 @@ components:
           type: object
           allOf:
             -
-              $ref: '#/components/schemas/hourly-report-settings-template-form.config'
+              $ref: '#/components/schemas/user-hourly-report-settings-template-form.config'
+      type: object
+    user-hourly-report-settings-template-form.config:
+      required:
+        - baseRates
+        - individualRates
+      properties:
+        baseRates:
+          description: 'Base rates'
+          type: object
+          allOf:
+            -
+              $ref: '#/components/schemas/hourly-report-settings-template-form.base-rates'
+        individualRates:
+          description: 'Individual rates (Custom rates for certain languages)'
+          type: array
+          items:
+            $ref: '#/components/schemas/user-hourly-report-settings-template-form.individual-rate'
+      type: object
+    user-hourly-report-settings-template-form.individual-rate:
+      required:
+        - languageIds
+        - hourly
+      properties:
+        languageIds:
+          description: 'Array of language ids'
+          type: array
+          items:
+            type: string
+            example: uk
+        hourly:
+          type: number
+          example: 0.1
       type: object
     UserPEReportSettingsTemplateCreateForm:
       title: 'User Report settings template for post-editing'
@@ -35801,7 +35854,7 @@ components:
             -
               $ref: '#/components/schemas/post-edit-report-settings-template-form.base-rates'
         individualRates:
-          description: 'Individual rates (Custom rates for certain languages or users)'
+          description: 'Individual rates (Custom rates for certain languages)'
           type: array
           items:
             $ref: '#/components/schemas/user-post-edit-report-settings-template-form.individual-rate'
@@ -39011,6 +39064,8 @@ components:
       type: object
       allOf:
         -
+          $ref: '#/components/schemas/TranslationProviderInfo'
+        -
           $ref: '#/components/schemas/LanguageTranslation'
         -
           properties:
@@ -39028,6 +39083,49 @@ components:
                 - failed
                 - passed
               example: passed
+    TranslationProviderInfo:
+      properties:
+        provider:
+          description: 'Translation Provider. `null` when the translation was added manually'
+          type: string
+          enum:
+            - tm
+            - google
+            - microsoft
+            - crowdin
+            - deepl
+            - amazon
+            - watson
+            - global_tm
+            - google_automl
+            - modernmt
+            - custom_mt
+            - ai
+          nullable: true
+        providerId:
+          description: 'Provider specific identifier: a TM for `tm`, an AI Prompt for `ai`, an MT engine for machine translation providers. `null` when the translation was added manually or without a specific provider entity'
+          type: integer
+          example: 17
+          nullable: true
+        isPreTranslated:
+          description: 'If `true`, the translation was added by Auto-Translation'
+          type: boolean
+          example: true
+        matchRate:
+          description: 'Translation Memory match rate in percent (40–100) recorded when the translation was added — set for manually added translations too. `null` when no TM match was available'
+          type: integer
+          example: 75
+          nullable: true
+        matchType:
+          description: 'Translation Memory match type. One of: `perfect` (text and context match), `exact` (text match only), `fuzzy` (partial match). `null` when no TM match was available'
+          type: string
+          enum:
+            - perfect
+            - exact
+            - fuzzy
+          example: fuzzy
+          nullable: true
+      type: object
     LanguageTranslation:
       properties:
         stringId:
@@ -39061,6 +39159,8 @@ components:
       type: object
       allOf:
         -
+          $ref: '#/components/schemas/TranslationProviderInfo'
+        -
           $ref: '#/components/schemas/LanguageTranslation'
         -
           properties:
@@ -39079,44 +39179,48 @@ components:
                 - passed
               example: passed
     PluralSuggestionOfLanguageTranslation:
-      properties:
-        translationId:
-          type: integer
-          example: 732
-        text:
-          type: string
-          example: String
-        pluralForm:
-          type: string
-          enum:
-            - zero
-            - one
-            - two
-            - few
-            - many
-            - other
-          example: one
-        user:
-          description: User
-          properties:
-            id:
-              type: integer
-              example: 19
-            username:
-              type: string
-              example: john_doe
-            fullName:
-              type: string
-              example: 'John Smith'
-            avatarUrl:
-              type: string
-              example: ''
-          type: object
-        createdAt:
-          type: string
-          format: date-time
-          example: '2019-09-23T11:26:54+00:00'
       type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/TranslationProviderInfo'
+        -
+          properties:
+            translationId:
+              type: integer
+              example: 732
+            text:
+              type: string
+              example: String
+            pluralForm:
+              type: string
+              enum:
+                - zero
+                - one
+                - two
+                - few
+                - many
+                - other
+              example: one
+            user:
+              description: User
+              properties:
+                id:
+                  type: integer
+                  example: 19
+                username:
+                  type: string
+                  example: john_doe
+                fullName:
+                  type: string
+                  example: 'John Smith'
+                avatarUrl:
+                  type: string
+                  example: ''
+              type: object
+            createdAt:
+              type: string
+              format: date-time
+              example: '2019-09-23T11:26:54+00:00'
     PluralLanguageTranslation:
       properties:
         stringId:
@@ -39160,6 +39264,8 @@ components:
         -
           $ref: '#/components/schemas/BaseTranslation'
         -
+          $ref: '#/components/schemas/TranslationProviderInfo'
+        -
           $ref: '#/components/schemas/BaseTranslation'
         -
           properties:
@@ -39171,24 +39277,6 @@ components:
               description: 'plural category name'
               type: string
               example: few
-            provider:
-              description: 'Translation Provider'
-              type: string
-              enum:
-                - tm
-                - global_tm
-                - google
-                - google_automl
-                - microsoft
-                - deepl
-                - amazon
-                - modernmt
-                - crowdin
-                - custom_mt
-              nullable: true
-            isPreTranslated:
-              type: boolean
-              example: true
     Alignment:
       title: Alignment
       properties:
@@ -40284,8 +40372,9 @@ components:
           description: 'Task description'
           type: string
         vendor:
-          description: 'Vendor identifier. Required when `type` is `3`. Browse available vendors at [Crowdin Store](https://crowdin.com/store/vendors).'
+          description: 'Vendor identifier. Required when `type` is `3`. Built-in vendors: `crowdin_language_service`, `oht`, `gengo`, `undertow`. For any other vendor, use its identifier from [Crowdin Store](https://crowdin.com/store/vendors).'
           type: string
+          example: crowdin_language_service
           nullable: true
         assignees:
           type: array
@@ -40338,8 +40427,9 @@ components:
             - 2
             - 3
         vendor:
-          description: "Vendor identifier. Browse available vendors at [Crowdin Store](https://crowdin.com/store/vendors).\n\n__Note:__ Additional vendor-specific settings (e.g. expertise, tone, quality) are configured per vendor in the store."
+          description: "Vendor identifier. Built-in vendors: `crowdin_language_service`, `oht`, `gengo`, `undertow`. For any other vendor, use its identifier from [Crowdin Store](https://crowdin.com/store/vendors).\n\n__Note:__ Additional vendor-specific settings (e.g. expertise, tone, quality) are configured per vendor in the store."
           type: string
+          example: crowdin_language_service
         labelIds:
           description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
           type: array
@@ -40459,8 +40549,9 @@ components:
             - 2
             - 3
         vendor:
-          description: "Vendor identifier. Browse available vendors at [Crowdin Store](https://crowdin.com/store/vendors).\n\n__Note:__ Additional vendor-specific settings (e.g. expertise, tone, quality) are configured per vendor in the store."
+          description: "Vendor identifier. Built-in vendors: `crowdin_language_service`, `oht`, `gengo`, `undertow`. For any other vendor, use its identifier from [Crowdin Store](https://crowdin.com/store/vendors).\n\n__Note:__ Additional vendor-specific settings (e.g. expertise, tone, quality) are configured per vendor in the store."
           type: string
+          example: crowdin_language_service
         labelIds:
           description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
           type: array
@@ -40568,62 +40659,33 @@ components:
           minimum: 1
           example: 25
         status:
-          description: 'Filter by task status'
-          type: array
-          items:
-            type: string
-          example:
-            - todo
-            - in_progress
+          description: 'Filter by task status. It can be one status or a list of comma-separated status values'
+          type: string
+          example: 'todo,in_progress'
         type:
-          description: 'Filter by task type'
-          type: array
-          items:
-            type: integer
-          example:
-            - 1
-            - 2
+          description: 'Filter by task type. It can be one type or a list of comma-separated type values'
+          type: string
+          example: '1,2'
         projectIds:
-          description: 'Filter by project IDs. Cannot be used together with groupIds'
-          type: array
-          items:
-            type: integer
-          example:
-            - 1
-            - 2
-            - 3
+          description: 'Filter by project IDs. It can be one ID or a list of comma-separated ID values. Cannot be used together with groupIds'
+          type: string
+          example: '1,2,3'
         assigneeIds:
-          description: 'Filter by assignee user IDs'
-          type: array
-          items:
-            type: integer
-          example:
-            - 10
-            - 20
+          description: 'Filter by assignee user IDs. It can be one ID or a list of comma-separated ID values'
+          type: string
+          example: '10,20'
         creatorIds:
-          description: 'Filter by creator user IDs'
-          type: array
-          items:
-            type: integer
-          example:
-            - 5
-            - 15
+          description: 'Filter by creator user IDs. It can be one ID or a list of comma-separated ID values'
+          type: string
+          example: '5,15'
         targetLanguageIds:
-          description: 'Filter by target language IDs'
-          type: array
-          items:
-            type: string
-          example:
-            - uk
-            - fr
-            - de
+          description: 'Filter by target language IDs. It can be one ID or a list of comma-separated ID values'
+          type: string
+          example: 'uk,fr,de'
         sourceLanguageIds:
-          description: 'Filter by source language IDs'
-          type: array
-          items:
-            type: string
-          example:
-            - en
+          description: 'Filter by source language IDs. It can be one ID or a list of comma-separated ID values'
+          type: string
+          example: en
         createdAtFrom:
           description: 'Filter tasks created from this date (ISO 8601)'
           type: string
@@ -40653,13 +40715,9 @@ components:
         -
           properties:
             groupIds:
-              description: 'Filter by group IDs. Cannot be used together with projectIds. Enterprise only'
-              type: array
-              items:
-                type: integer
-              example:
-                - 10
-                - 20
+              description: 'Filter by group IDs. It can be one ID or a list of comma-separated ID values. Cannot be used together with projectIds. Enterprise only'
+              type: string
+              example: '10,20'
           type: object
     TaskSettingsTemplateCreateForm:
       title: 'Task settings template'
@@ -41800,64 +41858,98 @@ components:
           type: string
           example: 'Testo tradotto'
       type: object
-    TmSegmentRecordOperationAdd:
-      description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+    TmSegmentPatch:
+      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      type: array
+      items:
+        $ref: '#/components/schemas/TmSegmentOperation'
+    TmSegmentOperation:
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
       properties:
         op:
           description: 'Patch operation to perform'
           type: string
           enum:
             - add
-        path:
-          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
-          type: string
-          format: json-pointer
-          enum:
-            - /records/-
-        value:
-          properties:
-            text:
-              type: string
-              example: 'Перекладений текст'
-            languageId:
-              description: 'Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany)'
-              type: string
-              example: uk
-          type: object
-      type: object
-    TmSegmentRecordOperationReplace:
-      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
-      properties:
-        op:
-          description: 'Patch operation to perform'
-          type: string
-          enum:
             - replace
-        path:
-          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
-          type: string
-          format: json-pointer
-          enum:
-            - '/records/{recordId}/text'
-        value:
-          type: string
-          example: 'Перекладений текст'
-      type: object
-    TmSegmentRecordOperationRemove:
-      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
-      properties:
-        op:
-          description: 'Patch operation to perform'
-          type: string
-          enum:
             - remove
         path:
           description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
           type: string
           format: json-pointer
           enum:
+            - /records/-
+            - '/records/{recordId}/text'
             - '/records/{recordId}'
       type: object
+      discriminator:
+        propertyName: op
+        mapping:
+          add: '#/components/schemas/TmSegmentRecordOperationAdd'
+          replace: '#/components/schemas/TmSegmentRecordOperationReplace'
+          remove: '#/components/schemas/TmSegmentRecordOperationRemove'
+    TmSegmentRecordOperationAdd:
+      description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.1). Adds a record with a translation in a language the segment does not have yet'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/TmSegmentOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - /records/-
+            value:
+              properties:
+                text:
+                  type: string
+                  example: 'Перекладений текст'
+                languageId:
+                  description: 'Language Identifier. Get via [List Supported Languages](#operation/api.languages.getMany)'
+                  type: string
+                  example: uk
+              type: object
+    TmSegmentRecordOperationReplace:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3). Updates the text of an existing record'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/TmSegmentOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - '/records/{recordId}/text'
+            value:
+              type: string
+              example: 'Перекладений текст'
+    TmSegmentRecordOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.2). Deletes a record from the segment. The segment itself is deleted with its last record'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/TmSegmentOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - '/records/{recordId}'
     TmSegmentRecordPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
