@@ -91,6 +91,9 @@ export default [
         ...sidebarLabel('overview'),
       },
       {
+        slug: path('crowdin-skills')
+      },
+      {
         slug: path('configuration-file')
       },
       {
