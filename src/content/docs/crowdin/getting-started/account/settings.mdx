@@ -23,7 +23,6 @@ import twoFactorAuthenticationRecoveryCodes from '!/crowdin/getting-started/acco
 import sessions from '!/crowdin/getting-started/account/account_settings_sessions.png';
 import tokens from '!/crowdin/getting-started/account/account_settings_tokens.png';
 import sudoModeConfirmingCredentials from '!/crowdin/getting-started/account/sudo_mode_confirming_credentials.png';
-import oauthAppsNewApp from '!/crowdin/getting-started/account/oauth_apps_new_app.png';
 import ratesSettings from '!/crowdin/getting-started/account/account_settings_rates.png';
 
 Manage your Crowdin account settings, including profile details, notification preferences, security settings, and more using the **Account Settings** page. To access it, click on your profile picture in the upper-right corner and select **Settings**.
@@ -426,12 +425,13 @@ To add a new application, follow these steps:
 
 <Steps>
   1. In the upper-right corner, click on your profile picture and select **Settings**.
-  1. Switch to the **OAuth** tab and click **New Application**.
-  1. In the appeared dialog, specify the following information:
-     * **Name** and **Description** &ndash; (optional) will be displayed to users when they authorize the app to access their Crowdin accounts.
-     * **Authorization callback URLs** &ndash; the URLs to which users will be sent after they authorize with Crowdin. You can add multiple URLs separated by commas (no need to use quotes).
+  2. Switch to the **OAuth** tab and click **New Application**.
+  3. In the dialog that opens, specify the following information:
+     * **Name** and **Description**: (Optional) Will be displayed to users when they authorize the app to access their Crowdin accounts.
+     * **Authorization callback URLs**: The URLs to which users will be sent after they authorize with Crowdin. You can add multiple URLs separated by commas (no need to use quotes).
+     * **Confidential**: Selected by default. Keep it selected when a trusted backend can store the client secret. Clear it for single-page (SPA), mobile, and CLI apps, which authorize with PKCE and have no client secret.
      * Select the access your app needs from the list of available [Scopes](/developer/understanding-scopes/).
-  1. Click **Create**. <Image src={oauthAppsNewApp} alt="Create OAuth App" class="width-md crowdin-modal" />
+  4. Click **Create**.
 </Steps>
 
 <Aside>
@@ -440,7 +440,7 @@ To add a new application, follow these steps:
 
 ### Modifying an OAuth App
 
-After you create an OAuth application, you can make changes to it. Go to your account's **Settings > OAuth Applications** to see the list of OAuth apps created under your account, the dates the apps were created, and how many users are using each app.
+After you create an OAuth application, you can make changes to it. Go to your account's **Settings > OAuth** to see the list of OAuth apps created under your account, the dates the apps were created, and how many users are using each app.
 
 To find a specific application, type its name or Client ID in the search field at the top of the list.
 
@@ -448,10 +448,14 @@ Click <Icon name="mdi:dots-horizontal" class="inline-icon" /> in the *Actions* c
 
 Using the available options, you can do the following:
 
-* **Edit** &ndash; update the application name, description, URLs, and scopes. Access Client ID and Client Secret of the created application.
-* **Reset secret** &ndash; Reset the Client Secret for the app.
-* **Revoke tokens** &ndash; Revoke all user tokens.
-* **Delete** &ndash; Delete the application.
+* **Edit**: Update the application name, description, URLs, scopes, and client type. Access Client ID and Client Secret of the created application.
+* **Reset secret**: Generate a new Client Secret for the app.
+* **Revoke tokens**: Revoke all user tokens.
+* **Delete**: Delete the application.
+
+Switching an application between confidential and public changes how it authorizes, so Crowdin asks you to confirm. Making an application public permanently deletes its client secret and switches it to PKCE. Making it confidential generates a new client secret. In both cases, all active tokens are revoked, so users must authorize the application again.
+
+OAuth applications used by a Crowdin App authorize with a client secret, so their client type stays confidential.
 
 ### Managing Connected OAuth Applications
 

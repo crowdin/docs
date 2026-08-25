@@ -13,6 +13,8 @@ You can enable organization members to authorize your OAuth app.
 
 When you build an OAuth app, implement the web application flow described below to obtain an authorization code and then exchange it for a token.
 
+You choose the application type when you register it. A confidential application authorizes with a client secret, which suits apps with a trusted backend that can keep the secret private. A public application authorizes with PKCE and has no client secret, which suits single-page (SPA), mobile, and CLI apps.
+
 ## Request Authorization Code
 
 You should redirect the user to the `/oauth/authorize` endpoint with the following GET parameters:
@@ -24,7 +26,7 @@ https://accounts.crowdin.com/oauth/authorize
 This will ask the user to approve the app access to their account based on the scopes specified in `REQUESTED_SCOPES` and then redirect back to the `REDIRECT_URI` you provided when creating an app.
 
 <Aside type="tip">
-  For enhanced security, we strongly recommend using the Proof Key for Code Exchange (PKCE) extension for a more secure token exchange.
+  Public applications must use the Proof Key for Code Exchange (PKCE) extension, and confidential applications should use it too.
 </Aside>
 
 ### Parameters {#request-authorization-code-parameters}
@@ -66,12 +68,12 @@ This will ask the user to approve the app access to their account based on the s
   <tr>
     <td><code>code_challenge</code></td>
     <td>string</td>
-    <td><strong>Strongly recommended.</strong> A Base64-URL-encoded SHA-256 hash of the <code>code_verifier</code>. Used to secure the authorization flow with PKCE. Required if <code>code_challenge_method</code> is provided. Read more about [PKCE RFC](https://datatracker.ietf.org/doc/html/rfc7636).</td>
+    <td><strong>Required for public applications</strong>, strongly recommended for confidential ones. A Base64-URL-encoded SHA-256 hash of the <code>code_verifier</code>. Used to secure the authorization flow with PKCE. A public application that omits it receives an <code>invalid_request</code> error instead of an authorization code. Read more about [PKCE RFC](https://datatracker.ietf.org/doc/html/rfc7636).</td>
   </tr>
-    <tr>
+  <tr>
     <td><code class="whitespace-nowrap">code_challenge_method</code></td>
     <td>string</td>
-    <td><strong>Strongly recommended.</strong> The method used to derive the <code>code_challenge</code>. Crowdin supports <code>S256</code> and <code>plain</code>. Required if <code>code_challenge</code> is provided.</td>
+    <td><strong>Strongly recommended.</strong> The method used to derive the <code>code_challenge</code>. Crowdin supports <code>S256</code> and <code>plain</code>. Send <code>S256</code>. When this parameter is omitted, the method defaults to <code>plain</code>, which transmits the verifier unhashed.</td>
   </tr>
   </tbody>
 </table>
@@ -94,7 +96,7 @@ If authorization has been declined, users are redirected to your website with an
 https://impact-mobile.com/auth/crowdin/?error=access_denied&state=d131dd02c5e6eec4
 ```
 
-## Users Are Redirected Back to Your Site by Crowdin
+## Exchange the Code for an Access Token
 
 If a user authorizes the app, Crowdin redirects back to your site and you can exchange the code received for an access token:
 
@@ -126,22 +128,22 @@ POST https://accounts.crowdin.com/oauth/token
   <tr>
     <td><code>client_secret</code></td>
     <td>string</td>
-    <td><strong>Required.</strong> You receive Client Secret for the app when you register it. This parameter is not required if you're using PKCE (i.e., providing a <code>code_verifier</code>).</td>
+    <td><strong>Required for confidential applications.</strong> You receive Client Secret for the app when you register it. Sending a <code>code_verifier</code> does not replace it. Public applications have no client secret and omit this parameter.</td>
   </tr>
   <tr>
     <td><code>redirect_uri</code></td>
     <td>string</td>
-    <td><strong>Required.</strong> The URL in your application where users will be sent after authorization. </td>
+    <td><strong>Required.</strong> The URL in your application where users will be sent after authorization.</td>
   </tr>
   <tr>
     <td><code>code</code></td>
     <td>string</td>
-    <td><strong>Required.</strong> Code received from the callback query string. </td>
+    <td><strong>Required.</strong> Code received from the callback query string.</td>
   </tr>
   <tr>
     <td><code>code_verifier</code></td>
     <td>string</td>
-    <td><strong>Strongly recommended.</strong> The original random string used to generate the <code>code_challenge</code>. Required if a <code>code_challenge</code> was sent in the initial authorization request.</td>
+    <td><strong>Required if the authorization request included a <code>code_challenge</code>.</strong> The original random string used to generate the <code>code_challenge</code>. Both confidential and public applications send it.</td>
   </tr>
   </tbody>
 </table>
@@ -232,7 +234,7 @@ POST https://accounts.crowdin.com/oauth/token
   <tr>
     <td><code>client_secret</code></td>
     <td>string</td>
-    <td><strong>Required.</strong> You receive Client Secret for the app when you register it.</td>
+    <td><strong>Required for confidential applications.</strong> You receive Client Secret for the app when you register it. Public applications omit this parameter.</td>
   </tr>
   <tr>
     <td><code>refresh_token</code></td>
