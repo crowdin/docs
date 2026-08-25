@@ -38,6 +38,7 @@ Retrieves a `ContextDataObject` containing key information about the environment
 <Aside>
   - The payload of this method is dynamic. Depending on the page where your app is loaded (e.g., Editor vs. Project Tools), it may contain a different set of properties.
   - When a value is unavailable, its key is omitted from the context object rather than set to `null`.
+  - The `user`, `project`, and `permissions` details are not part of the JWT token returned by <a href="#get-jwt-token">AP.getJwtToken</a>, so they are available to the app in the browser only.
 </Aside>
 
 **Example:**
@@ -70,7 +71,7 @@ AP.getContext(function(contextData) {
 
 ##### Response Payload Example
 
-```json collapse={16-25,29-63,66-68}
+```json collapse={36-97}
 {
   "user_id": 15,
   "user_login": "john.smith",
@@ -78,6 +79,33 @@ AP.getContext(function(contextData) {
   "project_identifier": "docs-portal",
   "organization_id": 100001,
   "organization_domain": "acme",
+  "user": {
+    "id": 15,
+    "username": "john.smith",
+    "fullname": "John Smith",
+    "isAdmin": false
+  },
+  "project": {
+    "id": 123,
+    "name": "Docs Portal",
+    "identifier": "docs-portal",
+    "type": "file-based",
+    "sourceLanguage": "en",
+    "targetLanguages": ["fr", "uk"],
+    "description": "Public documentation portal"
+  },
+  "permissions": [
+    {
+      "name": "translator",
+      "allLanguages": false,
+      "languages": ["fr"]
+    },
+    {
+      "name": "proofreader",
+      "allLanguages": true,
+      "languages": []
+    }
+  ],
   "editor": {
     "mode": "translate",
     "theme": "dark",
@@ -189,6 +217,134 @@ AP.getContext(function(contextData) {
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Description:</strong> The domain of the organization the app is installed in (Crowdin Enterprise only).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>user</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> An object containing details of the user the app is displayed to.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>user.id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The unique numeric ID of the user.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>user.username</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The username of the user.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>user.fullname</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The full name of the user.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>user.isAdmin</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Description:</strong> Crowdin Enterprise only. Whether the user has organization administrator
+          access.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>project</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> An object containing details of the project the app is running in. Present when
+          the app runs in a project context.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>project.id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The unique numeric ID of the project.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>project.name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The display name of the project.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">project.identifier</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The identifier of the project.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>project.type</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>file-based</code>, <code>string-based</code></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">project.sourceLanguage</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code> | <code>null</code></p>
+        <p><strong>Description:</strong> The language code of the project source language.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">project.targetLanguages</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Description:</strong> The language codes of the project target languages.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">project.description</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The project description.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>permissions</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Description:</strong> The roles the user holds in the current project. Only the highest-level access
+          is listed, so a user with the <code>admin</code>, <code>owner</code>, <code>manager</code>, or
+          <code>developer</code> role has no <code>translator</code>, <code>proofreader</code>, or
+          <code>language_coordinator</code> entry. Present when the app runs in a project context, and empty for a user
+          with no role in the project.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">permissions[].name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>admin</code> (Crowdin Enterprise only), <code>owner</code>,
+          <code>manager</code>, <code>developer</code>, <code>language_coordinator</code>, <code>translator</code>,
+          <code>proofreader</code></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">permissions[].allLanguages</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Description:</strong> Whether the role covers every target language of the project.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">permissions[].languages</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Description:</strong> The language codes the role is limited to. Empty when
+          <code>allLanguages</code> is <code>true</code>.</p>
       </td>
     </tr>
     <tr>
@@ -342,6 +498,214 @@ AP.getContext(function(contextData) {
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Description:</strong> The type of the workflow step (e.g., <code>"Translate"</code>,
           <code>"Proofread"</code>).</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.getPageState(callback) {#get-page-state}
+
+Retrieves a `PageStateObject` with a snapshot of the current Editor state: everything `AP.getContext()` returns, plus the current string, the string list, translations, filters, and file selection. Use it when your app needs several pieces of state at once, instead of chaining separate `AP.editor.get*` calls.
+
+<Aside>
+  This method is available in the Editor only. The callback runs once the string list has finished loading.
+</Aside>
+
+**Example:**
+
+```js
+AP.getPageState(function(pageState) {
+  if (pageState) {
+    console.log("Current string:", pageState.currentString);
+    console.log("Current page:", pageState.page);
+  }
+});
+```
+
+##### Parameters
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> A callback function that handles the response. It receives one argument: the <code>PageStateObject</code> or <code>null</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Response Payload Example
+
+Objects and arrays below are shortened. See the methods linked in the table for the full structure of
+each one.
+
+```json
+{
+  // Every field returned by AP.getContext(), plus the fields below
+  "currentString": {
+    "id": 1568759,
+    "text": "Welcome!",
+    "context": "Main screen"
+  },
+  "stringsList": [
+    {
+      "id": 1568759,
+      "text": "Welcome!"
+    }
+  ],
+  "selectedStrings": null,
+  "translations": [],
+  "topTranslation": null,
+  "filter": 3,
+  "customFilter": {
+    "translations": "untranslated",
+    "croql_expression": ""
+  },
+  "croqlFilter": "",
+  "filtersList": [
+    {
+      "name": "Show All",
+      "value": 3
+    }
+  ],
+  "page": 1,
+  "workflowStepStatusFilter": null,
+  "selectedFiles": [],
+  "isMultipleFilesSelected": false,
+  "unsavedSourceStrings": null
+}
+```
+
+##### Response Object Structure
+
+<p>The snapshot repeats every field of the <code><a href="#get-context">AP.getContext</a></code> response and adds the
+  fields below.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>currentString</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code> | <code>null</code></p>
+        <p><strong>Description:</strong> The currently active source string. See <code><a
+              href="#get-string">AP.editor.getString</a></code> for the object structure. <code>null</code> in
+          asset-based projects.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>stringsList</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code> | <code>null</code></p>
+        <p><strong>Description:</strong> The strings currently visible in the string list. See <code><a
+              href="#get-strings-list">AP.editor.getStringsList</a></code> for the object structure. <code>null</code>
+          in asset-based projects.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">selectedStrings</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code> | <code>null</code></p>
+        <p><strong>Description:</strong> The strings currently selected in the Editor list. See <code><a
+              href="#get-selected-strings">AP.editor.getSelectedStrings</a></code> for the object structure.
+          <code>null</code> when no strings are selected, and in <code>translate</code> mode, which has no multiple
+          selection.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>translations</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code> | <code>null</code></p>
+        <p><strong>Description:</strong> The translations and suggestions for the current string. See <code><a
+              href="#get-translations">AP.editor.getTranslations</a></code> for the object structure. <code>null</code>
+          in asset-based projects.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>topTranslation</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code> | <code>null</code></p>
+        <p><strong>Description:</strong> The top translation of the current string. See <code><a
+              href="#get-top-translation">AP.editor.getTopTranslation</a></code> for the object structure.
+          <code>null</code> in asset-based projects and when the string has no translations yet.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>filter</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The numeric ID of the active basic filter. See <code><a
+              href="#get-filter">AP.editor.getFilter</a></code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>customFilter</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> The current state of the Advanced Filter. See <code><a
+              href="#get-custom-filter">AP.editor.getCustomFilter</a></code> for the object structure.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>croqlFilter</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The active CroQL filter query, or an empty string when no filter is set. See
+          <code><a href="#get-croql-filter">AP.editor.getCroqlFilter</a></code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>filtersList</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Description:</strong> The available basic filters, with their names and numeric IDs. See <code><a
+              href="#get-filters-list">AP.editor.getFiltersList</a></code> for the object structure.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>page</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The current page number of the string list. See <code><a
+              href="#get-page">AP.editor.getPage</a></code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">workflowStepStatusFilter</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code> | <code>null</code></p>
+        <p><strong>Description:</strong> Crowdin Enterprise only. The active filter for workflow step status at the
+          current workflow step, or <code>ALL</code> when no status is selected. See <code><a
+              href="#get-workflow-step-status-filter">AP.editor.getWorkflowStepStatusFilter</a></code> for the allowed
+          values.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>selectedFiles</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code> | <code>null</code></p>
+        <p><strong>Description:</strong> The files selected in the file tree. See <code><a
+              href="#get-selected-files">AP.editor.getSelectedFiles</a></code> for the object structure.
+          <code>null</code> when the Editor has no file tree.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">isMultipleFilesSelected</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Description:</strong> Whether more than one file is selected in the file tree. See <code><a
+              href="#is-multiple-files-selected">AP.editor.isMultipleFilesSelected</a></code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">unsavedSourceStrings</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code> | <code>null</code></p>
+        <p><strong>Description:</strong> The source strings that have unsaved changes. See <code><a
+              href="#get-unsaved-source-strings">AP.editor.getUnsavedSourceStrings</a></code> for the object structure.
+          <code>null</code> outside <code>multilingual</code> mode.</p>
       </td>
     </tr>
   </tbody>
@@ -1185,7 +1549,7 @@ These methods allow your app to get information from and perform actions in the 
 
 ### Data Retrieval (Strings and Files)
 
-This group of methods allows your app to read information about the strings and files currently being viewed in the Editor, as well as change the file selection.
+This group of methods allows your app to read information about the strings and files currently being viewed in the Editor, as well as change the file selection. To read several pieces of the Editor state in one call, use [AP.getPageState](#get-page-state).
 
 #### AP.editor.getString(callback) {#get-string}
 
@@ -3251,7 +3615,11 @@ This method returns a plain **`string`**.
 ##### Response Object Structure
 
 <p><strong>Type:</strong> <code>string</code></p>
-<p><strong>Allowed values:</strong> <code>ALL</code>, <code>ToDo</code>, <code>Pending</code>, <code>Done</code></p>
+<p><strong>Allowed values:</strong> <code>ALL</code>, <code>TODO</code>, <code>PENDING</code>,
+  <code>INCOMPLETE</code>, <code>DONE</code></p>
+<p><code>PENDING</code> applies to <code>review</code> mode, and <code>INCOMPLETE</code> to
+  <code>translate</code>, <code>proofread</code>, and <code>multilingual</code> modes. The Editor shows both as
+  <strong>Pending</strong> in the <strong>Workflow step status</strong> menu.</p>
 
 #### AP.editor.setWorkflowStep(stepId) {#set-workflow-step}
 
@@ -3301,7 +3669,11 @@ AP.editor.setWorkflowStepStatusFilter('DONE');
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Required:</strong> Yes</p>
         <p><strong>Description:</strong> The status to filter by.</p>
-        <p><strong>Allowed values:</strong> <code>ALL</code>, <code>TODO</code>, <code>PENDING</code>, <code>DONE</code></p>
+        <p><strong>Allowed values:</strong> <code>ALL</code>, <code>TODO</code>, <code>PENDING</code>,
+          <code>INCOMPLETE</code>, <code>DONE</code></p>
+        <p><code>PENDING</code> applies to <code>review</code> mode, and <code>INCOMPLETE</code> to
+          <code>translate</code>, <code>proofread</code>, and <code>multilingual</code> modes. The Editor shows both as
+          <strong>Pending</strong> in the <strong>Workflow step status</strong> menu.</p>
       </td>
     </tr>
   </tbody>
@@ -3989,7 +4361,7 @@ AP.project.getTabsConfiguration(function(config) {
 
 This method returns an **`array`** of objects.
 
-```json collapse={10-50}
+```json collapse={10-49}
 [
   {
     "identifier": "home",
@@ -4709,6 +5081,29 @@ Use these event names with the `AP.events.on()` method to listen for actions hap
       <td>
         <p>Fires when a suggestion asset file is selected in the Editor (for asset-based projects).</p>
         <p><strong>Payload:</strong> An object containing <code>editor</code> context and <code>suggestion</code> data.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>pageState.changed</code></td>
+      <td>
+        <p>Fires when any part of the Editor page state changes. Changes that happen within 200 ms are reported as a
+          single event.</p>
+        <p><strong>Payload:</strong> The full <code>PageStateObject</code>, plus a <code>changed</code> array naming the
+          fields that triggered the event. See <code><a href="#get-page-state">AP.getPageState</a></code> for the object
+          structure. Treat <code>changed</code> as a hint about what to re-read: the payload always carries the latest
+          state.</p>
+        <div>
+          ```json
+          {
+            "changed": ["currentString", "translations", "topTranslation"],
+            "currentString": {
+              "id": 1568759,
+              "text": "Welcome!"
+            },
+            "page": 1
+          }
+          ```
+        </div>
       </td>
     </tr>
   </tbody>
