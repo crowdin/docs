@@ -183,6 +183,8 @@ You can use badges in the documentation in a several ways:
 - Sidebar item by specifying the `sidebar.badge` in the [document frontmatter](https://starlight.astro.build/reference/frontmatter/#sidebar).
 - Add a badge to the heading in the markdown file: `### Example :badge[New]`. [More examples](https://starlight-heading-badges.vercel.app/usage/).
 
+`New` badges added to articles or sections should stay there for three months. After that, remove them so they don't outshine the features that are actually new.
+
 ## API Documentation
 
 The yml specification for the API documentation is located in the `src/assets/api` directory.
