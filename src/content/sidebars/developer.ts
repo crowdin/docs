@@ -8,7 +8,6 @@ export default [
     ...sidebarLabel('crowdinApps'),
     items: [
       { slug: path('crowdin-apps-about') },
-      { slug: path('crowdin-apps-quick-start') },
       { slug: path('crowdin-apps-serverless') },
       { slug: path('crowdin-apps-sdk') },
       { slug: path('crowdin-apps-installation') },
