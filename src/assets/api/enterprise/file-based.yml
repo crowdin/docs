@@ -2701,7 +2701,7 @@ paths:
       tags:
         - Applications
       summary: 'Upload Application Bundle'
-      description: "**Required scopes:** `application` (Read and Write).\n\nUpload a bundle archive for a serverless app installed from manifest content. The bundle must be a ZIP archive that contains a non-empty `app.js` entry point at its root."
+      description: "**Required scopes:** `application.installation` (Read and Write).\n\nUpload a bundle archive for a serverless app installed from manifest content. The bundle must be a ZIP archive that contains a non-empty `app.js` entry point at its root."
       operationId: api.applications.installations.bundles.post
       parameters:
         -
@@ -2753,7 +2753,7 @@ paths:
       tags:
         - Applications
       summary: 'List Application Installations'
-      description: '**Required scopes:** `application` (Read only).'
+      description: '**Required scopes:** `application.installation` (Read only).'
       operationId: api.applications.installations.getMany
       parameters:
         -
@@ -2811,7 +2811,7 @@ paths:
       tags:
         - Applications
       summary: 'Install Application'
-      description: "**Required scopes:** `application` (Read and Write).\n\nInstall an application either from a hosted manifest URL or from its manifest content.<br><br>**Note:** Any application - with or without a backend, and regardless of whether it is published to the Crowdin Store - can be installed from a manifest URL (the manifest only needs to be reachable at that URL). Installing from manifest content is supported only for serverless apps - apps that run entirely in the browser with no backend (no `baseUrl`)."
+      description: "**Required scopes:** `application.installation` (Read and Write).\n\nInstall an application either from a hosted manifest URL or from its manifest content.<br><br>**Note:** Any application - with or without a backend, and regardless of whether it is published to the Crowdin Store - can be installed from a manifest URL (the manifest only needs to be reachable at that URL). Installing from manifest content is supported only for serverless apps - apps that run entirely in the browser with no backend (no `baseUrl`)."
       operationId: api.applications.installations.post
       requestBody:
         content:
@@ -2858,7 +2858,7 @@ paths:
       tags:
         - Applications
       summary: 'Get Application Installation'
-      description: '**Required scopes:** `application` (Read only).'
+      description: '**Required scopes:** `application.installation` (Read only).'
       operationId: api.applications.installations.get
       parameters:
         -
@@ -2898,7 +2898,7 @@ paths:
       tags:
         - Applications
       summary: 'Delete Application Installation'
-      description: '**Required scopes:** `application` (Read and Write).'
+      description: '**Required scopes:** `application.installation` (Read and Write).'
       operationId: api.applications.installations.delete
       parameters:
         -
@@ -2942,7 +2942,7 @@ paths:
       tags:
         - Applications
       summary: 'Edit Application Installation'
-      description: '**Required scopes:** `application` (Read and Write).'
+      description: '**Required scopes:** `application.installation` (Read and Write).'
       operationId: api.applications.installations.patch
       parameters:
         -
@@ -2989,7 +2989,7 @@ paths:
       tags:
         - Applications
       summary: 'Get Application Installation Update'
-      description: "**Required scopes:** `application` (Read only).\n\nReturns the diff between the currently installed application and the latest cached manifest, tagged with `manifestHash` for optimistic-locking on apply."
+      description: "**Required scopes:** `application.installation` (Read only).\n\nReturns the diff between the currently installed application and the latest cached manifest, tagged with `manifestHash` for optimistic-locking on apply."
       operationId: api.applications.installations.update.get
       parameters:
         -
@@ -3029,7 +3029,7 @@ paths:
       tags:
         - Applications
       summary: 'Apply Application Installation Update'
-      description: "**Required scopes:** `application` (Read and Write).\n\nApply the latest cached manifest to an installed application. Requires `manifestHash` from a recent GET /update call as an optimistic-locking token. If the cached manifest has changed since, returns 409 with the fresh diff in the response body."
+      description: "**Required scopes:** `application.installation` (Read and Write).\n\nApply the latest cached manifest to an installed application. Requires `manifestHash` from a recent GET /update call as an optimistic-locking token. If the cached manifest has changed since, returns 409 with the fresh diff in the response body."
       operationId: api.applications.installations.update.post
       parameters:
         -
@@ -3077,12 +3077,253 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
+  '/applications/{applicationIdentifier}/storage/kv/records':
+    get:
+      tags:
+        - Applications
+      summary: 'List Application KV Records'
+      description: "**Required scopes:** `application.storage` (Read only).\n\nLists the KV records in the application installation's storage that are visible to the current user. Values of `secret` records are returned decrypted. Expired records are not returned.\n\n__Note:__ Requires the application's own access token - personal access tokens are not supported"
+      operationId: api.applications.storage.kv.records.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+        -
+          $ref: '#/components/parameters/ApplicationKvPrefix'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+        -
+          name: orderBy
+          in: query
+          description: 'Read more about [sorting rules](#section/Introduction/Sorting)'
+          schema:
+            type: string
+            enum:
+              - key
+              - createdAt
+              - updatedAt
+              - expiresAt
+          example: 'createdAt desc'
+      responses:
+        '200':
+          description: 'Application KV Record list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationKvRecordCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    post:
+      tags:
+        - Applications
+      summary: 'Add Application KV Record'
+      description: "**Required scopes:** `application.storage` (Read and Write).\n\nAdds a new KV record to the application installation's storage. If the key already exists, the request returns `409` - use [Edit Application KV Record](#operation/api.applications.storage.kv.records.patch) to change an existing record.\n\n__Note:__ Requires the application's own access token - personal access tokens are not supported"
+      operationId: api.applications.storage.kv.records.post
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationKvRecordCreateForm'
+      responses:
+        '201':
+          description: 'Application KV Record was successfully created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationKvRecordResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '409':
+          description: 'A KV record for this key already exists'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
+  '/applications/{applicationIdentifier}/storage/kv/records/{key}':
+    get:
+      tags:
+        - Applications
+      summary: 'Get Application KV Record'
+      description: "**Required scopes:** `application.storage` (Read only).\n\nReturns a single KV record. `secret` records are returned decrypted. Expired records and records that are not visible to the current user are reported as not found.\n\n__Note:__ Requires the application's own access token - personal access tokens are not supported"
+      operationId: api.applications.storage.kv.records.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+        -
+          name: key
+          in: path
+          description: 'Key of the record. URL-encode reserved characters (e.g. `:` as `%3A`)'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'Application KV Record'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationKvRecordResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    delete:
+      tags:
+        - Applications
+      summary: 'Delete Application KV Record'
+      description: "**Required scopes:** `application.storage` (Read and Write).\n\nDeletes a KV record.\n\n__Note:__ Requires the application's own access token - personal access tokens are not supported"
+      operationId: api.applications.storage.kv.records.delete
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+        -
+          name: key
+          in: path
+          description: 'Key of the record. URL-encode reserved characters (e.g. `:` as `%3A`)'
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: 'Application KV Record was successfully deleted'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    patch:
+      tags:
+        - Applications
+      summary: 'Edit Application KV Record'
+      description: "**Required scopes:** `application.storage` (Read and Write).\n\nReplaces the value, the TTL, or both on an existing KV record. When you set a new TTL, `expiresAt` is calculated from the time the change is applied. Send `\"value\": null` for the `/ttl` path to remove the TTL and make the record permanent.\n\n__Note:__ Requires the application's own access token - personal access tokens are not supported"
+      operationId: api.applications.storage.kv.records.patch
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationIdentifier'
+        -
+          name: key
+          in: path
+          description: 'Key of the record. URL-encode reserved characters (e.g. `:` as `%3A`)'
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationKvRecordPatch'
+      responses:
+        '200':
+          description: 'Application KV Record'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationKvRecordResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
   '/applications/{applicationIdentifier}/api/{path}':
     get:
       tags:
         - Applications
       summary: 'Get Application Data'
-      description: "**Required scopes:** `application` (Read only).\n\nRetrieves data from the specified application.\n\n__Note__: Query parameters are application-specific and vary depending on the application being accessed."
+      description: "**Required scopes:** `application.proxy` (Read only).\n\nRetrieves data from the specified application.\n\n__Note__: Query parameters are application-specific and vary depending on the application being accessed."
       operationId: api.applications.api.get
       parameters:
         -
@@ -3130,7 +3371,7 @@ paths:
       tags:
         - Applications
       summary: 'Update or Restore Application Data'
-      description: "**Required scopes:** `application` (Read and Write).\n\nUpdates or restores data in the specified application.\n\n__Note__: Both the query parameters and request body are application-specific and vary depending on the application being accessed."
+      description: "**Required scopes:** `application.proxy` (Read and Write).\n\nUpdates or restores data in the specified application.\n\n__Note__: Both the query parameters and request body are application-specific and vary depending on the application being accessed."
       operationId: api.applications.api.put
       parameters:
         -
@@ -3183,7 +3424,7 @@ paths:
       tags:
         - Applications
       summary: 'Add Application Data'
-      description: "**Required scopes:** `application` (Read and Write).\n\nAdds new data to the specified application.\n\n__Note__: Both the query parameters and request body are application-specific and vary depending on the application being accessed."
+      description: "**Required scopes:** `application.proxy` (Read and Write).\n\nAdds new data to the specified application.\n\n__Note__: Both the query parameters and request body are application-specific and vary depending on the application being accessed."
       operationId: api.applications.api.post
       parameters:
         -
@@ -3236,7 +3477,7 @@ paths:
       tags:
         - Applications
       summary: 'Delete Application Data'
-      description: "**Required scopes:** `application` (Read and Write).\n\nDeletes data from the specified application.\n\n__Note__: Query parameters are application-specific and vary depending on the application being accessed."
+      description: "**Required scopes:** `application.proxy` (Read and Write).\n\nDeletes data from the specified application.\n\n__Note__: Query parameters are application-specific and vary depending on the application being accessed."
       operationId: api.applications.api.delete
       parameters:
         -
@@ -3274,7 +3515,7 @@ paths:
       tags:
         - Applications
       summary: 'Edit Application Data'
-      description: "**Required scopes:** `application` (Read and Write).\n\nEdits existing data in the specified application.\n\n__Note__: Both the query parameters and request body are application-specific and vary depending on the application being accessed."
+      description: "**Required scopes:** `application.proxy` (Read and Write).\n\nEdits existing data in the specified application.\n\n__Note__: Both the query parameters and request body are application-specific and vary depending on the application being accessed."
       operationId: api.applications.api.patch
       parameters:
         -
@@ -26491,6 +26732,53 @@ components:
                   type: object
                 -
                   $ref: '#/components/schemas/ApplicationInstallationReplaceValue'
+    ApplicationKvRecordData:
+      title: 'Application KV Record Data'
+      description: 'Any JSON value except `null` - a string, number, boolean, array or object. Up to 245760 bytes (240 KiB) when serialized'
+      oneOf:
+        -
+          type: string
+        -
+          type: number
+        -
+          type: boolean
+        -
+          type: object
+        -
+          type: array
+          items: {  }
+    ApplicationKvRecordPatch:
+      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      type: array
+      items:
+        $ref: '#/components/schemas/ApplicationKvRecordOperation'
+    ApplicationKvRecordOperation:
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+        - value
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+        path:
+          description: 'A JSON Pointer identifying the field to replace. Supported paths: `/value`, `/ttl`. `/key` and `/secret` are immutable - delete the record and create a new one instead.'
+          type: string
+          enum:
+            - /value
+            - /ttl
+        value:
+          description: 'The value to set at `path`. Any JSON value (string, number, boolean, array or object) for `/value`; a TTL in seconds (60-31536000) or `null` to remove the TTL for `/ttl`.'
+          anyOf:
+            -
+              $ref: '#/components/schemas/ApplicationKvRecordData'
+            -
+              type: integer
+              nullable: true
+      type: object
     IntegrationCrowdinFiles:
       type: array
       items:
@@ -26836,7 +27124,7 @@ components:
             - denied
           example: granted
         scopes:
-          description: 'Scopes the decision was made for - a snapshot of the application scopes at decision time.<br><br>Available scopes: `*`, `language`, `user`, `team`, `notification`, `custom_language`, `group`, `tm`, `glossary`, `style-guide`, `mt`, `ai`, `ai.provider`, `ai.prompt`, `ai.proxy`, `ai.translate`, `automation`, `automation.rule`, `automation.rule.execution`, `webhook`, `project`, `project.settings`, `project.member`, `project.status`, `project.status.issue`, `project.status.progress`, `project.status.qa-check`, `project.source`, `project.source.file`, `project.source.string`, `project.translation`, `project.screenshot`, `project.webhook`, `project.task`, `project.dictionary`, `project.report`, `project.advisor`, `client`, `vendor`, `field`, `security-log`, `application`, `organization`, `custom-spellchecker`, `external-qa-check`.<br><br>Each scope supports `:read` and `:write` modifiers (e.g. `project:read`, `project:write`); without a modifier the scope grants both'
+          description: 'Scopes the decision was made for - a snapshot of the application scopes at decision time.<br><br>Available scopes: `*`, `language`, `user`, `team`, `notification`, `custom_language`, `group`, `tm`, `glossary`, `style-guide`, `mt`, `ai`, `ai.provider`, `ai.prompt`, `ai.proxy`, `ai.translate`, `automation`, `automation.rule`, `automation.rule.execution`, `webhook`, `project`, `project.settings`, `project.member`, `project.status`, `project.status.issue`, `project.status.progress`, `project.status.qa-check`, `project.source`, `project.source.file`, `project.source.string`, `project.translation`, `project.screenshot`, `project.webhook`, `project.task`, `project.dictionary`, `project.report`, `project.advisor`, `client`, `vendor`, `field`, `security-log`, `application`, `application.installation`, `application.proxy`, `application.consent`, `application.storage`, `organization`, `custom-spellchecker`, `external-qa-check`.<br><br>Each scope supports `:read` and `:write` modifiers (e.g. `project:read`, `project:write`); without a modifier the scope grants both'
           type: array
           items:
             type: string
@@ -26899,7 +27187,7 @@ components:
           description: 'Relative URL (within the application bundle) of the application logo'
           type: string
         scopes:
-          description: 'OAuth scopes granted to the app for host-proxied Crowdin API calls.<br><br>Available scopes: `*`, `language`, `user`, `team`, `notification`, `custom_language`, `group`, `tm`, `glossary`, `style-guide`, `mt`, `ai`, `ai.provider`, `ai.prompt`, `ai.proxy`, `ai.translate`, `automation`, `automation.rule`, `automation.rule.execution`, `webhook`, `project`, `project.settings`, `project.member`, `project.status`, `project.status.issue`, `project.status.progress`, `project.status.qa-check`, `project.source`, `project.source.file`, `project.source.string`, `project.translation`, `project.screenshot`, `project.webhook`, `project.task`, `project.dictionary`, `project.report`, `project.advisor`, `client`, `vendor`, `field`, `security-log`, `application`, `organization`, `custom-spellchecker`, `external-qa-check`.<br><br>Each scope supports `:read` and `:write` modifiers (e.g. `project:read`, `project:write`); without a modifier the scope grants both.'
+          description: 'OAuth scopes granted to the app for host-proxied Crowdin API calls.<br><br>Available scopes: `*`, `language`, `user`, `team`, `notification`, `custom_language`, `group`, `tm`, `glossary`, `style-guide`, `mt`, `ai`, `ai.provider`, `ai.prompt`, `ai.proxy`, `ai.translate`, `automation`, `automation.rule`, `automation.rule.execution`, `webhook`, `project`, `project.settings`, `project.member`, `project.status`, `project.status.issue`, `project.status.progress`, `project.status.qa-check`, `project.source`, `project.source.file`, `project.source.string`, `project.translation`, `project.screenshot`, `project.webhook`, `project.task`, `project.dictionary`, `project.report`, `project.advisor`, `client`, `vendor`, `field`, `security-log`, `application`, `application.installation`, `application.proxy`, `application.consent`, `application.storage`, `organization`, `custom-spellchecker`, `external-qa-check`.<br><br>Each scope supports `:read` and `:write` modifiers (e.g. `project:read`, `project:write`); without a modifier the scope grants both.'
           type: array
           items:
             type: string
@@ -27025,6 +27313,28 @@ components:
           description: 'URL the app is served from; for local development this is your dev server, e.g. `http://localhost:8080/`.'
           type: string
       type: object
+    ApplicationKvRecordCreateForm:
+      required:
+        - key
+        - value
+      properties:
+        key:
+          description: "Key of the record. 1-500 characters from `a-z`, `A-Z`, `0-9`, `:`, `.`, `_`, `-`. Unique within the installation, case-sensitive and immutable.\n\nKeys with no reserved prefix are shared with everyone who can access the application. Reserved prefixes narrow visibility:\n * `user:{userId}:` - the user's own private records\n * `module:{moduleKey}:` - visible only to users with access to that module (`{moduleKey}` is a module key from the application manifest)"
+          type: string
+          example: settings.theme
+        value:
+          $ref: '#/components/schemas/ApplicationKvRecordData'
+        secret:
+          description: 'If `true`, the value is encrypted at rest. Immutable - to change it, delete the record and create a new one. Default is `false`'
+          type: boolean
+          default: false
+        ttl:
+          description: 'Time to live in seconds (60-31536000, inclusive). Omit for a permanent record'
+          type: integer
+          maximum: 31536000
+          minimum: 60
+          nullable: true
+      type: object
     ApplicationConsentCollectionResource:
       type: object
       allOf:
@@ -27083,6 +27393,30 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/ApplicationInstallationUpdateResponseModel'
+    ApplicationKvRecordCollectionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ApplicationKvRecordResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    ApplicationKvRecordResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/ApplicationKvRecord'
     AdvisorInspectorModule:
       title: 'Advisor Inspector Module'
       type: object
@@ -27329,6 +27663,8 @@ components:
               -
                 $ref: '#/components/schemas/EditorAutocompleteModule'
               -
+                $ref: '#/components/schemas/EditorButtonModule'
+              -
                 $ref: '#/components/schemas/EditorPanelModule'
               -
                 $ref: '#/components/schemas/ExternalQaCheckModule'
@@ -27451,6 +27787,37 @@ components:
           description: 'Whether the manifest has any changes'
           type: boolean
           example: true
+      type: object
+    ApplicationKvRecord:
+      title: 'Application KV Record'
+      description: 'A key-value record in the storage of an installed application'
+      properties:
+        key:
+          description: 'Key of the record - unique within the installation, case-sensitive'
+          type: string
+          example: settings.theme
+        value:
+          $ref: '#/components/schemas/ApplicationKvRecordData'
+        secret:
+          description: 'If `true`, the value is encrypted at rest'
+          type: boolean
+          example: false
+        createdAt:
+          description: 'Date the record was created, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-08-17T10:00:00+00:00'
+        updatedAt:
+          description: 'Date the record was last updated, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-08-17T10:00:00+00:00'
+        expiresAt:
+          description: 'Date the record expires, in ISO 8601 format. `null` for permanent records'
+          type: string
+          format: date-time
+          example: '2026-09-17T10:00:00+00:00'
+          nullable: true
       type: object
     AuthGuardModule:
       title: 'Auth Guard Module'
@@ -27667,6 +28034,26 @@ components:
             scopes:
               type: object
             iframe:
+              type: object
+    EditorButtonModule:
+      title: 'Editor Button Module'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Module'
+        -
+          properties:
+            identifier:
+              type: string
+              example: example-application
+            modes:
+              type: array
+              items:
+                type: string
+              example:
+                - translate
+                - review
+            options:
               type: object
     EditorPanelModule:
       title: 'Editor Panel Module'
@@ -35180,6 +35567,10 @@ components:
         title:
           type: string
           example: main
+        isShared:
+          description: 'Indicates whether the label is shared from a client project and therefore read-only'
+          type: boolean
+          example: false
       type: object
     SystemLabel:
       title: Label
@@ -35192,6 +35583,7 @@ components:
             isSystem:
               type: boolean
               example: 'true'
+          type: object
     CustomLanguagePatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -56171,6 +56563,12 @@ components:
         type: string
         format: date-time
       example: '2026-07-31T23:59:59+00:00'
+    ApplicationKvPrefix:
+      name: prefix
+      in: query
+      description: 'Filter results to keys that start with the given prefix'
+      schema:
+        type: string
     PaginationLimit:
       name: limit
       in: query
