@@ -1,72 +1,36 @@
 ---
-title: Security for Crowdin Apps
-description: Ensure the high level of security for Crowdin apps
+title: Verifying Requests from Crowdin
+description: Confirm that a request to your app came from Crowdin
 slug: developer/crowdin-apps-security
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
-To ensure the high level of security for cases when the Crowdin app works with the data from Crowdin (i.e. uses the authorization via `crowdin_app`), we've developed a security mechanism. The main principle of this security mechanism is based on the exchange of the JWT token between Crowdin and the Crowdin app. JWT token is signed with an OAuth Client Secret known only to the two final parties. This way, the Crowdin app can get a confirmation that the page is opened precisely in Crowdin.
+When you build a self-hosted app that works with data from Crowdin, it authenticates with [`crowdin_app`](/developer/crowdin-apps-app-descriptor/#authentication) and receives a signed JWT token with every request Crowdin sends it. Verifying that token is how the app tells a real request from anything else.
+
+Both SDKs handle this for you: the [Crowdin Apps SDK](/developer/crowdin-apps-sdk/) validates the token and extracts the context, and a [serverless app](/developer/crowdin-apps-serverless/) never receives a token at all. What follows is for apps that verify requests themselves, for example one written in another language.
 
 <Aside>
-  Apps with the [Workflow Step Type](/developer/crowdin-apps-module-workflow-step-type/#authentication) module must use the `crowdin_agent` authentication type instead of `crowdin_app`.
+  Apps with the [Workflow Step Type](/developer/crowdin-apps-module-workflow-step-type/#authentication) module use the `crowdin_agent` authentication type instead of `crowdin_app`.
 </Aside>
 
-## Implementation
+## What Crowdin Sends
 
-To implement the authorization and authentication in your Crowdin app, follow these steps:
-
-* Add the authorization via `crowdin_app` to your app descriptor and add the OAuth Client ID that will be used for authorization.
-* Add the callback to your Crowdin app that will handle the [Installed Event](/developer/crowdin-apps-installation/#installed-event-communication-flow).
-* Specify the necessary set of scopes in your app descriptor needed for your Crowdin app. The specified set of scopes shouldn't exceed the scopes specified in the OAuth.
-
-Using the above methods, on each request to the Crowdin app, Crowdin will pass a set of parameters along with a security token, which can be validated by a secret from the OAuth.
-
-Below you can see an example of the URL used by Crowdin to open a module page.
+Crowdin opens a module page with the token and its context in the query string:
 
 ```shell wrap
 https://example.com/app-module?jwtToken=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJCcjRhMmhwUW……MX0.yt-lbv3Z8JyIGX4jG405mjZvX8lwc1q0EfWdTtm9GCc&origin=https://{domain}.crowdin.com&clientId=your-client-id
 ```
 
-Query parameters:
+| Parameter  | Type           | Description                                              |
+|------------|----------------|----------------------------------------------------------|
+| `jwtToken` | `string`       | JWT token used for authorization.                        |
+| `origin`   | `string (url)` | Host used for opening a module page.                     |
+| `clientId` | `string`       | The ID of the OAuth Client used for authorization.       |
 
-<table>
-  <tbody>
-  <tr>
-    <td><code>jwtToken</code></td>
-    <td>
-      <p><strong>Type:</strong> <code>string</code></p>
-      <p><strong>Description:</strong> JWT token used for authorization.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>origin</code></td>
-    <td>
-      <p><strong>Type:</strong> <code>string (url)</code></p>
-      <p><strong>Description:</strong> Host used for opening a module page.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>clientId</code></td>
-    <td>
-      <p><strong>Type:</strong> <code>string</code></p>
-      <p><strong>Description:</strong> The ID of the OAuth Client used for authorization.</p>
-    </td>
-  </tr>
-  </tbody>
-</table>
+The token is signed with the OAuth Client Secret, which only Crowdin and your app know, so a valid signature is proof of where the request came from. Verify the signature and the expiry of every token your app receives, for example in a middleware that runs before the rest of your code. Any of the [existing libraries](https://jwt.io/) does it for you.
 
-The best practice would be adding middleware to the Crowdin app to verify whether each request has a token with a valid signature and expiry. You can use one of the [existing libraries](https://jwt.io/) to validate the authenticity of the token.
-
-## JWT Token Structure
-
-JWT token consists of the following parts:
-
-* Header - contains information about the type of the token and encoding algorithms.
-* Payload - contains additional information about the issue and expiration dates of the token, the information about the token issuer and requestor, and other contextual information.
-* Signature - the part with a signature based on the header and payload.
-
-JWT token payload example:
+## Token Payload
 
 ```json
 {
@@ -79,52 +43,11 @@ JWT token payload example:
 }
 ```
 
-Properties:
-
-<table>
-  <tbody>
-  <tr>
-    <td><code>aud</code></td>
-    <td>
-      <p><strong>Type:</strong> <code>string</code></p>
-      <p><strong>Description:</strong> ID of the OAuth Client that issued the token.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>sub</code></td>
-    <td>
-      <p><strong>Type:</strong> <code>string</code></p>
-      <p><strong>Description:</strong> Identifier of the user that is making a request to the Crowdin app.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>domain</code></td>
-    <td>
-      <p><strong>Type:</strong> <code>string|null</code></p>
-      <p><strong>Required:</strong> yes</p>
-      <p><strong>Description:</strong> The name of the organization from which the app is accessed. For Crowdin the domain value is always <code>null</code></p>
-    </td>
-  </tr>
-  <tr>
-    <td><code class="whitespace-nowrap">context</code></td>
-    <td>
-      <p><strong>Type:</strong> <code>object</code></p>
-      <p><strong>Description:</strong> The information about the environment where the Crowdin app module is opened (e.g. project, locale, user's timezone, etc.).</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>iat</code></td>
-    <td>
-      <p><strong>Type:</strong> <code>integer</code></p>
-      <p><strong>Description:</strong> Identifies the issue time of the token.</p>
-    </td>
-  </tr>
-  <tr>
-    <td><code>exp</code></td>
-    <td>
-      <p><strong>Type:</strong> <code>integer</code></p>
-      <p><strong>Description:</strong> Identifies the expiration time of the token.</p>
-    </td>
-  </tr>
-  </tbody>
-</table>
+| Field     | Type          | Description                                                                                              |
+|-----------|---------------|----------------------------------------------------------------------------------------------------------|
+| `aud`     | `string`      | ID of the OAuth Client that issued the token.                                                            |
+| `sub`     | `string`      | Identifier of the user that is making a request to the Crowdin app.                                      |
+| `domain`  | <code class="whitespace-nowrap">string&#124;null</code> | The organization the app is accessed from. Always present, and always `null` in Crowdin.                  |
+| `context` | `object`      | The environment where the module is opened, such as the project, the locale, and the user's timezone.    |
+| `iat`     | `integer`     | Identifies the issue time of the token.                                                                  |
+| `exp`     | `integer`     | Identifies the expiration time of the token.                                                             |
