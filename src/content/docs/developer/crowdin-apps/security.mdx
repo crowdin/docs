@@ -1,6 +1,6 @@
 ---
-title: Verifying Requests from Crowdin
-description: Confirm that a request to your app came from Crowdin
+title: Security for Crowdin Apps
+description: Ensure the high level of security for Crowdin apps
 slug: developer/crowdin-apps-security
 ---
 
@@ -22,11 +22,33 @@ Crowdin opens a module page with the token and its context in the query string:
 https://example.com/app-module?jwtToken=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJCcjRhMmhwUW……MX0.yt-lbv3Z8JyIGX4jG405mjZvX8lwc1q0EfWdTtm9GCc&origin=https://{domain}.crowdin.com&clientId=your-client-id
 ```
 
-| Parameter  | Type           | Description                                              |
-|------------|----------------|----------------------------------------------------------|
-| `jwtToken` | `string`       | JWT token used for authorization.                        |
-| `origin`   | `string (url)` | Host used for opening a module page.                     |
-| `clientId` | `string`       | The ID of the OAuth Client used for authorization.       |
+Query parameters:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>jwtToken</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> JWT token used for authorization.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>origin</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string (url)</code></p>
+      <p><strong>Description:</strong> Host used for opening a module page.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>clientId</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> The ID of the OAuth Client used for authorization.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
 
 The token is signed with the OAuth Client Secret, which only Crowdin and your app know, so a valid signature is proof of where the request came from. Verify the signature and the expiry of every token your app receives, for example in a middleware that runs before the rest of your code. Any of the [existing libraries](https://jwt.io/) does it for you.
 
@@ -43,11 +65,51 @@ The token is signed with the OAuth Client Secret, which only Crowdin and your ap
 }
 ```
 
-| Field     | Type          | Description                                                                                              |
-|-----------|---------------|----------------------------------------------------------------------------------------------------------|
-| `aud`     | `string`      | ID of the OAuth Client that issued the token.                                                            |
-| `sub`     | `string`      | Identifier of the user that is making a request to the Crowdin app.                                      |
-| `domain`  | <code class="whitespace-nowrap">string&#124;null</code> | The organization the app is accessed from. Always present, and always `null` in Crowdin.                  |
-| `context` | `object`      | The environment where the module is opened, such as the project, the locale, and the user's timezone.    |
-| `iat`     | `integer`     | Identifies the issue time of the token.                                                                  |
-| `exp`     | `integer`     | Identifies the expiration time of the token.                                                             |
+Properties:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>aud</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> ID of the OAuth Client that issued the token.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>sub</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Description:</strong> Identifier of the user that is making a request to the Crowdin app.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>domain</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string|null</code></p>
+      <p><strong>Description:</strong> The organization the app is accessed from. Always present, and always <code>null</code> in Crowdin.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">context</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object</code></p>
+      <p><strong>Description:</strong> The environment where the module is opened, such as the project, the locale, and the user's timezone.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>iat</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Identifies the issue time of the token.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>exp</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Description:</strong> Identifies the expiration time of the token.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
