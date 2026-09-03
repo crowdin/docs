@@ -1,0 +1,119 @@
+---
+title: Web Kancaları
+description: Web kancalarını yapılandırarak Crowdin’i hizmetlerinizle bütünleştirin
+slug: webhooks
+---
+
+import { Image } from 'astro:assets';
+import { Aside, Steps } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Icon } from 'astro-icon/components';
+import webhooksAdd from '!/crowdin/project-management/webhooks_add.png';
+import webhooksEditDelete from '!/crowdin/project-management/webhooks_edit_delete.png';
+import webhooksCallsHistory from '!/crowdin/project-management/webhooks_calls_history.png';
+
+Web kancaları, tamamlanan çeviriler veya düzeltme okuması gibi Crowdin projenizde meydana gelen önemli olaylar hakkında bilgi almanızı sağlar. Bir web kancası yapılandırmanızdan sonra Crowdin, HTTP aracılığıyla web kancası URL’sine veri içeren POST veya GET istekleri göndermeye başlayacaktır.
+
+<Aside title="İzinler">
+  Bir projedeki web kancalarını yönetmek için Proje Sahibi, Yönetici veya Geliştirici / Çeviri İsteyen rolüne sahip olmak zorundasınız. Daha fazla bilgi için [Kişileri Davet Etme](/inviting-people/) konusuna bakın.
+</Aside>
+
+## Kullanım Durumları
+
+Hizmetlerle veya arka ucunuzla bütünleştirmeler oluşturmak için web kancaları ekleyebilirsiniz. Örneğin:
+
+* Kullandığınız sisteme bildirimleri göndermek için bir web kancası ayarlayın.
+* Bilgileri belirli istek gereksinimleriyle (örneğin, HTTP yöntemi, içerik türü) üçüncü taraf hizmetlerine aktarın.
+* Crowdin ile özel bütünleştirmeler oluşturun.
+
+## Olaylar
+
+Web kancalarını projede meydana gelen farklı olaylar için yapılandırabilirsiniz, örn. bir dosya çevrildiğinde, düzeltildiğinde veya bir dizgi eklendiğinde veya güncellendiğinde.
+
+<ReadMore>
+  Crowdin Geliştirici Portalı’nda [Web Kancası Olayları](/developer/webhooks/#olaylar) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+## Web Kancaları Ekleme
+
+Web kancalarını Crowdin’de yapılandırmak için şu adımları izleyin:
+
+<Steps>
+  1. Projenizi açın ve **Araçlar** sekmesine gidin (Hesap seviyesinde web kancaları için **Hesap Ayarları**’nızı açın).
+  2. **Web Kancaları**’nı seçin ve **Web Kancası Ekle**’ye tıklayın.
+</Steps>
+
+<Image src={webhooksAdd} alt="Web Kancası Ekleyin" class="width-xl" />
+
+Bir web kancasını kaydetmek için aşağıdaki bilgileri sağlamanız gerekecek:
+
+* Web kancası adı (örneğin, "Uygulama Projesi Çevrildi").
+* URL’ye gönderilecek olaylar. Ya bir olayı ya da belirli bir olaylar dizisini seçebilirsiniz.
+* Web kancası geri çağrılarının doğrudan istekler olarak gönderildiği URL. Yönlendirmeler desteklenmez ve teslimin başarısız olmasına neden olur. Uç nokta **30 saniye** içinde bir "2XX" yanıtı döndürmek zorundadır.
+* Verilen bir kaynak için gerçekleştirilecek istenen eylemi gösteren istek yöntemi (ya `GET` ya da `POST` kullanın).
+* The content type for the POST request method (`multipart/form-data`, `application/json`, or `application/x-www-form-urlencoded`).
+  * `application/json` içerik türü için birden çok olayı tek bir istekte birleştirmek amacıyla **Toplu web kancaları**’nı seçebilirsiniz.
+
+İsteğe bağlı olarak, web kancanıza özel başlıklar ekleyebilirsiniz. Yetkilendirme yöntemi ve daha fazlası olarak ek güvenlik için kullanılabilirler. Örneğin, eğer başlıklar eklerseniz, web kancası uç noktanız, bilgilerin Crowdin’den geldiğinden emin olmak için bunları denetleyebilir.
+
+<Aside type="tip">
+  Bir web kancası eklerken, uygulamanızın bu çağrıya nasıl tepki vereceğini görmek için **Web kancasını dene**’ye tıklayın.
+</Aside>
+
+<Aside type="caution" title="Sınırlamalar">
+  Proje seviyesindeki olaylar için en fazla 20 web kancası uç noktası yapılandırabilirsiniz.
+</Aside>
+
+Web kancası yönetimine yaklaşımınıza bağlı olarak, Crowdin’in önceden yapılandırılmış web kancası URL’lerini açmasına izin vermek için güvenlik duvarınıza adanmış Crowdin IP adreslerini eklemeniz gerekebilir.
+
+<ReadMore>
+  Read more about [IP Addresses](/developer/ip-addresses/#webhooks-ai-providers-and-mt-engines).
+</ReadMore>
+
+## Özel Yükler
+
+Crowdin’deki her olay türünün, ilgili olay bilgileriyle birlikte belirli bir yük biçimi vardır. Web kancası yükünü, öğeleri sisteminizin gerektirdiği şekilde eklemek ve düzenlemek için özelleştirebilirsiniz.
+
+Olayın olası değişkenlerini denetlemek için *Yük* bölümünün sağ üst köşesindeki *Bilgi* <Icon name="mdi:info-outline" class="inline-icon" /> simgesinin üzerine gelin.
+
+## Web Kancalarını Düzenleyin veya Silin
+
+Belirli bir projede, yapılandırılmış web kancalarına doğrudan görüntülenen listeden düzenleyerek veya silerek erişebilir ve bunları yönetebilirsiniz.
+
+<Image src={webhooksEditDelete} alt="Web Kancalarını Düzenleyin veya Silin" />
+
+## Çağrı Geçmişi
+
+**Çağrı Geçmişi** bölümünde, yapılandırılan tüm web kancalarının çağrılarının listesini görüntüleyebilirsiniz. Tüm veya sadece başarısız web kancası bildirimlerini görüntülemek için süzgeci kullanın.
+
+<Image src={webhooksCallsHistory} alt="Çağrı Geçmişi" />
+
+## Web Kancaları Başarısızlığı
+
+Crowdin her olayı web kancası URL’nize bir kez gönderir, böylece başarısız olan bir olay tekrar gönderilmez.
+
+Son 24 saat içinde 4xx veya 5xx aralığında yanıt kodlarıyla 100 veya daha fazla kez başarısız olan web kancaları otomatik olarak etkisizleştirilir.
+
+### Etkisizleştirilen Web Kancaları
+
+Etkisizleştirilen web kancaları, **Web Kancaları** bölümünde, kalıcı hatalardan dolayı şu anda etkin olmadıklarını gösteren onay işareti kaldırılmış şekilde listelenir. Başarısız olan web kancaları hakkında daha fazlasını keşfetmek için **Çağrılar Geçmişi > Başarısız** bölümüne gidin. Burada, başarısız olan her web kancasında karşılaşılan sorunlarla ilgili ayrıntılı bilgileri keşfedebilirsiniz.
+
+### Elle Yeniden Etkinleştirme
+
+Web kancası hatalarının nedenini belirledikten ve çözdükten sonra, işlevselliklerini geri yüklemek için web kancalarını el ile yeniden etkinleştirebilirsiniz. **Web Kancaları** bölümünde etkisizleştirilen web kancasını bulun ve yeniden etkinleştirmek için seçin.
+
+## Web Kancalarını Slack’e Gönderme
+
+Crowdin web kancalarının yardımıyla, önceden yapılandırılmış olay türleri hakkındaki bildirimleri doğrudan belirli bir Slack kanalına gönderebilirsiniz.
+
+Web kancalarının Slack’e gönderilmesini yapılandırmak için basit bir Slack uygulaması oluşturmanız gerekir.
+
+<ReadMore>
+  [Gelen Web Kancalarını kullanarak Slack’e iletiler gönderme](https://api.slack.com/messaging/webhooks) hakkında daha fazlasını okuyun.
+</ReadMore>
+
+Slack uygulamanızı oluşturduğunuz ve yapılandırdığınız anda, Crowdin’de Web Kancaları yapılandırması için kullanılması gereken bir Web Kancası URL’sine sahip olacaksınız.
+
+<Aside>
+  Web kancalarını Slack’e göndermek için özel yükünüzün `"metin"` alanını içerdiğinden ve `Toplu web kancaları` seçeneğinin temizlendiğinden emin olun.
+</Aside>
