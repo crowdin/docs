@@ -4087,6 +4087,106 @@ Removes all custom CSS applied by `AP.editor.applyCustomThemeStyle`.
 AP.editor.resetCustomThemeStyle();
 ```
 
+#### AP.editor.updateButton(moduleKey, patch, [callback]) {#update-button}
+
+Applies a runtime patch to one of the app's own [Editor Buttons](/developer/crowdin-apps-module-editor-button/) modules. Omitted fields keep their current value, and `null` returns a field to the value declared in the manifest. The state lasts until the Editor is reloaded or the app's modules are refreshed.
+
+**Example:**
+
+```js
+AP.editor.updateButton(
+  'attach-screenshot',
+  { icon: '/icons/filled.svg', badge: 3 },
+  function(applied) {
+    console.log(applied); // true
+  }
+);
+```
+
+##### Parameters
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>moduleKey</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The <code>key</code> of the app's own <code>editor-button</code> module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>patch.icon</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> A relative path or an absolute URL on the app's own origin, or a small <code>data:image/…</code> URI.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>patch.badge</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code> or <code>boolean</code></p>
+        <p><strong>Description:</strong> A number shows a counter on the button (values above 99 appear as <code>99+</code>), and <code>true</code> shows a dot.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>patch.enabled</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Description:</strong> Set to <code>false</code> to make the button inactive, so clicks and its keyboard shortcut have no effect.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>patch.tooltip</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The text displayed in the button's tooltip instead of the module's <code>name</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Description:</strong> Receives <code>true</code> when at least one field of the patch was applied.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.resetButton(moduleKey, [callback]) {#reset-button}
+
+Returns one of the app's own [Editor Buttons](/developer/crowdin-apps-module-editor-button/) modules to the state declared in the manifest.
+
+**Example:**
+
+```js
+AP.editor.resetButton('attach-screenshot', function(cleared) {
+  console.log(cleared); // true
+});
+```
+
+##### Parameters
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>moduleKey</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The <code>key</code> of the app's own <code>editor-button</code> module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Description:</strong> Receives <code>true</code> when the button had runtime changes to clear.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 ### Editor Modal Actions
 
 These methods allow your app to open and close modal windows from within the Editor.
@@ -4945,6 +5045,23 @@ Use these event names with the `AP.events.on()` method to listen for actions hap
               }
             }
           ]
+          ```
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editor.button.click</code></td>
+      <td>
+        <p>Fires when a user clicks an <a href="/developer/crowdin-apps-module-editor-button/">Editor Buttons</a> module of the <code>event</code> type. Only the module named in the button's <code>options.module</code> receives the event.</p>
+        <p><strong>Payload:</strong> An object with the button's <code>key</code>, its <code>location</code>, and the strings and target languages the button was clicked for. Buttons in the translation toolbar report the current string, and buttons in the string menu report the selected strings.</p>
+        <div>
+          ```json
+          {
+            "key": "attach-screenshot",
+            "location": "strings-menu",
+            "stringIds": [1569759, 1569760],
+            "languageIds": [18]
+          }
           ```
         </div>
       </td>
