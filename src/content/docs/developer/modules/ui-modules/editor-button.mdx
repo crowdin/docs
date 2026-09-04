@@ -1,0 +1,249 @@
+---
+title: Editor Buttons Module
+description: Add buttons to the Editor that open the app's panels and modals or send it click events
+slug: developer/crowdin-apps-module-editor-button
+sidebar:
+  order: 9
+  label: Editor Buttons
+---
+
+This module allows adding buttons to the Editor that act on another module of the same app.
+
+Editor button locations:
+
+* `header-right`: the upper-right corner of the Editor header
+* `header-left`: the upper-left corner of the Editor header
+* `menu`: the **Apps** menu in the Editor's main menu
+* `translation-toolbar`: the toolbar with the actions for the current translation
+* `strings-menu`: the menu of the currently selected string or strings
+
+A button can perform one of the following actions:
+
+* Open a specified app module in the Editor's right panel (see [Editor Right Panel module](/developer/crowdin-apps-module-editor-right-panel/))
+* Open a specified app module in a modal dialog (see [Modal module](/developer/crowdin-apps-module-modal/))
+* Send an `editor.button.click` event to a specified app module
+
+The `panel` and `modal` types are available at every location. The `event` type is available at the `translation-toolbar` and `strings-menu` locations.
+
+The header locations and the translation toolbar show up to four buttons each, and the rest are available in the **More app actions** dropdown. In the `assets` mode, buttons are available at the `header-right`, `header-left`, and `menu` locations.
+
+Editor buttons are also listed in the Editor's Command Palette, and each of them can be assigned a keyboard shortcut in **Help > Keyboard Shortcuts**.
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+For Crowdin:
+
+* Only me (i.e., project owner)
+* Me, project managers and developers
+* All project members
+* Selected users
+
+For Crowdin Enterprise:
+
+* Only organization admins
+* Organization admins, project managers and developers
+* All users in the organization projects
+* Selected users
+
+## Structure
+
+### Panel
+
+The button opens the specified module in the Editor's right panel.
+
+```json title="manifest.json"
+{
+  "modules": {
+    "editor-button": [
+      {
+        "key": "editor-button-key",
+        "name": "Name of Editor Button",
+        "logo": "/editor-button-logo.png",
+        "modes": [
+          "translate"
+        ],
+        "options": {
+          "location": "header-right",
+          "type": "panel",
+          "module": "editor-panel-module-key",
+          "weight": 10
+        }
+      }
+    ],
+    "editor-right-panel": [
+      {
+        "key": "editor-panel-module-key",
+        "name": "New Panel",
+        "modes": [
+          "translate"
+        ],
+        "url": "/editor-page"
+      }
+    ]
+  }
+}
+```
+
+### Modal
+
+The button opens the specified module in a modal dialog.
+
+```json title="manifest.json"
+{
+  "modules": {
+    "editor-button": [
+      {
+        "key": "editor-button-key",
+        "name": "Name of Editor Button",
+        "modes": [
+          "translate"
+        ],
+        "options": {
+          "location": "menu",
+          "type": "modal",
+          "module": "modal-module-key"
+        }
+      }
+    ],
+    "modal": [
+      {
+        "key": "modal-module-key",
+        "name": "New Modal",
+        "url": "/path/to/modal/module"
+      }
+    ]
+  }
+}
+```
+
+### Event
+
+The button sends an `editor.button.click` event to the specified module without opening it.
+
+```json title="manifest.json"
+{
+  "modules": {
+    "editor-button": [
+      {
+        "key": "editor-button-key",
+        "name": "Name of Editor Button",
+        "modes": [
+          "translate"
+        ],
+        "options": {
+          "location": "translation-toolbar",
+          "type": "event",
+          "module": "editor-panel-module-key"
+        }
+      }
+    ],
+    "editor-right-panel": [
+      {
+        "key": "editor-panel-module-key",
+        "name": "New Panel",
+        "modes": [
+          "translate"
+        ],
+        "url": "/editor-page"
+      }
+    ]
+  }
+}
+```
+
+The event payload depends on the button's location. See [Supported Events](/developer/crowdin-apps-js/#supported-events) for the object structure.
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The human-readable name displayed in the button's tooltip, and as the item label in the menus.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>logo</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The relative URL to the button's icon.<br/>
+        The icon is displayed at 16x16 pixels. If omitted, the button uses the app's logo.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>modes</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Allowed values:</strong> <code>translate</code>, <code>comfortable</code>, <code>side-by-side</code>, <code>multilingual</code>, <code>review</code>, <code>assets</code></p>
+        <p><strong>Description:</strong> The Editor's mode list where the module will be available.<br/>
+        Use <code>translate</code> to make the module available in the following views: <code>comfortable</code>, <code>side-by-side</code>, and <code>multilingual</code>.<br/>
+        For more granular control, specify one or more of these values directly.<br/>
+        The <code>review</code> mode is available only in Crowdin Enterprise and only on the <a href="/enterprise/source-text-review/">Source Text Review</a> workflow step.<br/>
+        The <code>assets</code> mode is used for managing assets in the Editor.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">options.location</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Allowed values:</strong> <code>header-right</code>, <code>header-left</code>, <code>menu</code>, <code class="whitespace-nowrap">translation-toolbar</code>, <code>strings-menu</code></p>
+        <p><strong>Description:</strong> The location in the Editor where the button is added.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.type</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Allowed values:</strong> <code>panel</code>, <code>modal</code>, <code>event</code></p>
+        <p><strong>Description:</strong> The type of action this button will perform.<br/>
+        The <code>event</code> type is supported at the <code>translation-toolbar</code> and <code>strings-menu</code> locations.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.module</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The <code>key</code> of the module the button acts on. The module must be declared in the same app.<br/>
+        Use an <code>editor-right-panel</code> module with the <code>panel</code> type, a <code>modal</code> module with the <code>modal</code> type, and an <code>editor-right-panel</code> or <code>editor-background-worker</code> module with the <code>event</code> type.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.weight</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The order of the button among the other buttons at the same location. Buttons with lower values are placed first: to the left in the header and the translation toolbar, and higher in the menus.<br/>
+        The default value is <code>100</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>crowdin</code>, <code>crowdin-enterprise</code></p>
+        <p><strong>Description:</strong> Set of environments where a module could be installed.<br/>
+        This parameter is needed for cross-product applications.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Runtime State
+
+An app can update its own buttons while the Editor is open: set the icon, add a badge, override the tooltip, or make a button inactive. Use the [AP.editor.updateButton](/developer/crowdin-apps-js/#update-button) method to apply the changes and [AP.editor.resetButton](/developer/crowdin-apps-js/#reset-button) to return the button to the state declared in the manifest.
