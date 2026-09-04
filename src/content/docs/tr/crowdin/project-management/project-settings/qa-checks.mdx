@@ -18,9 +18,9 @@ import qaChecksView from '!/crowdin/project-management/settings/qa_checks_view.p
 import qaChecksDetails from '!/crowdin/project-management/settings/qa_checks_details.png';
 import qaChecksAddToIgnoreList from '!/crowdin/project-management/settings/qa_checks_add_to_ignore_list.png';
 
-Kalite güvencesi (KG) denetimlerinin temel amacı, çevirilerde farklı dile özgü yönleri etkin bir şekilde ele almanıza yardımcı olmak ve kaynak dizgileriyle aynı şekilde biçimlendirildiklerinden ve kullanıcı arayüzüne de uyacağından emin olmaktır. Bazı tipik KG denetimi sorunları, eksik virgüller, fazladan boşluklar veya yazım hataları içerir.
+Quality assurance (QA) checks scan translations for language-specific formatting that doesn't match the source string or won't fit the UI. Typical issues are missed commas, extra spaces, and typos.
 
-KG denetimleriyle düzeltilmesi gereken sorunlar Düzenleyicide vurgulanır. KG denetimleri, bazı yaygın hataları kolayca ve hızlı bir şekilde tespit etmeye yardımcı olur. Projenizi oluşturmadan ve çevirileri indirmeden önce tüm KG denetimi sorunlarını incelemeniz ve çözmeniz önerilir.
+Crowdin, Düzenleyicide bulduğu sorunları vurgular, bu yüzden projeyi oluşturmadan ve çevirileri indirmeden önce bunları gözden geçirin ve çözün.
 
 <Image src={qaChecksInEditor} alt="Düzenleyicide KG Denetimleri" />
 
@@ -28,7 +28,7 @@ KG denetimleriyle düzeltilmesi gereken sorunlar Düzenleyicide vurgulanır. KG 
   KG sorunu göstergeleri, etkin [Düzenleyici kipi ve düzenine](/online-editor/#düzenleyici-kipleri) bağlı olarak değişebilir.
 </Aside>
 
-**KG Denetimleri** bölümünde, çeviri işlemi sırasında Düzenleyicide vurgulanacak KG sorunlarının türlerini yönetebilirsiniz.
+**KG Denetimleri** bölümünde, Crowdin’in çeviri sırasında hangi tür KG sorunlarını vurgulayacağını seçersiniz.
 
 ## KG Denetimlerini Yapılandırın
 
@@ -38,49 +38,55 @@ Varsayılan olarak KG denetimleri etkinleştirilmiştir. Projenizde gerekli KG d
   1. Projenizi açın ve **Ayarlar > KG Denetimleri**’ne gidin.
   2. **KG Denetimlerini etkinleştir**’in seçildiğinden emin olun. <Image src={qaChecksSettings} alt="KG Denetimi Ayarları" />
   3. Tercihlerinize göre KG denetimi türlerini seçin.
-  4. Seçilen her KG denetim türü için iki seçenekten birini seçerek çevirileri KG sorunlarıyla birlikte kaydetmenin mümkün olup olmayacağını seçin: **Hata** ve **Uyarı**.
-     * **Uyarı** &ndash; çevirmenler, düzeltmeler için önerileri bulunan KG sorunları hakkında bilgilendirilir, ancak yine de **Yine de kaydet** düğmesini kullanarak çeviriyi kaydedebilirler.
-     * **Hata** &ndash; çevirmenler, düzeltmeler için önerileri bulunan KG sorunları hakkında bilgilendirilir ve tüm sorunlar çözülene kadar çeviriyi kaydedemezler.
+  4. For each selected QA check type, choose whether translations with QA issues can be saved: **Error** or **Warning**.
+     * **Warning**: Translators see the QA issue along with suggestions for fixes and can still save the translation with **Save anyway**.
+     * **Error**: Translators see the QA issue along with suggestions for fixes and can save the translation only after resolving it.
   5. KG Denetimleri listesi için aşağı kaydırın ve **Kaydet**’e tıklayın. <Image src={qaSaveSettings} alt="KG Denetimleri Kaydetme Ayarları" />
 </Steps>
 
-Etkinleştirildikten sonra, KG denetimleri arka planda çalışacak ve olası KG sorunları için çevirileri tarayacak.
+A few checks come with a fixed setting:
+
+* **Kopya çeviri**, **FTL sözdizimi** ve **MDX sözdizimi** her zaman etkinleştirilmiştir ve her zaman **Hata** olarak uygulanır.
+* **ICU sözdizimi** her zaman etkinleştirilmiştir ve **Hata** olarak mı yoksa **Uyarı** olarak mı uygulanacağını siz seçersiniz.
+* **Spelling mistakes**, **AI-powered check**, and **Outdated translation** are always applied as a **Warning**, and you choose whether they're enabled.
+
+Etkinleştirilen denetimler arka planda çalışır ve olası KG sorunları için çevirileri tarar.
 
 ## KG Denetimlerini Yeniden Doğrulayın
 
-Tüm proje çevirileri için etkinleştirilmiş KG denetimlerini yeniden çalıştırmak ve sorun durumlarını güncellemek için **Yeniden Doğrula** düğmesini kullanın. Bu, ayarları, YZ istemlerini veya terminolojiyi değiştirdikten sonra kullanışlıdır.
+Tüm proje çevirileri için etkinleştirilmiş KG denetimlerini yeniden çalıştırmak ve sorun durumlarını güncellemek için **Yeniden Doğrula** düğmesini kullanın. Ayarları, YZ istemlerini veya terminolojiyi değiştirdikten sonra bunu kullanın.
 
 <Aside>
   **Yeniden Doğrula** düğmesi sadece desteklenen en az bir KG denetimi kategorisi etkin olduğunda kullanılabilir (**Tutarlı terminoloji** veya **YZ destekli denetim**).
 </Aside>
 
-Yeniden doğrulama başladıktan sonra düğme etkisizleştirilir ve **İptal** düğmesi görünür. İşlem tamamlandığında bir onay bildirimi gösterilir.
+Yeniden doğrulama başladıktan sonra düğme etkisizleştirilir ve **İptal** düğmesi görünür. Crowdin, işlem tamamlandığında bir bildirim gösterir.
 
 ## KG Denetimi Parametreleri
 
-**Boş çeviri** &ndash; çevirisi olmayan dizgiler.
+**Boş çeviri**: Kaynak dizgi olmadığında çeviri boştur veya çeviri olmadığında kaynak dizgi boştur.
 
-**Uzunluk sorunları** &ndash; ayarladığınız karakter sınırından daha uzun çevrilmiş dizgiler.
+**Uzunluk sorunları**: Çeviri, dizgi için belirlenen karakter sınırından daha uzun.
 
 <Aside type="tip">
-  Belirli dizgiler için karakter sınırlarını ayarlamak amacıyla **Kaynaklar > Dizgiler**’e gidin. Gerekli dizgide **Düzenle**’ye tıklayın ve en fazla uzunluğu ayarlayın. Bu, çevirmenlere belirli bir dizgi için bir çevirinin belirtilen sınırdan daha uzun olamayacağı konusunda bilgilendirileceği anlamına gelir. Bu, verilen metin için alan sınırlı olduğunda faydalıdır.
+  Belirli bir dizgi için karakter sınırı ayarlamak amacıyla **Kaynaklar > Dizgiler**’e gidin, gerekli dizgide **Düzenle**’ye tıklayın ve en fazla uzunluğa ayarlayın. Çevirmenler daha sonra bu dizgi için çevirinin sınırdan daha uzun olamayacağını görür; bu da metin için alanın sınırlı olması durumunda yardımcı olur.
 </Aside>
 
-**Etiketler uyuşmazlığı** &ndash; HTML etiketlerini içeren dizgiler, çevirilerde bazı açılış veya kapanış etiketlerinden yoksun olabilir.
+**Etiket uyuşmazlığı**: Çevirideki HTML etiketleri kaynak dizgidekilerle eşleşmiyor veya bunların `id` öznitelikleri veya CDATA bölümleri farklı.
 
-**Boşluklar uyuşmazlığı** &ndash; art arda birden çok boşluk, eksik boşluklar.
+**Boşluk uyuşmazlığı**: Çevirideki boşluklar, baştaki ve sondaki boşluklar ve yeni satırlar, tekrarlanan boşluklar, özel karakterlerin etrafındaki boşluklar ve bölünemeyen boşluklar dahil olmak üzere kaynak dizgideki boşluklarla eşleşmiyor.
 
-**Değişkenler uyuşmazlığı** &ndash; kodun bazı bölümlerinden yoksun veya tuhaf olanlara sahip yer tutucular.
+**Değişkenler uyuşmazlığı**: Çevirideki yer tutucular kaynak dizgidekilerle eşleşmiyor.
 
-**Noktalama uyuşmazlığı** &ndash; noktalama hataları veya noktalama işaretlerindeki farklılıklar.
+**Noktalama işaretleri uyuşmazlığı**: Çevirideki noktalama işaretleri, önceki ve sonraki boşluklar da dahil olmak üzere kaynak dizgidekilerle eşleşmiyor.
 
-**Karakter büyük/küçük uyuşmazlığı** &ndash; kaynak veya çevrilmiş dizgilerde farklı olarak kullanılan küçük veya büyük harf.
+**Karakter büyük/küçük uyuşmazlığı**: Çevirideki karakter büyüklüğü ve küçüklüğü, ya dizginin başlangıcındaki ya da art arda birkaç büyük harfli karakterde kaynak dizgiyle eşleşmiyor.
 
-**Özel karakterler uyuşmazlığı** &ndash; yeni paragraflar, para birimi işaretleri, kaynak ve çevrilmiş dizgilerde farklı olarak kullanılan diğer özel karakterler.
+**Özel karakter uyuşmazlığı**: Çevirideki özel karakterler, parantez, tırnak işareti, biçimlendirme varlıkları, yeni paragraflar ve para birimi işaretleri gibi kaynak dizgideki karakterlerle eşleşmiyor.
 
-**“Yanlış çeviri” sorunları** &ndash; "şu anki çeviri yanlış" etiketi ile oluşturulan sorunlar.
+**"Yanlış çeviri" sorunları**: Çeviride, bir proje üyesinin **Şu anki çeviri yanlış** türüyle bildirdiği açık bir sorun var.
 
-**Yazım hataları** &ndash; Crowdin’in desteklediği sözlüklerde bulunmayan kelimeler.
+**Yazım hataları**: Çeviri, Crowdin’in desteklediği sözlüklerde bulunmayan kelimeler içeriyor.
 
 <Aside type="caution" title="Sınırlamalar">
   Şu anda sadece belirli diller için kullanılabilir.
@@ -89,29 +95,31 @@ Yeniden doğrulama başladıktan sonra düğme etkisizleştirilir ve **İptal** 
   </details>
 </Aside>
 
-**ICU sözdizimi** &ndash; çevirilerde ICU ileti sözdiziminin doğru kullanımı.
+**ICU sözdizimi**: Çeviri, ICU ileti sözdizimini bozuyor, `diğer` çoğul biçimi eksik veya kaynak dizgiden farklı bir yapı kullanıyor.
 
-**Tutarlı terminoloji** &ndash; kaynak kelimelerin ilgili sözlük terimlerine göre çevrilip çevrilmediğini denetler.
+**Tutarlı terminoloji**: Çeviri kaynak kelime için sözlük terimi kullanmıyor veya sözlükte **önerilmez** veya **eski** olarak işaretlenmiş bir terim kullanıyor.
 
 <Aside type="caution" title="Sınırlamalar">
   Şu anda İngilizce, Almanca, İspanyolca, Fransızca, İtalyanca, Felemenkçe, Norveççe, Norveççe Bokmal, Lehçe, Rusça, İsveççe, Ukraynaca, Japonca, Korece, Basitleştirilmiş Çince ve Türkçe için kullanılabilir.
 </Aside>
 
-**Kopya çeviri** &ndash; zaten varolan çevirileri çoğaltan çeviriler.
+**Kopya çeviri**: Çeviri, zaten varolan bir çeviriyi çoğaltıyor.
 
-**FTL sözdizimi** &ndash; çevirilerde FTL sözdiziminin doğru kullanımı.
+**FTL sözdizimi**: FTL dosyalarında, çeviri FTL sözdizimini bozuyor ya da kaynak dizginin kullandığı yer tutucuları ve başvuruları ekliyor veya çıkarıyor.
 
-**Android sözdizimi** &ndash; çevirilerde Android sözdiziminin doğru kullanımı.
+**Android sözdizimi**: Çeviri, kaynak dizginin kullandığı yer tutucu etiketlerini (`\<xliff:g>`) tutmuyor.
 
-**Sayı uyuşmazlığı** &ndash; kaynak ile çeviriler arasındaki tutarsızlıkları veya eksik sayıları denetler.
+**Sayı uyuşmazlığı**: Çevirideki sayılar kaynak dizgideki sayılarla eşleşmiyor veya eksik kalmış.
 
-**YZ destekli denetim** &ndash; çeviri sorunlarını tespit etmek, doğruluğu artırmak ve çevirilerin projeye özgü kalite standartlarını karşılamasını sağlamak için yapay zekayı kullanır. Tanımlanmış değerlendirme ölçütlerine sahip bir YZ isteminin yapılandırılmasını gerektirir.
+**YZ destekli denetim**: Çeviri, yapay zeka isteminizde tanımlanan değerlendirme ölçütlerini karşılamıyor. Denetimi etkinleştirmeden önce istemi yapılandırın.
 
 <ReadMore>
-  [YZ destekli denetimini yapılandırma](/crowdin-ai/#yz-kg-denetimi-ayarlama) hakkında daha fazlasını okuyun.
+  [YZ destekli denetimi yapılandırma](/crowdin-ai/#yz-kg-denetimi-ayarlama) hakkında daha fazlasını okuyun.
 </ReadMore>
 
-**Güncel olmayan çeviri** &ndash; karşılık gelen kaynak dizgiler değiştirildikten sonra gözden geçirilmesi gerekebilecek çevirileri işaretler.
+**Güncel olmayan çeviri**: Çeviri, kaynak dizgideki bir değişiklikten önce yapıldığından, gözden geçirilmesi gerekebilir.
+
+**MDX sözdizimi**: MDX dosyalarında, çevirideki bir satır `import` veya `export` ile başlar. MDX böyle bir satırı metin yerine kod olarak ele alır.
 
 ## Yazım Denetleyicisi
 
@@ -119,15 +127,15 @@ Yazım denetleyici, desteklenen diller için **Yazım hataları** KG denetimini 
 
 ### Yazım Denetleyicisi Nasıl Çalışır
 
-Yazım denetleyicisi yanlış yazılan kelimeleri yakalamaktan fazlasını yapar. Desteklenen diller için kapsam dile bağlı olsa da dilbilgisi, noktalama işaretleri ve büyük harf kullanımı sorunlarını da işaretleyebilir.
+Yazım denetleyicisi, yanlış yazılan kelimelerin ötesinde, kapsam dile bağlı olmasına rağmen desteklenen diller için dilbilgisi, noktalama işaretleri ve büyük harf sorunlarını işaretler.
 
 Yazım denetimi açıklamaları arayüz dilinizde değil, çevirdiğiniz hedef dilde gösterilir, böylece o dilin dilbilimcileri için doğal bir şekilde okunur.
 
 ### Yazım Denetleyicisi Yoksayma Listesi
 
-Eğer projeniz Yazım Denetleyicisi tarafından tanınmayan nadir kelimeler içeriyorsa, denetlenmelerini hariç tutmak için bunları Yoksayma listesine ekleyebilirsiniz.
+Eğer projeniz yazım denetleyicinin tanımadığı yaygın olmayan kelimeler kullanıyorsa, bunları denetimin dışında bırakmak için Yoksayma listesine ekleyin.
 
-Bu, hata olarak işaretlenmemesini bekleyebileceğiniz marka adları veya özel isimler (örn. `Uygulamam`) gibi projeye özgü terminoloji için kullanışlıdır. Yazım denetleyicisi ve Sözlük ayrı özellikler olduğundan, terimlerin Sözlüğe eklenmesi, bunların otomatik olarak Yazım Denetimi yoksayma listesine eklenmesini sağlamaz. Bunları buraya eklemek, işaretlenmelerini önlemenin doğru yoludur.
+Bu, marka adları veya özel isimler (örneğin, `Uygulamam`) gibi projeye özgü terminolojiye uygundur. Yazım denetleyicisi ve Sözlük ayrı özelliklerdir, bu yüzden Sözlüğe bir terim eklemek, onu Yoksayma listesine eklemez ve Yoksayma listesi, onu hariç tuttuğunuz yerdir.
 
 <Image src={qaChecksAddToIgnoreList} alt="KG Denetimleri Yoksayma listesine ekleyin" />
 
@@ -138,41 +146,40 @@ Yazım denetleyicisi için Yoksayma listesine eklenen kelimeleri gözden geçirm
   2. Sayfanın altındaki **Yazım Denetimi Yoksayma Listesi**’ne tıklayın.
 </Steps>
 
-Açılan pencerede yoksayma listesine eklenen kelimelerin listesini görebilirsiniz. Gerekirse bunları süzebilir veya listeden kaldırabilirsiniz.
+Açılan ileti öğesinde, burada süzebileceğiniz veya listeden kaldırabileceğiniz yoksayılan kelimeler listelenir.
 
 ## KG Sorun Göstergeleri
 
-KG denetimleri sorunları algıladığında, çeviri kalitesi sorunlarını hızlı bir şekilde tespit etmenize ve bunlara gitmenize yardımcı olmak için proje arayüzü boyunca görsel göstergeler görünür.
+KG denetimleri sorunları tespit ettiğinde, proje arayüzünde göstergeler görünür, böylece ilgilenilmesi gereken dizgileri bulabilirsiniz.
 
 ### KG Durum Seçenekleri
 
-<span>KAPALI</span> &ndash; etkinleştirilmediğinde.
+KG denetimi durumu aşağıdakilerden birini gösterir:
 
-<Badge text="DEVAM ETMEKTE" variant="caution" /> &ndash; çalışırken.
-
-<Badge text="SORUN YOK" variant="success" /> &ndash; hiçbir sorun bulunmadığında.
-
-<Badge text="SORUNLAR BULUNDU" variant="danger" /> &ndash; sorunlar bulunduğunda.
+* <span>KAPALI</span>: KG denetimleri etkin değil.
+* <Badge text="DEVAM EDİYOR" variant="caution" />: Denetleme çalışıyor.
+* <Badge text="SORUNLAR YOK" variant="success" />: Denetleme herhangi bir sorun bulamadı.
+* <Badge text="SORUNLAR BULUNDU" variant="danger" />: Denetleme sorunlar bulundu.
 
 ### Sorun Ayrıntılarını Görüntüleme
 
-KG denetimi durumu <Badge text="SORUNLAR BULUNDU" variant="danger" /> olduğunda, proje Panelinin sağ tarafındaki **Ayrıntılar** panelinde görünür. İki eylem düğmesini ortaya çıkarmak için üzerine tıklayın:
+<Badge text="SORUNLAR BULUNDU" variant="danger" /> durumu, proje Panelinin sağ tarafındaki **Ayrıntılar** panelinde görünür. İki eylem düğmesini ortaya çıkarmak için buna tıklayın:
 
-* **Sorunları Görüntüle** &ndash; KG sorunları olan önerilerin sayısını göstermek için Paneldeki dil satırını genişletir.
-* **Ayarlar** &ndash; sizi doğrudan **Ayarlar > KG Denetimleri**’ne götürür.
+* **Sorunları Görüntüle**: KG sorunları olan önerilerin sayısını göstermek için Paneldeki dil satırını genişletir.
+* **Ayarlar**: Sizi doğrudan **Ayarlar > KG Denetimleri**’ne götürür.
 
-<Image src={qaChecksView} alt="KG Denetimleri Görünümü" />
+<Image src={qaChecksView} alt="KG Denetimleri Görünüm" />
 
-Genişletilmiş dil satırında **KG sorunları içeren N öneri** bağlantısına tıklayarak Düzenleyiciyi KG sorunları süzgecininin uygulandığı şekilde açın.
+Genişletilmiş dil satırında **KG sorunları içeren N öneri**’ye tıklayarak Düzenleyiciyi KG sorunları süzgecininin uygulandığı şekilde açın.
 
-<Image src={qaChecksDetails} alt="KG Denetimleri Ayrıntıları" />
+<Image src={qaChecksDetails} alt="KG Denetimleri Ayrıntılar" />
 
-Düzenleyicide, [Yan Yana kipinde](/online-editor/#yan-yana-kipi) KG sorunları olan dizgileri gözden geçirebilirsiniz. Varolan çeviriler doğru ise onaylayabilir veya değişiklik yapabilir ve onaylayabilirsiniz.
+Düzenleyicide, [Yan Yana kipinde](/online-editor/#yan-yana-kipi) KG sorunları olan dizgileri gözden geçirin. Varolan çeviriler doğru ise onaylayın veya değişiklikleri yapın ve ardından bunları onaylayın.
 
 ### Dil Başına Göstergeler
 
-Çözülmemiş KG sorunları olan diller, proje Panelinde <Badge text="KG" variant="danger" /> göstergesiyle işaretlenir. Bu, hangi dillerin çözülmemiş KG sorunları içerdiğini bir bakışta gösteren bilgilendirici bir göstergedir.
+Çözülmemiş KG sorunları olan diller, proje Panelinde bir <Badge text="KG" variant="danger" /> göstergesiyle işaretlenir, böylece hangi dillerin bunları içerdiğini bir bakışta görebilirsiniz.
 
 ### Dosya Başına Göstergeler
 
-Ayrıca KG sorunları olan dosyaları doğrudan dil sayfasından da tanımlayabilirsiniz. Çözülmemiş KG sorunları içeren tüm dosyalar <Badge text="KG" variant="danger" /> göstergesiyle işaretlenir. Bu, hangi dosyaların çözülmemiş KG sorunları içerdiğini bir bakışta gösteren bilgilendirici bir göstergedir. Bu dosyada bulunan sorunların sayısını görmek için göstergenin üzerine gelin.
+Çözülmemiş KG sorunları olan dosyalar, dil sayfasında <Badge text="KG" variant="danger" /> göstergesiyle işaretlenir. Bu dosyada bulunan sorunların sayısını görmek için göstergenin üzerine gelin.
