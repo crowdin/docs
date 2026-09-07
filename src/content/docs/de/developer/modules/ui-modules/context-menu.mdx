@@ -1,0 +1,252 @@
+---
+title: Kontextmenü-Modul
+description: Das Element nach Möglichkeit im Kontextmenü erstellen
+slug: developer/crowdin-apps-module-context-menu
+sidebar:
+  order: 19
+  label: Kontextmenü
+---
+
+Dieses Modul ermöglicht die Erstellung benutzerdefinierter Einträge in den Kontextmenüs von Crowdin.
+
+Crowdin-Kontextmenüs:
+
+* Ressourcen > TM > TM-Eintrag
+* Ressourcen > Glossar > Glossareintrag
+* Projekt-Startseite > Spracheintrag
+* Projekt > Inhalte > Dateien > Dateieintrag
+* Projekt > Inhalte > Screenshots > Screenshot-Eintrag
+* Projekt > Sprachseite > Dateieintrag
+
+Kontextmenüs von Crowdin Enterprise:
+
+* Workspace > TM > TM-Eintrag
+* Workspace > Glossar > Glossareintrag
+* Projekt-Startseite > Spracheintrag
+* Projekt > Inhalte > Dateien > Dateieintrag
+* Projekt > Inhalte > Screenshots > Screenshot-Eintrag
+* Projekt-Startseite > Sprachseite > Dateieintrag
+
+Ein Kontextmenüeintrag kann ein bestimmtes App-Modul mit zusätzlichem Kontext öffnen, der sich auf den ausgewählten Eintrag oder eine benutzerdefinierte URL bezieht.
+Es gibt folgende Arten von Aktionen:
+
+* Ein bestimmtes App-Modul in einem modalen Dialog öffnen (siehe [Modal-Modul](#modal))
+* Zu einem bestimmten App-Modul weiterleiten
+* Eine benutzerdefinierte URL in einem neuen Tab öffnen
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+For Crowdin:
+
+* Only me (i.e., project owner)
+* Ich, Projektmanager und Entwickler (wenn der Ort `language`, `screenshot`, `source_file` oder `translated_file` ist)
+* All project members
+* Selected users
+
+For Crowdin Enterprise:
+
+* Only organization admins
+* Organisationsadministratoren, Projektmanager und Entwickler (wenn der Ort `language`, `screenshot`, `source_file` oder `translated_file` ist)
+* All users in the organization projects
+* Selected users
+
+## Structure
+
+### Modal
+
+Der Kontextmenüeintrag zeigt das angegebene Modul in einem modalen Dialog an.
+
+```json title="manifest.json"
+{
+  "modules": {
+    "context-menu": [
+      {
+        "key": "context-menu-key",
+        "name": "Name des Kontextmenüeintrags",
+        "description": "Beschreibung des Kontextmenüeintrags",
+        "options": {
+          "location": "source_file",
+          "type": "modal",
+          "module": {
+            "modal": "modal-module-key"
+          },
+          "signaturePatterns": {
+            "fileName": ".*\.json",
+            "nodeType": [0, 1]
+          }
+        }
+      }
+    ],
+    "modal": [
+      {
+        "key": "modal-module-key",
+        "name": "Neues Modal",
+        "url": "/path/to/integration/module"
+      }
+    ]
+  }
+}
+```
+
+### Weiterleitung
+
+Der Kontextmenüeintrag leitet zum angegebenen Modul weiter.
+
+```json title="manifest.json"
+{
+  "modules": {
+    "context-menu": [
+      {
+        "key": "context-menu-key",
+        "name": "Name des Kontextmenüeintrags",
+        "description": "Beschreibung des Kontextmenüeintrags",
+        "options": {
+          "location": "source_file",
+          "type": "redirect",
+          "module": {
+            "project-integrations": "integration-module-key"
+          },
+          "signaturePatterns": {
+            "fileName": ".*\.json",
+            "nodeType": [0, 1]
+          }
+        }
+      }
+    ],
+    "project-integrations": [
+      {
+        "key": "integration-module-key",
+        "name": "Neue Integration",
+        "logo": "/integration-logo.png",
+        "url": "/path/to/integration/module"
+      }
+    ]
+  }
+}
+```
+
+### Neuer Tab
+
+Der Kontextmenüeintrag öffnet einen neuen Tab mit der URL: `baseUrl/options.url`.
+
+```json title="manifest.json"
+{
+  "baseUrl": "https://app.example.com",
+  "modules": {
+    "context-menu": [
+      {
+        "key": "context-menu-key",
+        "name": "Name des Kontextmenüeintrags",
+        "description": "Beschreibung des Kontextmenüeintrags",
+        "options": {
+          "location": "source_file",
+          "type": "new_tab",
+          "url": "/example/path",
+          "signaturePatterns": {
+            "fileName": ".*\.json",
+            "nodeType": [0, 1]
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Der für Menschen lesbare Name, der im Kontextmenü angezeigt wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Eine für Menschen lesbare Beschreibung der Funktion des Moduls.<br />Die Beschreibung wird in der Crowdin-Oberfläche angezeigt.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">options.location</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Zulässige Werte:</strong> <code>tm</code>, <code>glossary</code>, <code>style_guide</code>, <code>language</code>, <code>screenshot</code>, <code>source_file</code>, <code>translated_file</code></p>
+        <p><strong>Beschreibung:</strong> Der Ort in der Benutzeroberfläche, an dem das Kontextmenü hinzugefügt werden kann.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.type</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Zulässige Werte:</strong> <code>modal</code>, <code>new_tab</code> (nur für selbst gehostete Apps), <code>redirect</code></p>
+        <p><strong>Beschreibung:</strong> Die Art der Aktion, die dieses Modul ausführt.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Relative URL.</p>
+        <p>Nur mit dem Typ <code>new_tab</code> verwenden</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.module</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>object</code></p>
+        <p><strong>Beschreibung:</strong> Moduldefinition.</p>
+        <p>Nur mit den Typen <code>modal</code> und <code>redirect</code> verwenden</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>signaturePatterns</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>object</code></p>
+        <p><strong>Beschreibung:</strong> Enthält Kriterien zur Erkennung des Datei- oder Knotentyps und legt fest, wann der Kontextmenüeintrag angezeigt wird.</p>
+        <p>Nur verwenden, wenn <code>options.location</code> auf <code>source_file</code> gesetzt ist</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns.fileName</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Enthält reguläre Ausdrücke für <code>fileName</code>, die zur Erkennung des Dateityps verwendet werden.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>signaturePatterns.nodeType</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>array</code></p>
+        <p><strong>Zulässige Werte:</strong> <code>0</code> – Ordner, <code>1</code> – Datei, <code>2</code> – Branch</p>
+        <p><strong>Beschreibung:</strong> Array von Knotentypen, das festlegt, wann der Kontextmenüeintrag angezeigt wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Zulässige Werte:</strong> <code>crowdin</code>, <code>crowdin-enterprise</code></p>
+        <p><strong>Beschreibung:</strong> Menge der Umgebungen, in denen ein Modul installiert werden kann.<br />
+        Dieser Parameter wird für produktübergreifende Anwendungen benötigt.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
