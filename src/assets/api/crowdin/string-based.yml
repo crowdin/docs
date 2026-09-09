@@ -2501,7 +2501,7 @@ paths:
       tags:
         - AI
       summary: 'Generate AI Report'
-      description: '**Required scopes:** `ai.provider` (Read only).'
+      description: "**Required scopes:** `ai.provider` (Read only).\n\nGeneration is asynchronous and takes three requests. This one starts it and returns the report `identifier`. Then poll [Check AI Report Generation Status](#operation/api.users.ai.reports.get) until its `status` is `finished`; `progress` counts up to 100 meanwhile. Finally [Download AI Report](#operation/api.users.ai.reports.download.download) returns a short-lived `url`. Fetch that url to get the report file itself."
       operationId: api.users.ai.reports.post
       parameters:
         -
@@ -2513,6 +2513,8 @@ paths:
               oneOf:
                 -
                   $ref: '#/components/schemas/TokensUsageRawData'
+                -
+                  $ref: '#/components/schemas/CostsByUsers'
       responses:
         '201':
           description: 'AI Report generation was successfully started'
@@ -20321,6 +20323,10 @@ components:
           type: boolean
           example: true
           nullable: true
+        isCompatibleWithAiLimit:
+          description: 'Whether the model can be used while AI cost limits are in effect.'
+          type: boolean
+          example: true
       type: object
     AiProvider:
       title: 'AI Provider'
@@ -20538,28 +20544,9 @@ components:
           properties:
             data:
               additionalProperties: true
-    TokensUsageRawData:
-      title: 'Tokens Usage Raw Data'
-      description: 'Generate a raw data AI tokens usage'
-      required:
-        - type
-        - schema
-      properties:
-        type:
-          description: tokens-usage-raw-data
-          type: string
-          enum:
-            - tokens-usage-raw-data
-          example: tokens-usage-raw-data
-        schema:
-          description: 'Tokens Usage Raw Data Report schema'
-          type: object
-          oneOf:
-            -
-              $ref: '#/components/schemas/ai.report.tokens_raw_usage.general'
-      type: object
-    ai.report.tokens_raw_usage.general:
-      title: General
+    ai.report.base:
+      title: 'Report Period And Filters'
+      description: 'The period, filters and file format every AI report accepts. Each report type composes this schema, so a field means the same thing whichever type you ask for'
       required:
         - dateFrom
         - dateTo
@@ -20570,12 +20557,12 @@ components:
           format: date-time
           example: '2024-01-23T07:00:14+00:00'
         dateTo:
-          description: 'Report date to in UTC, ISO 8601'
+          description: 'Report date to in UTC, ISO 8601. Part of the period, so a whole day runs from `00:00:00` to `23:59:59`'
           type: string
           format: date-time
           example: '2024-09-27T07:00:14+00:00'
         format:
-          description: 'Defines report target format'
+          description: '`csv` is a header row plus one data row per record; `json` wraps the same records and echoes the filters the report was built with'
           type: string
           default: json
           enum:
@@ -20583,24 +20570,74 @@ components:
             - csv
           example: json
         projectIds:
-          description: 'Array of project ids. Get via [List Projects](#operation/api.projects.getMany)'
+          description: 'Count only usage from these projects, ids via [List Projects](#operation/api.projects.getMany). Organization-level AI usage belongs to no project, so it drops out once this filter is set'
           type: array
           items:
             type: integer
             example: 22
         promptIds:
-          description: 'Array of AI Prompt ids. Get via [List TMs](#operation/api.ai.prompts.getMany)'
+          description: 'Count only usage made through these AI prompts, ids via [List AI Prompts](#operation/api.ai.prompts.getMany)'
           type: array
           items:
             type: integer
             example: 18
         userIds:
-          description: 'Array of user ids'
+          description: 'Count only usage by these users; by default everyone in the organization is included'
           type: array
           items:
             type: integer
             example: 1
       type: object
+    TokensUsageRawData:
+      title: 'Tokens Usage Raw Data'
+      description: 'Every AI call of the period, one record each, with its tokens and cost, for auditing what a specific call spent, or for aggregating the raw numbers your own way. Use `costs-by-users` instead when you only need the totals per user'
+      required:
+        - type
+        - schema
+      properties:
+        type:
+          type: string
+          enum:
+            - tokens-usage-raw-data
+          example: tokens-usage-raw-data
+        schema:
+          description: 'The generated file holds one record per AI call: when it happened, the project, prompt, provider and model behind it, the user charged for it, and its input tokens, output tokens and cost'
+          type: object
+          oneOf:
+            -
+              $ref: '#/components/schemas/ai.report.tokens_raw_usage.general'
+      type: object
+    ai.report.tokens_raw_usage.general:
+      title: General
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ai.report.base'
+    CostsByUsers:
+      title: 'Costs By Users'
+      description: 'AI spend per user for a period, already summed up: for billing AI usage back to a team, watching who nears an AI cost limit, or pulling the AI Limits page figures into your own dashboard. Use `tokens-usage-raw-data` instead when you need every individual AI call rather than per-user totals'
+      required:
+        - type
+        - schema
+      properties:
+        type:
+          type: string
+          enum:
+            - costs-by-users
+          example: costs-by-users
+        schema:
+          description: 'The generated file holds one row per user: `userId`, `userFullName` and `totalCost`, their AI spend for the period in USD; users who made no AI calls in it are omitted. Pass a calendar day or month with no filters to get exactly the figures the AI Limits page shows'
+          type: object
+          oneOf:
+            -
+              $ref: '#/components/schemas/ai.report.costs_by_users.general'
+      type: object
+    ai.report.costs_by_users.general:
+      title: General
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/ai.report.base'
     AiReportResource:
       description: 'AI Report Resource'
       type: object
@@ -20952,6 +20989,10 @@ components:
           format: float
           example: 200
           nullable: true
+        isLimitingActive:
+          description: 'Whether any AI cost limit is currently in force for the organization: an organization-wide limit, a default per-user limit, or at least one entry in `perUserOverrides` that is not unlimited.'
+          type: boolean
+          example: true
         perUserOverrides:
           description: 'Per-user cost limit overrides that take precedence over `userDailyCostLimit` and `userMonthlyCostLimit`.'
           type: array
@@ -30611,6 +30652,12 @@ components:
           format: date-time
           example: '2026-01-01T00:00:00+00:00'
           nullable: true
+        translationModifiedAfter:
+          description: "Re-translates only if a string's current translation was modified after this date. Can be combined with `translationModifiedBefore` to define a date range.\n\n__Note:__ Cannot be later than `translationModifiedBefore`. Requires `scope` to be `translated` or `all`. Cannot be used with `scope: \"untranslated\"` or `translateUntranslatedOnly: true`."
+          type: string
+          format: date-time
+          example: '2026-01-01T00:00:00+00:00'
+          nullable: true
         replaceTranslationsOption:
           description: "Defines whether to replace existing translations with new auto-translations. Default is `none`. Available values:\n- 'none' – add the new translation alongside existing ones (default)\n- 'autoTranslated' – replace auto-generated translations (TM, MT, AI). Human translations are kept\n- 'all' – replace all existing translations\n\n__Note:__ Values other than `none` require `scope` to be `translated` or `all` (cannot be combined with `scope: \"untranslated\"` or `translateUntranslatedOnly: true`)."
           type: string
@@ -30809,6 +30856,10 @@ components:
             - all
           example: untranslated
         translationModifiedBefore:
+          type: string
+          format: date-time
+          nullable: true
+        translationModifiedAfter:
           type: string
           format: date-time
           nullable: true
@@ -40953,6 +41004,7 @@ components:
             - /labelMatchRule
             - /excludeLabelIds
             - /excludeLabelMatchRule
+            - /skipAssignedStrings
             - /resetScope
             - /generateCostEstimate
             - /generateTranslationCost
