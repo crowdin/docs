@@ -45,6 +45,7 @@ export const collections = {
         'repo.viewInstall': z.string().optional(),
         'social.applePodcast': z.string().optional(),
         'social.spotifyPodcast': z.string().optional(),
+        'nav.more': z.string().optional(),
         'modal.header': z.string().optional(),
         'translateInCrowdin': z.string().optional(),
         'englishOnlyContent': z.string().optional(),

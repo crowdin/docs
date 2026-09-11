@@ -6,12 +6,14 @@
  *     section highlighted, sourced from starlight-sidebar-topics route data.
  *   - External links (Store, Blog, Community, Crowdin.com).
  *
- * Structure and base styles are adapted from starlight-utils' SiteTitle.astro + NavLinks.astro
- * (flex wrapper + `<ul>` of links, gray links turning white on hover, bold current link,
- * smaller text on wide viewports), with the site's original `.nav-link` pill styling
- * (padding/rounded/white active button) layered on top.
+ * The header also holds search and the theme/language selects, so the nav collapses by width:
+ *   - from 84rem: topic pills and external links all inline;
+ *   - 64rem–84rem: topic pills inline, external links behind a "More" dropdown;
+ *   - below 64rem: everything behind "More" (topics first, current one highlighted).
+ * (See also the `.header` rules in src/style/global.css.)
  */
 import Default from '@astrojs/starlight/components/SiteTitle.astro';
+import { Icon } from '@astrojs/starlight/components';
 
 const topics = Astro.locals.starlightSidebarTopics?.topics ?? [];
 
@@ -23,11 +25,11 @@ const externalLinks = [
 ];
 ---
 
-<div class="site-title-with-nav">
+<div class="flex items-center gap-2">
     <Default />
-    <ul class="nav-links">
+    <ul class="hidden sm:flex items-center gap-2 list-none m-0 p-0">
         {topics.map((topic) => (
-            <li>
+            <li class="topic-inline">
                 <a
                     href={topic.link}
                     class="nav-link"
@@ -35,41 +37,96 @@ const externalLinks = [
                 >{Astro.locals.t(topic.label, { defaultValue: topic.label })}</a>
             </li>
         ))}
-        {externalLinks.map((link) => (
-            <li>
-                <a href={link.href} class="nav-link" target="_blank" rel="noopener">{link.label}</a>
-            </li>
-        ))}
+        <li>
+            <header-more-menu class="relative block">
+                <button type="button" class="nav-link more-toggle" aria-expanded="false" aria-controls="header-more-links">
+                    {Astro.locals.t('nav.more')}
+                    <Icon name="down-caret" class="more-caret transition-transform" />
+                </button>
+                <ul id="header-more-links" class="more-links list-none m-0">
+                    {topics.map((topic) => (
+                        <li class="menu-topic">
+                            <a
+                                href={topic.link}
+                                class="nav-link"
+                                aria-current={topic.isCurrent ? 'page' : undefined}
+                            >{Astro.locals.t(topic.label, { defaultValue: topic.label })}</a>
+                        </li>
+                    ))}
+                    <li class="menu-topic menu-separator" role="separator"></li>
+                    {externalLinks.map((link) => (
+                        <li>
+                            <a href={link.href} class="nav-link" target="_blank" rel="noopener">{link.label}</a>
+                        </li>
+                    ))}
+                </ul>
+            </header-more-menu>
+        </li>
     </ul>
 </div>
 
+<script>
+    /**
+     * Disclosure behaviour for the "More" menu: toggle on click, close on outside click,
+     * on Escape, and when focus leaves the menu (keyboard users tabbing past it).
+     */
+    class HeaderMoreMenu extends HTMLElement {
+        connectedCallback() {
+            const toggle = this.querySelector<HTMLButtonElement>('.more-toggle');
+            if (!toggle) return;
+
+            const setOpen = (open: boolean) => toggle.setAttribute('aria-expanded', String(open));
+            const isOpen = () => toggle.getAttribute('aria-expanded') === 'true';
+
+            toggle.addEventListener('click', () => setOpen(!isOpen()));
+
+            document.addEventListener('click', (event) => {
+                if (isOpen() && !this.contains(event.target as Node)) setOpen(false);
+            });
+
+            this.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && isOpen()) {
+                    setOpen(false);
+                    toggle.focus();
+                }
+            });
+
+            this.addEventListener('focusout', (event) => {
+                const next = event.relatedTarget as Node | null;
+                if (isOpen() && next && !this.contains(next)) setOpen(false);
+            });
+        }
+    }
+
+    if (!customElements.get('header-more-menu')) {
+        customElements.define('header-more-menu', HeaderMoreMenu);
+    }
+</script>
+
 <style>
-    .site-title-with-nav {
-        display: flex;
-        align-items: center;
-        gap: var(--sl-nav-gap);
-    }
-
-    .nav-links {
-        display: none;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        gap: var(--sl-nav-gap);
-    }
-
+    /* Pill shared by the links and the "More" button so they line up and size identically. */
     .nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
         padding: 0.5rem 0.75rem;
+        border: 0;
         border-radius: 0.5rem;
+        font-size: var(--sl-text-sm);
+        line-height: 1.25rem;
         white-space: nowrap;
         text-decoration: none;
         color: var(--sl-color-gray-1);
+        background: none;
+        appearance: none;
+        cursor: pointer;
     }
 
     .nav-link:hover,
-    .nav-link:focus {
+    .nav-link:focus,
+    .more-toggle[aria-expanded='true'] {
         color: var(--sl-color-white);
-        background-color: rgba(var(--crowdin-cards-color), 0.05);
+        background-color: var(--crowdin-gray-005);
     }
 
     .nav-link[aria-current='page'],
@@ -80,20 +137,77 @@ const externalLinks = [
         background-color: var(--sl-color-white);
     }
 
-    @media (min-width: 640px) {
-        .nav-links {
-            display: flex;
+    .more-toggle[aria-expanded='true'] .more-caret {
+        transform: rotate(180deg);
+    }
+
+    /* Dropdown panel, shown while the "More" button is expanded. */
+    .more-links {
+        display: none;
+        position: absolute;
+        inset-inline-start: 0;
+        top: calc(100% + 0.375rem);
+        z-index: var(--sl-z-index-navbar);
+        min-width: 10rem;
+        padding: 0.375rem;
+        border: 1px solid var(--sl-color-gray-5);
+        border-radius: 0.5rem;
+        background-color: var(--sl-color-bg-nav);
+        box-shadow: var(--sl-shadow-md);
+    }
+
+    .more-toggle[aria-expanded='true'] + .more-links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+    }
+
+    .more-links .nav-link {
+        width: 100%;
+    }
+
+    .menu-separator {
+        height: 1px;
+        margin: 0.25rem 0;
+        background-color: var(--sl-color-gray-5);
+    }
+
+    /* Below 64rem the topic pills don't fit next to search and the selects; they live in the menu. */
+    .topic-inline {
+        display: none;
+    }
+
+    @media (min-width: 64rem) {
+        .topic-inline {
+            display: block;
         }
 
-        /* Let the nav sit beside the logo without being clipped by the title wrapper. */
-        :global(.title-wrapper) {
-            overflow: visible;
+        .menu-topic {
+            display: none;
         }
     }
 
-    @media (min-width: 50rem) {
-        .nav-link {
-            font-size: var(--sl-text-sm);
+    /* Wide viewports: enough room for the full header, so render the external links inline. */
+    @media (min-width: 84rem) {
+        .more-toggle {
+            display: none;
+        }
+
+        .more-links,
+        .more-toggle[aria-expanded='true'] + .more-links {
+            display: flex;
+            flex-direction: row;
+            gap: 0.5rem;
+            position: static;
+            min-width: 0;
+            padding: 0;
+            border: 0;
+            background: none;
+            box-shadow: none;
+        }
+
+        .more-links .nav-link {
+            width: auto;
         }
     }
 </style>
