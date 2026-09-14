@@ -1,0 +1,310 @@
+---
+title: Benachrichtigungen
+description: Get notified about the new events that happen in Crowdin
+slug: account-notifications
+sidebar:
+  order: 0
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import { Icon } from 'astro-icon/components';
+import slackAuthorize from '!/crowdin/getting-started/account/slack_authorize.png';
+import slackConnect from '!/crowdin/getting-started/account/slack_connect.png';
+import slackCrowdinNotifications from '!/crowdin/getting-started/account/slack_crowdin_notifications.png';
+import customNotificationsSetUp from '!/crowdin/getting-started/account/custom_notifications_set_up.png';
+import customNotificationsPayload from '!/crowdin/getting-started/account/custom_notifications_custom_payload.png';
+import customNotificationsEditDelete from '!/crowdin/getting-started/account/custom_notifications_edit_delete.png';
+
+Crowdin bietet verschiedene Arten von Benachrichtigungen an, um den unterschiedlichen Anforderungen der Benutzer gerecht zu werden, darunter:
+
+* *Project Updates*: Notify users of changes to the project, such as new content to translate or updates to existing content.
+* *Translation Activity*: Notify users of new translations, approvals, or comments on translations.
+* *Task Management*: These notifications inform users about new tasks, deadlines and task completions.
+* *Team Communication*: These alerts notify users of messages and discussions within the project.
+
+Um die Benachrichtigungen anzuzeigen, klicke oben rechts auf der Seite auf das Glockensymbol <Icon name="mdi:bell-outline" class="inline-icon" />.
+
+<LinkCard title="Notification Settings" href="/account-settings/#notifications" />
+
+## Slack-Einbindung
+
+Mit Updates, die direkt an Slack gesendet werden, weißt du sofort, was in den Crowdin-Projekten passiert, die du verwaltest oder zu denen du beiträgst. Nachdem du dein Crowdin-Konto mit Slack integriert hast, wähle die Benachrichtigungen aus, die du erhalten möchtest, und der Crowdin-Bot sendet sie als Direktnachrichten.
+
+<Aside>
+  Die Slack-Integration für Crowdin muss für jeden einzelnen Benutzer konfiguriert werden, der Benachrichtigungen in Slack erhalten möchte.
+</Aside>
+
+Um Crowdin-Benachrichtigungen über Slack zu erhalten, gehe wie folgt vor:
+
+<Steps>
+  1. Klicke oben rechts auf dein Profilbild und wähle **Einstellungen**.
+  2. Wechsle zum Tab **Benachrichtigungen** und klicke auf **Slack verbinden**. <Image src={slackConnect} alt="Connect Slack" />
+  3. Bestätigen Sie die Verbindung mit Crowdin auf der Slack-Seite. <Image src={slackAuthorize} alt="Authorize Slack" class="width-lg" />
+  4. Go back to Crowdin and select the notifications you want to receive in Slack.
+</Steps>
+
+<ReadMore>
+  Mehr über [globale Benachrichtigungseinstellungen](/account-settings/#notifications) erfahren.
+</ReadMore>
+
+You will receive the selected types of notifications as direct messages from the Crowdin bot.
+
+<Image src={slackCrowdinNotifications} alt="Crowdin Notifications in Slack" />
+
+Sie können außerdem jederzeit die Benachrichtigungen deaktivieren und von Crowdin trennen.
+
+## Custom Notifications
+
+Benutzerdefinierte Benachrichtigungen ermöglichen es dir, Informationen über neue Ereignisse in Crowdin zu erhalten. Sobald du benutzerdefinierte Benachrichtigungen für dein Konto konfiguriert hast, sendet Crowdin POST-Anfragen mit Daten über HTTP an die URL für benutzerdefinierte Benachrichtigungen.
+
+### Use Cases
+
+You can configure custom notifications to build integrations with the services or with your backend. For example:
+
+* Set up custom notifications to send notifications to the system you use.
+* Übermittle Informationen an Drittanbieterdienste entsprechend den spezifischen Anforderungen der Anfrage (z. B. Inhaltstyp, Header, Payload).
+* Erstelle benutzerdefinierte Integrationen mit Crowdin.
+
+### Configuring
+
+Um benutzerdefinierte Benachrichtigungen in Crowdin zu konfigurieren, gehe wie folgt vor:
+
+<Steps>
+  1. Öffne deine **Kontoeinstellungen** und gehe zum Tab **Benachrichtigungen**.
+  2. Klicke im Bereich **Benutzerdefinierter Benachrichtigungskanal** auf **Benutzerdefinierten Benachrichtigungskanal einrichten**, um mit der Konfiguration deiner benutzerdefinierten Benachrichtigungen zu beginnen.
+</Steps>
+
+You will need to provide the following information to set up custom notifications:
+
+* The URL where the callback should be sent.
+* The content type for the POST request method (`multipart/form-data`, `application/json`, or `application/x-www-form-urlencoded`).
+
+Optionally, you can add special headers to your custom notifications. They can be used for additional security, as an authorization method, and more. Wenn du beispielsweise Header hinzufügst, kann dein Endpunkt für benutzerdefinierte Benachrichtigungen diese überprüfen und sicherstellen, dass die Informationen von Crowdin stammen.
+
+When configuring custom notifications, click **Test notification** to see how your application will react to that call. Once finished with the configuration, click **Save**.
+
+<Image src={customNotificationsSetUp} alt="Setting Up Custom Notifications" class="width-xl" />
+
+Abhängig davon, wie du benutzerdefinierte Benachrichtigungen verwaltest, musst du möglicherweise bestimmte Crowdin-IP-Adressen zu deiner Firewall hinzufügen, damit Crowdin auf die vorkonfigurierten URLs für benutzerdefinierte Benachrichtigungen zugreifen kann.
+
+<ReadMore>
+  Read more about [IP Addresses](/developer/ip-addresses/).
+</ReadMore>
+
+### Custom Payloads
+
+Du kannst die Payload für benutzerdefinierte Benachrichtigungen ändern, um die Elemente entsprechend den Anforderungen deines Systems hinzuzufügen und zu organisieren. To get informative and user-friendly notifications, make sure to include the `{{notification-message}}` placeholder in your payload.
+
+<Image src={customNotificationsPayload} alt="Custom Payload" class="width-xl" />
+
+### Event Types
+
+Nachdem du benutzerdefinierte Benachrichtigungen konfiguriert hast, kannst du in der Spalte **Benutzerdefiniert** die Ereignistypen auswählen, über die du Benachrichtigungen erhalten möchtest.
+
+You can configure custom notifications for the following event types:
+
+<Include file="notification-types-crowdin.mdx" />
+
+### Manage Custom Notifications
+
+Du kannst benutzerdefinierte Benachrichtigungen im Bereich **Benutzerdefinierter Benachrichtigungskanal** des Tabs **Benachrichtigungen** bearbeiten oder löschen.
+
+<Image src={customNotificationsEditDelete} alt="Manage Custom Notifications" />
+
+### Configuring for Discord {#discord}
+
+Um benutzerdefinierte Benachrichtigungen von Crowdin in Discord einzurichten, gehe wie folgt vor.
+
+#### Creating Discord Account
+
+If you don't have a Discord account already, you will need to [create one](https://discord.com/register).
+
+<Aside>
+  Du kannst benutzerdefinierte Benachrichtigungen von Crowdin nur über die Discord-Desktop-App oder die Discord-Weboberfläche konfigurieren. Once configured, you'll be able to receive these notifications via Discord mobile apps as well.
+</Aside>
+
+Download and install the [Discord desktop app](https://discord.com/download). Alternatively, you may use the Discord web interface for further configurations.
+
+#### Creating Discord Webhook
+
+To receive notifications in Discord, you need to create a webhook. Once finished, copy the webhook URL. Du benötigst dies für die Konfiguration auf der Crowdin-Seite.
+
+<ReadMore>
+  Read more about [creating a Discord webhook](https://support.discord.com/hc/articles/228383668).
+</ReadMore>
+
+#### Configuring Custom Notifications Channel {#custom-channel-discord}
+
+<Steps>
+  1. Öffne **Kontoeinstellungen > Benachrichtigungen**.
+  2. Klicke auf **Benutzerdefinierten Benachrichtigungskanal einrichten**.
+  3. In the appeared dialog, paste the Discord webhook URL in the **URL** field.
+  4. Select **application/json** for the **Content type**.
+  5. Paste the following payload in the **Payload** field:
+     ```json
+     {
+       "content": "{{notification-message}}"
+     }
+     ```
+  6. Klicke auf **Benachrichtigung testen**, um eine Testnachricht von Crowdin an deinen Discord-Kanal zu erhalten.
+  7. Once finished with the configuration, click **Save**.
+</Steps>
+
+### Configuring for Google Chat {#google-chat}
+
+Um benutzerdefinierte Benachrichtigungen von Crowdin in Google Chat einzurichten, gehe wie folgt vor.
+
+#### Creating Google Account
+
+If you already have a Google account, it gives you access to many Google products, including Google Chat. If you don't have a Google account, you will need to [create one](https://accounts.google.com/signup).
+
+Download and install the [Google Chat desktop app](https://chat.google.com/download/). Alternatively, you may use the Google Chat web interface for further configurations.
+
+#### Creating Google Chat Webhook
+
+To receive notifications in Google Chat, you need to create a webhook. Once finished, copy the webhook URL. Du benötigst dies für die Konfiguration auf der Crowdin-Seite.
+
+<ReadMore>
+  Read more about [creating a Google Chat webhook](https://developers.google.com/chat/how-tos/webhooks#step_1_register_the_incoming_webhook).
+</ReadMore>
+
+#### Configuring Custom Notifications Channel {#custom-channel-google-chat}
+
+<Steps>
+  1. Öffne deine **Kontoeinstellungen** und gehe zum Tab **Benachrichtigungen**.
+  2. Klicke auf **Benutzerdefinierten Benachrichtigungskanal einrichten**.
+  3. In the appeared dialog, paste the Google Chat webhook URL in the **URL** field.
+  4. Select **application/json** for the **Content type**.
+  5. Paste the following payload in the **Payload** field:
+     ```json
+     {
+       "text": "{{notification-message}}"
+     }
+     ```
+  6. Klicke auf **Benachrichtigung testen**, um eine Testnachricht von Crowdin an deinen Google-Chat-Kanal zu erhalten.
+  7. Once finished with the configuration, click **Save**.
+</Steps>
+
+### Configuring for Microsoft Teams {#microsoft-teams}
+
+Um benutzerdefinierte Benachrichtigungen von Crowdin in Microsoft Teams einzurichten, gehe wie folgt vor.
+
+#### Creating Microsoft Teams Account
+
+If you don't have a Microsoft Teams account already, you will need to [create one](https://go.microsoft.com/fwlink/p/?linkid=2123761\&lm=deeplink\&lmsrc=NeutralHomePageWeb\&cmpid=FreemiumSignUpHero).
+
+Download and install the [Microsoft Teams desktop app](https://www.microsoft.com/microsoft-teams/download-app). Alternatively, you may use the Microsoft Teams web interface for further configurations.
+
+#### Creating Microsoft Teams Webhook
+
+To receive notifications in Microsoft Teams, you need to create a webhook. Once finished, copy the webhook URL. Du benötigst dies für die Konfiguration auf der Crowdin-Seite.
+
+<ReadMore>
+  Read more about [creating a Microsoft Teams webhook](https://learn.microsoft.com/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook).
+</ReadMore>
+
+#### Configuring Custom Notifications Channel {#custom-channel-microsoft-teams}
+
+<Steps>
+  1. Öffne deine **Kontoeinstellungen** und gehe zum Tab **Benachrichtigungen**.
+  2. Klicke auf **Benutzerdefinierten Benachrichtigungskanal einrichten**.
+  3. In the appeared dialog, paste the Microsoft Teams webhook URL in the **URL** field.
+  4. Select **application/json** for the **Content type**.
+  5. Paste the following payload in the **Payload** field:
+     ```json
+     {
+       "text": "{{notification-message}}"
+     }
+     ```
+  6. Klicke auf **Benachrichtigung testen**, um eine Testnachricht von Crowdin an deinen Microsoft-Teams-Kanal zu erhalten.
+  7. Once finished with the configuration, click **Save**.
+</Steps>
+
+#### Per-project notifications with the Microsoft Teams App
+
+Benutzerdefinierte Benachrichtigungen ermöglichen es dir, deine kontospezifischen Benachrichtigungen von Crowdin zu erhalten. Wenn du Benachrichtigungen zu einem bestimmten Projekt erhalten möchtest, das du in Crowdin verwaltest, kannst du unsere [Microsoft-Teams-App](https://store.crowdin.com/teams) verwenden.
+
+### Configuring for Telegram {#telegram}
+
+Um benutzerdefinierte Benachrichtigungen von Crowdin in Telegram einzurichten, gehe wie folgt vor.
+
+#### Creating Telegram Account
+
+If you don't have a Telegram account already, you will need to connect with a phone. Telegram uses your phone number as a primary credential which you'll use to log into your account.
+
+So firstly, download and install the Telegram app using [Android](https://telegram.org/dl/android) or [iOS](https://telegram.org/dl/ios).
+Once signed up, you may use the [Telegram web interface](https://telegram.org/dl/webogram) with a PC or Mac to simplify further configurations, but this part is up to you.
+
+#### Creating Telegram Bot
+
+To receive notifications in Telegram, you need to create a bot. Once finished, you will be provided with a bot's API token. Make sure to save it; you'll need it later.
+
+<ReadMore>
+  Read more about [creating a Telegram bot](https://core.telegram.org/bots#creating-a-new-bot).
+</ReadMore>
+
+#### Configuring Telegram Channel
+
+Der nächste Schritt besteht darin, einen öffentlichen Telegram-Kanal zu erstellen, über den du Benachrichtigungen von Crowdin erhältst. Later you'll be able to change the channel's privacy if needed.
+
+To create a Telegram channel, follow these steps:
+
+<Steps>
+  1. Open Telegram on your device.
+  2. Click on the pen icon and select **New Channel**.
+  3. Name your channel in the **Channel name** field.
+  4. *(Optional)* Specify a channel description.
+  5. *(Optional)* Click on the camera icon to set a display picture for your channel.
+  6. Click **Next** in the top-right corner.
+  7. Select **Public** channel type.
+  8. Specify a permanent link for your channel. This link is what people would use to search and join your channel.
+  9. Click **Next** in the top-right corner.
+  10. *(Optional)* In this step, Telegram will ask you to add subscribers to your Telegram channel. Select contacts you’d like to add, including your new bot (provide your bot with Admin permissions). You can choose not to add any members for now since you'll be able to do it later.
+  11. Click **Next** in the top-right corner to continue and create your channel on Telegram.
+</Steps>
+
+#### Configuring Custom Notifications Channel {#custom-channel-telegram}
+
+<Steps>
+  1. Öffne deine **Kontoeinstellungen** und gehe zum Tab **Benachrichtigungen**.
+  2. Klicke auf **Benutzerdefinierten Benachrichtigungskanal einrichten**.
+  3. In the appeared dialog, specify the **URL** in the following format: `https://api.telegram.org/bot{bot_API_token}/sendMessage`.
+  4. Select **application/json** for the **Content type**.
+  5. Paste the following payload in the **Payload** field:
+     ```json
+     {
+       "chat_id": "{public_chat_id}",
+       "text": "{{notification-message}}"
+     }
+     ```
+     where `{public_chat_id}` &ndash; Your public chat id you specified for your channel link during the Telegram channel configuration.
+  6. Klicke auf **Benachrichtigung testen**, um eine Testnachricht von Crowdin an deinen Telegram-Kanal zu erhalten.
+  7. Once finished with the configuration, click **Save**.
+</Steps>
+
+#### Changing Telegram Channel Type
+
+Wenn du deinen Telegram-Kanal privat machen und weiterhin Benachrichtigungen erhalten möchtest, gehe wie folgt vor:
+
+<Steps>
+  1. First of all you need to acquire your Telegram channel's original chat id by visiting: `https://api.telegram.org/bot{bot_API_token}/sendMessage?chat_id={public_chat_id}&text=Test`
+  2. You'll get a response in a JSON format that will contain your Telegram channel's original chat id.
+  3. Öffne in Crowdin deine **Kontoeinstellungen** und gehe zum Tab **Benachrichtigungen**.
+  4. Klicke auf **Benutzerdefinierten Benachrichtigungskanal einrichten**.
+  5. In the appeared dialog, modify the **URL** by replacing the chat id with the one received in the JSON response above.
+  6. Click **Save**.
+  7. In Telegram, open your channel.
+  8. Click on your channel name and click **Edit**.
+  9. Click **Channel Type**.
+  10. Select **Private** and click **Done**.
+</Steps>
+
+<Aside>
+  Make sure to replace `{bot_API_token}` and `{public_chat_id}` with your actual Telegram bot API token and public chat id.
+</Aside>

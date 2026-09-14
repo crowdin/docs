@@ -1,0 +1,167 @@
+---
+title: Configuring VCS Integrations Online
+description: Learn how to configure a DVCS integration online in Crowdin
+slug: configuring-vcs-integrations-online
+sidebar:
+  order: 5
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import configuringSpreadsheets from '!/crowdin/integrations/vcs_configuring_spreadsheets.png';
+import configuringXml from '!/crowdin/integrations/vcs_configuring_xml.png';
+import editIntegrationEditBranchBtn from '!/crowdin/integrations/vcs_edit_integration_edit_branch_btn.png';
+import filesList from '!/crowdin/integrations/vcs_files_list.png';
+import filesListFilter from '!/crowdin/integrations/vcs_files_list_filter.png';
+import ignoreFiles from '!/crowdin/integrations/vcs_ignore_files.png';
+import languageMapping from '!/crowdin/integrations/vcs_language_mapping.png';
+import languageMapping2 from '!/crowdin/integrations/vcs_language_mapping2.png';
+import loadConfiguration from '!/crowdin/integrations/vcs_load_configuration.png';
+
+Um eine Integration mit einem Versionsverwaltungssystem zu konfigurieren, gib die zu übersetzenden Quelldateien und die Struktur an, die Crowdin für die übersetzten Dateien in deinem Repository verwenden soll.
+
+## Branch-Konfiguration
+
+Once you've selected your repository and branch for translation, the next step is to configure the selected branch. Click <Icon name="mdi:pencil" class="inline-icon" /> to open the **Branch Configuration** dialog and start the configuration. In the **Branch Configuration** dialog, you can either load the existing configuration file stored in your repository or create a new configuration from scratch.
+
+<Image src={editIntegrationEditBranchBtn} alt="Edit Integration" class="width-2xl crowdin-modal" />
+
+If you want your VCS integration to work in the **Target File Bundles Mode**, you need to configure target file bundles for each branch you have selected for translation.
+
+<ReadMore>
+  Mehr über die [Konfiguration von Ziel-Dateibundles für VCS-Integrationen](/bundles/#bundles-in-vcs-integrations) erfahren.
+</ReadMore>
+
+## Loading a Configuration
+
+To load the existing configuration file stored in your repository, follow these steps:
+
+<Steps>
+  1. Klicke auf <Icon name="mdi:dots-horizontal" class="inline-icon" /> und wähle **Konfiguration laden**.
+  2. Gib den Namen der Konfigurationsdatei in deinem Repository an.
+  3. Click **Continue**. <Image src={loadConfiguration} alt="Konfiguration laden" class="width-2xl crowdin-modal" />
+</Steps>
+
+The configuration will be displayed in the **Branch Configuration** dialog. You can use it as is or modify it if necessary.
+
+## Creating a Configuration
+
+To create a new configuration file to be used by the integration, specify the preferred name and click **Continue** in the **Branch Configuration** dialog.
+
+Then specify the source and translated file paths using the patterns and placeholders listed below. In the right panel, you can preview the structure of the source files that will be uploaded for translation and the structure of the translated files based on the specified paths.
+
+Once you've finished setting up the configuration for the selected branch and saved the changes, the configuration file will be saved in the root of the translation branch in your repository.
+
+### Patterns
+
+You can use wildcard (`*`, `**`, `?`, `[set]`, `\`) patterns to specify which files should be uploaded for translation.
+
+<ReadMore>
+  Read more about [wildcard patterns](/developer/configuration-file/#general-configuration).
+</ReadMore>
+
+### Variablen
+
+Use placeholders to specify where translated files will be placed and how they will be named:
+
+<Include file="placeholders.mdx" />
+
+## Advanced Settings
+
+The advanced settings provide more control over the integration's behavior. You can specify files to be excluded from translation, map custom language codes, and configure parsing options for structured file formats, such as spreadsheets and XML. This section also covers additional parameters that can be configured by manually editing the `crowdin.yml` file in your repository.
+
+### Ignoring Files
+
+Wenn bestimmte Dateien nicht übersetzt werden sollen, klicke auf **Ignoriertes Muster hinzufügen**, gib das Muster für diese Dateien an, und Crowdin lädt diese Dateien nicht zur Übersetzung hoch.
+
+<Image src={ignoreFiles} alt="Ignore files or folders" class="width-2xl crowdin-modal" />
+
+### Sprachzuordnung
+
+Wenn dein Projekt benutzerdefinierte Namen für Sprachverzeichnisse verwendet, kannst du die Sprachzuordnung verwenden, um deine eigenen Sprachen den von Crowdin erkannten Sprachen zuzuordnen.
+
+To add a language mapping, follow these steps:
+
+<Steps>
+  1. Click **Language Mapping**. <Image src={languageMapping} alt="Sprachzuordnung" class="width-2xl crowdin-modal" />
+  2. Select the necessary language and a placeholder.
+  3. Specify your custom code.
+  4. Click **Add Mapping** to add another custom code. <Image src={languageMapping2} alt="Language mapping" class="width-lg" />
+  5. Click **Save**.
+</Steps>
+
+### Configuring Spreadsheets
+
+You can specify the scheme of your spreadsheet file in the **Scheme** field. To create the scheme for your CSV or XLS/XLSX file, use the following constants:
+
+* `identifier` &ndash; column contains string identifiers.
+* `source_phrase` &ndash; column contains source strings.
+* `source_or_translation` &ndash; column contains source strings, but the same column will be filled with translations when the file is exported. If you upload existing translations, the values from this column will be used as translations.
+* `translation` &ndash; column contains translations.
+* `context` &ndash; column contains comments or context information for the source strings.
+* `max_length` &ndash; column contains max.length limit values for the string translations.
+* `labels` &ndash; column contains labels for the source strings.
+* `none` &ndash; column that will be skipped during import.
+
+**Scheme example**: `identifier,source_phrase,context,fr,de,it,uk` ([Language Codes](/developer/language-codes/)).
+
+If a spreadsheet contains the translations for several target languages, select **Multilingual file**. If you don't want to translate the text stored in the first row, select **Import first line as a header**.
+
+<Image src={configuringSpreadsheets} alt="Configuring Spreadsheets" class="width-2xl crowdin-modal" />
+
+### Configuring XML Files
+
+Du kannst die Einstellungen für den Import von XML-Dateien konfigurieren, um festzulegen, wie Crowdin mit den XML-Dateien umgehen soll.
+
+<Image src={configuringXml} alt="Configuring XML Files" class="width-2xl crowdin-modal" />
+
+| **Option**                | **Description**                                                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Translate Content**     | Select to translate texts stored inside the tags.                                                                                                                  |
+| **Translate Attributes**  | Select to translate tag attributes.                                                                                                                                |
+| **Content Segmentation**  | Select to split the XML source file's content into shorter text segments.                                                                                          |
+| **Translatable Elements** | This is an array of strings, where each item is the XPaths to the DOM element that should be imported. Sample path: `/path/to/node` or `/path/to/attribute[@attr]` |
+
+<Aside>
+  When Content segmentation is enabled, the translation upload is handled by an experimental machine learning technology.
+</Aside>
+
+### Additional Parameters
+
+The following parameters can't be configured online:
+
+* `preserve_hierarchy` – behält die Verzeichnisstruktur in Crowdin bei
+* `dest` – ermöglicht die Angabe eines Dateinamens in Crowdin
+* `type` – ermöglicht die Angabe eines Dateityps in Crowdin
+* `update_option` - keeps translations and keeps/removes approvals of changed strings during a file update
+* `commit_message` - additional text appended to the default commit message
+* `append_commit_message` - controls whether your custom text is appended to or replaces the default commit message
+* `export_languages` - export translations for the specified languages
+
+Once you save the online configuration, a `crowdin.yml` file is saved in the root of the configured branch in your repository. You can edit this file manually to add the necessary parameters.
+
+<ReadMore>
+  Read more about the [configuration file](/developer/configuration-file/#configuration-file-for-vcs-integrations).
+</ReadMore>
+
+## Saving Configuration
+
+<Steps>
+  1. Klicke auf **Speichern**, um die erstellte Konfiguration in der Vorschau anzuzeigen. <Image src={filesListFilter} alt="Konfiguration speichern" class="width-2xl crowdin-modal" />
+  2. Click **Add File Filter** if you have multiple file groups with different configurations. <br />If several branches in the project have the same configuration, and you want the same filters to be applied to them, select **Apply filters to all translatable branches**.
+  3. Click **Save** to save the created configuration. <Image src={filesList} alt="Dateiliste" class="width-2xl crowdin-modal" />
+</Steps>
+
+Sobald die Konfiguration gespeichert ist, werden die lokalisierbaren Dateien in dein Crowdin-Projekt hochgeladen.
+
+## Siehe auch
+
+<CardGrid>
+  <LinkCard title="GitHub" href="/github-integration/" />
+  <LinkCard title="GitLab" href="/gitlab-integration/" />
+  <LinkCard title="Bitbucket" href="/bitbucket-integration/" />
+  <LinkCard title="Azure Repos" href="/azure-repos-integration/" />
+</CardGrid>
