@@ -1,0 +1,193 @@
+---
+title: CDN-Verteilungen
+description: Deliver translated content to your app instantly via CDN
+slug: cdn-distributions
+sidebar:
+  order: 6
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import webFlow from '!/crowdin/integrations/cdn_distributions_web.png';
+import mobileFlow from '!/crowdin/integrations/cdn_distributions_mobile_server_desktop.png';
+import addDistribution from '!/crowdin/integrations/cdn_distributions_add_distribution.png';
+import releaseDistribution from '!/crowdin/integrations/cdn_distributions_release_distribution.png';
+import usagePrice from '!/crowdin/integrations/cdn_distributions_usage_price.png';
+import usageStats from '!/crowdin/integrations/cdn_distributions_usage_statistics.png';
+
+CDN Distributions allow you to instantly update sources and translations in your mobile, server, desktop, or web apps with a single click without preparing a new release.
+
+Distributionen sind plattformunabhängig (z. B. iOS, macOS, Android, Windows oder Linux). Crowdin stellt deine Inhalte über das CDN als reguläre Dateien bereit, die jede App unabhängig von ihrer Plattform abrufen kann. Du kannst auf diese Inhalte über eines der Crowdin-SDKs, den Crowdin-OTA-JavaScript-Client oder direkt über eine URL zugreifen.
+
+## How It Works
+
+The following illustrations provide a visual representation of how source and translation content delivery works for different types of applications.
+
+<Tabs>
+  <TabItem label="Mobile, Server and Desktop Apps">
+    <Image src={mobileFlow} alt="CDN Distributions Flow for Mobile Apps" />
+  </TabItem>
+  <TabItem label="Web Apps">
+    <Image src={webFlow} alt="CDN Distributions Flow for Web Apps" />
+  </TabItem>
+</Tabs>
+
+## Distribution Setup
+
+A distribution is a CDN vault that mirrors your project's translated content and is required for integration with your apps. Distributionen verwenden [Bundles](/bundles/), um deine Dateien zu paketieren und bereitzustellen.
+
+To configure a distribution, follow these steps:
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Steps>
+      1. Open your project and go to the **Translations** tab.
+      2. Expand the **CDN Distributions** section.
+      3. Klicke auf **Hinzufügen**.
+      4. In the **Add distribution** dialog, enter the preferred name for your distribution.
+      5. Select the bundles you want to include in this distribution or click **Add bundle** to create one from scratch. You can use the **Search bundles** field to quickly find specific bundles by name.
+      6. Click **Create**.
+      7. Kopiere <Icon name="mdi:content-copy" class="inline-icon" /> den **Distribution Hash** und das **Distribution Manifest**. The manifest is a JSON file containing key distribution details (e.g., files, languages, paths) that can be used in your integration.
+    </Steps>
+  </TabItem>
+  <TabItem label="String-based project">
+    <Steps>
+      1. Open your project and go to the **Download** tab.
+      2. Expand the **CDN Distributions** section.
+      3. Klicke auf **Hinzufügen**.
+      4. In the **Add distribution** dialog, enter the preferred name for your distribution.
+      5. Select the bundles you want to include in this distribution or click **Add bundle** to create one from scratch. You can use the **Search bundles** field to quickly find specific bundles by name.
+      6. Click **Create**.
+      7. Kopiere <Icon name="mdi:content-copy" class="inline-icon" /> den **Distribution Hash** und das **Distribution Manifest**. The manifest is a JSON file containing key distribution details (e.g., files, languages, paths) that can be used in your integration.
+    </Steps>
+  </TabItem>
+</Tabs>
+
+<Image src={addDistribution} alt="CDN Distribution with Bundles" />
+
+<Aside>
+  Das CDN speichert alle veröffentlichten Übersetzungen bis zu 1 Stunde im Cache, sodass das CDN selbst nach der Veröffentlichung neuer Übersetzungen in Crowdin diese mit Verzögerung zurückgeben kann.
+</Aside>
+
+## For Mobile Applications
+
+To send the translated content to your mobile apps via CDN Distributions, use the Crowdin SDKs.
+
+<CardGrid>
+  <LinkCard title="iOS SDK" href="https://crowdin.github.io/mobile-sdk-ios/" target="_blank" />
+  <LinkCard title="Android SDK" href="https://crowdin.github.io/mobile-sdk-android/" target="_blank" />
+  <LinkCard title="Flutter SDK" href="https://store.crowdin.com/flutter" target="_blank" />
+  <LinkCard title="React Native SDK" href="https://store.crowdin.com/react-native-sdk" target="_blank" />
+</CardGrid>
+
+## For Web Applications
+
+To send the translated content to your web apps via CDN Distributions, use the Crowdin OTA JavaScript client.
+
+<ReadMore>
+  Read more about the [Crowdin OTA JavaScript client](https://crowdin.github.io/ota-client-js/).
+</ReadMore>
+
+To manage the translated content delivery to your web apps manually, you can either:
+
+* Use the **Distribution Manifest URL**, which displays a JSON file containing distribution details (files, languages, etc.), or
+* Form each file URL with the **distribution hash**, as shown below.
+
+Form the URL to the translation file as follows:
+
+```shell
+https://distributions.crowdin.net/{distribution_hash}/content/{path_to_file}
+```
+
+`{path_to_file}` will match the path used in your regular translation build. Wenn deine Dateien keine Exportmuster mit Platzhaltern für den Sprachcode enthalten (z. B. `%locale%`, `%two_letters_code%` usw.), fügt Crowdin automatisch den Crowdin-Sprachcode am Anfang des Pfads hinzu.
+
+Um alle verfügbaren Dateien und Sprachen für deine Distribution anzuzeigen, kopiere die Distribution-Manifest-URL (die in der Crowdin-Oberfläche bereitgestellt wird) und öffne sie in deinem Browser.
+
+You’ll see a JSON structure like:
+
+```json
+{
+  "files": ["/crowdin_sample_android.xml"],
+  "languages": ["fr","de","uk"],
+  "language_mapping": [],
+  "custom_languages": [],
+  "timestamp": 1234567890,
+  "content": {
+    "fr": ["/content/fr/crowdin_sample_android.xml"],
+    "de": ["/content/de/crowdin_sample_android.xml"],
+    "uk": ["/content/uk/crowdin_sample_android.xml"]
+  },
+  "mapping": ["/mapping/en/crowdin_sample_android.xml"]
+}
+```
+
+This JSON includes the exact paths to use with the distribution.
+
+## Pricing
+
+| **Pricing Component** | **Free Quota** | **Price**  |
+| --------------------- | -------------- | ---------- |
+| Request Count         | 1M/month       | $3.00/1M   |
+| Data Transfer         | 10GB/month     | $2.00/10GB |
+
+A request is considered any single query to a CDN (e.g., a request to a distribution manifest, a request to a distribution file, etc.).
+
+Data transfer is the amount of data transferred over the network (including headers). The system delivers your language packages via CDN, containing all the existing translations.
+
+If the distribution contains content divided into multiple files, a request to download each file is counted as a separate request. Additionally, the volume of files is also counted as a data transfer.
+
+For example, if a distribution contains 20 files, each of which is 5MB, the download is counted as 20 requests and 100MB of data transfer.
+
+To reduce requests to the CDN, you can put all the necessary content into one file (using Bundles), and when it is downloaded, the system counts one request instead of 20 separate ones. Additionally, caching configuration can be made on the app's side.
+
+In our statistics, we use data provided by AWS. If 1,000,001 (1 million and 1) requests are made in a month, the price for requests will be $6. If 10GB and 1 byte are transferred in a month, the price for data transfer will be $4. The combined total will be $10 per month for requests and data transfer.
+
+## Managing Your CDN Usage
+
+Du kannst die Kosten für deine CDN-Nutzung verwalten und Benachrichtigungen für tägliche Nutzungslimits unter **Kontoeinstellungen > Abrechnung > CDN-Distributionen** einrichten.
+
+### CDN Usage Price
+
+In the **CDN Distributions** usage section, you can see the total amount spent during the current billing cycle (one month). This includes a detailed breakdown of requests and data transfer with their respective prices. Payment for CDN usage will be included in your Crowdin subscription on the next billing cycle. Crowdin Credits does not cover CDN usage.
+
+<Image src={usagePrice} alt="CDN Usage Price" />
+
+### Setting Daily Balance Warning Threshold
+
+You can set a daily CDN usage limit, and when this threshold is exceeded, you'll receive a notification. By default, the limit is set to $30 per day. This feature helps you stay informed of your usage and avoid unexpected overages. You can update the limit anytime. Additionally, if your free quota (1M requests and 10GB of data transfer) is exceeded, a one-time notification will be sent.
+
+To set up usage notifications, follow these steps:
+
+<Steps>
+  1. Öffne deine **Kontoeinstellungen** und gehe zum Tab **Abrechnung**.
+  2. Öffne den Abschnitt **CDN-Distributionen**.
+  3. Enter your desired threshold amount in the **Daily balance warning threshold, $** field.
+  4. Click **Save** to confirm your settings.
+</Steps>
+
+### Usage Statistics
+
+The **Usage Statistics** section provides a visual analysis of your CDN usage via an interactive graph, showing detailed statistics for the month. You can view data for all distributions or focus on specific ones.
+
+The graph displays three lines simultaneously: request quantity, transfer costs, and data transferred. Hover over the data points to see daily totals for each category.
+
+You can also focus on a specific category by hovering over its title under the graph. To hide a certain category from the graph, click on its title.
+
+<Image src={usageStats} alt="Usage Statistics" />
+
+### Project Statistics
+
+The **Project Statistics** section, located below the graph, provides a detailed breakdown of your CDN usage grouped by project. This table helps you track which projects are consuming the most resources during the selected period.
+
+Each row in the table represents a single project and includes the following information:
+
+* **Project**: The name of the project.
+* **Requests**: The total number of requests made by the project.
+* **Data Transferred (GB)**: The total data transferred by the project.
+* **Price**: The approximate cost for the project's usage.
+
+<Aside>
+  The costs shown in the usage graph and project statistics table are estimates. The final billed amount may vary slightly.
+</Aside>
