@@ -138,7 +138,7 @@ The system sends texts for translation using `url` and then the app processes th
 https://{AppBaseUrl}/translate/?source=en&target=uk&project_id=727186&jwtToken={yourTokenValue}
 ```
 
-## Query parameters
+### Query Parameters
 
 <table>
   <tbody>
@@ -180,55 +180,7 @@ https://{AppBaseUrl}/translate/?source=en&target=uk&project_id=727186&jwtToken={
   </tbody>
 </table>
 
-## Batch Processing and File Context
-
-By default, Crowdin splits source strings into smaller chunks (`splitStringsIntoChunks: true`) to optimize processing time and manage request sizes.
-
-However, some modern MT engines and AI providers (such as XL8 or LLMs) require the full context of a file to produce high-quality translations. This is particularly important for formats like subtitles (SRT) or literary content where the translation of one sentence depends heavily on the previous one.
-
-If you are connecting an engine that supports file-based or document-level translation:
-
-1. Set `splitStringsIntoChunks` to `false` in your manifest.
-2. Crowdin will send all strings belonging to a single file in one request.
-
-<Aside type="caution">
-  When <code>splitStringsIntoChunks</code> is set to <code>false</code>, ensure your endpoint and the connected MT engine can handle large payloads, as the request body size will correspond to the size of the full source file.
-</Aside>
-
-## Handling Non-Translatable Elements by Your MT Engine
-
-For strings containing non-translatable elements (e.g., tags, placeholders, etc.), Crowdin replaces these elements with special *notranslate* tags. This ensures that these elements remain in their original state after the string is translated by the MT engine. Crowdin uses this approach to avoid potential issues that could break exported translation files.
-
-Below you can see the examples of a string before and after the modification.
-
-Here is an example of how a string containing non-translatable elements (tags, placeholders, etc.) looks in Crowdin:
-
-```html
-<strong>Task:</strong>
-```
-
-This is how Crowdin modifies the above string before sending it to the MT engine:
-
-```html
-<span class="notranslate">0</span>Task:<span class="notranslate">1</span>
-```
-
-### Customizing Non-Translatable Elements for Your MT Engine
-
-If your MT engine already has a similar feature but implements it differently from Crowdin, we recommend adjusting the handling of non-translatable elements in your Custom MT app to match your MT engine's implementation. Specifically, replace Crowdin's defaults, like
-
-```html
-<span class="notranslate">%index%</span>
-```
-with do-not-translate elements specific to your MT engine.
-
-Here you can explore an implementation example of do-not-translate elements in Amazon Translate: [Using do-not-translate in Amazon Translate](https://docs.aws.amazon.com/translate/latest/dg/customizing-translations-tags.html).
-
-### Handling Translations with Altered Non-Translatable Elements
-
-If the MT engine sends a translation to Crowdin that doesn't include all tags in their original state or if they are somehow altered (e.g., translated), Crowdin will ignore such translations and won't save them to the string.
-
-## Request to the App from Crowdin for applicationUrl (simple)
+### Request to the App from Crowdin for applicationUrl (simple)
 
 Request payload example:
 
@@ -243,7 +195,7 @@ Request payload example:
 }
 ```
 
-## Request to the App from Crowdin for applicationUrl (extended)
+### Request to the App from Crowdin for applicationUrl (extended)
 
 To use the extended request please add the `withContext` parameter to your Custom MT module.
 
@@ -304,7 +256,7 @@ Request payload example:
 }
 ```
 
-## Expected Response from the App (Without errors)
+### Expected Response from the App (Without errors)
 
 Response payload example:
 
@@ -337,7 +289,7 @@ For large payloads, you can return a `translationsUrl` instead of the inline `tr
 
 `translationsUrl` is a public URL to a [new-line delimited json](https://github.com/ndjson/ndjson-spec) file with the translated strings. Use either `translations` or `translationsUrl`.
 
-## Expected Response from the App (With errors)
+### Expected Response from the App (With errors)
 
 Response payload example:
 
@@ -350,6 +302,54 @@ Response payload example:
 ```
 
 The structure of the responses from the app should correspond to the presented examples, otherwise Crowdin will consider them invalid.
+
+## Batch Processing and File Context
+
+By default, Crowdin splits source strings into smaller chunks (`splitStringsIntoChunks: true`) to optimize processing time and manage request sizes.
+
+However, some modern MT engines and AI providers (such as XL8 or LLMs) require the full context of a file to produce high-quality translations. This is particularly important for formats like subtitles (SRT) or literary content where the translation of one sentence depends heavily on the previous one.
+
+If you are connecting an engine that supports file-based or document-level translation:
+
+1. Set `splitStringsIntoChunks` to `false` in your manifest.
+2. Crowdin will send all strings belonging to a single file in one request.
+
+<Aside type="caution">
+  When <code>splitStringsIntoChunks</code> is set to <code>false</code>, ensure your endpoint and the connected MT engine can handle large payloads, as the request body size will correspond to the size of the full source file.
+</Aside>
+
+## Handling Non-Translatable Elements by Your MT Engine
+
+For strings containing non-translatable elements (e.g., tags, placeholders, etc.), Crowdin replaces these elements with special *notranslate* tags. This ensures that these elements remain in their original state after the string is translated by the MT engine. Crowdin uses this approach to avoid potential issues that could break exported translation files.
+
+Below you can see the examples of a string before and after the modification.
+
+Here is an example of how a string containing non-translatable elements (tags, placeholders, etc.) looks in Crowdin:
+
+```html
+<strong>Task:</strong>
+```
+
+This is how Crowdin modifies the above string before sending it to the MT engine:
+
+```html
+<span class="notranslate">0</span>Task:<span class="notranslate">1</span>
+```
+
+### Customizing Non-Translatable Elements for Your MT Engine
+
+If your MT engine already has a similar feature but implements it differently from Crowdin, we recommend adjusting the handling of non-translatable elements in your Custom MT app to match your MT engine's implementation. Specifically, replace Crowdin's defaults, like
+
+```html
+<span class="notranslate">%index%</span>
+```
+with do-not-translate elements specific to your MT engine.
+
+Here you can explore an implementation example of do-not-translate elements in Amazon Translate: [Using do-not-translate in Amazon Translate](https://docs.aws.amazon.com/translate/latest/dg/customizing-translations-tags.html).
+
+### Handling Translations with Altered Non-Translatable Elements
+
+If the MT engine sends a translation to Crowdin that doesn't include all tags in their original state or if they are somehow altered (e.g., translated), Crowdin will ignore such translations and won't save them to the string.
 
 ## Troubleshooting
 
