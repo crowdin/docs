@@ -16,6 +16,21 @@ This functionality is particularly useful for handling file types that are not n
 
 <Image src={editorAP} alt="Editor Asset Panel Module" />
 
+## How It Works
+
+The Editor Asset Panel module operates on an event-driven mechanism. When a user navigates to an asset within the Editor, the system checks for any installed apps that use this module.
+
+1. **Pattern Matching**: Crowdin takes the `fileNamePattern` from your app's `manifest.json` and tests it against the name of the currently opened asset (e.g., `clip.mov`).
+2. **App Initialization**: If the asset's file name matches the pattern, Crowdin replaces the default preview panel with an iframe pointing to your app's `url`.
+3. **Event Handling**: Once your app is loaded, Crowdin dispatches events to it, which your app must subscribe to and handle. These events contain the necessary data (payload) for your app to display the correct asset content.
+
+The primary events are:
+
+* `asset.source.preview`: Dispatched when the user clicks on the source asset preview.
+* `asset.suggestion.preview`: Dispatched when the user clicks on a translated asset preview.
+
+Your app should listen for these events to implement its custom preview logic, such as rendering a video player or an audio console. If an asset's file name does not match the `fileNamePattern`, the default Crowdin asset previewer will be loaded as usual.
+
 ## Access
 
 You can grant access to this module to one of the following user categories:
@@ -101,18 +116,3 @@ For Crowdin Enterprise:
     </tr>
   </tbody>
 </table>
-
-## How It Works
-
-The Editor Asset Panel module operates on an event-driven mechanism. When a user navigates to an asset within the Editor, the system checks for any installed apps that use this module.
-
-1. **Pattern Matching**: Crowdin takes the `fileNamePattern` from your app's `manifest.json` and tests it against the name of the currently opened asset (e.g., `clip.mov`).
-2. **App Initialization**: If the asset's file name matches the pattern, Crowdin replaces the default preview panel with an iframe pointing to your app's `url`.
-3. **Event Handling**: Once your app is loaded, Crowdin dispatches events to it, which your app must subscribe to and handle. These events contain the necessary data (payload) for your app to display the correct asset content.
-
-The primary events are:
-
-* `asset.source.preview`: Dispatched when the user clicks on the source asset preview.
-* `asset.suggestion.preview`: Dispatched when the user clicks on a translated asset preview.
-
-Your app should listen for these events to implement its custom preview logic, such as rendering a video player or an audio console. If an asset's file name does not match the `fileNamePattern`, the default Crowdin asset previewer will be loaded as usual.
