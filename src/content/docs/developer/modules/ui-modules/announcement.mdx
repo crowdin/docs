@@ -1,0 +1,244 @@
+---
+title: Announcement Module
+description: Show notices from your app in the Crowdin Enterprise header and on glossary pages
+slug: developer/crowdin-apps-module-announcement
+sidebar:
+  order: 22
+  label: Announcement
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+This module allows an app to show notices to the users of a Crowdin Enterprise organization.
+
+Announcement placements:
+
+* `header-alert`: the alert strip below the page header, present on every page of the organization
+* `glossary`: above the term table on a glossary page
+
+The module is available only in Crowdin Enterprise and only in self-hosted apps.
+
+## How It Works
+
+<Steps>
+  1. An organization admin installs the app and chooses who can see its announcements.
+  2. A user opens a page with the module's placement. Crowdin Enterprise sends a request to the module's `url` with the current context.
+  3. The app answers with the announcements it wants that user to see, or with an empty list.
+  4. Crowdin Enterprise shows the announcements at the placement. The user can close the ones the app marked as dismissible.
+</Steps>
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+* Only organization admins
+* Organization admins, project managers and developers
+* All users in the organization projects
+* Selected users
+
+Crowdin Enterprise pre-selects **All users in the organization projects** for this module.
+
+## Structure
+
+```json title="manifest.json"
+{
+  "baseUrl": "https://app.example.com",
+  "modules": {
+    "announcement": [
+      {
+        "key": "header-announcements",
+        "name": "Header announcements",
+        "url": "/announcements/header",
+        "placement": "header-alert"
+      }
+    ]
+  }
+}
+```
+
+An app can declare several announcement modules, one per placement or several at the same placement.
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The human-readable name of the module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL Crowdin Enterprise requests the announcements from.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>placement</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Allowed values:</strong> <code>header-alert</code>, <code>glossary</code></p>
+        <p><strong>Description:</strong> Where the module's announcements are shown.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>Description:</strong> Set of environments where a module could be installed.<br/>
+        This parameter is needed for cross-product applications.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Communication between Announcement App and Crowdin
+
+Crowdin Enterprise requests the announcements each time it renders the module's placement. It sends a `POST` request to `baseUrl` + `url` with the app's JWT in the `Authorization` header, and the app has 10 seconds to answer.
+
+### Request to the App
+
+Request payload example:
+
+```json
+{
+  "context": {
+    "placement": "glossary",
+    "userId": 123,
+    "glossaryId": 456
+  }
+}
+```
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>context.placement</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The placement the announcements are requested for.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>context.userId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The user the announcements are requested for.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">context.glossaryId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Description:</strong> The glossary whose page the user opened.<br/>
+        Sent with the <code>glossary</code> placement.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+The organization is identified by the JWT, so the payload carries the context only.
+
+### Expected Response from the App
+
+Response payload example:
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": "autumn-release-terms",
+        "text": "The autumn release terminology is in the glossary. Check it before you start translating.",
+        "dismissible": true,
+        "expiresAt": "2026-10-01T00:00:00+00:00",
+        "actionLabel": "Read the release notes",
+        "actionUrl": "https://example.com/releases/autumn"
+      }
+    ]
+  }
+}
+```
+
+Return an empty `items` array when the app has nothing to show.
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Identifier of the announcement within the module, up to 255 characters.<br/>
+        A closed announcement stays closed as long as it keeps this value, so give an edited announcement a new <code>id</code> to show it again.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>text</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The announcement itself, up to 65,535 characters.<br/>
+        The text is shown as plain text, and bare <code>http</code> and <code>https</code> URLs in it become links. In the header strip the text is shown on one line, with the full text in a tooltip.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>dismissible</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Whether the user can close the announcement.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>expiresAt</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The moment the announcement stops being shown, in ISO 8601 format.<br/>
+        Announcements without this field are shown until the app stops returning them.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>actionLabel</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The label of the announcement's action link, up to 255 characters.<br/>
+        Use it together with <code>actionUrl</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>actionUrl</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The address the action link opens in a new tab, up to 2,048 characters.<br/>
+        Must start with <code>https://</code>. Use it together with <code>actionLabel</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Crowdin Enterprise reads a response of up to 512 KB with up to 1,000 items, and shows the first 10 valid announcements from it. An announcement that breaks the rules above is skipped, and the rest of the response is still used.
+
+## Display Rules
+
+Crowdin Enterprise applies the following rules to the announcements an app returns:
+
+* Announcements the user cannot close come first, and the rest follow in the order the apps were installed.
+* The header strip shows one announcement at a time. With more than one, the strip also shows a counter and the arrows for moving between them.
+* Closing an announcement hides it in that browser only.
+* Crowdin Enterprise reloads the header announcements every 15 minutes, and the announcements at both placements when the user returns to the tab. An announcement with `expiresAt` also triggers a reload at its expiry.
