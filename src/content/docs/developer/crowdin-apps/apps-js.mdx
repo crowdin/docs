@@ -4089,7 +4089,7 @@ AP.editor.resetCustomThemeStyle();
 
 #### AP.editor.updateButton(moduleKey, patch, [callback]) {#update-button}
 
-Applies a runtime patch to one of the app's own [Editor Buttons](/developer/crowdin-apps-module-editor-button/) modules. Omitted fields keep their current value, and `null` returns a field to the value declared in the manifest. The state lasts until the Editor is reloaded or the app's modules are refreshed.
+Applies a runtime patch to one of the app's own [Editor Buttons](/developer/crowdin-apps-module-editor-button/) modules. Omitted fields keep their current value. Setting `icon`, `badge`, or `tooltip` to `null` returns it to its manifest state, and so does setting `enabled` to `true`. The state lasts until the Editor is reloaded or the app's modules are refreshed.
 
 **Example:**
 
@@ -4111,22 +4111,30 @@ AP.editor.updateButton(
       <td><code>moduleKey</code></td>
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
-        <p><strong>Required:</strong> yes</p>
+        <p><strong>Required:</strong> Yes</p>
         <p><strong>Description:</strong> The <code>key</code> of the app's own <code>editor-button</code> module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>patch</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The button fields to change.</p>
       </td>
     </tr>
     <tr>
       <td><code>patch.icon</code></td>
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
-        <p><strong>Description:</strong> A relative path or an absolute URL on the app's own origin, or a small <code>data:image/…</code> URI.</p>
+        <p><strong>Description:</strong> A path starting with <code>/</code>, an absolute URL on the app's own origin, or a <code>data:image/…</code> URI of up to 32 KB.</p>
       </td>
     </tr>
     <tr>
       <td><code>patch.badge</code></td>
       <td>
-        <p><strong>Type:</strong> <code>integer</code> or <code>boolean</code></p>
-        <p><strong>Description:</strong> A number shows a counter on the button (values above 99 appear as <code>99+</code>), and <code>true</code> shows a dot.</p>
+        <p><strong>Type:</strong> <code>integer</code> | <code>boolean</code></p>
+        <p><strong>Description:</strong> A number from 1 to 99 shows a counter on the button, higher numbers show as <code>99+</code>, and <code>0</code> or <code>true</code> shows a dot. <code>false</code> removes the badge.</p>
       </td>
     </tr>
     <tr>
@@ -4140,13 +4148,14 @@ AP.editor.updateButton(
       <td><code>patch.tooltip</code></td>
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
-        <p><strong>Description:</strong> The text displayed in the button's tooltip instead of the module's <code>name</code>.</p>
+        <p><strong>Description:</strong> The text shown instead of the module's <code>name</code>, both in the button's tooltip and as the item label in the menus.</p>
       </td>
     </tr>
     <tr>
       <td><code>callback</code></td>
       <td>
         <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> No</p>
         <p><strong>Description:</strong> Receives <code>true</code> when at least one field of the patch was applied.</p>
       </td>
     </tr>
@@ -4173,7 +4182,7 @@ AP.editor.resetButton('attach-screenshot', function(cleared) {
       <td><code>moduleKey</code></td>
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
-        <p><strong>Required:</strong> yes</p>
+        <p><strong>Required:</strong> Yes</p>
         <p><strong>Description:</strong> The <code>key</code> of the app's own <code>editor-button</code> module.</p>
       </td>
     </tr>
@@ -4181,6 +4190,7 @@ AP.editor.resetButton('attach-screenshot', function(cleared) {
       <td><code>callback</code></td>
       <td>
         <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> No</p>
         <p><strong>Description:</strong> Receives <code>true</code> when the button had runtime changes to clear.</p>
       </td>
     </tr>
@@ -5053,7 +5063,7 @@ Use these event names with the `AP.events.on()` method to listen for actions hap
       <td><code>editor.button.click</code></td>
       <td>
         <p>Fires when a user clicks an <a href="/developer/crowdin-apps-module-editor-button/">Editor Buttons</a> module of the <code>event</code> type. Only the module named in the button's <code>options.module</code> receives the event.</p>
-        <p><strong>Payload:</strong> An object with the button's <code>key</code>, its <code>location</code>, and the strings and target languages the button was clicked for. Buttons in the translation toolbar report the current string, and buttons in the string menu report the selected strings.</p>
+        <p><strong>Payload:</strong> An object with the button's <code>key</code> and <code>location</code>. A translation-toolbar button also reports <code>stringId</code>, <code>languageIds</code>, and <code>pluralId</code> (<code>-1</code> when the string has no plural forms); a strings-menu button reports <code>stringIds</code> and <code>languageIds</code>.</p>
         <div>
           ```json
           {
