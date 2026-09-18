@@ -1,0 +1,567 @@
+---
+title: GraphQL-API
+description: Rufe mit spezifischeren und flexibleren Abfragen genau die Daten ab, die du benötigst
+slug: developer/graphql-api
+sidebar:
+  order: 4
+---
+
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+
+Die GraphQL-API ist ein Tool, mit dem du mithilfe spezifischerer und flexiblerer Abfragen genau die Daten abrufen kannst, die du benötigst. Einer der Hauptvorteile der GraphQL-API besteht darin, dass du mit einer einzigen Anfrage viele verschiedene Ressourcen abrufen kannst.
+
+Wenn du Abfragen an die Crowdin-GraphQL-API ausführen möchtest, empfehlen wir die App GraphQL Playground. Damit kannst du Abfragen über die Weboberfläche von Crowdin und Crowdin Enterprise erstellen, testen und debuggen, noch bevor du Code in deiner Anwendung schreibst.
+
+<LinkCard title="GraphQL Playground" description="Integrierte GraphQL-IDE für einen besseren Entwicklungsworkflow." href="https://store.crowdin.com/graphql-playground" target="_blank" />
+
+## Autorisierung mit der GraphQL-API
+
+Um mit der GraphQL-API in Crowdin oder Crowdin Enterprise zu arbeiten, verwende eines der folgenden Zugriffstokens:
+
+* [Persönliches Crowdin-Zugriffstoken](/account-settings/#creating-a-personal-access-token)
+* [Persönliches Crowdin Enterprise-Zugriffstoken](/enterprise/account-settings/#creating-a-personal-access-token)
+* [OAuth-Zugriffstoken](/developer/authorizing-oauth-apps/#make-requests-to-the-api-with-the-access-token-returned)
+
+Stelle sicher, dass du den folgenden Header in deinen Anfragen verwendest:
+
+```bash
+Authorization: Bearer <ACCESS_TOKEN>
+```
+
+Die Antwort, wenn die Autorisierung fehlschlägt:
+
+401 Nicht autorisiert
+
+```json
+{
+  "error": {
+    "message": "Unauthorized",
+    "code": 401
+  }
+}
+```
+
+## Root-Endpunkt
+
+Im Gegensatz zur REST-API verfügt die GraphQL-API nur über einen Endpunkt, der unabhängig von den ausgeführten Operationen konstant bleibt.
+
+Crowdin-GraphQL-Endpunkt:
+
+```bash
+https://api.crowdin.com/api/graphql
+```
+
+Crowdin Enterprise GraphQL-Endpunkt:
+
+```bash
+https://{domain}.api.crowdin.com/api/graphql
+```
+
+## Ressourcenbeschränkungen
+
+Die Crowdin-GraphQL-API verfügt über Beschränkungen, um übermäßige oder missbräuchliche Aufrufe an die Crowdin-Server zu verhindern.
+
+### Knotenlimit
+
+Alle GraphQL-API-Aufrufe müssen die folgenden Anforderungen erfüllen, um die Schemavalidierung zu bestehen:
+
+* Benutzer müssen für jede Verbindung ein `first`- oder `last`-Argument angeben.
+* Die Werte von `first` und `last` müssen zwischen 1 und 10.000 liegen.
+* Einzelne Aufrufe dürfen insgesamt nicht mehr als 10.000 Knoten anfordern.
+
+#### Knotenberechnung
+
+In den folgenden Beispielen kannst du sehen, wie die Knoten eines Aufrufs berechnet werden.
+
+##### Einfache Abfrage
+
+```graphql
+query {
+  viewer {
+    projects(first: 50) {
+      edges {
+        node {
+          name
+
+          files(first: 10) {
+            totalCount
+            edges {
+              node {
+                name
+                type
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Berechnung:
+
+```
+50         = 50 Projekte
++
+50 x 10    = 500 Dateien
+
+           = 550 Knoten insgesamt
+```
+
+##### Komplexe Abfrage
+
+```graphql
+query {
+  viewer {
+    projects(first: 50) {
+      edges {
+        node {
+          files(first: 20) {
+            edges {
+              node {
+                strings(first: 10) {
+                  edges {
+                    node {
+                      ... on PlainSourceString {
+                        text
+                      }
+                      ... on ICUSourceString {
+                        text
+                      }
+                      ... on PluralSourceString {
+                        plurals {
+                          one
+                          other
+                        }
+                      }
+                      ... on AssetSourceString {
+                        text
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+  
+          translations(first: 20, languageId: "uk") {
+            edges {
+              node {
+                ... on PlainStringTranslation {
+                  text
+                }
+                ... on ICUStringTranslation {
+                  text
+                }
+                ... on PluralStringTranslation {
+                  pluralForm
+                  text
+                }
+                ... on AssetStringTranslation {
+                  text
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Berechnung:
+
+```
+50           = 50 Projekte
++
+50 x 20      = 1.000 Dateien
++
+50 x 20 x 10 = 10.000 Zeichenketten
++
+50 x 20      = 1.000 Übersetzungen
+
+             = 12.050 Knoten insgesamt
+```
+
+### Ratenlimit
+
+Das Limit der GraphQL-API unterscheidet sich deutlich von den [REST-API-Ratenlimits](/developer/api/v2/#section/Introduction/Rate-Limits).
+
+Wie oben erwähnt, kannst du mit nur einem GraphQL-Aufruf dieselbe Datenmenge abrufen und dadurch mehrere REST-Aufrufe überflüssig machen. Während ein einzelner komplexer GraphQL-Aufruf Tausenden von REST-Anfragen entsprechen kann, ohne das Ratenlimit der REST-API zu überschreiten, kann seine Verarbeitung für die Crowdin-Server dennoch ebenso aufwendig sein.
+
+Die GraphQL-API verwendet eine normalisierte Punktskala, um die Serverkosten einer Abfrage genau darzustellen, indem sie den Ratenlimit-Score eines Aufrufs berechnet. Dieser Score umfasst die `first`- und `last`-Argumente einer übergeordneten Verbindung und ihrer untergeordneten Verbindungen.
+
+* Die Formel verwendet die `first`- und `last`-Argumente einer übergeordneten Verbindung und ihrer untergeordneten Verbindungen, um die mögliche Auslastung von Crowdin-Systemen wie MySQL und ElasticSearch im Voraus zu bestimmen.
+* Jede neue Verbindung hat ihren eigenen Punktwert. Die Punkte werden zu den übrigen Punkten des Aufrufs addiert, um einen endgültigen Ratenlimit-Score zu bilden.
+
+Das Ratenlimit der GraphQL-API ist auf 5.000 Punkte pro Stunde festgelegt. Da für die GraphQL-API und die REST-API unterschiedliche Ratenlimits gelten, entsprechen 5.000 Punkte pro Stunde nicht 5.000 Aufrufen pro Stunde.
+
+<Aside type="caution">
+  Die aktuelle Berechnungsmethode und das Ratenlimit sind nicht konstant und können in Zukunft geändert werden.
+</Aside>
+
+#### Ratenlimitstatus eines Aufrufs prüfen
+
+Um den Ratenlimitstatus bei Verwendung der GraphQL-API zu prüfen, frage die Felder des Objekts `rateLimit` ab:
+
+```graphql
+query {
+  viewer {
+    username
+  }
+  rateLimit {
+    limit
+    cost
+    remaining
+    resetAt
+  }
+}
+```
+
+* `limit` &ndash; gibt die maximale Anzahl an Punkten zurück, die der Benutzer innerhalb eines 60-Minuten-Zeitraums verbrauchen darf.
+* `cost` &ndash; gibt die Punktkosten des aktuellen Aufrufs zurück, die auf das Ratenlimit angerechnet werden.
+* `remaining` &ndash; gibt die Anzahl der verbleibenden Punkte im aktuellen Ratenlimit-Zeitraum zurück.
+* `resetAt` &ndash; gibt den Zeitpunkt zurück, zu dem das aktuelle Ratenlimitfenster in UTC-Epoch-Sekunden zurückgesetzt wird.
+
+#### Ratenlimit-Score vor der Ausführung eines Aufrufs schätzen
+
+Eine Abfrage des Objekts `rateLimit` kann zwar den Score eines Aufrufs liefern, wird aber auf das Limit angerechnet. Um dies zu umgehen, kannst du den Score eines Aufrufs im Voraus schätzen. Mit der folgenden Berechnung kannst du ungefähr dieselben Kosten ermitteln, die von `rateLimit { cost }` zurückgegeben werden.
+
+<Steps>
+  1. Zuerst sollte die Anzahl der Anfragen addiert werden, die erforderlich sind, um jede eindeutige Verbindung im Aufruf zu erfüllen. Gehe davon aus, dass jede Anfrage die Limits des Arguments `first` oder `last` erreicht.
+  2. Als Nächstes musst du die Zahl durch 100 teilen und das Ergebnis runden, um die endgültigen Gesamtkosten zu erhalten. Dieser Schritt normalisiert große Zahlen.
+</Steps>
+
+<Aside>
+  Die Mindestkosten eines Aufrufs der GraphQL-API betragen 1, was einer einzelnen Anfrage entspricht.
+</Aside>
+
+Hier ist eine Beispielabfrage mit Score-Berechnung:
+
+```graphql
+query {
+  viewer {
+    username
+    projects(first: 100) {
+      edges {
+        node {
+          id
+          files(first: 50) {
+            edges {
+              node {
+                id
+                strings(first: 60) {
+                  edges {
+                    node {
+                      ... on PlainSourceString {
+                        id
+                        text
+                      }
+                      ... on ICUSourceString {
+                        id
+                        text
+                      }
+                      ... on PluralSourceString {
+                        id
+                        plurals {
+                          one
+                          other
+                        }
+                      }
+                      ... on AssetSourceString {
+                        id
+                        text
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+* Bei der Rückgabe von 100 Projekten muss die API einmal auf das Konto des Benutzers zugreifen, um die Liste der Projekte abzurufen. Also: Anfragen für Projekte = 1
+* Bei der Rückgabe von 50 Dateien muss die API auf jedes der 100 Projekte zugreifen, um die Liste der Dateien abzurufen. Also: Anfragen für Dateien = 100
+* Bei der Rückgabe von 60 Zeichenketten muss die API auf jede der 5.000 potenziell vorhandenen Dateien zugreifen, um die Liste der Zeichenketten abzurufen. Also: Anfragen für Zeichenketten = 5.000
+* Gesamt = 5.101
+
+Teile nun die Summe von 5.101 durch 100 und runde das Ergebnis. Als Ergebnis erhältst du den endgültigen Score der Abfrage, nämlich 51.
+
+## Seitennummerierung
+
+Die Seitennummerierung ist ein grundlegendes Konzept in GraphQL, mit dem du einen Teil der Daten aus einer größeren Sammlung abrufen kannst, wodurch die Verwaltung und Darstellung von Informationen einfacher wird.
+
+In diesem Abschnitt sehen wir uns an, wie du die Seitennummerierung in der Crowdin-GraphQL-API verwendest, wobei das Feld `projects` als Beispiel dient.
+
+### Seitennummerierung in Crowdin GraphQL verstehen
+
+Bevor wir auf die Details der Seitennummerierung eingehen, klären wir zunächst einige wichtige Begriffe:
+
+* **Verbindung** &ndash; In Crowdin GraphQL ist eine Verbindung eine Struktur, die eine Liste von Elementen enthält. Sie umfasst normalerweise `edges`, `pageInfo` und `totalCount`. `edges` enthalten die eigentlichen Datenelemente, `pageInfo` liefert Informationen zur Seitennummerierung und `totalCount` gibt die Gesamtzahl der Elemente in der Verbindung an.
+* **Edges** &ndash; Edges sind einzelne Elemente innerhalb einer Verbindung. Jede Edge enthält den Knoten (das Datenelement) und einen Cursor, bei dem es sich um eine Zeichenkette handelt, mit der du durch die Sammlung navigieren kannst.
+* **PageInfo** &ndash; PageInfo liefert Informationen, anhand derer du feststellen kannst, ob weitere Elemente abgerufen werden können. Es enthält Felder wie `hasNextPage`, `hasPreviousPage`, `startCursor` und `endCursor`.
+
+### Seitennummerierung in Crowdin GraphQL verwenden
+
+Sehen wir uns nun die Verwendung der Seitennummerierung mit dem Feld `projects` in der Crowdin-GraphQL-API an.
+
+#### Projekte mit Seitennummerierung abfragen
+
+Das Feld `projects` innerhalb des Typs `User` wird verwendet, um die einem Benutzer zugeordneten Projekte abzufragen. Es akzeptiert mehrere Eingabeparameter, mit denen du die Seitennummerierung der Ergebnisse steuern kannst. Diese Parameter sind:
+
+* `after` &ndash; Ein Cursor, der angibt, wo die Abfrage in der Projektliste beginnen soll.
+* `first` &ndash; Die Anzahl der Projekte, die nach dem angegebenen Cursor abgerufen werden sollen.
+* `before` &ndash; Ein Cursor, der angibt, wo die Abfrage enden soll.
+* `last` &ndash; Die Anzahl der Projekte, die vor dem angegebenen Cursor abgerufen werden sollen.
+
+#### Beispielabfrage
+
+Die folgende Beispielabfrage fordert die ersten zehn Projekte an, die dem authentifizierten Benutzer zugeordnet sind, beginnend mit dem angegebenen Cursor (`cursor_string`). Die Antwort enthält das Array `edges` mit den Projektdaten sowie die Felder `pageInfo` und `totalCount` zur Steuerung der Seitennummerierung.
+
+```graphql
+query {
+  viewer {
+    projects(
+      after: "cursor_string",   # Replace with a valid `after` cursor
+      first: 10
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+      totalCount
+    }
+  }
+}
+```
+
+Hier ist ein Beispiel für die Antwort auf die obige Abfrage:
+
+```json
+{
+  "data": {
+    "viewer": {
+      "projects": {
+        "edges": [
+          {
+            "node": {
+              "id": 1,
+              "name": "Umbrella",
+              "description": "Official Umbrella Translation Project"
+            },
+            "cursor": "MA=="
+          },
+          {
+            "node": {
+              "id": 2,
+              "name": "Umbrella iOS",
+              "description": "Official Umbrella iOS App Translation Project"
+            },
+            "cursor": "MQ=="
+          }
+        ],
+        "pageInfo": {
+          "hasNextPage": true,
+          "hasPreviousPage": false,
+          "startCursor": "MA==",
+          "endCursor": "MQ=="
+        },
+        "totalCount": 5
+      }
+    }
+  }
+}
+```
+
+#### Steuerung der Seitennummerierung
+
+* `hasNextPage` &ndash; Dieses Feld in `pageInfo` gibt an, ob weitere Projekte für die nächste Seite verfügbar sind.
+* `hasPreviousPage` &ndash; Dieses Feld in `pageInfo` gibt an, ob weitere Projekte für die vorherige Seite verfügbar sind.
+* `startCursor` &ndash; Der Cursor, der auf das erste Projekt im aktuellen Ergebnissatz verweist.
+* `endCursor` &ndash; Der Cursor, der auf das letzte Projekt im aktuellen Ergebnissatz verweist.
+* `totalCount` &ndash; Die Gesamtzahl der dem Benutzer zugeordneten Projekte.
+
+#### Vorherige Seiten abrufen
+
+Es gibt Situationen, in denen du in deinem Datensatz rückwärts durch Seiten navigieren musst. Das kann aus verschiedenen Gründen erforderlich sein, z. B. um ältere Daten zu prüfen, Korrekturen vorzunehmen oder Änderungen durchzuführen.
+
+Um rückwärts durch die Seiten zu navigieren, kannst du die Parameter `last` und `before` verwenden. Der Parameter `last` gibt die Anzahl der Elemente vom Ende der Liste an, und der Parameter `before` übernimmt den Cursor des ersten Elements, das du abrufen möchtest. Hier ist ein Beispiel:
+
+```graphql
+query {
+  viewer {
+    projects(
+      last: 10,
+      before: "cursor_of_first_item"   # Replace with a valid `before` cursor
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+      }
+    }
+  }
+}
+```
+
+## Filtern und Sortieren
+
+Crowdin GraphQL bietet Funktionen zum Filtern und Sortieren (Ordnen) von Daten. Dadurch kannst du die Auswahl der abzurufenden Daten eingrenzen und in einer bestimmten Reihenfolge anordnen.
+
+Wie bei der Seitennummerierung sehen wir uns in diesem Abschnitt an, wie du das Filtern und Sortieren in der Crowdin-GraphQL-API verwendest, wobei das Feld `projects` als Beispiel dient.
+
+### Daten filtern
+
+Beim Filtern werden Kriterien angegeben, anhand derer eine Teilmenge der Daten aus einem größeren Datensatz ausgewählt wird. In Crowdin GraphQL kannst du deine Abfrageergebnisse anhand bestimmter Bedingungen eingrenzen. Das ist besonders nützlich, wenn du Daten abrufen möchtest, die bestimmte Anforderungen oder Eigenschaften erfüllen.
+
+#### `ProjectFilterInput`
+
+Crowdin GraphQL stellt den Typ `ProjectFilterInput` bereit, mit dem du Projekte anhand verschiedener Attribute filtern kannst. Hier sind einige wichtige Attribute, nach denen du filtern kannst:
+
+* `and` &ndash; Eine logische Konjunktion, die mehrere Filterkriterien miteinander verbindet.
+* `or` &ndash; Eine logische Disjunktion, die mehrere Filterkriterien miteinander verbindet.
+* `id` &ndash; Nach der Projekt-ID filtern, beispielsweise auf Gleichheit, größer oder kleiner.
+* `userId` &ndash; Projekte anhand der zugehörigen Benutzer-ID filtern.
+* `name` &ndash; Projekte nach ihrem Namen filtern, mit Optionen auf Gleichheit, Enthaltensein oder einen bestimmten Textanfang zu prüfen.
+* `identifier` &ndash; Nach dem Projektbezeichner filtern, ähnlich wie beim Filtern nach dem Namen.
+* `description` &ndash; Projekte nach ihrer Beschreibung filtern, mit Optionen auf Gleichheit, Enthaltensein oder einen bestimmten Textanfang zu prüfen.
+* `publicDownloads` &ndash; Projekte danach filtern, ob öffentliche Downloads aktiviert sind.
+* `languageAccessPolicy` &ndash; Projekte nach ihrer Sprachzugriffsrichtlinie filtern (z. B. „open“ oder „moderate“).
+* `visibility` &ndash; Projekte nach ihrer Sichtbarkeit filtern (z. B. „open“ oder „private“).
+* `createdAt` &ndash; Projekte anhand ihres Erstellungsdatums mit verschiedenen datumsbezogenen Bedingungen filtern.
+* `updatedAt` &ndash; Projekte anhand ihres letzten Aktualisierungsdatums filtern.
+* `lastActivityAt` &ndash; Projekte anhand ihres Datums der letzten Aktivität filtern.
+
+Filtern ist eine flexible Möglichkeit, die benötigten Daten in deinen Abfragen gezielt auszuwählen. Du kannst logische Operatoren wie `and` und `or` verwenden, um mehrere Filterbedingungen zu kombinieren und deine Abfrage noch weiter zu verfeinern.
+
+#### Beispiel für einen Filter
+
+Um Projekte abzurufen, die nach einem bestimmten Datum erstellt wurden und die Sichtbarkeit „private“ haben, kannst du eine Filtereingabe wie diese erstellen:
+
+```graphql
+query {
+  viewer {
+    projects(
+      first: 10,
+      filter: {
+        createdAt: { gt: "2023-01-01T00:00:00Z" }
+        and: { visibility: { equals: private } }
+      }
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+      }
+    }
+  }
+}
+```
+
+Dieser Filter gibt Projekte zurück, die beide Bedingungen erfüllen: nach dem 1. Januar 2023 erstellt und auf die Sichtbarkeit „private“ gesetzt.
+
+### Daten sortieren
+
+Beim Sortieren wird die Reihenfolge festgelegt, in der die Ergebnisse einer Abfrage angezeigt werden. Die Anzahl der Ergebnisse wird dadurch nicht reduziert, sondern sie werden in eine bestimmte Reihenfolge gebracht. Crowdin GraphQL bietet Optionen zum Sortieren von Daten nach Attributen wie Projektname, Erstellungsdatum oder anderen relevanten Faktoren.
+
+#### `ProjectOrderInput`
+
+Der Typ `ProjectOrderInput` in Crowdin GraphQL ermöglicht es dir, die Sortierreihenfolge für deine Abfrageergebnisse festzulegen. Du kannst Projekte nach Attributen sortieren wie:
+
+* `id` &ndash; Projekte nach ihrem eindeutigen Bezeichner sortieren.
+* `userId` &ndash; Projekte nach dem Bezeichner des Benutzers sortieren, der sie erstellt hat.
+* `name` &ndash; Projekte nach ihrem Namen sortieren.
+* `identifier` &ndash; Projekte nach ihrem Bezeichner sortieren.
+* `description` &ndash; Projekte nach ihrer Beschreibung sortieren.
+* `publicDownloads` &ndash; Projekte nach ihrer Einstellung für öffentliche Downloads sortieren.
+* `languageAccessPolicy` &ndash; Projekte nach ihrer Sprachzugriffsrichtlinie sortieren.
+* `visibility` &ndash; Projekte nach ihrer Sichtbarkeitseinstellung sortieren.
+* `createdAt` &ndash; Projekte nach ihrem Erstellungsdatum sortieren.
+* `updatedAt` &ndash; Projekte nach ihrem letzten Aktualisierungsdatum sortieren.
+* `lastActivityAt` &ndash; Projekte nach ihrem Datum der letzten Aktivität sortieren.
+
+Du kannst die Sortierreihenfolge auf aufsteigend („asc“) oder absteigend („desc“) festlegen und hast damit vollständige Kontrolle darüber, wie die Daten dargestellt werden.
+
+#### Beispiel für eine Sortierung
+
+Um Projekte abzurufen, die nach ihrem Namen in absteigender Reihenfolge sortiert sind, kannst du eine Sortiereingabe wie diese erstellen:
+
+```graphql
+query {
+  viewer {
+    projects(
+      first: 10
+      order: [{ name: desc }]
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+      }
+    }
+  }
+}
+```
+
+Diese Sortierreihenfolge zeigt die Projekte in umgekehrter alphabetischer Reihenfolge ihrer Namen an.
+
+### Filtern und Sortieren kombinieren
+
+Crowdin GraphQL ermöglicht es dir, Filterung und Sortierung zu kombinieren, um deine Abfragen gezielt anzupassen. Du kannst die Daten zunächst filtern, um eine Teilmenge auszuwählen, die bestimmte Kriterien erfüllt, und anschließend die Ergebnisse in der gewünschten Reihenfolge sortieren. Diese Kombination ermöglicht es dir, Daten entsprechend deinen spezifischen Anforderungen abzurufen und anzuordnen.
+
+#### Beispiel für Filtern und Sortieren
+
+Um Projekte abzurufen, die nach einem bestimmten Datum erstellt wurden, die Sprachzugriffsrichtlinie „moderate“ verwenden und nach ihrem Datum der letzten Aktivität in aufsteigender Reihenfolge sortiert werden, kannst du eine Abfrage wie diese erstellen:
+
+```graphql
+query {
+  viewer {
+    projects(
+      first: 10
+      filter: {
+        createdAt: { gt: "2023-01-01T00:00:00Z" }
+        and: { languageAccessPolicy: { equals: moderate } }
+      },
+      order: [{ lastActivityAt: asc }]
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          # Add more fields as needed
+        }
+      }
+    }
+  }
+}
+```
+
+Diese Abfrage gibt Projekte zurück, die die Filterbedingungen erfüllen, und zeigt sie aufsteigend nach ihrem Datum der letzten Aktivität an.

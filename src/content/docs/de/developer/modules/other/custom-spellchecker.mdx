@@ -1,0 +1,245 @@
+---
+title: Modul für benutzerdefinierte Rechtschreibprüfung
+description: Füge eine benutzerdefinierte Rechtschreibprüfung hinzu, um Übersetzungen anhand bestimmter Regeln zu überprüfen.
+slug: developer/crowdin-apps-module-custom-spellchecker
+sidebar:
+  label: Benutzerdefinierte Rechtschreibprüfung
+---
+
+import ReadMore from '~/components/ReadMore.astro';
+
+Mit diesem Modul kannst du benutzerdefinierte Rechtschreibprüfungen hinzufügen, um Übersetzungen anhand bestimmter Regeln zu überprüfen, die standardmäßig nicht unterstützt werden.
+
+Jede Sprache kann nur einer aktiven Rechtschreibprüfung zugewiesen werden. Wenn mehrere benutzerdefinierte Rechtschreibprüfungen verwendet werden, werden die für eine bestimmte Rechtschreibprüfung ausgewählten Sprachen automatisch von allen anderen Rechtschreibprüfungen getrennt. Sprachen, die keiner der benutzerdefinierten Rechtschreibprüfungen zugewiesen sind, werden von der standardmäßigen Crowdin-Rechtschreibprüfung verarbeitet.
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+* Nur Organisationsadministratoren
+* Alle Benutzer in den Projekten der Organisation
+* Ausgewählte Benutzer
+
+## Struktur
+
+```json title="manifest.json"
+{
+  "modules": {
+    "custom-spellchecker": [
+      {
+        "key": "custom-spellchecker",
+        "name": "Custom Spellchecker",
+        "description": "Description",
+        "checkSpellingUrl": "/check",
+        "listSupportedLanguagesUrl": "/languages",
+        "url": "/setup.html"
+      }
+    ]
+  }
+}
+```
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Der für Menschen lesbare Name des Moduls.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Die für Menschen lesbare Beschreibung der Funktion des Moduls.<br />
+        Die Beschreibung wird in der Crowdin-Enterprise-Benutzeroberfläche angezeigt.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>checkSpellingUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p> <p><strong>Erforderlich:</strong> ja</p> <p><strong>Beschreibung:</strong> Die relative URL, die ausgelöst wird, wenn Texte zur Rechtschreibprüfung gesendet werden.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">listSupportedLanguagesUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p> <p><strong>Erforderlich:</strong> ja</p> <p><strong>Beschreibung:</strong> Die relative URL, die beim Abrufen der vom Modul unterstützten Sprachen ausgelöst wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p> <p><strong>Erforderlich:</strong> ja</p> <p><strong>Beschreibung:</strong> Die relative URL zur Einrichtungsseite des Moduls.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Zulässige Werte:</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>Beschreibung:</strong> Menge der Umgebungen, in denen ein Modul installiert werden kann.<br />
+        Dieser Parameter wird für produktübergreifende Anwendungen benötigt.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Kommunikation zwischen der App für die benutzerdefinierte Rechtschreibprüfung und Crowdin
+
+Das System sendet Texte zur Rechtschreibprüfung über `checkSpellingUrl`, entweder aus dem Editor während der Übersetzung oder wenn die Qualitätssicherungsprüfungen Übersetzungen validieren. Die App verarbeitet die Texte und antwortet dem System mit einer von zwei möglichen Antwortarten: [ohne Rechtschreibfehler](#expected-response-from-the-app-without-spelling-issues) und [mit Rechtschreibfehlern](#expected-response-from-the-app-with-spelling-issues). In einigen Fällen muss das System die vom Modul unterstützten Sprachen überprüfen (z. B. beim Konfigurieren der Sprachen für die benutzerdefinierte Rechtschreibprüfung in den Organisationseinstellungen). In diesen Fällen sendet Crowdin über `listSupportedLanguagesUrl` eine Anfrage an die App, und die App antwortet mit den Daten zu den von ihr unterstützten Sprachen.
+
+### Anfrage von Crowdin an die App für checkSpellingUrl
+
+Beispiel für die Nutzlast der Anfrage:
+
+```json
+{
+  "language": "uk",
+  "texts": [
+    "Збререгти якк...",
+    "Ноаий файд"
+  ]
+}
+```
+
+### Erwartete Antwort der App (ohne Rechtschreibfehler)
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+{
+  "data": [
+    {
+      "text": "Зберегти як...",
+      "matches": []
+    },
+    {
+      "text": "Новий файл",
+      "matches": []
+    }
+  ]
+}
+```
+
+### Erwartete Antwort der App (mit Rechtschreibfehlern)
+
+Beispiel für die Nutzlast der Antwort:
+
+```json collapse={31-50}
+{
+  "data": [
+    {
+      "text": "Збререгти якк...",
+      "matches": [
+        {
+          "category": "typos",
+          "message": "Знайдено потенційну орфографічну помилку.",
+          "shortMessage": "Орфографічна помилка",
+          "offset": 0,
+          "length": 9,
+          "replacements": [
+            "Зберегти"
+          ]
+        },
+        {
+          "category": "typos",
+          "message": "Знайдено потенційну орфографічну помилку.",
+          "shortMessage": "Орфографічна помилка",
+          "offset": 10,
+          "length": 3,
+          "replacements": [
+            "як"
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Ноаий файд",
+      "matches": [
+        {
+          "category": "typos",
+          "message": "Знайдено потенційну орфографічну помилку.",
+          "shortMessage": "Орфографічна помилка",
+          "offset": 0,
+          "length": 5,
+          "replacements": [
+            "Новий"
+          ]
+        },
+        {
+          "category": "typos",
+          "message": "Знайдено потенційну орфографічну помилку.",
+          "shortMessage": "Орфографічна помилка",
+          "offset": 6,
+          "length": 4,
+          "replacements": [
+            "файл"
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Erwartete Kategorietypen:**
+
+* `typography`
+* `casing`
+* `grammar`
+* `typos`
+* `spelling`
+* `punctuation`
+* `confused_words`
+* `redundancy`
+* `style`
+* `gender_neutrality`
+* `semantics`
+* `colloquialisms`
+* `wikipedia`
+* `barbarism`
+* `misc`
+
+### Antwort der App an Crowdin für listSupportedLanguagesUrl
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+{
+  "data": [
+    {
+      "code": "uk",
+      "name": "Ukrainian"
+    },
+    {
+      "code": "kab",
+      "name": "Kabul"
+    },
+    {
+      "code": "en",
+      "name": "English"
+    }
+  ]
+}
+```
+
+Die Struktur der Antworten der App muss den dargestellten Beispielen entsprechen. Andernfalls betrachtet Crowdin sie als ungültig.
+
+Sprachen, die in der Organisation nicht verfügbar sind, werden in der Sprachenliste des Moduls nicht angezeigt. Um solche Sprachen anzuzeigen, füge sie als benutzerdefinierte Sprachen hinzu.
+
+<ReadMore>
+  Weitere Informationen findest du unter [Benutzerdefinierte Sprachen](/enterprise/organization-settings/#custom-languages).
+</ReadMore>

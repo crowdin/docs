@@ -1,0 +1,291 @@
+---
+title: Modul zur Verarbeitung vor dem Dateiexport
+description: Ändere die Strings vor dem Dateiexport
+slug: developer/crowdin-apps-module-file-pre-export-processing
+sidebar:
+  order: 5
+  label: Verarbeitung vor dem Dateiexport
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Mit dem Modul zur Verarbeitung vor dem Export kannst du die Strings vor dem Dateiexport ändern. Dieses Modul arbeitet sowohl mit den Source-Strings als auch mit den dazugehörigen Übersetzungen. Das Modul zur Verarbeitung vor dem Export ist besonders nützlich, wenn du die ursprüngliche Dateistruktur beibehalten und die Datei unverändert exportieren möchtest, aber Änderungen an übersetzten Strings vornehmen willst.
+
+Mit dem Modul zur Verarbeitung vor dem Export erhältst du einen Payload mit dem Dateiinhalt und den zu exportierenden Strings. Mit dem Modul zur Verarbeitung vor dem Export kannst du übersetzte Strings ändern und sie anschließend für den Export zurückgeben. So kannst du die Strings anpassen, ohne den Dateiinhalt direkt zu verändern.
+
+<Aside>
+  Wenn deine Dateiverarbeitungs-App mithilfe des Moduls zur Verarbeitung nach dem Import die Anzahl der Strings geändert hat, muss das Modul zur Verarbeitung vor dem Export die ursprüngliche Anzahl der Strings zusammen mit ihrer `uniqId` zurückgeben.
+</Aside>
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+Für Crowdin:
+
+* Nur ich (also der Projektinhaber)
+* Alle Projektmitglieder
+* Ausgewählte Benutzer
+
+Für Crowdin Enterprise:
+
+* Nur Organisationsadministratoren
+* Alle Benutzer in den Projekten der Organisation
+* Ausgewählte Benutzer
+
+## Struktur
+
+```json title="manifest.json"
+{
+  "modules": {
+    "file-pre-export": [
+      {
+        "key": "your-pre-export-module-key",
+        "url": "/export-strings",
+        "signaturePatterns": {
+          "fileName": "^.+\.xml$",
+          "fileContent": "<properties>\s*<property\s+name=.*value=.*/>"
+        }
+      }
+    ]
+  }
+}
+```
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Die relative URL, die beim Export einer Datei aufgerufen wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Description:</strong> Contains <code>fileName</code> and/or <code>fileContent</code> regular expressions used to detect file type when exporting a translation file.</p>
+        <p><Aside><code>fileContent</code> regular expression checks only the first 64 KB of the file content.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Kommunikation zwischen der File-Processing-App und Crowdin
+
+Beim Export einer Datei erkennt das System anhand des Parameters `signaturePatterns` ein geeignetes Modul zur Verarbeitung vor dem Export und sendet eine HTTP-Anfrage an die URL der App (`$baseUrl`. `$url`) zur weiteren Verarbeitung mit den Source-Strings und den dazugehörigen Übersetzungen.
+
+Die Dateiverarbeitungs-App ändert die String-Übersetzungen entsprechend deinen Anforderungen. Stelle sicher, dass das Modul zur Verarbeitung vor dem Export die ursprüngliche Anzahl der Strings zusammen mit ihrer `uniqId` zurückgibt, damit der Übersetzungsexport erfolgreich abgeschlossen werden kann. Nachdem die geänderten Strings vom Modul zur Verarbeitung vor dem Export zurückgegeben wurden, werden sie zum Erstellen einer Übersetzungsdatei verwendet.
+
+### Anfrage an die Dateiverarbeitungs-App
+
+Beispiel für die Nutzlast der Anfrage:
+
+```json
+// max request payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "jobType": "file-pre-export",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name"
+  },
+  "file": {
+    "id": 1,
+    "name": "file.xml",
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded source file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // source file public URL
+  },
+  "sourceLanguage": {
+    "id": "es",
+    "name": "Spanish",
+    "editorCode": "es",
+    "twoLettersCode": "es",
+    "threeLettersCode": "spa",
+    "locale": "es-ES",
+    "androidCode": "es-rES",
+    "osxCode": "es.lproj",
+    "osxLocale": "es",
+    "pluralCategoryNames": ["one"],
+    "pluralRules": "(n != 1)"
+  },
+  "targetLanguages": [
+    {
+      // same structure as for sourceLanguage, one element for export, can be more for multilingual files
+    }
+  ],
+  "strings": [...],
+  "stringsUrl": "https://tmp.downloads.crowdin.com/strings.ndjson",
+}
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>jobType</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Wert:</strong> <code>file-pre-export</code></p>
+        <p><strong>Beschreibung:</strong> Gibt die Aktion des Moduls zur Verarbeitung vor dem Dateiexport an.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.content</code>, <code class="whitespace-nowrap">file.contentUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Parameter zur Übergabe des base64-codierten Inhalts der Source-Datei (<code>file.content</code>) oder einer öffentlichen URL zur Source-Datei (<code>file.contentUrl</code>).<br />
+        Either of these two parameters can be used.<Aside title="Limitations">Das maximale Limit für die Nutzlast der Anfrage beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>strings</code>, <code>stringsUrl</code></td>
+      <td>
+        <p><strong>Typ(strings):</strong> <code>array</code></p>
+        <p><strong>Typ(stringsUrl):</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Parameter für die Source-Strings und ihre jeweiligen Übersetzungen vor dem Dateiexport. <code>strings</code> – String-Array. <code>stringsUrl</code> – öffentliche URL zu einem <a href="https://github.com/ndjson/ndjson-spec" target="_blank">Newline-delimited-JSON</a> mit Strings.<br />
+        Either of these two parameters can be used.<Aside title="Limitations">Das maximale Limit für die Nutzlast der Anfrage beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Erwartete Antwort der App
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+// max response payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "data": {
+    "strings": [...], // modified strings array
+    "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // new-line delimited json file with modified strings
+  },
+  "error": {
+    "message": "Your error message"
+  }
+}
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>data.strings</code>, <code>data.stringsUrl</code></td>
+      <td>
+        <p><strong>Typ(data.strings):</strong> <code>array</code></p>
+        <p><strong>Typ(data.stringsUrl):</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Parameter zur Übergabe des Inhalts der geänderten Strings.<br />
+        <code>data.strings</code> – Array mit geänderten Strings.<br />
+        <code>data.stringsUrl</code> – öffentliche URL zu einem <a href="https://github.com/ndjson/ndjson-spec" target="_blank">Newline-delimited-JSON</a> mit geänderten Strings.<br />
+        Either of these two parameters can be used.<Aside title="Limitations">Das maximale Limit für die Nutzlast der Antwort beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Eine Fehlermeldung, die von der App an Crowdin übergeben wird und für einen Benutzer in der Benutzeroberfläche sichtbar ist.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Struktur des String-Arrays
+
+Unten siehst du ein Beispiel für die Strings, die die App vor dem Export erhält. Dieselbe Struktur wird für die geänderten Strings in der Antwort der App verwendet.
+
+Payload Beispiel:
+
+```json
+// strings should be in "new-line delimited json" format if they passed by URL
+[
+  { // non plural string
+    "uniqId": "9cdfb439c7876e703e307864c9167a15::1", // required, unique ID
+    "identifier": "string-key-1", // required
+    "context": "Some context", // optional
+    "maxLength": 10, // optional, default null
+    "isHidden": false, // optional, default null
+    "hasPlurals": false, // optional, default false
+    "labels": ["label-one", "label-two"], // optional, default []
+    "text": "String source text", // required
+    "translations": { // optional
+      "uk": { // targetLanguage.id
+        "text": "Переклад стрічки", // required
+        "status": "untranslated | translated | approved" // optional, default "translated"
+      }
+      // can be other languages for multilingual, check "targetLanguages" in the request payload
+    }
+  },
+  { // plural string
+    "uniqId": "9cdfb439c7876e703e307864c9167a15::2", // required, unique ID
+    "identifier": "string-key-2",
+    "context": "Some optional context",
+    "maxLength": 15,
+    "isHidden": false,
+    "hasPlurals": true,
+    "labels": [],
+    "text": { // keys from sourceLanguage.pluralCategoryNames
+      "one": "One file",
+      "other": "%d files"
+    },
+    "translations": {
+      "uk": {
+        "text": { // keys from targetLanguage.pluralCategoryNames
+          "one": "One file",
+          "few": "%d файла",
+          "many": "%d файлів"
+        },
+        "status": {
+          "one": "untranslated",
+          "few": "translated",
+          "many": "approved"
+        }
+      }
+    }
+  }
+]
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>uniqId</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Eindeutige ID innerhalb der Datei.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>identifier</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Sichtbarer String-Schlüssel.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>

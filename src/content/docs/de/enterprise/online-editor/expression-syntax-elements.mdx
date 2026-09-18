@@ -1,0 +1,301 @@
+---
+title: Syntaxelemente für Ausdrücke
+description: Erfahre mehr über die verschiedenen Elemente der Ausdruckssyntax.
+slug: enterprise/expression-syntax-elements
+---
+
+import { Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import Include from '~/components/Include.astro';
+
+Du kannst configure verbal expressions und custom placeholders using ein shared Setze von expression syntax elements. Diese elements define how spezifisch parts von ein Zeichenfolge sollte sein matched, based auf structure, character Typen, oder formatting patterns.
+
+## Ausdruckselemente
+
+<Include file="expression-syntax-elements.mdx" />
+
+## Verbalausdrücke
+
+in der Editor, du kann Verwende verbal expressions in der [Advanced Filter](/enterprise/online-editor/#advanced-filter) zu Suche für Zeichenfolgen dass match spezifisch patterns, similar zu regular expressions. Du kannst Verwende it zu Filtere Zeichenfolgen based auf patterns like punctuation, character Typen, length, und mehr.
+
+Zum Beispiel, zu find alle Zeichenfolgen dass start mit ein uppercase letter und end mit ein period, Verwende der following expression:
+
+```graphql
+start "true", range "A,Z", anything, range "a,z,A,Z,0,9", limit "1,50", then ".", end "true"
+```
+
+dies expression means:
+
+* `start "true"` – der Zeichenfolge begins bei der start
+* `range "A,Z"` – starts mit ein capital letter
+* `anything` – followed von beliebige characters
+* `range "a,z,A,Z,0,9"` – allows letters und numbers
+* `limit "1,50"` – Zeichenfolge length between 1 und 50 characters
+* `then "."` – ends mit ein period
+* `end "true"` – end von der Zeichenfolge
+
+<CardGrid>
+  <LinkCard title="Verbal Tester" description="Erstellen, prüfen und bearbeiten von verbalen Ausdrücken in einem Crowdin-Projekt mit der Anwendung Verbal Tester" href="https://store.crowdin.com/verbal-tester" target="_blank" />
+  <LinkCard title="Verbal Expressions GPT ausprobieren" description="Helps mit Verbal Expressions development in Crowdin." href="https://chat.openai.com/g/g-NdFRRXHwm-crowdin-verbal-expressions-maker" target="_blank" />
+</CardGrid>
+
+### Beispiele für Verbalausdrücke
+
+Below sind several examples von verbal expressions along mit der Typen von Zeichenfolgen they help match in dein Projekt. Diese sind useful wenn du want zu Filtere Zeichenfolgen mit spezifisch Inhalt oder structure.
+
+<Aside>
+  alle der examples below Verwende der gleich argument delimiter `"`
+</Aside>
+
+##### Start mit Uppercase und End mit ein Period
+
+Zeichenfolge example:
+
+```
+ein test Zeichenfolge.
+```
+
+Ausdruck:
+
+```graphql
+start "true", range "A,Z", anything, range "a,z,A,Z,0,9", limit "1,50", then ".", end "true"
+```
+
+##### Zeichenfolgen Containing URLs
+
+Zeichenfolge example:
+
+```
+Visit http://example.com oder https://www.example.com
+```
+
+Ausdruck:
+
+```graphql
+dann „http“, eventuell „s“, dann „://“, eventuell „www.“, beliebiges außer „ “
+```
+
+##### Zeichenfolgen mit `%s` und `%d` Placeholders
+
+Zeichenfolge example:
+
+```
+Welcome, %s! du haben %d neu messages.
+```
+
+Ausdruck:
+
+```graphql
+dann „%“, eines von „s,d“
+```
+
+##### Zeichenfolgen mit Variables in Double Curly Brackets
+
+Zeichenfolge example:
+
+```
+Hallo, {{user.name}}!
+```
+
+Ausdruck:
+
+```graphql
+dann „{{“, Bereich „a,z“, mehrfach, dann „.“, Bereich „a,z“, mehrfach, dann „}}“
+```
+
+<Aside>
+  Dieser expression matches variables like `{{user.name}}` wo both parts contain nur lowercase letters.
+</Aside>
+
+##### Zeichenfolgen mit Variables in Double Curly Brackets (Including Uppercase Letters und Digits)
+
+Zeichenfolge example:
+
+```
+Hallo, {{User123.name42}}!
+```
+
+Ausdruck:
+
+```graphql
+dann „{{“, Bereich „a,z,A,Z,0,9“, mehrfach, dann „.“, Bereich „a,z,A,Z,0,9“, mehrfach, dann „}}“
+```
+
+<Aside>
+  Verwende dies version zu match variables wo Namen kann contain uppercase letters oder numbers.
+</Aside>
+
+##### Zeichenfolgen dass Contain Floating Point Numbers
+
+Zeichenfolge example:
+
+```
+der Ergebnis ist 3.14159
+```
+
+Ausdruck:
+
+```graphql
+Start, Bereich „0,9“, mehrfach, dann „.“, Bereich „0,9“, mehrfach, Ende
+```
+
+##### Zeichenfolgen dass Start mit Title Case (Two Capitalized Words)
+
+Zeichenfolge example:
+
+```
+Quick Access ist verfügbar now.
+```
+
+Ausdruck:
+
+```graphql
+start, range "A,Z", range "a,z", multiple, then " ", range "A,Z", range "a,z", multiple
+```
+
+##### Zeichenfolgen mit Trailing Whitespace
+
+Zeichenfolge example:
+
+```
+dies ist ein sentence mit trailing space
+```
+
+Ausdruck:
+
+```graphql
+start "true", range "A,Z", anything, range "a,z,A,Z,0,9", then " ", end "true"
+```
+
+##### Zeichenfolgen Starting mit ein Hash Symbol (e.g., Hashtags oder Anchors)
+
+Zeichenfolge example:
+
+```
+#ErsteSchritte
+```
+
+Ausdruck:
+
+```graphql
+Start „true“, dann „#“, etwas, Ende „true“
+```
+
+##### Zeichenfolgen Containing HTML Tags
+
+Zeichenfolge example:
+
+```
+Klicke auf <strong>here</strong> zu continue.
+```
+
+Ausdruck:
+
+```graphql
+dann „<“, etwas, dann „>“
+```
+
+##### Zeichenfolgen Containing ein Email Address Format
+
+Zeichenfolge example:
+
+```
+Please contact us bei support@example.com
+```
+
+Ausdruck:
+
+```graphql
+dann „@“, etwas außer „ “
+```
+
+##### Zeichenfolgen mit Double Spaces (Possible Spacing Problem)
+
+Zeichenfolge example:
+
+```
+Dieser Zeichenfolge hat extra space.
+```
+
+Ausdruck:
+
+```graphql
+then " "
+```
+
+##### Zeichenfolgen Ending mit ein Colon
+
+Zeichenfolge example:
+
+```
+Gib ein dein Name:
+```
+
+Ausdruck:
+
+```graphql
+dann „:“, Ende „true“
+```
+
+##### Zeichenfolgen mit ein Currency Symbol Followed von Digits
+
+Zeichenfolge example:
+
+```
+Gesamt: $29.99
+```
+
+Ausdruck:
+
+```graphql
+dann „$“, Bereich „0,9“, mehrfach
+```
+
+##### Zeichenfolgen in camelCase Format
+
+Zeichenfolge example:
+
+```
+lowerUpper
+```
+
+Ausdruck:
+
+```graphql
+start, range "ein,z", multiple, range "ein,Z", range "ein,z", multiple, end
+```
+
+##### Ganzes Wort abgleichen (Wortgrenze)
+
+Zeichenfolge example:
+
+```
+Fill out der form mit dein Informationen.
+```
+
+Ausdruck:
+
+```graphql
+Wortgrenze, dann „form“, Wortgrenze
+```
+
+<Aside>
+  Matches der standalone word `form`, not der `form` inside `information`.
+</Aside>
+
+##### in-Word Match (Non-Word Boundary)
+
+Zeichenfolge example:
+
+```
+Fill out der form mit dein Informationen.
+```
+
+Ausdruck:
+
+```graphql
+Keine Wortgrenze, dann „form“, keine Wortgrenze
+```
+
+<Aside>
+  Matches der `form` inside `information`, not der standalone word `form`.
+</Aside>

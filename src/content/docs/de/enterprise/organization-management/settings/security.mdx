@@ -1,0 +1,169 @@
+---
+title: Sicherheit
+description: Configure security Einstellungen for your Organisation
+slug: enterprise/security
+sidebar:
+  order: 1
+---
+
+import { Image } from 'astro:assets';
+import { Steps, CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import organizationSettingsMenuItem from '!/enterprise/organization-management/organization_settings_menu_item.png';
+import customAuthAppCredentials from '!/enterprise/organization-management/custom_auth_app_credentials.png';
+
+Die Seite **Sicherheit** bietet verschiedene Sicherheits- und Authentifizierungseinstellungen für deine Crowdin-Enterprise-Organisation. Du kannst festlegen, wie Personen deiner Organisation beitreten, welche Authentifizierungsmethoden zur Anmeldung verwendet werden können, und API-Token- sowie Sitzungsrichtlinien verwalten.
+
+Um configure your security Einstellungen, folge these Schritten:
+
+<Steps>
+  1. Klicke oben rechts auf dein Profilbild und wähle **Organisationseinstellungen**. <Image src={organizationSettingsMenuItem} alt="Organization Settings Menu Item" />
+  2. Wechsle in der linken Seitenleiste zum Bereich **Sicherheit**.
+</Steps>
+
+## Sicherheitsoptionen
+
+Konfiguriere erweiterte Sicherheitseinstellungen wie **Registrierung zulassen**, **Von Administratoren verwaltete Einladungen**, **Zwei-Faktor-Authentifizierung**, **Geräteverifizierung**, Erstellung und Lebensdauer persönlicher Token, Sitzungs-Timeouts und **IP-Zulassungsliste**.
+
+#### erlauben Signup
+
+Wähle aus, ob Personen der Organisation ohne vorherige Einladung per E-Mail oder über einen teilbaren Link beitreten können. Nach der Registrierung können Administratoren und Projektmanager die Berechtigungen der Organisationsmitglieder verwalten.
+
+#### Admin-verwaltet Invitations
+
+Beschränke die Möglichkeit, neue Mitglieder zur Organisation einzuladen, auf Administratoren. Wenn diese Option aktiviert ist, können Projektmanager weiterhin Benutzer, die bereits Teil der Organisation sind, zu ihren Projekten einladen, aber keine neuen Benutzer zur Organisation hinzufügen.
+
+Diese Option ist nützlich, wenn du strenger kontrollieren möchtest, wer deiner Organisation beitritt, insbesondere in regulierten Umgebungen oder wenn der Zugriff zentral durch eine kleine Gruppe von Administratoren verwaltet wird.
+
+<Aside>
+  **erlauben Signup** und **Admin-verwaltet Invitations** sind mutually exclusive. Nur eine davon kann gleichzeitig aktiviert sein.
+</Aside>
+
+#### Minimale Passwortstärke
+
+Define die complexity requirements für Benutzer passwords zu sicherstellen account security. Wenn eine Mindeststufe festgelegt ist (z. B. **Mittel**), müssen alle Organisationsmitglieder sicherstellen, dass ihre Passwörter die festgelegten Kriterien erfüllen, um den Zugriff aufrechtzuerhalten. Dies hilft, die Verwendung schwacher oder leicht erratbarer Anmeldedaten zu verhindern und schützt sowohl Benutzerkonten als auch Organisationsdaten.
+
+<ReadMore>
+  Mehr über [Stufen der Passwortstärke](/enterprise/account-settings/#password-strength) erfahren.
+</ReadMore>
+
+#### Zwei-Faktor-Authentifizierung
+
+Die Zwei-Faktor-Authentifizierung bietet eine zusätzliche Sicherheitsebene für deine Crowdin-Enterprise-Organisation. Sobald Sie die Funktion aktivieren, werden alle Mitglieder der Organisation aufgefordert, die Zwei-Faktor-Authentifizierung für ihre Konten einzurichten. Ab diesem Zeitpunkt verwenden die Mitglieder der Organisation bei jeder Anmeldung neben einem Benutzernamen und einem Kennwort auch einen Authentifizierungscode.
+
+#### Sicherheitsschlüssel erzwingen
+
+Erfordere die Verwendung von Hardwaregeräten zur Benutzerauthentifizierung. Durch die Aktivierung dieser Option wird die Verwendung softwarebasierter Methoden wie Bestätigungscodes aus Authentifizierungs-Apps eingeschränkt und ein höherer Schutz vor Phishing-Angriffen geboten.
+
+<Aside>
+  Um enable **Enforce Security Keys**, **Two-Factor Authentication** must be enabled first.
+</Aside>
+
+#### Anfragen zum Zurücksetzen der 2FA einschränken
+
+Deaktiviere die Self-Service-Option, über die Benutzer auf der Anmeldeseite eine Zurücksetzung der Zwei-Faktor-Authentifizierung anfordern können. Wenn enabled, users who lose Zugriff to their 2FA device cannot initiate a reset themselves. Stattdessen muss ein Administrator die Identität des Benutzers manuell überprüfen und die 2FA-Einstellungen zurücksetzen.
+
+#### Geräteverifizierung
+
+Füge eine zusätzliche Sicherheitsstufe hinzu, wenn sich Benutzer von einem neuen Gerät anmelden. Nach der Aktivierung verlangt Crowdin Enterprise vor der Gewährung des Zugriffs auf deine Organisation eine Geräteverifizierung per E-Mail. Dies stellt sicher, dass nur autorisierte Benutzer auf deine Organisation zugreifen können, selbst wenn ihre Anmeldedaten kompromittiert wurden.
+
+Device verification ist triggered wenn:
+
+* ein Benutzer Protokolle in von ein unrecognized device.
+* ein Benutzer clears ihr browser cookies oder switches browsers.
+
+Device verification kann sein bypassed wenn:
+
+* [zwei-factor Authentifizierung](#two-factor-authentication) (2FA) ist aktiviert und konfiguriert für die Benutzer’s account. In diesem Fall wird die Geräteverifizierung nicht erzwungen, da 2FA bereits eine starke Authentifizierung bietet.
+* Deine Organisation verwendet eine externe Authentifizierung über einen eigenen Identitätsanbieter und ist nicht auf eine E-Mail-Verifizierung angewiesen.
+
+#### erlauben Personal Token Creation
+
+Aktiviere diese Option, damit Organisationsmitglieder ihre eigenen persönlichen Zugriffstoken zur Authentifizierung bei der API erstellen können. Wenn diese Option deaktiviert ist, können Mitglieder keine neuen Token erstellen.
+
+#### Maximale Token-Lebensdauer
+
+Lege eine maximale Anzahl von Tagen fest, für die ein neues Token gültig sein kann. Diese Richtlinie gilt nur für Token, die nach dem Speichern der Einstellung erstellt wurden, und wirkt sich nicht auf zuvor erstellte Token aus. Du kannst eine bestimmte Anzahl von Tagen (1 bis 365) festlegen oder **Läuft nie ab** auswählen.
+
+#### Zeitüberschreitung bei inaktiver Sitzung
+
+Automatically log out members nach they have been inactive for a selected period.
+
+* **20 minutes**: die shortest timeout. Die Option **Angemeldet bleiben** ist auf der Anmeldeseite nicht verfügbar.
+* **8 Stunden, 24 Stunden, 7 Tage, 30 Tage**: Bei Benutzern, die bei der Anmeldung auf **Angemeldet bleiben** klicken, meldet das System sie nach diesem Zeitraum der Inaktivität ab.
+
+#### Sitzungsdauer
+
+konfigurieren ein absolute time limit für session duration. Im Gegensatz zum **Timeout für inaktive Sitzungen**, das bei Aktivität des Benutzers zurückgesetzt wird, erfordert diese Einstellung nach Ablauf der angegebenen Dauer unabhängig von der Aktivität eine erneute Authentifizierung.
+
+* **Disabled**: Sessions do nicht have a fixed expiration time (Standard).
+* **24 Stunden, 7 Tage, 30 Tage**: Benutzer müssen ihre Identität nach diesem Zeitraum erneut überprüfen.
+
+#### IP-Zulassungsliste
+
+Gewähre Zugriff auf deine Crowdin-Enterprise-Organisation nur Verbindungen von erlaubten IP-Adressen.
+
+Mit dieser Funktion kannst du eine Liste von IP-Adressen festlegen, die auf deine Crowdin-Enterprise-Organisation zugreifen dürfen. Du kannst beispielsweise die IP-Zulassungsliste verwenden, um nur Verbindungen aus deinem Unternehmensnetzwerk zuzulassen und alle anderen Verbindungen von IP-Adressen zu blockieren, die nicht zu deiner IP-Zulassungsliste gehören. Sobald die IP-Zulassungsliste aktiviert ist, beginnt Crowdin Enterprise, alle Verbindungen sowohl über die Benutzeroberfläche als auch über die API zu filtern.
+
+<Aside>
+  Die IP-Zulassungsliste ist bei Crowdin Enterprise nur im [Abonnementtarif](https://crowdin.com/pricing#enterprise-plans) Business verfügbar.
+</Aside>
+
+Um die IP-Zulassungsliste zu verwenden, erstelle zunächst in CIDR-Notation eine Liste der IP-Adressen und Bereiche, die Zugriff auf deine Organisation haben sollen.
+
+<ReadMore>
+  Mehr über die [CIDR-Notation](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation) erfahren.
+</ReadMore>
+
+Die IP-Zulassungsliste kann eine unbegrenzte Anzahl von IP-Adressen und Bereichen enthalten, die über die Benutzeroberfläche und die API auf deine Crowdin-Enterprise-Organisation zugreifen dürfen.
+
+Sobald du alle IP-Adressen und Bereiche gesammelt hast, die zur IP-Zulassungsliste hinzugefügt werden sollen, [wende dich an das Support-Team](https://crowdin.com/contacts), um die IP-Zulassungsliste für deine Organisation zu aktivieren. Wenn du Einträge in deiner IP-Zulassungsliste bearbeiten oder entfernen musst, wende dich mit der entsprechenden Anfrage an das Support-Team.
+
+## Authentifizierungsmethoden
+
+Im Abschnitt Authentifizierungsmethoden können Sie auswählen, wie sich Mitglieder bei Ihrer Crowdin Enterprise-Organisation anmelden können. Die Leute haben also noch Zeit, andere Authentifizierungsmethoden einzurichten.
+
+<Aside>
+  Wenn Sie eine der Authentifizierungsmethoden deaktivieren, wird die Möglichkeit, sich über diese bestimmte Methode anzumelden, innerhalb von 24 Stunden aufgehoben.
+
+  Außerdem wird allen Organisationsmitgliedern, die die deaktivierte Authentifizierungsmethode verwenden, eine entsprechende Benachrichtigung angezeigt, um sie darüber zu informieren, dass sie in den Kontoeinstellungen alternative Methoden einrichten müssen.
+</Aside>
+
+Wenn du zuvor deaktivierte Authentifizierungsmethoden wieder aktivierst, stehen sie den Organisationsmitgliedern sofort zur Verfügung.
+
+* *E-Mail/Benutzername und Passwort* &ndash; Mitglieder können sich mit ihrer E-Mail-Adresse oder ihrem Crowdin-Enterprise-Benutzernamen und einem Passwort anmelden.
+* *Passkey* &ndash; Mitglieder können sich mit sicheren Passkeys anmelden und so eine passwortlose Authentifizierung und einen verbesserten Kontoschutz nutzen.
+* *Magic Link* &ndash; Mitglieder kann request ein eins-time Authentifizierung link das wird sein sent zu ihr emails.
+* *Crowdin* &ndash; Mitglieder kann Protokoll in mit ihr Crowdin account.
+* *Facebook* &ndash; Mitglieder kann Protokoll in mit ihr Facebook account.
+* *GitHub* &ndash; Mitglieder kann Protokoll in mit ihr GitHub account.
+* *GitLab* &ndash; Mitglieder kann Protokoll in mit ihr GitLab account.
+* *Google* &ndash; Mitglieder kann Protokoll in mit ihr Google account.
+* *X* &ndash; Mitglieder kann Protokoll in mit ihr X account.
+* *OpenID Connect* &ndash; Mitglieder können sich mit ihrem OpenID-Konto anmelden.
+* *SAML* &ndash; Mitglieder kann Protokoll in mit ihr IDP account.
+
+## Benutzerdefinierte Autorisierungsanwendungen
+
+Mit Facebook-, GitHub-, GitLab-, Google- und X-SSO kannst du die standardmäßig vorkonfigurierte globale Authentifizierungsanwendung von Crowdin Enterprise verwenden oder deine eigene benutzerdefinierte Authentifizierungsanwendung einrichten.
+
+Führen Sie die folgenden Schritte aus, um Ihre benutzerdefinierte Authentifizierungsanwendung zu konfigurieren:
+
+<Steps>
+  1. Klicke oben rechts auf dein Profilbild und wähle **Organisationseinstellungen**.
+  2. Wechsle in der linken Seitenleiste zum Bereich **Sicherheit**.
+  3. Scrolle zum Bereich „Authentifizierungsmethoden“ und klicke auf das gewünschte SSO, für das du die benutzerdefinierte Authentifizierungsanwendung einrichten möchtest.
+  4. Wähle **Benutzerdefinierte Authentifizierungsanwendung** aus, füge die Anmeldedaten deiner benutzerdefinierten Authentifizierungsanwendung ein und klicke auf **Speichern**. <Image src={customAuthAppCredentials} alt="Authentication Custom Auth App Credentials" />
+  5. Kopiere die **Weiterleitungs-URL** mit <Icon name="mdi:content-copy" class="inline-icon" /> von der Seite **Authentifizierungseinstellungen** und füge sie in die Einstellungen deiner benutzerdefinierten Authentifizierungsanwendung ein.
+</Steps>
+
+Ein ähnlicher Konfigurationsablauf gilt auch für die Authentifizierungsmethode [OpenID Connect](/enterprise/oidc/).
+
+## Siehe auch
+
+<CardGrid>
+  <LinkCard title="SAML Single Sign-On" description="Erfahre, wie du SAML SSO für deine Organisation einrichtest." href="/enterprise/saml/" />
+  <LinkCard title="Terms-Compliance-App" description="Verwende diese App, um von Benutzern die Zustimmung zu deinen Nutzungsbedingungen zu verlangen, bevor sie auf die Organisation zugreifen können." href="https://store.crowdin.com/terms-compliance" target="_blank" />
+  <LinkCard title="Device-Approvals-App" description="Verwende diese App, um eine Administratorgenehmigung für neue Geräte zu verlangen, bevor Benutzer auf die Organisation zugreifen können." href="https://store.crowdin.com/device-approvals" target="_blank" />
+</CardGrid>

@@ -1,0 +1,252 @@
+---
+title: Editor-Schaltflächenmodul
+description: Schaltflächen zum Editor hinzufügen, die die Panels und Modals der App öffnen oder Klickereignisse senden
+slug: developer/crowdin-apps-module-editor-button
+sidebar:
+  order: 9
+  label: Editor-Schaltflächen
+---
+
+Mit diesem Modul können Schaltflächen zum Editor hinzugefügt werden, die auf ein anderes Modul derselben App wirken.
+
+Positionen der Editor-Schaltflächen:
+
+* `header-right`: die obere rechte Ecke des Editor-Headers
+* `header-left`: die obere linke Ecke des Editor-Headers
+* `menu`: das **Apps**-Menü im Hauptmenü des Editors
+* `translation-toolbar`: die Symbolleiste mit den Aktionen für die aktuelle Übersetzung
+* `strings-menu`: das Menü des aktuell ausgewählten Strings bzw. der aktuell ausgewählten Strings
+
+Eine Schaltfläche kann eine der folgenden Aktionen ausführen:
+
+* Ein angegebenes App-Modul im rechten Editorpanel öffnen (siehe [Modul für das rechte Editorpanel](/developer/crowdin-apps-module-editor-right-panel/))
+* Ein angegebenes App-Modul in einem modalen Dialog öffnen (siehe [Modalmodul](/developer/crowdin-apps-module-modal/))
+* Ein `editor.button.click`-Ereignis an ein angegebenes App-Modul senden
+
+Die Typen `panel` und `modal` sind an jeder Position verfügbar. Der Typ `event` ist an den Positionen `translation-toolbar` und `strings-menu` verfügbar.
+
+Ein `panel`- oder `event`-Button wird nur in den Editor-Modi angezeigt, die auch das Zielmodul angibt. Stelle daher sicher, dass die `modes` des Buttons innerhalb der für das Zielmodul definierten Modi liegen. Ein `modal`-Button hängt ausschließlich von seinen eigenen `modes` ab.
+
+Die Header-Positionen und die Übersetzungssymbolleiste zeigen jeweils bis zu vier Schaltflächen. Die übrigen sind im Dropdown **Weitere App-Aktionen** verfügbar. Im Modus `assets` sind Schaltflächen an den Positionen `header-right`, `header-left` und `menu` verfügbar. Auf Mobilgeräten sind Buttons an den Positionen `menu`, `translation-toolbar` und `strings-menu` verfügbar. In der Übersetzungsleiste wird jeweils nur ein Button gleichzeitig angezeigt.
+
+Editor-Schaltflächen werden auch in der Befehlspalette des Editors aufgelistet. Für jede Schaltfläche kann unter **Hilfe > Tastenkürzel** ein Tastenkürzel zugewiesen werden.
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+Für Crowdin:
+
+* Nur ich (also der Projektinhaber)
+* Ich, Projektmanager und Entwickler
+* Alle Projektmitglieder
+* Ausgewählte Benutzer
+
+Für Crowdin Enterprise:
+
+* Nur Organisationsadministratoren
+* Organisationsadministratoren, Projektmanager und Entwickler
+* Alle Benutzer in den Projekten der Organisation
+* Ausgewählte Benutzer
+
+## Struktur
+
+### Panel
+
+Die Schaltfläche öffnet das angegebene Modul im rechten Editorpanel.
+
+```json title="manifest.json"
+{
+  "modules": {
+    "editor-button": [
+      {
+        "key": "editor-button-key",
+        "name": "Name of Editor Button",
+        "logo": "/editor-button-logo.png",
+        "modes": [
+          "translate"
+        ],
+        "options": {
+          "location": "header-right",
+          "type": "panel",
+          "module": "editor-panel-module-key",
+          "weight": 10
+        }
+      }
+    ],
+    "editor-right-panel": [
+      {
+        "key": "editor-panel-module-key",
+        "name": "New Panel",
+        "modes": [
+          "translate"
+        ],
+        "url": "/editor-page"
+      }
+    ]
+  }
+}
+```
+
+### Modal
+
+Die Schaltfläche öffnet das angegebene Modul in einem modalen Dialog.
+
+```json title="manifest.json"
+{
+  "modules": {
+    "editor-button": [
+      {
+        "key": "editor-button-key",
+        "name": "Name of Editor Button",
+        "modes": [
+          "translate"
+        ],
+        "options": {
+          "location": "menu",
+          "type": "modal",
+          "module": "modal-module-key"
+        }
+      }
+    ],
+    "modal": [
+      {
+        "key": "modal-module-key",
+        "name": "New Modal",
+        "url": "/path/to/modal/module"
+      }
+    ]
+  }
+}
+```
+
+### Event
+
+Die Schaltfläche sendet ein `editor.button.click`-Ereignis an das angegebene Modul, ohne es zu öffnen.
+
+```json title="manifest.json"
+{
+  "modules": {
+    "editor-button": [
+      {
+        "key": "editor-button-key",
+        "name": "Name of Editor Button",
+        "modes": [
+          "translate"
+        ],
+        "options": {
+          "location": "translation-toolbar",
+          "type": "event",
+          "module": "editor-panel-module-key"
+        }
+      }
+    ],
+    "editor-right-panel": [
+      {
+        "key": "editor-panel-module-key",
+        "name": "New Panel",
+        "modes": [
+          "translate"
+        ],
+        "url": "/editor-page"
+      }
+    ]
+  }
+}
+```
+
+Der Event-Payload hängt von der Position der Schaltfläche ab. Siehe [Unterstützte Ereignisse](/developer/crowdin-apps-js/#supported-events) für die Struktur des Objekts.
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> Ja</p>
+        <p><strong>Beschreibung:</strong> Modulkennung innerhalb der Crowdin-App.<br />
+        Die Kennung muss sich von den Schlüsseln der <code>editor-right-panel</code>, <code>editor-background-worker</code>, und <code>modal</code> Module der App unterscheiden.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Der für Menschen lesbare Name, der im Tooltip der Schaltfläche und als Eintragsbezeichnung in den Menüs angezeigt wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>logo</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Die relative URL zum Symbol der Schaltfläche.<br />
+        Das Symbol wird mit 16x16 Pixeln angezeigt. Wenn es nicht angegeben ist, verwendet die Schaltfläche das Logo der App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>modes</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>Array</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Zulässige Werte:</strong> <code>translate</code>, <code>comfortable</code>, <code>side-by-side</code>, <code>multilingual</code>, <code>review</code>, <code>assets</code></p>
+        <p><strong>Beschreibung:</strong> Die Liste der Modi des Editors, in denen das Modul verfügbar ist.<br />
+        Verwende <code>translate</code>, um das Modul in den folgenden Ansichten verfügbar zu machen: <code>comfortable</code>, <code>side-by-side</code> und <code>multilingual</code>.<br />
+        Für eine detailliertere Steuerung kannst du einen oder mehrere dieser Werte direkt angeben.<br />
+        Der Modus <code>review</code> ist nur in Crowdin Enterprise und nur im Workflow-Schritt <a href="/enterprise/source-text-review/">Überprüfung des Ausgangstexts</a> verfügbar.<br />
+        Der Modus <code>assets</code> wird zum Verwalten von Assets im Editor verwendet.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">options.location</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>String</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Zulässige Werte:</strong> <code>header-right</code>, <code>header-left</code>, <code>menu</code>, <code class="whitespace-nowrap">translation-toolbar</code>, <code>strings-menu</code></p>
+        <p><strong>Beschreibung:</strong> Die Position im Editor, an der die Schaltfläche hinzugefügt wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.type</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Zulässige Werte:</strong> <code>panel</code>, <code>modal</code>, <code>event</code></p>
+        <p><strong>Beschreibung:</strong> Der Aktionstyp, den diese Schaltfläche ausführt.<br />
+        Der Typ <code>event</code> wird an den Positionen <code>translation-toolbar</code> und <code>strings-menu</code> unterstützt.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.module</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Der <code>key</code> des Moduls, auf das die Schaltfläche wirkt. Das Modul muss in derselben App deklariert sein, und beide müssen mindestens einen gemeinsamen Wert für <code>environments</code> haben.<br />
+        Verwende ein Modul <code>editor-right-panel</code> mit dem Typ <code>panel</code>, ein <code>modal</code>-Modul mit dem Typ <code>modal</code> und ein <code>editor-right-panel</code>- oder <code>editor-background-worker</code>-Modul mit dem Typ <code>event</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.weight</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>integer</code></p>
+        <p><strong>Beschreibung:</strong> Die Reihenfolge der Schaltfläche unter den anderen Schaltflächen an derselben Position. Schaltflächen mit niedrigeren Werten werden zuerst platziert: links im Header und in der Übersetzungssymbolleiste, weiter hinten in den Menüs.<br />
+        Der Standardwert ist <code>100</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Zulässige Werte:</strong> <code>crowdin</code>, <code>crowdin-enterprise</code></p>
+        <p><strong>Beschreibung:</strong> Menge der Umgebungen, in denen ein Modul installiert werden kann.<br />
+        Dieser Parameter wird für produktübergreifende Anwendungen benötigt.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Laufzeitstatus
+
+Eine App kann ihre eigenen Schaltflächen aktualisieren, während der Editor geöffnet ist: das Symbol festlegen, ein Badge hinzufügen, den Tooltip überschreiben oder eine Schaltfläche deaktivieren. Verwende die Methode [AP.editor.updateButton](/developer/crowdin-apps-js/#update-button), um die Änderungen anzuwenden, und [AP.editor.resetButton](/developer/crowdin-apps-js/#reset-button), um die Schaltfläche in den im Manifest deklarierten Zustand zurückzusetzen.

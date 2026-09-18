@@ -1,0 +1,889 @@
+---
+title: Workflow-Schritttyp
+description: Erstelle einen neuen Workflow-Schritttyp für Crowdin-Enterprise-Workflows.
+slug: developer/crowdin-apps-module-workflow-step-type
+sidebar:
+  label: Workflow-Schritttyp
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+Mit diesem Modul kannst du benutzerdefinierte Workflow-Schritttypen erstellen, die die Standardliste der Workflow-Schritte in Crowdin Enterprise erweitern. Nach der Installation der App stehen die neuen Schritttypen im Workflow-Editor zur Verfügung und können zu Workflows und Vorlagen hinzugefügt werden.
+
+Ein benutzerdefinierter Workflow-Schritt ist eine externe Verarbeitungsstufe innerhalb eines Workflows. Crowdin Enterprise leitet die Zeichenfolgen weiter, verfolgt ihren Status und zählt den Fortschritt, während deine App die Abschlussbedingung des Schritts implementiert: Sie entscheidet, wann eine Zeichenfolge im Schritt vollständig verarbeitet ist und über welchen Ausgang sie weitergeleitet wird. Typische Anwendungsfälle sind KI-basierte Überprüfungen, die Integration eines externen Review- oder MT-Systems, Compliance-Gates sowie Verzögerungs- oder Planungsschritte.
+
+## So funktioniert es
+
+Das Modul arbeitet asynchron und wird durch Webhook-Ereignisse gesteuert:
+
+<Steps>
+  1. Ein Organisationsadministrator installiert die App. Die von der App bereitgestellten benutzerdefinierten Schritttypen stehen im Workflow-Editor zur Verfügung.
+  2. Ein Projektmanager fügt den benutzerdefinierten Schritt zu einem Workflow oder einer Workflow-Vorlage hinzu und konfiguriert ihn über die von der App bereitgestellte Einstellungsoberfläche.
+  3. Wenn Zeichenfolgen den benutzerdefinierten Schritt erreichen, sendet Crowdin Enterprise das Webhook-Ereignis `string.status_on_step.recalculation_triggered` an die App.
+  4. Die App verarbeitet die empfangenen Zeichenfolgen mit ihrer eigenen Logik. Die Verarbeitung erfolgt asynchron und kann so lange dauern wie erforderlich.
+  5. Die App aktualisiert den Status jeder verarbeiteten Zeichenfolge über die API und weist sie entsprechend ihrer Routing-Logik einem der deklarierten Ausgänge des Schritts zu.
+  6. Crowdin Enterprise leitet die Zeichenfolgen an den nächsten mit diesem Ausgang verbundenen Workflow-Schritt weiter.
+</Steps>
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+* Nur Organisationsadministratoren
+* Alle Benutzer in den Projekten der Organisation
+* Ausgewählte Benutzer
+
+## Struktur
+
+Das folgende Beispiel zeigt einen vollständigen App-Deskriptor für eine App, die einen benutzerdefinierten Workflow-Schritt bereitstellt. Der Authentifizierungstyp `crowdin_agent`, das Objekt `agent` und das für das Ereignis `string.status_on_step.recalculation_triggered` abonnierte Modul `webhook` sind alle erforderlich:
+
+```json title="manifest.json"
+{
+  "identifier": "custom-workflow-step-app",
+  "name": "Custom Workflow Step App",
+  "description": "A sample app that provides a custom workflow step",
+  "logo": "/logo.png",
+  "baseUrl": "https://example.com",
+  "authentication": {
+    "type": "crowdin_agent",
+    "clientId": "your-client-id"
+  },
+  "agent": {
+    "name": "Custom Step",
+    "username": "custom-step-agent",
+    "avatarUrl": "/assets/agent-avatar.png"
+  },
+  "events": {
+    "installed": "/hooks/installed"
+  },
+  "scopes": [
+    "project"
+  ],
+  "modules": {
+    "workflow-step-type": [
+      {
+        "key": "custom-workflow-step",
+        "name": "Custom Workflow Step",
+        "logo": "/logo.png",
+        "description": "A sample custom step for Crowdin Enterprise workflows",
+        "boundaries": {
+          "input": {
+            "title": "Input Strings",
+            "ports": [
+              "untranslated",
+              "translated",
+              "approved",
+              "all",
+              "false",
+              "true",
+              "skipped",
+              "initial"
+            ]
+          },
+          "outputs": [
+            {
+              "title": "Processed Strings",
+              "port": "translated"
+            },
+            {
+              "title": "Unprocessed Strings",
+              "port": "untranslated"
+            }
+          ]
+        },
+        "editorMode": "comfortable",
+        "updateSettingsUrl": "/settings/custom-workflow-step",
+        "deleteSettingsUrl": "/delete/custom-workflow-step",
+        "url": "/workflow-step/custom-workflow-step",
+        "environments": [
+          "crowdin-enterprise"
+        ]
+      }
+    ],
+    "webhook": [
+      {
+        "key": "workflow-step-webhook",
+        "url": "/hooks/workflow",
+        "events": [
+          "string.status_on_step.recalculation_triggered"
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Für Menschen lesbarer Name des Workflow-Schritttyps, der im Workflow-Editor angezeigt wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>logo</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Beschreibung:</strong> Relative URL zum Logo des Workflow-Schritttyps, das im Workflow-Editor angezeigt wird.<br />
+        Die empfohlene Auflösung beträgt 48×48 Pixel.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Beschreibung:</strong> Für Menschen lesbare Beschreibung der Funktion des Workflow-Schritts.<br />
+        Die Beschreibung wird in der Crowdin-Enterprise-Benutzeroberfläche angezeigt.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>object</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Definiert die Eingangs- und Ausgangsports des Workflow-Schritts und bestimmt, wie Zeichenfolgen in den Schritt gelangen und ihn verlassen. Weitere Informationen findest du unter <a href="#boundaries-and-ports">Grenzen und Ports</a>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries.input</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>object</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Gibt die Eigenschaften der Eingabedaten des Workflow-Schritts einschließlich der verfügbaren Ports an. Es ist genau eine Eingangsgruppe zulässig.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">boundaries.input.title</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Titel des Eingangsbereichs des Workflow-Schritts (3–30 Zeichen).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries.input.ports</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Allowed values:</strong> <code>untranslated</code>, <code>translated</code>, <code>approved</code>, <code>all</code>, <code>false</code>, <code>true</code>, <code>skipped</code>, <code>initial</code></p>
+        <p><strong>Description:</strong> Defines the string statuses that can be processed by this workflow step.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries.outputs</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>array</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Gibt die möglichen Ausgaben des Workflow-Schritts an und bestimmt, wie verarbeitete Zeichenfolgen weitergeleitet werden. Ein Schritt kann einen oder zwei Ausgänge deklarieren.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>boundaries.outputs.[]</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>object</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Zulässige Werte für <code>port</code>:</strong> <code>untranslated</code>, <code>translated</code>, <code>approved</code>, <code>all</code>, <code>false</code>, <code>true</code>, <code>skipped</code></p>
+        <p><strong>Beschreibung:</strong> Definiert die Ausgänge des Workflow-Schritts. Jedes Objekt im Array enthält:</p>
+        <ul>
+          <li><code>title</code> (<strong>string</strong>) – Der Titel für den Ausgabebereich des Workflow-Schritts (3–30 Zeichen).</li>
+          <li><code>port</code> (<strong>string</strong>) – Der Porttyp, der zum Verbinden von Ausgaben verwendet wird. Der Port <code>initial</code> kann nicht als Ausgabe verwendet werden.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code>editorMode</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Zulässige Werte:</strong> <code>side-by-side</code>, <code>comfortable</code>, <code>multilingual</code></p>
+        <p><strong>Beschreibung:</strong> Definiert den standardmäßigen Crowdin-Enterprise-Editor-Modus, der verwendet wird, wenn ein Benutzer den Editor für diesen Workflow-Schritt öffnet.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>updateSettingsUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Beschreibung:</strong> Relative URL zum Senden aktualisierter Einstellungen des Workflow-Schritts, nachdem ein Benutzer Änderungen im Workflow-Editor gespeichert hat. Wird verwendet, wenn der benutzerdefinierte Workflow-Schritt über eine Konfiguration verfügt.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>deleteSettingsUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Beschreibung:</strong> Relative URL, die benachrichtigt wird, wenn der Workflow-Schritt im Workflow-Editor gelöscht wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Beschreibung:</strong> Relative URL zum Iframe mit der Einstellungsoberfläche für den Workflow-Schritt. Die Seite wird im Workflow-Editor geladen, wenn ein Benutzer den Schritt konfiguriert.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Zulässige Werte:</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>Beschreibung:</strong> Menge der Umgebungen, in denen ein Modul installiert werden kann.<br />
+        Dieser Parameter wird für produktübergreifende Anwendungen benötigt.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Grenzen und Ports
+
+Das Objekt `boundaries` deklariert die Anschlüsse des Schritts im Workflow. Ein Port beschreibt den Status des Inhalts, der ihn durchläuft, nicht die Schritte, mit denen er verbunden ist. Ein Ausgang eines Schritts kann mit einem Eingang des nächsten Schritts verbunden werden, wenn beide denselben Port verwenden oder wenn eine der beiden Seiten den Port `all` verwendet.
+
+| Port             | Bedeutung                                                                                                                                      |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `initial`        | Die Zeichenfolge ist direkt vom Startpunkt des Workflows eingetroffen, ohne vorherige Verarbeitung. Kann nur als **Eingang** verwendet werden. |
+| `untranslated`   | Die Zeichenfolge hat noch keine Übersetzung.                                                                                                   |
+| `translated`     | Die Zeichenfolge hat eine Übersetzung.                                                                                                         |
+| `approved`       | Die Übersetzung der Zeichenfolge wurde genehmigt.                                                                                              |
+| `skipped`        | Die Zeichenfolge wurde von einem vorherigen Schritt übersprungen (beispielsweise weil die Vorübersetzung keine Übereinstimmung gefunden hat).  |
+| `true` / `false` | Ein generisches boolesches Paar für Verzweigungslogik. Dies sind dieselben Anschlüsse, die auch von Custom-Code-Schritten verwendet werden.    |
+| `all`            | Ein Platzhalter, der mit jedem Port auf der anderen Seite verbunden werden kann.                                                               |
+
+Eine häufige Konfiguration besteht aus einem „Erfolgs“-Ausgang (z. B. `translated`, `approved` oder `true`) und einem „Fehler“- oder „Überspringen“-Ausgang (z. B. `untranslated`, `skipped` oder `false`), sodass der Workflow verarbeitete und nicht verarbeitete Zeichenfolgen auf unterschiedliche Pfade leiten kann.
+
+## Anforderungen
+
+Apps, die das Modul `workflow-step-type` enthalten, müssen alle folgenden Anforderungen erfüllen. Nur die ersten beiden werden bei der Installation der App validiert:
+
+* **`crowdin_agent`-Authentifizierung** – Die App muss den Authentifizierungstyp `crowdin_agent` verwenden und im App-Deskriptor einen `agent` deklarieren. Andere Authentifizierungstypen (z. B. `crowdin_app` oder `none`) sind für dieses Modul nicht zulässig. Weitere Informationen findest du unter [Authentifizierung](#authentication).
+* **App-Backend** – Alle Modul-URLs sind relativ zur `baseUrl` der App, daher ist das Modul nicht mit [serverlosen Apps](/developer/crowdin-apps-serverless/) kompatibel.
+* **Begleitendes Webhook-Modul** – Dieselbe App muss außerdem ein [Webhook-Modul](/developer/crowdin-apps-module-webhook/) deklarieren, das das Ereignis `string.status_on_step.recalculation_triggered` abonniert. Ohne dieses Modul gibt es weder bei der Installation noch beim Hinzufügen des Schritts zu einem Workflow einen Fehler – Zeichenfolgen, die den Schritt erreichen, werden der App einfach nie zugestellt. Ein Validierungsfehler (*Einige erforderliche Abhängigkeiten sind nicht erfüllt*) erscheint erst, wenn der Workflow später erneut gespeichert wird.
+* **Nur Crowdin Enterprise** – Benutzerdefinierte Workflow-Schritte sind nur in Crowdin-Enterprise-Projekten mit Workflows verfügbar. In Crowdin (crowdin.com) ist das Modul nicht verfügbar und wird nicht einfach abgelehnt.
+
+## Authentication
+
+Das Modul `workflow-step-type` erfordert den Authentifizierungstyp `crowdin_agent`. Wenn der App-Deskriptor einen anderen Authentifizierungstyp verwendet (oder das Objekt `authentication` fehlt), schlägt die Installation mit folgendem Fehler fehl:
+
+> Nur der Authentifizierungstyp crowdin_agent ist für den Modultyp workflow-step-type zulässig
+
+### Warum der Authentifizierungstyp „Agent“ verwendet wird
+
+Ein benutzerdefinierter Workflow-Schritt verarbeitet noch lange nach der Installation Zeichenfolgen in deinen Projekten, ausgelöst durch Webhooks und ohne eine Benutzersitzung. Dafür erstellt Crowdin Enterprise einen eigenen **Agenten** (einen Bot-Benutzer, der deine App in der Organisation repräsentiert):
+
+* Der Agentenbenutzer wird bei der Installation der App automatisch erstellt und bei der Deinstallation der App entfernt.
+* Alle API-Aufrufe der App zur Verarbeitung von Zeichenfolgen im benutzerdefinierten Schritt werden als Agentenbenutzer authentifiziert.
+* Der Agent muss in jedem Projekt, in dem der benutzerdefinierte Schritt verwendet wird, Managerzugriff haben. Ein Projektmanager lädt den Agenten als Manager in das Projekt ein, während er den Workflow-Schritt einrichtet. Alternativ kann der Agent während der App-Installation für alle vorhandenen Projekte als Manager zugewiesen werden.
+* Alle Aktionen der App werden in der Projektaktivität dem Agentenbenutzer zugeschrieben.
+
+In der Crowdin-Enterprise-Benutzeroberfläche wird der Agentenbenutzer als *Bot* bezeichnet.
+
+### Agentendeklaration
+
+Wenn du den Authentifizierungstyp `crowdin_agent` verwendest, muss der App-Deskriptor ein Objekt `agent` auf oberster Ebene enthalten, das den Agentenbenutzer beschreibt:
+
+```json title="manifest.json"
+{
+  "authentication": {
+    "type": "crowdin_agent",
+    "clientId": "your-client-id"
+  },
+  "agent": {
+    "name": "Custom Step",
+    "username": "custom-step-agent",
+    "avatarUrl": "/assets/agent-avatar.png"
+  }
+}
+```
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>agent.username</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Länge:</strong> 3–128 Zeichen</p>
+        <p><strong>Beschreibung:</strong> Benutzername des in der Organisation erstellten Agentenbenutzers. Wenn der Benutzername bereits vergeben ist, hängt Crowdin ein zufälliges Suffix an. Verlasse dich daher nicht auf den exakt deklarierten Wert.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>agent.name</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Beschreibung:</strong> Anzeigename des Agentenbenutzers. Crowdin hängt an diesen Wert <code>&nbsp;Agent</code> an. Wenn der Wert weggelassen wird, wird der App-Name verwendet.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">agent.avatarUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Beschreibung:</strong> Relative URL zum Avatar des Agentenbenutzers. Wenn der Wert weggelassen wird, wird das App-Logo verwendet.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Abrufen eines API-Tokens
+
+Der Token-Ablauf für `crowdin_agent` ähnelt dem [`crowdin_app`-Ablauf](/developer/crowdin-apps-installation/#installed-event-communication-flow). Wenn die App installiert wird, sendet Crowdin das [Installiert-Ereignis](/developer/crowdin-apps-app-descriptor/#installed-event-payload) an die App. Bei Apps mit dem Authentifizierungstyp `crowdin_agent` enthält die Nutzlast des Installiert-Ereignisses außerdem die Eigenschaft `agentId`, die numerische Kennung des für deine App erstellten Agentenbenutzers.
+
+Um ein API-Zugriffstoken zu erhalten, sendet die App die folgende Anfrage:
+
+```shell
+POST https://accounts.crowdin.com/oauth/token
+```
+
+**Parameter der Token-Anfrage:**
+
+<table>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">grant_type: crowdin_agent</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Erforderlich:</strong> ja</p>
+      <p><strong>Beschreibung:</strong> Gibt den Token-Ablauf für eine Agenten-App an.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>client_id</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Erforderlich:</strong> ja</p>
+      <p><strong>Beschreibung:</strong> The Client ID für the App is received wenn the App is registered.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>client_secret</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Erforderlich:</strong> ja</p>
+      <p><strong>Beschreibung:</strong> The Client Secret für the App is received wenn the App is registered.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>app_id</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Erforderlich:</strong> ja</p>
+      <p><strong>Beschreibung:</strong> Crowdin App Bezeichner von the App descriptoder.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>app_secret</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Erforderlich:</strong> ja</p>
+      <p><strong>Beschreibung:</strong> The eindeutig secret verwendet to authoderize your Crowdin App. Dieser Wert wird aus dem Installiert-Ereignis abgerufen.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>domain</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string|null</code></p>
+      <p><strong>Erforderlich:</strong> ja</p>
+      <p><strong>Beschreibung:</strong> Name der Organisation, in der die App installiert ist. Dieser Wert wird aus dem Installiert-Ereignis abgerufen.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user_id</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Erforderlich:</strong> ja</p>
+      <p><strong>Beschreibung:</strong> The Bezeichner of the Benutzer wer installiereniert the App. Dieser Wert wird aus dem Installiert-Ereignis abgerufen.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>agent_id</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Erforderlich:</strong> ja</p>
+      <p><strong>Beschreibung:</strong> Kennung des für deine App erstellten Agentenbenutzers. Dieser Wert wird aus dem Installiert-Ereignis abgerufen (Eigenschaft <code>agentId</code>).</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+Das resultierende Zugriffstoken wird für den Agentenbenutzer ausgestellt. Verwende es im `Authorization: Bearer`-Header für die [API-Methoden](#api-methods), die Zeichenfolgenstatus im benutzerdefinierten Schritt verwalten.
+
+<Aside>
+  Die im App-Deskriptor angeforderten Scopes dürfen die in der OAuth-App konfigurierten Scopes nicht überschreiten. Um Zeichenfolgenstatus in einem benutzerdefinierten Workflow-Schritt zu verwalten, benötigt die App den Scope `project`.
+</Aside>
+
+## Kommunikation zwischen App und Crowdin
+
+Das Modul „Workflow-Schritttyp“ verwendet Webhooks und API-Methoden zur Kommunikation mit Crowdin Enterprise. Apps, die dieses Modul enthalten, müssen außerdem das [Webhook-Modul](/developer/crowdin-apps-module-webhook/) definieren, um zeichenfolgenbezogene Ereignisse (d. h. `string.status_on_step.recalculation_triggered`) zu empfangen und entsprechend zu verarbeiten.
+
+### Empfangen von Webhook-Ereignissen von Crowdin
+
+Crowdin Enterprise sendet jedes Mal eine gebündelte Webhook-Nutzlast an das Webhook-Modul der App, wenn Zeichenfolgen einen von der App bereitgestellten benutzerdefinierten Workflow-Schritt erreichen. Wenn eine Zeichenfolge auf dem benutzerdefinierten Schritt landet (z. B. weil sie gerade hinzugefügt, von einem vorherigen Schritt dorthin verschoben oder erneut ausgelöst wurde), wird ihr Status im Schritt auf **Verarbeitung erforderlich** gesetzt und das Webhook-Ereignis zur Zustellung in die Warteschlange gestellt.
+
+Diese Nutzlast enthält das Ereignis `string.status_on_step.recalculation_triggered` und umfasst alle relevanten Zeichenfolgen, die eine externe Verarbeitung benötigen (z. B. KI-basiertes Korrekturlesen).
+
+<Aside>
+  Webhook-Ereignisse werden in Gruppen zugestellt und können mit einer kurzen Verzögerung eintreffen. Antworte so schnell wie möglich mit einem `2xx`-Statuscode und verarbeite die Zeichenfolgen asynchron. Weitere Informationen findest du unter [Zustellgarantien](#delivery-guarantees-and-reconciliation).
+</Aside>
+
+Beispiel für eine Webhook-Nutzlast für das Ereignis `string.status_on_step.recalculation_triggered`:
+
+```json
+{
+  "events": [
+    {
+      "event": "string.status_on_step.recalculation_triggered",
+      "stringStatus": {
+        "status": "NEED_PROCESS",
+        "output": "",
+        "originEvent": "string.added",
+        "organizationId": "200007777",
+        "translation": {
+          "id": 1106423,
+          "identifier": "058eb6ea2bdcc79a6a7208783c8bfb50",
+          "key": "string_1",
+          "text": "Not all videos are shown to users. See more",
+          "type": "text",
+          "context": "string_1",
+          "maxLength": "50",
+          "isHidden": false,
+          "isDuplicate": false,
+          "masterStringId": null,
+          "revision": 1,
+          "hasPlurals": false,
+          "labelIds": [],
+          "url": "https://umbrella.crowdin.com/editor/173/743/en-et#1106423",
+          "createdAt": "2024-10-29T10:47:13+00:00",
+          "updatedAt": null,
+          "file": {
+            "id": 743,
+            "name": "umbrella_app.xml",
+            "title": null,
+            "type": "android8",
+            "path": "/umbrella_app.xml",
+            "status": "active",
+            "revision": "1",
+            "branch": {
+              "id": null
+            },
+            "directory": {
+              "id": null
+            },
+            "project": null
+          },
+          "project": {
+            "id": 173,
+            "userId": 1,
+            "sourceLanguageId": "en",
+            "targetLanguageIds": [
+              "uk",
+              "et"
+            ],
+            "identifier": "d3026ae4cff9820bc140a210d23b35ad",
+            "name": "Project Name",
+            "createdAt": "2024-10-25T14:37:47+00:00",
+            "updatedAt": "2024-10-25T14:37:47+00:00",
+            "lastActivity": "2025-01-30T09:32:58+00:00",
+            "description": "",
+            "url": "https://umbrella.crowdin.com/u/projects/173",
+            "cname": null,
+            "languageAccessPolicy": null,
+            "visibility": null,
+            "publicDownloads": null,
+            "logo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJY...<truncated>...BBQmCC",
+            "isExternal": false,
+            "externalType": null,
+            "hasCrowdsourcing": false,
+            "groupId": 1
+          }
+        },
+        "sourceLanguage": {
+          "id": "en",
+          "name": "English",
+          "editorCode": "en",
+          "twoLettersCode": "en",
+          "threeLettersCode": "eng",
+          "locale": "en-US",
+          "androidCode": "en-rUS",
+          "osxCode": "en.lproj",
+          "osxLocale": "en",
+          "textDirection": "ltr",
+          "dialectOf": null
+        },
+        "affectedLanguage": {
+          "id": "et",
+          "name": "Estonian",
+          "editorCode": "et",
+          "twoLettersCode": "et",
+          "threeLettersCode": "est",
+          "locale": "et-EE",
+          "androidCode": "et-rEE",
+          "osxCode": "et.lproj",
+          "osxLocale": "et",
+          "textDirection": "ltr",
+          "dialectOf": null
+        },
+        "workflowStep": {
+          "id": 1035,
+          "title": "AI Review",
+          "type": "Application",
+          "languages": [],
+          "applicationModule": {
+            "applicationIdentifier": "custom-workflow-step",
+            "moduleKey": "review-step"
+          }
+        },
+        "user": {
+          "id": "1",
+          "username": "john_smith",
+          "fullName": "John Smith",
+          "avatarUrl": "https://avatar-url.com/avatar/1/small/1bc07ce78f415990547ba1b4fd5ac8a8_default.png"
+        }
+      }
+    }
+  ]
+}
+```
+
+### Zeichenfolgenstatus bei einem benutzerdefinierten Schritt
+
+Jede Zeichenfolge in einem benutzerdefinierten Workflow-Schritt hat pro Zielsprache einen Status. Die Statuswerte, auf die du bei der Arbeit mit den [API-Methoden](#api-methods) triffst:
+
+| Status                                                  | Bedeutung                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEED_PROCESS`                                          | Die Zeichenfolge hat den Schritt erreicht und wartet auf die Entscheidung der App. `TODO`                                                                                                                                                                                                    |
+| Im Fortschritt des Projekts als „zu erledigen“ gezählt. | Die App hat die Zeichenfolge explizit im Schritt geparkt, indem sie einen leeren Ausgang (\`\`) gesetzt hat.                                                                                                                                                                                 |
+| `DONE`                                                  | Die App hat die Zeichenfolge einem der Ausgänge des Schritts zugewiesen, und die Zeichenfolge wurde im Workflow weitergeleitet.                                                                                                                                                              |
+| `FAILED`                                                | Die Zustellung des Webhooks an die App ist fehlgeschlagen. Zeichenfolgen mit diesem Status werden im Projekt als fehlgeschlagene Wörter angezeigt und nicht automatisch erneut gesendet. Weitere Informationen findest du unter [Zustellgarantien](#delivery-guarantees-and-reconciliation). |
+| `INCOMPLETE`                                            | Die Zeichenfolge wird derzeit für diese Sprache nicht zu diesem Schritt weitergeleitet (z. B. weil sie ausgeblendet oder vom Workflow ausgeschlossen ist).                                                                                                                                   |
+
+### Zeichenfolgen verarbeiten und ihren Status aktualisieren
+
+1. **App-Logik** – Die App verarbeitet die empfangenen Zeichenfolgen gemäß ihrer internen Logik (z. B. indem sie sie an einen KI-Dienst sendet oder benutzerdefinierte Validierungen ausführt).
+2. [**Zeichenfolgenstatus über die API aktualisieren**](#api-methods) – Nach der Verarbeitung ruft die App die Crowdin-Enterprise-API auf, um den Status jeder Zeichenfolge im benutzerdefinierten Workflow-Schritt zu aktualisieren. Diese Aktion leitet die Zeichenfolgen an die entsprechenden Ausgänge des Workflows weiter.
+
+#### API-Methoden
+
+Nachfolgend findest du die API-Methoden zum Verwalten von Zeichenfolgenstatus in einem benutzerdefinierten Workflow-Schritt. Die Methode **Zeichenfolgenstatus aktualisieren** ist erforderlich, da sie den Status von Zeichenfolgen abschließt und sie an die richtigen Workflow-Ausgänge weiterleitet. Die andere verfügbare Methode **Aktuellen Zeichenfolgenstatus abrufen** ist optional, kann aber bei Sonderfällen oder erweiterter Logik deiner App hilfreich sein.
+
+<Aside>
+  Diese Endpunkte sind speziell für Apps mit dem Modul `workflow-step-type` vorgesehen und gehören nicht zur allgemeinen [Crowdin-API-Referenz](/developer/api/).
+</Aside>
+
+<Aside type="caution">
+  Diese Endpunkte müssen mit einem Zugriffstoken aufgerufen werden, das über den [`crowdin_agent`-Grant-Typ](#obtaining-an-api-token) abgerufen wurde. Anfragen, die mit einem regulären Benutzer oder einem über andere Grant-Typen erhaltenen Token authentifiziert wurden, werden mit dem Fehler `403 Forbidden` abgelehnt. Der Agentenbenutzer muss Managerzugriff auf das Projekt haben.
+</Aside>
+
+<details>
+  <summary><strong>Zeichenfolgenstatus aktualisieren</strong></summary>
+
+  Verwende diesen Endpunkt, um den Status von Zeichenfolgen zu aktualisieren, die deinen benutzerdefinierten Workflow-Schritt erreicht haben.
+
+  ```shell title="Crowdin Enterprise" wrap
+  PATCH https://{organization_domain}.api.crowdin.com/api/v2/projects/{projectId}/workflow-steps/{stepId}/languages/{languageId}/status
+  ```
+
+  <table>
+    <thead>
+      <tr>
+        <th>Parameter</th>
+        <th>Erforderlich</th>
+        <th>Typ</th>
+        <th>Beschreibung</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>organization_domain</code></td>
+        <td>Ja</td>
+        <td><code>string</code></td>
+        <td>Domäne deiner Crowdin-Enterprise-Organisation.</td>
+      </tr>
+      <tr>
+        <td><code>projectId</code></td>
+        <td>Ja</td>
+        <td><code>integer</code></td>
+        <td>Numerische Kennung deines Crowdin-Enterprise-Projekts.</td>
+      </tr>
+      <tr>
+        <td><code>stepId</code></td>
+        <td>Ja</td>
+        <td><code>integer</code></td>
+        <td>Numerische Kennung des benutzerdefinierten Workflow-Schritts.</td>
+      </tr>
+      <tr>
+        <td><code>languageId</code></td>
+        <td>Ja</td>
+        <td><code>string</code></td>
+        <td>Code der Zielsprache. Muss eine der Zielsprachen des Schritts sein (siehe Eigenschaft <code>workflowStep.languages</code> in der Webhook-Nutzlast).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  Der Anforderungstext ist ein JSON-Patch-Array. Nur die Operation `replace` wird unterstützt. Der `path` hat das Format `/{stringId}/output`, und `value` muss entweder einem der in `boundaries.outputs` des Moduls deklarierten Ausgänge oder einer leeren Zeichenfolge entsprechen:
+
+  * Ein deklarierter Ausgang (z. B. `translated`) – die Zeichenfolge wird im Schritt als **Erledigt** markiert und sofort an den mit diesem Ausgang verbundenen Workflow-Schritt weitergeleitet.
+  * Eine leere Zeichenfolge (\`\`) – die Zeichenfolge wird mit dem Status **Zu erledigen** im Schritt geparkt. Verwende dies, um Zeichenfolgen ausstehend zu halten (z. B. damit sie als verbleibende Arbeit sichtbar bleiben), bis deine App die Verarbeitung abgeschlossen hat.
+
+  **Anforderungstext (Beispiel):**
+  ```json
+  [
+    {
+      "op": "replace",
+      "path": "/1106423/output",
+      "value": "translated"
+    },
+    {
+      "op": "replace",
+      "path": "/1106430/output",
+      "value": "untranslated"
+    }
+  ]
+  ```
+
+  **Antwortbeispiel:**
+  ```json
+  {
+    "data": [
+      {
+        "data": {
+          "stringId": 1106423,
+          "languageId": "et",
+          "stepId": 1035,
+          "status": "DONE",
+          "output": "translated"
+        }
+      },
+      {
+        "data": {
+          "stringId": 1106430,
+          "languageId": "et",
+          "stepId": 1035,
+          "status": "DONE",
+          "output": "untranslated"
+        }
+      }
+    ]
+  }
+  ```
+</details>
+
+<details>
+  <summary><strong>Aktuellen Zeichenfolgenstatus abrufen</strong></summary>
+
+  Rufe die aktuellen Statuswerte von Zeichenfolgen in einem benutzerdefinierten Workflow-Schritt ab.
+
+  ```shell title="Crowdin Enterprise" wrap
+  GET https://{organization_domain}.api.crowdin.com/api/v2/projects/{projectId}/workflow-steps/{stepId}/languages/{languageId}/status
+  ```
+
+  <table>
+    <thead>
+      <tr>
+        <th>Parameter</th>
+        <th>Erforderlich</th>
+        <th>Typ</th>
+        <th>Beschreibung</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>organization_domain</code></td>
+        <td>Ja</td>
+        <td><code>string</code></td>
+        <td>Domäne deiner Crowdin-Enterprise-Organisation.</td>
+      </tr>
+      <tr>
+        <td><code>projectId</code></td>
+        <td>Ja</td>
+        <td><code>integer</code></td>
+        <td>Numerische Kennung deines Crowdin-Enterprise-Projekts.</td>
+      </tr>
+      <tr>
+        <td><code>stepId</code></td>
+        <td>Ja</td>
+        <td><code>integer</code></td>
+        <td>Numerische Kennung des benutzerdefinierten Workflow-Schritts.</td>
+      </tr>
+      <tr>
+        <td><code>languageId</code></td>
+        <td>Ja</td>
+        <td><code>string</code></td>
+        <td>Code der Zielsprache.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  **Abfrageparameter:**
+
+  <table>
+    <thead>
+      <tr>
+        <th>Parameter</th>
+        <th>Erforderlich</th>
+        <th>Typ</th>
+        <th>Beschreibung</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>stringIds</code></td>
+        <td>Nein</td>
+        <td><code>string</code></td>
+        <td>Nach Zeichenfolgen-IDs filtern (durch Kommas getrennt, bis zu 500 pro Anfrage).</td>
+      </tr>
+      <tr>
+        <td><code>status</code></td>
+        <td>Nein</td>
+        <td><code>string</code></td>
+        <td>Nach Status filtern: <code>TODO</code>, <code>DONE</code>, <code>INCOMPLETE</code>, <code>NEED_PROCESS</code> oder <code>FAILED</code>.</td>
+      </tr>
+      <tr>
+        <td><code>limit</code></td>
+        <td>Nein</td>
+        <td><code>integer</code></td>
+        <td>Maximale Anzahl der abzurufenden Elemente.</td>
+      </tr>
+      <tr>
+        <td><code>offset</code></td>
+        <td>Nein</td>
+        <td><code>integer</code></td>
+        <td>Start-Offset in der Sammlung.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  **Antwortbeispiel:**
+  ```json
+  {
+    "data": [
+      {
+        "data": {
+          "stringId": 1106423,
+          "languageId": "et",
+          "stepId": 1035,
+          "status": "DONE",
+          "output": "translated"
+        }
+      },
+      {
+        "data": {
+          "stringId": 1106430,
+          "languageId": "et",
+          "stepId": 1035,
+          "status": "DONE",
+          "output": "untranslated"
+        }
+      }
+    ]
+  }
+  ```
+</details>
+
+### Zustellgarantien und Abgleich
+
+Verlasse dich nicht auf den Webhook als Warteschlange:
+
+* **Bündelung und Verzögerung** – Ereignisse werden in Gruppen gesammelt und einmal pro Minute gesendet, sodass sie nach dem Erreichen des Schritts mit einer kurzen Verzögerung eintreffen können.
+* **Begrenzte Wiederholungen** – Wenn die App nicht erreichbar ist oder mit einem Fehler antwortet, wird die Zustellung nur eine begrenzte Anzahl von Malen wiederholt. Danach werden die betroffenen Zeichenfolgen im Schritt als **Fehlgeschlagen** markiert und nicht automatisch erneut gesendet.
+* **Wiederherstellung nach Fehlern** – Zeichenfolgen mit dem Status **Fehlgeschlagen** werden im Projekt als fehlgeschlagene Wörter angezeigt. Ein Projektmanager kann ihre Verarbeitung im Workflow-Schritt in Crowdin Enterprise erneut auslösen. Dadurch werden sie auf **Verarbeitung erforderlich** zurückgesetzt und das Webhook-Ereignis erneut gesendet.
+* **Keine Verarbeitungsfrist** – Zeichenfolgen können unbegrenzt im Status **Verarbeitung erforderlich** warten. Crowdin Enterprise lässt sie nicht ablaufen und weist sie nicht neu zu. Daher ist deine App dafür verantwortlich, jede empfangene Zeichenfolge letztendlich zu verarbeiten.
+
+Da die Zustellung nicht garantiert ist, solltest du den Status deiner App regelmäßig mit Crowdin Enterprise abgleichen: Rufe für jeden aktiven Schritt und jede Sprache den Endpunkt **Aktuellen Zeichenfolgenstatus abrufen** mit dem Filter `status=NEED_PROCESS` auf und verarbeite die zurückgegebenen Zeichenfolgen wie gewohnt.
+
+### Workflow-Schritt im Workflow-Editor konfigurieren
+
+Benutzer können einen benutzerdefinierten Workflow-Schritt im Crowdin-Enterprise-Workflow-Editor konfigurieren oder löschen. Crowdin Enterprise benachrichtigt deine App über diese Änderungen über die Callbacks `updateSettingsUrl` und `deleteSettingsUrl`, die wie die Iframe-Anfragen mit demselben `Authorization: Bearer`-JWT signiert sind. Über diese Benachrichtigungen erfährt deine App, welche ihrer Schritte vorhanden sind und wie sie konfiguriert sind. Speichere daher die empfangenen Daten.
+
+* **Einstellungen aktualisieren (`updateSettingsUrl`)**
+  * Wenn ein Benutzer nach dem Hinzufügen oder Ändern des Schritts im Workflow-Editor auf **Speichern** klickt, sendet Crowdin Enterprise eine **POST**-Anfrage an die im App-Deskriptor definierte `updateSettingsUrl`.
+  * Bei einem Schritt in einem Projekt-Workflow enthält der Anforderungstext `organizationId`, `projectId`, `workflowId`, `stepId` und `settings` (die von der Einstellungsoberfläche gespeicherte Schritt-Konfiguration).
+  * Bei einem Schritt in einer Workflow-Vorlage enthält der Anforderungstext `organizationId`, `templateId`, `stepId` und `settings`.
+  * Die App antwortet mit einem **2XX-Status**, um die erfolgreiche Verarbeitung der aktualisierten Konfiguration zu bestätigen.
+
+* **Schritt löschen (`deleteSettingsUrl`)**
+  * Wenn ein Benutzer den Schritt im Workflow-Editor löscht, sendet Crowdin Enterprise eine **DELETE**-Anfrage an die `deleteSettingsUrl`.
+  * Bei einem Schritt in einem Projekt-Workflow enthält der Anforderungstext `organizationId`, `projectId`, `workflowId` und `stepId`. Bei einem Schritt in einer Workflow-Vorlage enthält er `organizationId`, `templateId` und `stepId`.
+  * Die App kann gespeicherte Einstellungen für den gelöschten Workflow-Schritt sicher entfernen und mit einem **2XX-Status** antworten, um den Erfolg zu bestätigen.
+
+<Aside>
+  Durch die Deinstallation der App werden alle auf ihren Modulen basierenden Workflow-Schritte deaktiviert. Behandle das [Deinstallationsereignis](/developer/crowdin-apps-app-descriptor/#uninstall-event-payload) als Löschung aller zugehörigen Schritte und bereinige die gespeicherten Daten.
+</Aside>
+
+### Einstellungsoberfläche in deiner App implementieren
+
+Wenn der Workflow-Schritt Einstellungen über die Benutzeroberfläche bereitstellt, musst du eine Validierung und Speicherung der Konfiguration des Workflow-Schritts implementieren.
+
+#### Validierungsmethode
+
+In der Iframe-Oberfläche für deinen benutzerdefinierten Workflow-Schritt musst du eine Methode zur Validierung der Schritt-Konfiguration implementieren:
+
+```js
+window.formRef = {
+  validateForm: () => {
+    // Validate settings form
+    return true;
+  },
+}
+```
+
+Diese Methode wird aufgerufen, sobald Crowdin Enterprise prüft, ob die Einstellungen vor dem Speichern gültig sind.
+
+#### Einstellungen speichern
+
+Verwende zum Speichern der Konfiguration des Workflow-Schritts die folgende Methode:
+
+```js
+window.currentFormData = settings;
+AP.formDataUpdated(settings);
+```
+
+Die gespeicherten Einstellungen werden über den Callback `updateSettingsUrl` an deine App zurückgegeben, wenn der Benutzer den Workflow speichert.
+
+## Empfohlener Implementierungsablauf
+
+<Steps>
+  1. **Registriere eine OAuth-App** mit den von deiner App benötigten Scopes (mindestens `project`). Weitere Informationen findest du unter [Erstellen einer OAuth-Anwendung](/developer/authorizing-oauth-apps/).
+  2. **App-Deskriptor vorbereiten** – Setze `authentication.type` auf `crowdin_agent` mit deiner `clientId`, deklariere das Objekt `agent`, mindestens ein Modul `workflow-step-type` und ein `webhook`-Modul, das das Ereignis `string.status_on_step.recalculation_triggered` abonniert. Füge `updateSettingsUrl`, `deleteSettingsUrl` und die `url` des Einstellungs-Iframes hinzu, wenn dein Schritt eine schrittspezifische Konfiguration besitzt.
+  3. **Installiert-Ereignis verarbeiten** – Speichere die empfangenen Anmeldedaten einschließlich `agentId` und rufe bei Bedarf über den Grant-Typ `crowdin_agent` ein API-Token ab.
+  4. **Einstellungs-Callbacks verarbeiten** – Speichere die über `updateSettingsUrl` empfangenen Daten, die jeden aktiven Schritt zusammen mit seinen Einstellungen identifizieren.
+  5. **Webhook verarbeiten** – Bestätige schnell mit einer `2xx`-Antwort und stelle die Zeichenfolgen zur Verarbeitung in eine Warteschlange. Nutzlasten werden gebündelt empfangen (`{"events": [...]}`). Überprüfe den Header `X-Crowdin-Signature`.
+  6. **Zeichenfolgen verarbeiten** – Verarbeite die Zeichenfolgen mit deiner eigenen Logik und melde die Ergebnisse über den Endpunkt **Zeichenfolgenstatus aktualisieren**, indem du jede Zeichenfolge einem Ausgang zuweist, der deine Entscheidung widerspiegelt, oder \`\`, um sie im Schritt zu parken.
+  7. **Regelmäßig abgleichen** – Frage den Endpunkt **Aktuellen Zeichenfolgenstatus abrufen** mit dem Filter `status=NEED_PROCESS` ab, um Zeichenfolgen zu erfassen, deren Webhook-Ereignisse deine App möglicherweise verpasst hat.
+  8. **Löschungen behandeln** – Entferne den gespeicherten Status pro Schritt bei Anfragen an `deleteSettingsUrl` und behandle die Deinstallation der App als Löschung aller Schritte.
+</Steps>
+
+## Fehlerbehebung
+
+| Fehlermeldung                                                                                                                                  | Wahrscheinliche Ursache                                                                                                                                                                                          | Lösung                                                                                                                                                                      |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Installation schlägt fehl mit *Nur der Authentifizierungstyp crowdin_agent ist für den Modultyp workflow-step-type zulässig*                   | Der App-Deskriptor verwendet die Authentifizierung `crowdin_app` oder `none`, oder das Objekt `authentication` fehlt.                                                                                            | Setze `authentication.type` auf `crowdin_agent`, gib die `clientId` an und füge das Objekt `agent` hinzu.                                                                   |
+| Installation schlägt fehl mit *Serverlose Apps unterstützen nur UI-Modultypen*                                                                 | Im App-Deskriptor fehlt `baseUrl`.                                                                                                                                                                               | Füge eine `baseUrl` hinzu – dieses Modul erfordert ein App-Backend.                                                                                                         |
+| Installation schlägt fehl mit *Angeforderte Scopes überschreiten die in der OAuth-App angegebene Zugriffsebene*                                | Die Scopes im App-Deskriptor sind umfassender als die Scopes der OAuth-App.                                                                                                                                      | Gleiche die Scopes des App-Deskriptors an die Konfiguration der OAuth-App an.                                                                                               |
+| Der Schritttyp wird im Workflow-Editor nicht angezeigt.                                                                                        | Die App ist in Crowdin statt in Crowdin Enterprise installiert, der aktuelle Benutzer hat keinen Zugriff auf das Modul oder die App verfügt über kein Webhook-Modul, das das erforderliche Ereignis abonniert.   | Installiere die App in Crowdin Enterprise, prüfe die Zugriffseinstellungen des Moduls und füge das Webhook-Modul für `string.status_on_step.recalculation_triggered` hinzu. |
+| Workflow-Validierungsfehler *„\{agentName}“ erfordert Managerberechtigungen für das Projekt*                                                   | Der Agentenbenutzer hat keinen Managerzugriff auf das Projekt.                                                                                                                                                   | Lade den Agentenbenutzer als Manager in das Projekt ein.                                                                                                                    |
+| `403 Forbidden` bei den Endpunkten zum Zeichenfolgenstatus                                                                                     | Das Zugriffstoken wurde nicht über den Grant-Typ `crowdin_agent` abgerufen (beispielsweise gehört es einem regulären Benutzer) oder der Agent ist kein Manager des Projekts.                                     | Rufe das Token über den Grant-Typ `crowdin_agent` mit dem Parameter `agent_id` ab und überprüfe die Projektrolle des Agenten.                                               |
+| `404 Not Found` bei den Endpunkten zum Zeichenfolgenstatus                                                                                     | `languageId` gehört nicht zu den Zielsprachen des Schritts oder der Schritt ist kein aktiver benutzerdefinierter Workflow-Schritt.                                                                               | Verwende die Sprachcodes aus der Eigenschaft `workflowStep.languages` des Webhooks und überprüfe die Schrittkennung.                                                        |
+| `400 Bad Request` beim Aktualisieren des Zeichenfolgenstatus                                                                                   | Der Ausgabewert ist keiner der für den Schritt deklarierten Ausgangsports.                                                                                                                                       | Sende einen der Werte `boundaries.outputs[].port` des Moduls oder eine leere Zeichenfolge.                                                                                  |
+| Zeichenfolgen bleiben als fehlgeschlagene Wörter im Schritt hängen.                                                                            | Die Zustellung des Webhooks an die App ist fehlgeschlagen.                                                                                                                                                       | Stelle die Verfügbarkeit der App wieder her und löse anschließend die fehlgeschlagenen Zeichenfolgen im Workflow-Schritt in Crowdin Enterprise erneut aus.                  |
+| Der Webhook trifft nie ein oder das erneute Speichern des Workflows schlägt mit *Einige erforderliche Abhängigkeiten sind nicht erfüllt* fehl. | Die App verfügt über kein Webhook-Modul, das `string.status_on_step.recalculation_triggered` abonniert; das Webhook-Modul ist beim falschen Ereignis abonniert oder gehört zu einer anderen App als der Schritt. | Abonniere das Webhook-Modul **derselben** App für das Ereignis `string.status_on_step.recalculation_triggered`.                                                             |
+
+<ReadMore>
+  Weitere Informationen zu [App-basierten Workflow-Schritten](/enterprise/app-based-workflow-step/) findest du aus Sicht der Organisationsverwaltung.
+</ReadMore>

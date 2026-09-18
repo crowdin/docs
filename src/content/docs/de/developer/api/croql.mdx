@@ -1,0 +1,1664 @@
+---
+title: Crowdin Query Language (CroQL)
+description: Benötigte Lokalisierungsressourcen anhand bestimmter Bedingungen abrufen
+slug: developer/croql
+sidebar:
+  order: 7
+---
+
+import { Aside, LinkCard, Tabs, TabItem, Badge } from '@astrojs/starlight/components';
+
+Crowdin Query Language (CroQL) ist ein Tool für den Crowdin Editor, den Crowdin Enterprise Editor sowie die Crowdin- und Crowdin Enterprise-API, mit dem du anhand bestimmter Bedingungen benötigte Lokalisierungsressourcen abrufen kannst. Mit CroQL kannst du Quell-Strings und ihre Übersetzungen für eine bestimmte Zielsprache sowie TM-Segmente und Glossarbegriffe filtern.
+
+Du kannst CroQL mit den folgenden API-Methoden verwenden:
+
+<Tabs syncKey="Produkt">
+  <TabItem label="Crowdin">
+    * [Strings auflisten](/developer/api/v2/#tag/Source-Strings/operation/api.projects.strings.getMany)
+    * [Strings auflisten](/developer/api/v2/string-based/#tag/Source-Strings/operation/api.projects.strings.getMany) <Badge text="String-based" variant="note" />
+    * [Sprachübersetzungen auflisten](/developer/api/v2/#tag/StringAsset-Translations/operation/api.projects.languages.translations.getMany)
+    * [Sprachübersetzungen auflisten](/developer/api/v2/string-based/#tag/String-Translations/operation/api.projects.languages.translations.getMany) <Badge text="String-based" variant="note" />
+    * [TM-Segmente auflisten](/developer/api/v2/#tag/Translation-Memory/operation/api.tms.segments.getMany)
+    * [TM-Segmente auflisten](/developer/api/v2/string-based/#tag/Translation-Memory/operation/api.tms.segments.getMany) <Badge text="String-based" variant="note" />
+    * [Begriffe auflisten](/developer/api/v2/#tag/Glossaries/operation/api.glossaries.terms.getMany)
+    * [Begriffe auflisten](/developer/api/v2/string-based/#tag/Glossaries/operation/api.glossaries.terms.getMany) <Badge text="String-based" variant="note" />
+  </TabItem>
+  <TabItem label="Crowdin Enterprise">
+    * [Strings auflisten](/developer/enterprise/api/v2/#tag/Source-Strings/operation/api.projects.strings.getMany)
+    * [Strings auflisten](/developer/enterprise/api/v2/string-based/#tag/Source-Strings/operation/api.projects.strings.getMany) <Badge text="String-based" variant="note" />
+    * [Sprachübersetzungen auflisten](/developer/enterprise/api/v2/#tag/StringAsset-Translations/operation/api.projects.languages.translations.getMany)
+    * [Sprachübersetzungen auflisten](/developer/enterprise/api/v2/string-based/#tag/String-Translations/operation/api.projects.languages.translations.getMany) <Badge text="String-based" variant="note" />
+    * [TM-Segmente auflisten](/developer/enterprise/api/v2/#tag/Translation-Memory/operation/api.tms.segments.getMany)
+    * [TM-Segmente auflisten](/developer/enterprise/api/v2/string-based/#tag/Translation-Memory/operation/api.tms.segments.getMany) <Badge text="String-based" variant="note" />
+    * [Begriffe auflisten](/developer/enterprise/api/v2/#tag/Glossaries/operation/api.glossaries.terms.getMany)
+    * [Begriffe auflisten](/developer/enterprise/api/v2/string-based/#tag/Glossaries/operation/api.glossaries.terms.getMany) <Badge text="String-based" variant="note" />
+  </TabItem>
+</Tabs>
+
+## Operatoren
+
+Die wichtigsten CroQL-Operatoren sind unten aufgeführt. Verwende und kombiniere sie, um bestimmte Bedingungen für das Abrufen der benötigten Inhalte aus Crowdin festzulegen. Um deine CroQL-Abfrage zu erstellen, kannst du die Elemente aus den folgenden Tabellen verwenden.
+
+### Arithmetische Operatoren
+
+Arithmetische Operatoren werden verwendet, um mathematische Operationen mit beliebigen numerischen Datentypen durchzuführen.
+
+| Name           | Symbol | Beispiel |
+| -------------- | ------ | -------- |
+| Addition       | *      | 1 + 9    |
+| Subtraktion    | -      | 11 - 1   |
+| Division       | /      | 20 / 2   |
+| Multiplikation | *      | 2 \* 5   |
+| Negation       | -      | -10      |
+
+### Vergleichsoperatoren
+
+Vergleichsoperatoren werden verwendet, um Werte zu vergleichen und `true` oder `false` zurückzugeben.
+
+| Name                | Symbol                                                     | Aliase | Beispiel                                                                                                                |
+| ------------------- | ---------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Zwischen            | `{{expression}} between {{expression}} and {{expression}}` |        | 5 between 1 and 10                                                                                                      |
+| Gleich              | =                                                          |        | 10 = 10                                                                                                                 |
+| Ungleich            | !=                                                         | ≠      | 1 != 10; 1 ≠ 10                                                                                                         |
+| Größer              | &gt;                                                       |        | 10 &gt; 1                                                                                                               |
+| Größer oder gleich  | &gt;=                                                      | ≥      | 10 &gt;= 1; 10 ≥ 1                                                                                                      |
+| Kleiner             | &lt;                                                       |        | 1 &lt; 10                                                                                                               |
+| Kleiner oder gleich | &lt;=                                                      | ≤      | 1 &lt;= 10; 1 ≤ 10                                                                                                      |
+| Enthält             | `{{string}}` enthält `{{string}}`                          |        | `"Hello World" contains "Hello"`; `"Hello World" contains text`; `text contains "Hello World"`; `context contains text` |
+
+### Logische Operatoren
+
+Logische Operatoren werden verwendet, um mehrere boolesche Ausdrücke oder Werte zu kombinieren und ein einzelnes boolesches Ergebnis zurückzugeben.
+
+| Name  | Symbol | Beispiel                            |
+| ----- | ------ | ----------------------------------- |
+| Und   | und    | 1 \< 10 and 10 > 1 |
+| Oder  | oder   | 1 \< 10 or 10 > 1  |
+| Xor   | xor    | 1 \< 10 xor 10 > 1 |
+| Nicht | nicht  | nicht 1 \< 10      |
+
+### Filteroperatoren
+
+Filteroperatoren werden verwendet, um Objekte anhand der angegebenen Bedingung zu filtern.
+
+| Name       | Symbol                               | Beispiel                                  |
+| ---------- | ------------------------------------ | ----------------------------------------- |
+| Filtern    | `{{collection}}` mit `{{predicate}}` | `translations where (count of votes > 0)` |
+| Abgleichen | `{{object}} with {{predicate}}`      | `user with (login = "crowdin")`           |
+
+### Bedingter Operator (ternär)
+
+Der ternäre Operator wird verwendet, um eine im ersten Wert angegebene Bedingung zu prüfen. Ist sie `true`, wird der zweite Wert zurückgegeben; ist sie `false`, wird der dritte Wert zurückgegeben.
+
+| Name   | Symbol                                                     | Beispiel                                                 |
+| ------ | ---------------------------------------------------------- | -------------------------------------------------------- |
+| Ternär | `If {{condition}} then {{expression}} else {{expression}}` | `If 1 \< 10 then "less" else "greater"` |
+
+### Abrufoperatoren
+
+Abrufoperatoren
+
+| Name       | Symbol                                     | Beispiel                            |
+| ---------- | ------------------------------------------ | ----------------------------------- |
+| Erwähnung  | `@user:{{string}}`; `@language:{{string}}` | `@user:"crowdin"`; `@language:"en"` |
+| Mitglied   | `{{member}} of {{object}}`                 | `count of translations`             |
+| Bezeichner | `{{identifier}}`                           | `text`; `identifier`                |
+
+### Skalaroperatoren
+
+Skalaroperatoren werden verwendet, um Werte zur weiteren Verarbeitung zu deklarieren.
+
+| Name           | Symbol         | Beispiel                       |
+| -------------- | -------------- | ------------------------------ |
+| Ganzzahl       | `{{integer}}`  | 10                             |
+| Fließkommazahl | `{{float}}`    | 10.01                          |
+| Zeichenkette   | `{{string}}`   | "crowdin"                      |
+| Datum/Uhrzeit  | `{{datetime}}` | 'today'; '2021-03-16 00:00:00' |
+
+### Gruppenoperator
+
+Der Gruppenoperator wird verwendet, um die Ausführungsreihenfolge der Operatoren festzulegen.
+
+| Name   | Symbol | Beispiel                                         |
+| ------ | ------ | ------------------------------------------------ |
+| Gruppe | ( )    | 1 \< 10 and (20 > 10 or 10 > 5) |
+
+## CroQL-Abfragebeispiele
+
+In diesem Abschnitt findest du praktische Beispiele für CroQL-Abfragen, die dir helfen, die Abfragefunktionen in Crowdin zu verstehen und zu verwenden. Diese Beispiele helfen dir dabei, eigene Abfragen zu erstellen, um bestimmte Datensätze anhand verschiedener Kriterien abzurufen, etwa Übersetzungsstatus, Benutzeraktivität und String-Eigenschaften.
+
+<LinkCard title="CroQL Tester – Editor und Tester für CroQL-Ausdrücke" description="Teste deine CroQL-Abfragen im CroQL Tester." href="https://store.crowdin.com/croql-tester" target="_blank" />
+
+### String-Abfragen
+
+Diese Abfragen werden verwendet, um Informationen über Quell-Strings abzurufen.
+
+* Strings, für die keine ukrainischen Übersetzungen mit Freigaben oder Stimmen vorhanden sind:
+  ```graphql wrap
+  count of translations where ( language = @language:"uk" and ( count of approvals > 0 or count of votes > 0 ) ) = 0
+  ```
+
+* Strings, die nur eine Übersetzung haben:
+  ```graphql
+  count of translations = 1
+  ```
+
+* Strings, die nur Übersetzungen von einem bestimmten Benutzer haben:
+  ```graphql wrap
+  count of translations > 0 and count of translations = count of translations where (user = @user:"crowdin")
+  ```
+
+* Strings, die mindestens eine Übersetzung von einem anderen als den angegebenen Benutzern haben:
+  ```graphql
+  count of translations where (user != @user:"crowdin") > 0
+  ```
+
+* Strings, deren Übersetzungen ausschließlich von anderen als den angegebenen Benutzern stammen:
+  ```graphql wrap
+  count of translations > 0 and count of translations = count of translations where (user != @user:"crowdin")
+  ```
+
+* Strings, gefiltert nach Bezeichner und numerischer ID einer Datei in deinem Crowdin-Projekt:
+  ```graphql
+  identifier = "key" and id of file = 777
+  ```
+
+* Strings mit nicht gelösten Problemen, gefiltert nach der numerischen ID einer Datei in deinem Crowdin-Projekt:
+  ```graphql
+  id of file = 777 and count of comments where (has unresolved issue) > 0
+  ```
+
+* Ausgeblendete Strings, die keine Duplikate sind und eine oder mehrere Übersetzungen haben:
+  ```graphql
+  is hidden and not is duplicate and count of translations > 0
+  ```
+
+* Strings mit einer oder mehreren Freigaben:
+  ```graphql
+  count of languages summary where (approvalsCount >= 1) > 0
+  ```
+
+* Strings mit Kommentaren des Benutzers mit dem Benutzernamen `crowdin`:
+  ```graphql
+  count of comments where (user = @user:"crowdin") > 0
+  ```
+
+* Strings, die im Quelltext „ABC“ enthalten, aber in ihren Übersetzungen nicht „ABC“ enthalten:
+  ```graphql
+  text contains "ABC" and (count of translations where (text contains "ABC") = 0)
+  ```
+
+#### Feldabfragen
+
+Diese Abfragen werden verwendet, um Informationen über Quell-Strings anhand der ihnen zugewiesenen [Felder](/enterprise/fields/) abzurufen.
+
+* Strings mit einem bestimmten Feldnamen und einem exakten Feldwert:
+
+  *Anwendungsfall: Finde Strings, bei denen das Feld „Priority“ auf „High“ gesetzt ist.*
+
+  ```graphql wrap
+  count of fields where (name = "Priority" and value = "High") > 0
+  ```
+
+* Strings mit einem bestimmten Feld-Slug und einem Wert, der ein bestimmtes Wort enthält:
+
+  *Anwendungsfall: Finde Strings, bei denen der Slug „category“ das Wort „mobile“ enthält.*
+
+  ```graphql wrap
+  count of fields where (slug = "field-category" and value contains "mobile") > 0
+  ```
+
+* Strings, denen anhand ihres Namens ein bestimmtes Feld zugewiesen wurde:
+
+  *Anwendungsfall: Finde alle Strings, denen ein Feld „Department“ zugewiesen ist, unabhängig vom Wert.*
+
+  ```graphql wrap
+  count of fields where (name = "Department") > 0
+  ```
+
+* Strings, denen anhand ihres Slugs ein bestimmtes Feld zugewiesen wurde:
+
+  *Anwendungsfall: Finde Strings, die einen bestimmten Systembezeichner für ein Feld „Owner“ verwenden.*
+
+  ```graphql wrap
+  count of fields where (slug = "field-internal-owner") > 0
+  ```
+
+* Strings mit einem Feld, dessen Name ein bestimmtes Wort enthält:
+
+  *Anwendungsfall: Finde Strings mit beliebigen „Status“-bezogenen Feldern (z. B. Legal Status, Review Status).*
+
+  ```graphql wrap
+  count of fields where (name contains "Status") > 0
+  ```
+
+* Strings mit einem beliebigen Feld mit einem nicht leeren Wert:
+
+  *Anwendungsfall: Finde Strings, bei denen Metadaten ausgefüllt sind.*
+
+  ```graphql wrap
+  count of fields where (value != "") > 0
+  ```
+
+* Strings mit einem Textfeld mit einem nicht leeren Wert:
+
+  *Anwendungsfall: Nützlich, um sicherzustellen, dass Metadaten-Kommentare oder -Beschreibungen tatsächlich ausgefüllt sind.*
+
+  ```graphql wrap
+  count of fields where (type = "text" and value != "") > 0
+  ```
+
+* Strings, die mehreren bestimmten Feldnamen entsprechen, bei denen der Wert ein bestimmtes Wort enthält:
+
+  *Anwendungsfall: Prüfe, ob das Feld „Platform“ oder „Environment“ das Wort „Production“ enthält.*
+
+  ```graphql wrap
+  count of fields where ((name = "Platform" or name = "Environment") and value contains "Production") > 0
+  ```
+
+<details>
+  <summary><strong>String- und Feldabfragen in der Crowdin API verwenden</strong></summary>
+  Verwende deine Abfrage in den folgenden Crowdin-API-Endpunkten:
+
+    ```shell title="Crowdin" wrap
+    GET https://api.crowdin.com/api/v2/projects/{projectId}/strings?croql={croql}
+    ```
+
+    ```shell title="Crowdin Enterprise" wrap
+    GET https://{organization_domain}.api.crowdin.com/api/v2/projects/{projectId}/strings?croql={croql}
+    ```
+
+    | Parameter     | Details                                                                               |
+    | ------------- | ------------------------------------------------------------------------------------- |
+    | `{projectId}` | **Typ:** `integer`<br />**Beschreibung:** Numerische Kennung deines Crowdin-Projekts. |
+    | `{croql}`     | **Typ:** `string`<br />**Beschreibung:** CroQL-Ausdruck.                              |
+
+    <Aside type="caution">Stelle vor dem Ausführen der Anfrage sicher, dass du deinen CroQL-Ausdruck URL-kodierst.</Aside>
+</details>
+
+### Übersetzungsabfragen
+
+Diese Abfragen werden verwendet, um Informationen über Übersetzungen abzurufen.
+
+* Übersetzungen des Benutzers mit dem Benutzernamen `crowdin` oder Übersetzungen mit mindestens 100 positiven Stimmen:
+  ```graphql
+  user = @user:"crowdin" or count of votes where ( is up ) >= 100
+  ```
+
+<details>
+  <summary><strong>Übersetzungsabfragen in der Crowdin API verwenden</strong></summary>
+  Verwende deine Abfrage in den folgenden Crowdin-API-Endpunkten:
+
+    ```shell title="Crowdin" wrap
+    GET https://api.crowdin.com/api/v2/projects/{projectId}/languages/uk/translations?croql={croql}
+    ```
+
+    ```shell title="Crowdin Enterprise" wrap
+    GET https://{organization_domain}.api.crowdin.com/api/v2/projects/{projectId}/languages/uk/translations?croql={croql}
+    ```
+
+    | Parameter     | Details                                                                               |
+    | ------------- | ------------------------------------------------------------------------------------- |
+    | `{projectId}` | **Typ:** `integer`<br />**Beschreibung:** Numerische Kennung deines Crowdin-Projekts. |
+    | `{croql}`     | **Typ:** `string`<br />**Beschreibung:** CroQL-Ausdruck.                              |
+
+    <Aside type="caution">Stelle vor dem Ausführen der Anfrage sicher, dass du deinen CroQL-Ausdruck URL-kodierst.</Aside>
+</details>
+
+### Abfragen für Translation-Memory-Segmente
+
+Diese Abfragen werden verwendet, um Informationen über TM-Segmente abzurufen.
+
+* Translation-Memory-Segmente, die mindestens einen Datensatz enthalten, der mindestens einmal verwendet wurde:
+  ```graphql
+  count of records where (usageCount > 0) > 0
+  ```
+
+* Translation-Memory-Segmente, die mindestens einen vom Benutzer mit dem Benutzernamen `crowdin` erstellten Datensatz enthalten:
+  ```graphql
+  count of records where (createdBy = @user:"crowdin") > 0
+  ```
+
+<details>
+  <summary><strong>Translation-Memory-Segmentabfragen in der Crowdin API verwenden</strong></summary>
+  Verwende deine Abfrage in den folgenden Crowdin-API-Endpunkten:
+
+    ```shell title="Crowdin" wrap
+    GET https://api.crowdin.com/api/v2/tms/{tmId}/segments?croql={croql}
+    ```
+
+    ```shell title="Crowdin Enterprise" wrap
+    GET https://{organization_domain}.api.crowdin.com/api/v2/tms/{tmId}/segments?croql={croql}
+    ```
+
+    | Parameter     | Details                                                                               |
+    | ------------- | ------------------------------------------------------------------------------------- |
+    | `{projectId}` | **Typ:** `integer`<br />**Beschreibung:** Numerische Kennung deines Crowdin-Projekts. |
+    | `{croql}`     | **Typ:** `string`<br />**Beschreibung:** CroQL-Ausdruck.                              |
+
+    <Aside type="caution">Stelle vor dem Ausführen der Anfrage sicher, dass du deinen CroQL-Ausdruck URL-kodierst.</Aside>
+</details>
+
+### Abfragen für Glossarbegriffe
+
+Diese Abfragen werden verwendet, um Informationen über Glossarbegriffe abzurufen.
+
+* Von einem Benutzer mit dem Benutzernamen `crowdin` für Ukrainisch erstellte Begriffe:
+  ```graphql
+  user = @user:"crowdin" and language = @language:"uk"
+  ```
+
+* Begriffe, die „ABC“ enthalten und als Wortart Substantiv haben:
+  ```graphql
+  text contains "ABC" and partOfSpeech = "noun"
+  ```
+
+* Begriffe, die als nicht empfohlen oder veraltet markiert sind:
+  ```graphql
+  status = "not_recommended" or status = "obsolete"
+  ```
+
+* Begriffe vom Typ Abkürzung, die eine Notiz enthalten:
+  ```graphql
+  type = "abbreviation" and note contains "tooltip"
+  ```
+
+* Nach einem bestimmten Datum hinzugefügte Begriffe:
+  ```graphql
+  createdAt > '2024-12-01 00:00:00'
+  ```
+
+* Begriffe mit dem Lemma „cancel“ und in Englisch:
+  ```graphql
+  lemma = "cancel" and language = @language:"en"
+  ```
+
+* Begriffe, die eine Referenz-URL enthalten:
+  ```graphql
+  url contains "https://"
+  ```
+
+<details>
+  <summary><strong>Glossarbegriff-Abfragen in der Crowdin API verwenden</strong></summary>
+  Verwende deine Abfrage in den folgenden Crowdin-API-Endpunkten:
+
+  ```shell title="Crowdin" wrap
+  GET https://api.crowdin.com/api/v2/glossaries/{glossaryId}/terms?croql={croql}
+  ```
+
+  ```shell title="Crowdin Enterprise" wrap
+  GET https://{organization_domain}.api.crowdin.com/api/v2/glossaries/{glossaryId}/terms?croql={croql}
+  ```
+
+  | Parameter      | Details                                                                                           |
+  | -------------- | ------------------------------------------------------------------------------------------------- |
+  | `{glossaryId}` | **Typ:** `integer`<br />**Beschreibung:** Numeric identifier of your Crowdin glossary.            |
+  | `{croql}`      | **Typ:** `string`<br />**Beschreibung:** CroQL-Ausdruck zum Filtern von Glossarbegriff-Einträgen. |
+
+  <Aside type="caution">Stelle vor dem Ausführen der Anfrage sicher, dass du deinen CroQL-Ausdruck URL-kodierst.</Aside>
+</details>
+
+### Beispiele auf Grundlage der erweiterten Filteroptionen des Editors
+
+<Aside>
+  Um die folgenden Abfragen in der Crowdin API zu verwenden, musst du die benötigte Zielsprache angeben (z. B. `count of languages summary where (language = @language:"uk" and is translated) > 0`) in deiner CroQL-Abfrage.
+</Aside>
+
+#### Zeichenketten
+
+* Hinzugefügte Strings:
+  ```graphql
+  added between '2023-12-06 13:44:14' and '2023-12-07 13:44:14'
+  ```
+* Aktualisierte Strings:
+  ```graphql
+  updated between '2023-12-06 13:44:14' and '2023-12-07 13:44:14'
+  ```
+* String-Typ:
+  ```graphql
+  type is plain or type is icu
+  ```
+* Comments:
+  ```graphql
+  Kommentare:
+  ```
+* Screenshots:
+  ```graphql
+  count of screenshots > 0
+  ```
+* QA-Probleme:
+  ```graphql
+  count of languages summary where (has qa issues) > 0
+  ```
+
+#### Übersetzungen
+
+* Nicht übersetzt:
+  ```graphql
+  count of languages summary = 0
+  ```
+* Teilweise übersetzt (Pluralformen):
+  ```graphql
+  count of languages summary where (is partially translated) > 0
+  ```
+* Übersetzt:
+  ```graphql
+  count of languages summary where (is translated) > 0
+  ```
+* Übersetzt von:
+  ```graphql
+  count of translations where (user = @user:"crowdin") > 0
+  ```
+* Nicht übersetzt von:
+  ```graphql
+  count of translations where (user != @user:"crowdin") > 0
+  ```
+* Identisch mit dem Quell-String:
+  ```graphql
+  count of languages summary where (has translation as source) > 0
+  ```
+* Geänderter Quell-String:
+  ```graphql
+  count of languages summary where (is source changed after translation) > 0
+  ```
+* Übersetzungen aktualisiert:
+  ```graphql wrap
+  count of languages summary where ( translation updated between '2023-12-06 13:44:14' and '2023-12-07 13:44:14') > 0
+  ```
+* Stimmen:
+  ```graphql
+  count of languages summary where (rating > 0) > 0
+  ```
+
+#### Dubletten
+
+* Master-Strings:
+  ```graphql
+  not is duplicate
+  ```
+* Nur Duplikate:
+  ```graphql
+  is duplicate
+  ```
+* Duplikate mit gemeinsam genutzten Übersetzungen:
+  ```graphql wrap
+  is duplicate and count of languages summary where (has shared translation) > 0
+  ```
+* Duplikate mit eigenen Übersetzungen:
+  ```graphql wrap
+  is duplicate and count of languages summary where (not has shared translation and is translated) > 0
+  ```
+
+#### Freigaben
+
+* Übersetzt, nicht freigegeben:
+  ```graphql
+  count of languages summary where (is translated and not is approved) > 0
+  ```
+* Teilweise freigegeben (Pluralformen):
+  ```graphql
+  count of languages summary where (is partially approved) > 0
+  ```
+* Freigegeben:
+  ```graphql
+  count of languages summary where (is approved) > 0
+  ```
+* Freigegeben von:
+  ```graphql wrap
+  count of translations where (count of approvals where (user = @user:"crowdin") > 0) > 0
+  ```
+* Nicht freigegeben von:
+  ```graphql wrap
+  count of translations where (count of approvals where (user != @user:"crowdin") > 0) > 0
+  ```
+* Hat Übersetzungen nach der Freigabe:
+  ```graphql
+  count of languages summary where (has translation after approval) > 0
+  ```
+
+#### KI, MT und TM
+
+* Von KI übersetzt:
+  ```graphql
+  count of languages summary where (is translated by ai) > 0
+  ```
+* Von MT übersetzt:
+  ```graphql
+  count of languages summary where (is translated by mt) > 0
+  ```
+* Von TM übersetzt:
+  ```graphql
+  count of languages summary where (is translated by tm) > 0
+  ```
+* Von KI, MT oder TM übersetzt:
+  ```graphql
+  count of languages summary where (is auto translated) > 0
+  ```
+
+#### Sonstiges
+
+* Vorübersetzung:
+  * Verwendet: Nicht verfügbar
+  * Nicht verwendet: Nicht verfügbar
+* Sortieren nach: Nicht verfügbar
+* Verbale Ausdrücke: Nicht verfügbar
+* Geltungsbereich des verbalen Ausdrucks: Nicht verfügbar
+
+## Kontext
+
+CroQL kann in den folgenden Kontexten verwendet werden: Quell-String-Kontext, Übersetzungskontext und Translation-Memory-(TM-)Segmentkontext. Verwende die folgenden Beispiele als Grundlage für die Erstellung deiner CroQL-Abfragen.
+
+### Quell-String-Kontext
+
+```json collapse={37-56,62-92}
+{
+  "type is plain": true,
+  "type is plural": false,
+  "type is icu": false,
+  "type is asset": false,
+  "text": "Quick Start",
+  "identifier": "quick_start",
+  "context": "quick_start",
+  "max length": 0,
+  "is visible": true,
+  "is hidden": false,
+  "is duplicate": false,
+  "isPassedWorkflow": true,
+  "fields": {
+    "priority": "High",
+    "legal-status": "approved"
+  },
+  "file": {
+    "id": 32,
+    "name": "sample.csv",
+    "title": "Sample",
+    "type": "csv",
+    "context": "Some useful context information"
+  },
+  "branch": {
+    "id": 7,
+    "name": "main",
+    "title": "Main"
+  },
+  "comments": [
+    {
+      "has issue": false,
+      "has unresolved issue": false,
+      "user": 1
+    }
+  ],
+  "screenshots": [],
+  "translations": [
+    {
+      "text": "Швидкий старт",
+      "plural form": "none",
+      "is pre translated": true,
+      "provider": "tm",
+      "language": "uk",
+      "user": 1,
+      "votes": [
+        {
+          "is up": true,
+          "is down": false,
+          "user": 2,
+          "added": "2021-04-09 13:44:14"
+        }
+      ],
+      "approvals": [
+        {
+          "user": 2,
+          "added": "2021-04-09 13:44:14"
+        }
+      ],
+      "updated": "2021-04-09 10:23:17"
+    }
+  ],
+  "languages summary": [
+    {
+      "language": "en",
+      "is translated": false,
+      "is partially translated": false,
+      "is approved": false,
+      "is partially approved": false,
+      "translation updated": false,
+      "is auto translated": false,
+      "is translated by tm": false,
+      "is translated by mt": false,
+      "is translated by ai": false,
+      "is source changed after translation": false,
+      "has translation as source": false,
+      "has translation after approval": false,
+      "has shared translation": false,
+      "has qa issues": false,
+      "has empty translation qa issues": false,
+      "has translation length qa issues": false,
+      "has tags mismatch qa issues": false,
+      "has spaces mismatch qa issues": false,
+      "has variables mismatch qa issues": false,
+      "has punctuation mismatch qa issues": false,
+      "has character case mismatch qa issues": false,
+      "has special characters mismatch qa issues": false,
+      "has incorrect translation qa issues": false,
+      "has spelling qa issues": false,
+      "has icu syntax qa issues": false,
+      "has terms qa issues": false,
+      "has duplicate translation qa issues": false,
+      "has ftl syntax qa issues": false,
+      "has android syntax qa issues": false,
+      "has numbers mismatch qa issues": false,
+      "has ai qa issues": false,
+      "has outdated translation qa issues": false,
+      "has mdx syntax qa issues": false,
+      "has custom qa issues": false,
+      "rating": 1,
+      "approvalsCount": 1
+    }
+  ],
+  "labels": [
+    {
+      "id": 1,
+      "title": "label title",
+      "is system": false
+    }
+  ],
+  "added": "2021-04-08 12:33:27",
+  "updated": "2021-04-08 12:33:27"
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>type is plain</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Ausgangsstring mit reinem Text.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>Typ ist Plural</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Ausgangsstring mit Pluralformen.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>Typ ist ICU</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Ausgangsstring mit ICU.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>Typ ist Asset</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Ausgangsstring ist ein Asset.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Der Ausgangsstring-Text.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>identifier</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Die Kennung (der Schlüssel) des Ausgangsstrings.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>Kontext</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Der Kontext des Ausgangsstrings.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>Maximale Länge</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String max.length.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is visible</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String is visible.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is hidden</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String is hidden.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is duplicate</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String is duplicate.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>isPassedWorkflow</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Crowdin Enterprise only. Der Ausgangsstring, der einen Projekt-Workflow durchlaufen hat.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>fields</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>object</code></p>
+      <p><strong>Beschreibung:</strong> Crowdin Enterprise only. Ein Objekt mit benutzerdefinierten Eigenschaften ([Felder](/enterprise/fields/)), die einem String zugewiesen wurden.<br />
+      Du kannst danach anhand von <code>name</code>, <code>slug</code>, <code>value</code> und <code>type</code> filtern.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>file</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>object</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String file.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>branch</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>object</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String branch.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>comments</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>array</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String comments.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has issue</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has an issue.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has unresolved issue</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has an unresolved issue.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung des Benutzers, der einen Kommentar hinzugefügt hat.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>screenshots</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>array</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String screenshots.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>translations</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>array</code></p>
+      <p><strong>Beschreibung:</strong> Übersetzungen des Quell-Strings.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Übersetzungstext.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>plural form</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Pluralform der Übersetzung.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is pre translated</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Übersetzung, die durch automatische Übersetzung hinzugefügt wurde.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>provider</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Zulässige Werte:</strong> <code>tm</code>, <code>global_tm</code>, <code>google</code>, <code>google_automl</code>, <code>microsoft</code>, <code>crowdin</code>, <code>deepl</code>, <code>modernmt</code>, <code>amazon</code>, <code>watson</code>, <code>custom_mt</code>, <code>ai</code></p>
+      <p><strong>Beschreibung:</strong> Übersetzung, die über Translation Memory, eine maschinelle Übersetzungsengine oder KI bereitgestellt wird.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>language</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Als String angegebene Sprachkennung. Verwende die <a href="/developer/language-codes/">Sprachcodes</a>, zum Beispiel <code>"uk"</code> für Ukrainisch. Verwende in Abfragen das Format: <code>@language:"uk"</code>.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung des Benutzers, der eine Übersetzung hinzugefügt hat.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>votes</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>array</code></p>
+      <p><strong>Beschreibung:</strong> Array der für die Übersetzung abgegebenen Stimmen.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is up</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Positive Stimme.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is down</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Negative Stimme.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung des Benutzers, der eine Stimme für die Übersetzung abgegeben hat.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum, an dem eine Stimme für die Übersetzung hinzugefügt wurde.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>approvals</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>array</code></p>
+      <p><strong>Beschreibung:</strong> Array der hinzugefügten Übersetzungsfreigaben.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung des Benutzers, der eine Übersetzung freigegeben hat.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum, an dem eine Übersetzungsfreigabe hinzugefügt wurde.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updated</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum, an dem eine Übersetzung aktualisiert wurde.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>languages summary</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>array</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String top translations (the translations with the highest priority).</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>language</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Als String angegebene Sprachkennung. Verwende die <a href="/developer/language-codes/">Sprachcodes</a>, zum Beispiel <code>"uk"</code> für Ukrainisch. Verwende in Abfragen das Format: <code>@language:"uk"</code>.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is translated</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String is translated.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is partially translated</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String is partially translated.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is approved</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String is approved.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is partially approved</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String is partially approved.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>translation updated</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String translation is updated.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is auto translated</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String is translated by TM, MT, or AI.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is translated by tm</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String is translated by TM.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is translated by mt</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String is translated by MT.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is translated by ai</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String is translated by AI.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is source changed after translation</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String changed after translation.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has translation as source</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has translation equal to source text.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has translation after approval</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has translation after approval.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has shared translation</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String duplicate has shared translations from a master string.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has empty translation qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has empty translation QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has translation length qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has translation length QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has tags mismatch qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has tags mismatch QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has spaces mismatch qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has spaces mismatch QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has variables mismatch qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has variables mismatch QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has punctuation mismatch qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has punctuation mismatch QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has character case mismatch qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has character case mismatch QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has special characters mismatch qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has special characters mismatch QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has incorrect translation qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has incorrect translation QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has spelling qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has spelling QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has icu syntax qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has ICU syntax QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has terms qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has terms QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has duplicate translation qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has duplicate translation QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has ftl syntax qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has FTL syntax QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has android syntax qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has Android syntax QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has numbers mismatch qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has numbers mismatch QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has ai qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has AI QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has outdated translation qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has outdated translation QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has mdx syntax qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has MDX syntax QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has custom qa issues</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String has Custom QA issues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>rating</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String translation rating.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>approvalsCount</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Die Anzahl der Übersetzungsfreigaben.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>labels</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>array</code></p>
+      <p><strong>Beschreibung:</strong> Der Quell-String labels.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>id</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numeric identifier of the label.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>title</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Titel des Labels.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is system</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Systemlabel (Label mit dem Namen der Quelldatei, das in String-basierten Projekten automatisch zu Strings hinzugefügt wird).</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum, an dem ein Quell-String hinzugefügt wurde.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updated</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum, an dem ein Quell-String aktualisiert wurde.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### Übersetzungskontext
+
+```json
+{
+  "text": "Швидкий старт",
+  "plural form": "none",
+  "is pre translated": true,
+  "provider": "tm",
+  "user": 1,
+  "votes": [
+    {
+      "is up": true,
+      "is down": false,
+      "user": 2,
+      "added": "2021-04-09 13:44:14"
+    }
+  ],
+  "approvals": [
+    {
+      "user": 2,
+      "added": "2021-04-09 13:44:14"
+    }
+  ],
+  "updated": "2021-04-09 10:23:17"
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Übersetzungstext.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>plural form</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Pluralform der Übersetzung.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is pre translated</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Übersetzung, die durch automatische Übersetzung hinzugefügt wurde.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>provider</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Zulässige Werte:</strong> <code>tm</code>, <code>global_tm</code>, <code>google</code>, <code>google_automl</code>, <code>microsoft</code>, <code>crowdin</code>, <code>deepl</code>, <code>modernmt</code>, <code>amazon</code>, <code>watson</code>, <code>custom_mt</code>, <code>ai</code></p>
+      <p><strong>Beschreibung:</strong> Übersetzung, die über Translation Memory, eine maschinelle Übersetzungsengine oder KI bereitgestellt wird.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung des Benutzers, der eine Übersetzung hinzugefügt hat.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>votes</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>array</code></p>
+      <p><strong>Beschreibung:</strong> Array der für die Übersetzung abgegebenen Stimmen.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is up</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Positive Stimme.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is down</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Negative Stimme.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung des Benutzers, der eine Stimme für die Übersetzung abgegeben hat.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum, an dem eine Stimme für die Übersetzung hinzugefügt wurde.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>approvals</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>array</code></p>
+      <p><strong>Beschreibung:</strong> Array der hinzugefügten Übersetzungsfreigaben.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung des Benutzers, der eine Übersetzung freigegeben hat.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>added</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum, an dem eine Übersetzungsfreigabe hinzugefügt wurde.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updated</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum, an dem eine Übersetzung aktualisiert wurde.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### Kontext eines Translation-Memory-(TM-)Segments
+
+```json
+{
+  "records": [
+    {
+      "id": 1,
+      "text": "Перекладений текст",
+      "usageCount": 77,
+      "createdBy": 1,
+      "updatedBy": 1,
+      "createdAt": "2027-09-16T13:48:04+00:00",
+      "updatedAt": "2027-09-16T13:48:04+00:00"
+    }
+  ]
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>records</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>array</code></p>
+      <p><strong>Beschreibung:</strong> Array der Datensätze der Translation-Memory-Segmente.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>id</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung eines Datensatzes.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Übersetzungstext eines Datensatzes.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>usageCount</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Die Anzahl, wie oft ein Translation-Memory-Datensatz verwendet wurde.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>createdBy</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung des Benutzers, der einen Translation-Memory-Datensatz erstellt hat.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updatedBy</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung des Benutzers, der einen Translation-Memory-Datensatz aktualisiert hat.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>createdAt</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum, an dem ein Translation-Memory-Datensatz erstellt wurde.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updatedAt</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum, an dem ein Translation-Memory-Datensatz aktualisiert wurde.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### Kontext eines Glossarkonzepts
+
+```json
+{
+  "id": 101,
+  "user": 12,
+  "subject": "User Interfact",
+  "definition": "A command used to save user progress in the application.",
+  "url": "https://example.com/concept/save",
+  "note": "Commonly used in forms and toolbars.",
+  "translatable": true,
+  "createdAt": "2027-09-16T13:48:04+00:00",
+  "updatedAt": "2027-09-16T13:48:04+00:00"
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>id</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung des Glossarbegriffs.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung des Benutzers, der das Konzept erstellt hat.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>subject</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Domäne oder Wissensbereich, zu dem das Konzept gehört (z. B. UI, Entwicklung, Gesundheitswesen).</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>definition</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Allgemeine Erklärung oder Definition des Konzepts.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>url</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> URL, die zu einer Ressource mit weiteren Informationen über das Konzept führt.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>note</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Zusätzliche Informationen oder Erläuterungen für Übersetzer.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">translatable</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>boolean</code></p>
+      <p><strong>Beschreibung:</strong> Gibt an, ob das Konzept in andere Sprachen übersetzt werden kann.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>createdAt</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum und Uhrzeit, zu der das Konzept erstellt wurde.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updatedAt</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum und Uhrzeit, zu der das Konzept zuletzt aktualisiert wurde.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### Kontext eines Glossarbegriffs
+
+```json
+{
+  "id": 301,
+  "text": "Cancel",
+  "description": "A command to stop or abort an operation.",
+  "language": "en",
+  "user": 42,
+  "partOfSpeech": "verb",
+  "status": "admitted",
+  "type": "abbreviation",
+  "gender": "neuter",
+  "note": "Often used in confirmation dialogs.",
+  "lemma": "cancel",
+  "url": "https://example.com/term/cancel",
+  "concept": 101,
+  "createdAt": "2027-09-16T13:48:04+00:00",
+  "updatedAt": "2027-09-16T13:48:04+00:00"
+}
+```
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>id</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung des Glossarbegriffs.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>text</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Der Begriff selbst in der angegebenen Sprache.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>description</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Zusätzliche Erklärung oder Bedeutung des Begriffs.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>language</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Als String angegebene Sprachkennung. Verwende die <a href="/developer/language-codes/">Sprachcodes</a>, zum Beispiel <code>"uk"</code> für Ukrainisch. Verwende in Abfragen das Format: <code>@language:"uk"</code>.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Numerische Kennung des Benutzers, der den Begriff hinzugefügt hat.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">partOfSpeech</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Zulässige Werte:</strong> <code>noun</code>, <code>verb</code>, <code>adj</code>, <code>pron</code>, <code>propn</code>, <code>det</code>, <code>adv</code>, <code>adp</code>, <code>cconj</code>, <code>sconj</code>, <code>num</code>, <code>intj</code>, <code>aux</code>, <code>prt</code>, <code>sym</code>, <code>x</code></p>
+      <p><strong>Beschreibung:</strong> Die grammatische Kategorie des Begriffs.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>status</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Zulässige Werte:</strong> <code>preferred</code>, <code>admitted</code>, <code>not_recommended</code>, <code>obsolete</code>, <code>draft</code></p>
+      <p><strong>Beschreibung:</strong> Gibt die Freigabe- oder Verwendungsebene des Begriffs an.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>type</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Zulässige Werte:</strong> <code>full_form</code>, <code>acronym</code>, <code>abbreviation</code>, <code>short_form</code>, <code>phrase</code>, <code>variant</code></p>
+      <p><strong>Beschreibung:</strong> Klassifizierung des Begriffs nach Struktur oder Verwendung.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>gender</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Zulässige Werte:</strong> <code>masculine</code>, <code>feminine</code>, <code>neuter</code>, <code>common</code>, <code>other</code></p>
+      <p><strong>Beschreibung:</strong> Grammatisches Geschlecht des Begriffs, sofern zutreffend.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>note</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Zusätzliche Hinweise für Übersetzer oder Notizen zum Begriff.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>lemma</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Die Grundform des Begriffs.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>url</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Referenzlink für den Begriff.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>Konzept</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> ID des Konzepts, zu dem der Begriff gehört.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>createdAt</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum und Uhrzeit, zu der der Begriff erstellt wurde.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>updatedAt</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>datetime</code></p>
+      <p><strong>Beschreibung:</strong> Datum und Uhrzeit, zu der der Begriff zuletzt aktualisiert wurde.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>

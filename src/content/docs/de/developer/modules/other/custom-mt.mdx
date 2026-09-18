@@ -1,0 +1,366 @@
+---
+title: Benutzerdefiniertes MT-Modul
+description: Benutzerdefinierte maschinelle Übersetzungs-Engines mit Crowdin verbinden
+slug: developer/crowdin-apps-module-custom-mt
+sidebar:
+  label: Benutzerdefiniertes MT
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import mt from '!/developer/module_mt.png';
+
+Mit diesem Modul kannst du maschinelle Übersetzungs-Engines verbinden, die von Crowdin noch nicht unterstützt werden. Nachdem du eine solche App erstellt hast, kannst du deine Inhalte mit der verbundenen MT-Engine automatisch übersetzen oder von ihr erstellte Übersetzungsvorschläge im Editor für Übersetzer anzeigen lassen.
+
+<Image src={mt} alt="Benutzerdefiniertes MT-Modul" />
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+Für Crowdin:
+
+* Nur ich (also der Projektinhaber)
+* Alle Projektmitglieder
+* Ausgewählte Benutzer
+
+Für Crowdin Enterprise:
+
+* Nur Organisationsadministratoren
+* Alle Benutzer in den Projekten der Organisation
+* Ausgewählte Benutzer
+
+## Struktur
+
+```json title="manifest.json"
+{
+  "modules": {
+    "custom-mt": [
+      {
+        "key": "custom-mt",
+        "name": "Benutzerdefinierte MT",
+        "logo": "/logo.png",
+        "url": "/translate",
+        "withContext": true,
+        "batchSize": 10,
+        "splitStringsIntoChunks": true
+      }
+    ]
+  }
+}
+```
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Der für Menschen lesbare Name des Moduls.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>logo</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Die relative URL zum Logo der benutzerdefinierten MT-Engine, das in der Crowdin-Oberfläche angezeigt wird.<br />
+        Die empfohlene Auflösung beträgt 48×48 Pixel.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Die relative URL zur Inhaltsseite des Moduls, die in Crowdin integriert wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>withContext</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>boolean</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Beschreibung:</strong> Zusätzliche Metadaten, die zusammen mit den Strings gesendet werden.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>batchSize</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>integer</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Beschreibung:</strong> Die maximale Anzahl von Strings, die in einer Anfrage an die Custom-MT-App gesendet werden können.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">splitStringsIntoChunks</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>boolean</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Standard:</strong> <code>true</code></p>
+        <p><strong>Beschreibung:</strong> Steuert die [Batch-Verarbeitung](#batch-processing-and-file-context). Wenn <code>false</code> festgelegt ist, werden alle Strings einer Datei in einer einzigen Anfrage an die MT-Engine gesendet. Wenn <code>true</code> (Standard) festgelegt ist, teilt Crowdin die Strings in Chunks auf.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Zulässige Werte:</strong> <code>crowdin</code>, <code>crowdin-enterprise</code></p>
+        <p><strong>Beschreibung:</strong> Menge der Umgebungen, in denen ein Modul installiert werden kann.<br />
+        Dieser Parameter wird für produktübergreifende Anwendungen benötigt.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Kommunikation zwischen der benutzerdefinierten MT-App und Crowdin
+
+Das System sendet Texte zur Übersetzung über `url`. Anschließend verarbeitet die App die Texte und antwortet mit einer von zwei möglichen Arten von Antworten: [ohne Fehler](#expected-response-from-the-app-without-errors) oder [mit Fehlern](#expected-response-from-the-app-with-errors).
+
+<Aside>
+  Stelle sicher, dass deine Custom-MT-App dieselben [Sprachcodes](/developer/language-codes/) verwendet, die Crowdin unterstützt. Wenn einige Sprachen nicht übereinstimmen, richte eine Sprachzuordnung ein.
+</Aside>
+
+**HTTP-Anfrage:**
+
+```shell wrap
+https://{AppBaseUrl}/translate/?source=en&target=uk&project_id=727186&jwtToken={yourTokenValue}
+```
+
+### Abfrageparameter
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>source</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Quellsprache.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>target</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Zielsprache.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>project_id</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>integer</code></p>
+        <p><strong>Beschreibung:</strong> Numerische ID eines Crowdin-Projekts.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>jwtToken</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> JWT-Token, das zur Autorisierung verwendet wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>strings</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Source-Strings, die übersetzt werden müssen.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Anfrage von Crowdin an die App für `applicationUrl` (einfach)
+
+Beispiel für die Nutzlast der Anfrage:
+
+```json
+{
+  "strings": [
+    "Save as...",
+    "New file",
+    "You received one message.",
+    "You received {number} messages."
+  ]
+}
+```
+
+### Anfrage von Crowdin an die App für `applicationUrl` (erweitert)
+
+Um die erweiterte Anfrage zu verwenden, füge deinem Custom-MT-Modul den Parameter `withContext` hinzu.
+
+Beispiel für die Nutzlast der Anfrage:
+
+```json collapse={15-50}
+{
+  "strings": [
+    {
+      "id": 1,
+      "projectId": 727186,
+      "fileId": 47047,
+      "text": "Speichern unter …",
+      "identifier": "save_as",
+      "context": "translation Context",
+      "maxLength": 15,
+      "isHidden": false,
+      "isPlural": false,
+      "pluralForm": null
+    },
+    {
+      "id": 2,
+      "projectId": 727186,
+      "fileId": 47047,
+      "text": "Neue Datei",
+      "identifier": "new_file",
+      "context": "translation Context",
+      "maxLength": null,
+      "isHidden": false,
+      "isPlural": false,
+      "pluralForm": null
+    },
+    {
+      "id": 3,
+      "projectId": 727186,
+      "fileId": 47047,
+      "text": "Du hast eine neue Nachricht erhalten.",
+      "identifier": "new_message",
+      "context": "translation Context",
+      "maxLength": null,
+      "isHidden": false,
+      "isPlural": true,
+      "pluralForm": "one"
+    },
+    {
+      "id": 3,
+      "projectId": 727186,
+      "fileId": 47047,
+      "text": "Du hast {number} neue Nachrichten erhalten.",
+      "identifier": "new_message",
+      "context": "translation Context",
+      "maxLength": null,
+      "isHidden": false,
+      "isPlural": true,
+      "pluralForm": "other"
+    }
+  ]
+}
+```
+
+### Erwartete Antwort der App (ohne Fehler)
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+{
+  "data": {
+    "translations": [
+      "Speichern unter …",
+      "Neue Datei",
+      "Du hast eine neue Nachricht erhalten.",
+      "Du hast {number} neue Nachrichten erhalten."
+    ]
+  }
+}
+```
+
+Das `translations`-Array muss innerhalb des obersten `data`-Objekts verschachtelt sein. Eine Antwort, die das Array auf oberster Ebene zurückgibt (z. B. `{"translations": [...]}`), wird als Antwort ohne Übersetzungen behandelt und abgelehnt.
+
+Gib genau eine Übersetzung pro Source-String zurück, und zwar in derselben Reihenfolge, in der die Strings empfangen wurden. Crowdin ordnet Übersetzungen anhand ihrer Position im Array den Source-Strings zu, nicht anhand der ID. Wenn die Anzahl der zurückgegebenen Übersetzungen nicht mit der Anzahl der gesendeten Strings übereinstimmt, wird dieser Batch übersprungen.
+
+Bei großen Payloads kannst du statt des Inline-`translations`-Arrays `translationsUrl` zurückgeben.
+
+```json
+{
+  "data": {
+    "translationsUrl": "https://app.example.com/jKe8ujs7a-translations.ndjson"
+  }
+}
+```
+
+`translationsUrl` ist eine öffentliche URL zu einer [Newline-delimited-JSON](https://github.com/ndjson/ndjson-spec)-Datei mit den übersetzten Strings. Verwende entweder `translations` oder `translationsUrl`.
+
+### Erwartete Antwort der App (mit Fehlern)
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+{
+  "error": {
+    "message": "Error message from the App or MT engine"
+  }
+}
+```
+
+Die Struktur der Antworten der App muss den dargestellten Beispielen entsprechen. Andernfalls betrachtet Crowdin sie als ungültig.
+
+## Batch-Verarbeitung und Dateikontext
+
+Standardmäßig teilt Crowdin Source-Strings in kleinere Chunks auf (`splitStringsIntoChunks: true`), um die Verarbeitungszeit zu optimieren und die Größe von Anfragen zu verwalten.
+
+Einige moderne MT-Engines und AI-Anbieter (z. B. XL8 oder LLMs) benötigen jedoch den vollständigen Kontext einer Datei, um hochwertige Übersetzungen zu erzeugen. Dies ist besonders bei Formaten wie Untertiteln (SRT) oder literarischen Inhalten wichtig, bei denen die Übersetzung eines Satzes stark vom vorherigen abhängt.
+
+Wenn du eine Engine verbindest, die datei- oder dokumentbasierte Übersetzungen unterstützt:
+
+1. Setze `splitStringsIntoChunks` in deinem Manifest auf `false`.
+2. Crowdin sendet alle Strings, die zu einer Datei gehören, in einer einzigen Anfrage.
+
+<Aside type="caution">
+  Wenn <code>splitStringsIntoChunks</code> auf <code>false</code> gesetzt ist, stelle sicher, dass dein Endpunkt und die verbundene MT-Engine große Payloads verarbeiten können, da die Größe des Request-Bodys der Größe der vollständigen Ausgangsdatei entspricht.
+</Aside>
+
+## Umgang mit nicht übersetzbaren Elementen durch deine MT-Engine
+
+Bei Strings, die nicht übersetzbare Elemente enthalten (z. B. Tags, Platzhalter usw.), ersetzt Crowdin diese Elemente durch spezielle *notranslate*-Tags. Dadurch bleibt der ursprüngliche Zustand dieser Elemente erhalten, nachdem der String von der MT-Engine übersetzt wurde. Crowdin verwendet diesen Ansatz, um potenzielle Probleme zu vermeiden, die exportierte Übersetzungsdateien beschädigen könnten.
+
+Unten siehst du Beispiele für einen String vor und nach der Änderung.
+
+Hier siehst du ein Beispiel dafür, wie ein String mit nicht übersetzbaren Elementen (Tags, Platzhaltern usw.) in Crowdin aussieht:
+
+```html
+<strong>Aufgabe:</strong>
+```
+
+So verändert Crowdin den oben genannten String, bevor er an die MT-Engine gesendet wird:
+
+```html
+<span class="notranslate">0</span>Aufgabe:<span class="notranslate">1</span>
+```
+
+### Nicht übersetzbare Elemente für deine MT-Engine anpassen
+
+Wenn deine MT-Engine bereits über eine ähnliche Funktion verfügt, diese aber anders als Crowdin implementiert, empfehlen wir, den Umgang mit nicht übersetzbaren Elementen in deiner Custom-MT-App an die Implementierung deiner MT-Engine anzupassen. Ersetze insbesondere Crowdins Standardwerte wie
+
+```html
+<span class="notranslate">%index%</span>
+```
+
+durch die spezifischen Nicht-Übersetzen-Elemente deiner MT-Engine.
+
+Hier findest du ein Implementierungsbeispiel für Nicht-Übersetzen-Elemente in Amazon Translate: [Using do-not-translate in Amazon Translate](https://docs.aws.amazon.com/translate/latest/dg/customizing-translations-tags.html).
+
+### Umgang mit Übersetzungen mit veränderten nicht übersetzbaren Elementen
+
+Wenn die MT-Engine eine Übersetzung an Crowdin sendet, die nicht alle Tags in ihrem ursprünglichen Zustand enthält oder bei der sie verändert wurden (z. B. übersetzt), ignoriert Crowdin solche Übersetzungen und speichert sie nicht im String.
+
+## Fehlerbehebung
+
+Wenn die Custom-MT-App eine Antwort zurückgibt, die Übersetzungen aber nicht gespeichert werden, entspricht der Antwort-Body höchstwahrscheinlich nicht dem erwarteten Schema. Wenn eine Antwort abgelehnt wird, enthält Crowdin den empfangenen Statuscode und den Body in der Fehlermeldung, sodass du ihn mit dem oben beschriebenen Schema vergleichen kannst.
+
+| Fehlermeldung                                                 | Wahrscheinliche Ursache                                                                                              | Lösung                                                                                                                                                          |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Custom-MT-Engine hat keine Übersetzungen zurückgegeben        | Das `translations`-Array fehlt, ist leer oder befindet sich außerhalb des `data`-Objekts (z. B. auf oberster Ebene). | Verschachtle das `translations`-Array unter dem `data`-Objekt und stelle sicher, dass es nicht leer ist.                                                        |
+| Custom-MT-Engine hat eine ungültige Übersetzung zurückgegeben | Eines der Elemente im `translations`-Array ist kein String.                                                          | Gib jede Übersetzung als einfachen String zurück.                                                                                                               |
+| Custom-MT-Engine hat eine unerwartete Antwort zurückgegeben   | Der Antwort-Body ist kein gültiges JSON.                                                                             | Gib einen korrekt formatierten JSON-Body zurück, der dem erwarteten Schema entspricht.                                                                          |
+| Custom-MT-Engine hat einen HTTP-Fehler zurückgegeben          | Der Endpunkt hat mit einem HTTP-Statuscode außerhalb des Bereichs 2xx geantwortet.                                   | Gib bei erfolgreichen Übersetzungen HTTP 200 zurück und verwende zum Melden von Fehlern das [Fehlerantwortformat](#expected-response-from-the-app-with-errors). |
+
+Einige Antworten werden ohne Fehlermeldung abgelehnt. Wenn die Anzahl der zurückgegebenen Übersetzungen nicht mit der Anzahl der gesendeten Source-Strings übereinstimmt, überspringt Crowdin diesen Batch und lässt die betreffenden Strings unübersetzt. Stelle sicher, dass deine App genau eine Übersetzung pro Source-String und in derselben Reihenfolge zurückgibt.

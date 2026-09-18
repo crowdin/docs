@@ -1,0 +1,278 @@
+---
+title: OAuth-Apps autorisieren
+description: Erfahre, wie du Organisationsmitglieder dazu bringst, deine OAuth-App zu autorisieren
+slug: developer/authorizing-oauth-apps
+sidebar:
+  order: 2
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+Sie können Organisationsmitgliedern ermöglichen, Ihre OAuth-App zu autorisieren.
+
+Wenn du eine OAuth-App erstellst, implementiere den unten beschriebenen Ablauf für Webanwendungen, um einen Autorisierungscode zu erhalten und ihn anschließend gegen ein Token auszutauschen.
+
+Du wählst den Anwendungstyp bei der Registrierung aus. Eine vertrauliche Anwendung autorisiert sich mit einem Client-Secret. Das eignet sich für Apps mit einem vertrauenswürdigen Backend, das das Secret geheim halten kann. Eine öffentliche Anwendung autorisiert sich mit PKCE und hat kein Client-Secret. Das eignet sich für Single-Page-Apps (SPA), mobile Apps und CLI-Apps.
+
+## Autorisierungscode anfordern
+
+Du solltest den Benutzer mit den folgenden GET-Parametern zum Endpunkt `/oauth/authorize` weiterleiten:
+
+```bash
+https://accounts.crowdin.com/oauth/authorize
+```
+
+Damit wird der Benutzer aufgefordert, den Zugriff der App auf sein Konto basierend auf den in `REQUESTED_SCOPES` angegebenen Berechtigungsbereichen zu genehmigen. Anschließend wird er zu der `REDIRECT_URI` zurückgeleitet, die du beim Erstellen der App angegeben hast.
+
+<Aside type="tip">
+  Öffentliche Anwendungen müssen die Erweiterung Proof Key for Code Exchange (PKCE) verwenden; auch für vertrauliche Anwendungen wird sie empfohlen.
+</Aside>
+
+### Parameter {#request-authorization-code-parameters}
+
+<table>
+  <thead>
+  <tr>
+    <th>Name</th>
+    <th>Wert</th>
+    <th>Beschreibung</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>client_id</code></td>
+    <td>string</td>
+    <td><strong>Erforderlich.</strong> Beim Registrieren der App erhältst du die Client-ID für die App.</td>
+  </tr>
+  <tr>
+    <td><code>redirect_uri</code></td>
+    <td>string</td>
+    <td><strong>Erforderlich.</strong> Die URL in deiner Anwendung, zu der Benutzer nach der Autorisierung weitergeleitet werden.</td>
+  </tr>
+  <tr>
+    <td><code>response_type:</code><code>code</code></td>
+    <td>string</td>
+    <td><strong>Erforderlich.</strong> Dieser Parameter wird für die Ablaufdefinition einer OAuth-App verwendet.</td>
+  </tr>
+  <tr>
+    <td><code>scope</code></td>
+    <td>string</td>
+    <td><strong>Erforderlich.</strong> Wähle aus der Liste der verfügbaren Berechtigungsbereiche den Zugriff aus, den deine App benötigt. Du kannst mehrere [Berechtigungsbereiche](/developer/understanding-scopes/) durch Leerzeichen getrennt hinzufügen (Anführungszeichen sind nicht erforderlich).</td>
+  </tr>
+  <tr>
+    <td><code>state</code></td>
+    <td>string</td>
+    <td><strong>Dringend empfohlen.</strong> Eine nicht erratbare zufällige Zeichenfolge. Verwende sie als zusätzlichen Schutz gegen Cross-Site-Request-Forgery-Angriffe.</td>
+  </tr>
+  <tr>
+    <td><code>code_challenge</code></td>
+    <td>string</td>
+    <td><strong>Für öffentliche Anwendungen erforderlich</strong>, für vertrauliche Anwendungen dringend empfohlen. Ein Base64-URL-codierter SHA-256-Hash des <code>code_verifier</code>. Wird verwendet, um den Autorisierungsablauf mit PKCE abzusichern. Eine öffentliche Anwendung, die ihn weglässt, erhält statt eines Autorisierungscodes den Fehler <code>invalid_request</code>. Erfahre mehr über [PKCE RFC](https://datatracker.ietf.org/doc/html/rfc7636).</td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">code_challenge_method</code></td>
+    <td>string</td>
+    <td><strong>Dringend empfohlen.</strong> Die Methode, mit der der <code>code_challenge</code> abgeleitet wird. Crowdin unterstützt <code>S256</code> und <code>plain</code>. Sende <code>S256</code>. Wenn dieser Parameter weggelassen wird, ist <code>plain</code> die Standardmethode. Dabei wird der Verifier ohne Hashing übertragen.</td>
+  </tr>
+  </tbody>
+</table>
+
+Die folgende Autorisierungs-URL wird erstellt:
+
+```bash wrap
+https://accounts.crowdin.com/oauth/authorize?client_id=m50YenPpqac8u5D4dnK&redirect_uri=https://impact-mobile.com/auth/crowdin&response_type=code&scope=project+tm&state=d131dd02c5e6eec4
+```
+
+Nach erfolgreicher Autorisierung werden Benutzer zu deiner Website zurückgeleitet:
+
+```bash wrap
+https://impact-mobile.com/auth/crowdin/?code=def50200df1fbb5ebac05f9288850d9e...0835bd3cf42&state=d131dd02c5e6eec4
+```
+
+Wenn die Autorisierung abgelehnt wurde, werden Benutzer mit einem Fehler zu deiner Website zurückgeleitet:
+
+```bash wrap
+https://impact-mobile.com/auth/crowdin/?error=access_denied&state=d131dd02c5e6eec4
+```
+
+## Code gegen ein Zugriffstoken austauschen
+
+Wenn ein Benutzer die App autorisiert, leitet Crowdin ihn zurück zu deiner Website. Dort kannst du den erhaltenen Code gegen ein Zugriffstoken austauschen:
+
+```bash
+POST https://accounts.crowdin.com/oauth/token
+```
+
+### Parameter {#redirect-parameters}
+
+<table>
+  <thead>
+  <tr>
+    <th>Name</th>
+    <th>Wert</th>
+    <th>Beschreibung</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>grant_type:</code> <code>authorization_code</code></td>
+    <td>string</td>
+    <td><strong>Erforderlich.</strong> Dieser Parameter wird für die Ablaufdefinition einer OAuth-App verwendet.</td>
+  </tr>
+  <tr>
+    <td><code>client_id</code></td>
+    <td>string</td>
+    <td><strong>Erforderlich.</strong> Beim Registrieren der App erhältst du die Client-ID für die App.</td>
+  </tr>
+  <tr>
+    <td><code>client_secret</code></td>
+    <td>string</td>
+    <td><strong>Für vertrauliche Anwendungen erforderlich.</strong> Beim Registrieren der App erhältst du das Client-Secret für die App. Das Senden eines <code>code_verifier</code> ersetzt es nicht. Öffentliche Anwendungen besitzen kein Client-Secret und lassen diesen Parameter weg.</td>
+  </tr>
+  <tr>
+    <td><code>redirect_uri</code></td>
+    <td>string</td>
+    <td><strong>Erforderlich.</strong> Die URL in deiner Anwendung, zu der Benutzer nach der Autorisierung weitergeleitet werden.</td>
+  </tr>
+  <tr>
+    <td><code>code</code></td>
+    <td>string</td>
+    <td><strong>Erforderlich.</strong> Code, der aus dem Callback-Query-String empfangen wurde.</td>
+  </tr>
+  <tr>
+    <td><code>code_verifier</code></td>
+    <td>string</td>
+    <td><strong>Erforderlich, wenn die Autorisierungsanfrage einen <code>code_challenge</code> enthielt.</strong> Die ursprüngliche zufällige Zeichenfolge, die zum Erzeugen des <code>code_challenge</code> verwendet wurde. Sowohl vertrauliche als auch öffentliche Anwendungen senden ihn.</td>
+  </tr>
+  </tbody>
+</table>
+
+Beispielsweise sieht eine Anfrage mit curl wie folgt aus:
+
+```bash
+curl -X POST \
+  https://accounts.crowdin.com/oauth/token \
+  -H "content-type: application/json" \
+  -d "{
+      \"grant_type\":\"authorization_code\",
+      \"client_id\":\"m50YenPpqac8u5D4dnK\",
+      \"client_secret\":\"yz35kYtjox...YE9Am\",
+      \"redirect_uri\":\"https://impact-mobile.com/auth/crowdin\",
+      \"code\":\"def50200df1fbb5ebac05f9288850d9e...0835bd3cf42\"
+  }"
+```
+
+### Antwort {#redirect-response}
+
+Standardmäßig hat die Antwort die folgende Form:
+
+```json
+{
+  "access_token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJS...lag1e_Zk4EdJ5diYfz0",
+  "token_type":"bearer",
+  "expires_in": 7200,
+  "refresh_token": "b213c684ccaa7db1217e946e6ad...fff7ae"
+}
+```
+
+## Anfragen mit dem zurückgegebenen Zugriffstoken an die API senden
+
+Mit dem Zugriffstoken kannst du nun im Namen des autorisierten Benutzers Anfragen an die Crowdin API senden.
+
+Beispielsweise kannst du in curl den folgenden Authorization-Header setzen:
+
+```bash wrap
+curl -H "Authorization: Bearer ACCESS_TOKEN" https://api.crowdin.com/api/v2/projects
+```
+
+Crowdin Enterprise:
+
+```bash wrap
+curl -H "Authorization: Bearer ACCESS_TOKEN" https://<organization_domain>.api.crowdin.com/api/v2/projects
+```
+
+<Aside>
+  Um die Crowdin-Enterprise-`organization_domain` abzurufen, analysiere das gemäß den JWT-Spezifikationen strukturierte Zugriffstoken und extrahiere daraus die erforderliche `organization_domain`.
+</Aside>
+
+<ReadMore>
+  Weitere Infürmationen zu [Sicherheit für Crowdin Apps](/Entwickler/crowdin-Apps-Sicherheit/).
+</ReadMore>
+
+## Refresh-Token
+
+Das Zugriffstoken, das ein Benutzer nach der Autorisierung der App erhält, hat eine begrenzte Gültigkeitsdauer. Das Zugriffstoken läuft nach der in der Antwort angegebenen Anzahl von Sekunden ab.
+
+Um ein Token zu erneuern, ohne den Benutzer erneut weiterleiten zu müssen, sende die folgenden Body-Parameter per POST-Anfrage an den Autorisierungsserver:
+
+```bash
+POST https://accounts.crowdin.com/oauth/token
+```
+
+### Parameter {#refresh-token-parameters}
+
+<table>
+  <thead>
+  <tr>
+    <th>Name</th>
+    <th>Wert</th>
+    <th>Beschreibung</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>grant_type:</code> <code>refresh_token</code></td>
+    <td>string</td>
+    <td><strong>Erforderlich.</strong> Dieser Parameter wird für die Ablaufdefinition einer OAuth-App verwendet.</td>
+  </tr>
+  <tr>
+    <td><code>client_id</code></td>
+    <td>string</td>
+    <td><strong>Erforderlich.</strong> Beim Registrieren der App erhältst du die Client-ID für die App.</td>
+  </tr>
+  <tr>
+    <td><code>client_secret</code></td>
+    <td>string</td>
+    <td><strong>Für vertrauliche Anwendungen erforderlich.</strong> Beim Registrieren der App erhältst du das Client-Secret für die App. Öffentliche Anwendungen lassen diesen Parameter weg.</td>
+  </tr>
+  <tr>
+    <td><code>refresh_token</code></td>
+    <td>string</td>
+    <td><strong>Erforderlich.</strong> Refresh-Token, das aus der letzten Autorisierungsantwort empfangen wurde.</td>
+  </tr>
+  </tbody>
+</table>
+
+Beispielsweise sieht eine Anfrage mit curl wie folgt aus:
+
+```bash
+curl -X POST \
+  https://accounts.crowdin.com/oauth/token \
+  -H "content-type: application/json" \
+  -d "{
+      \"grant_type\":\"refresh_token\",
+      \"client_id\":\"m50YenPpqac8u5D4dnK\",
+      \"client_secret\":\"yz35kYtjox...YE9Am\",
+      \"refresh_token\":\"b213c684ccaa7db1217e946e6ad...fff7ae\"
+  }"
+```
+
+### Antwort {#refresh-token-response}
+
+Standardmäßig hat die Antwort die folgende Form:
+
+```json
+{
+  "access_token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJS...ZjFkMWI4OWFlIiwiaWF",
+  "token_type":"bearer",
+  "expires_in": 7200,
+  "refresh_token": "ea506ea4c37aa152f0a91ed2482...4a0c567"
+}
+```
+
+## Weiterleitungs-URLs
+
+Du kannst eine oder mehrere Weiterleitungs-URLs registrieren, wenn du eine OAuth-Anwendung in Crowdin erstellst.
+
+Aus Sicherheitsgründen kannst du Benutzer nach der Autorisierung nicht zu einer URL weiterleiten, wenn diese URL nicht in den Informationen der Anwendung enthalten ist.

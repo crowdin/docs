@@ -1,0 +1,277 @@
+---
+title: Maschinelle Übersetzung
+description: Erfahre, wie du Machine-Translation-Engines in Crowdin konfigurierst.
+slug: machine-translation
+---
+
+import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import Include from '~/components/Include.astro';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import machineTranslationSuggestions from '!/crowdin/localization-resources/mt_suggestions.png';
+
+In Crowdin integrierte Machine-Translation-Engines liefern Übersetzungsvorschläge von Diensten wie Google Translate und AutoML Translation, Microsoft Translator und weiteren.
+
+MT-Vorschläge werden im Bereich **Automatisierte Vorschläge** des Editors in der Reihenfolge der Konfigurationsdaten der Engines angezeigt. Um die Vorschläge einer bestimmten Engine zu priorisieren, konfiguriere diese Engine zuerst.
+
+Du kannst auch über MT-Engines eine [automatische Übersetzung](/auto-translation/) durchführen.
+
+<Image src={machineTranslationSuggestions} alt="Machine-Translation-Vorschläge im Editor" />
+
+<LinkCard title="Weitere Machine-Translation-Engines hinzufügen" description="Installiere weitere Machine-Translation-Engines aus dem Crowdin Store." href="https://store.crowdin.com/tags/machine-translation" target="_blank" />
+
+Standardmäßig sind maschinelle Übersetzungen für jedes Projekt aktiviert. Die Übersetzungs-Engines müssen jedoch konfiguriert werden, bevor Projektmitglieder sie verwenden können. Wenn du diese Option für bestimmte Projekte deaktivieren möchtest, deaktiviere **Machine-Translation-Vorschläge anzeigen** in den [Projekteinstellungen](/project-settings/machine-translation/).
+
+## Konfiguration von Übersetzungsmaschinen
+
+Gehe folgendermaßen vor, um die Machine-Translation-Engines zu konfigurieren:
+
+<Steps>
+  1. Öffne deine Profilstartseite und wähle in der linken Seitenleiste **MT** aus.
+  2. Klicke neben der zu konfigurierenden MT-Engine auf <Icon name="mdi:dots-horizontal" class="inline-icon" /> und wähle **Bearbeiten**. Alternativ kannst du einfach auf die gewünschte MT-Engine doppelklicken.
+  3. Gib die Zugangsdaten für die ausgewählte Übersetzungs-Engine ein.
+  4. *(Optional)* Erweitere **Erweiterte Einstellungen** und konfiguriere die Optionen **In Projekten und Sprachen verwenden**:
+     * **MT-Verfügbarkeit auf Sprachen beschränken**: Wähle die Sprachen aus, für die die MT-Engine Übersetzungen bereitstellen soll. Alternativ kannst du das Feld leer lassen, um alle unterstützten Sprachen zu aktivieren.
+     * **MT-Verfügbarkeit auf Projekte beschränken**: Wähle die Projekte aus, in denen du die MT-Engine verwenden möchtest. Alternativ kannst du das Feld leer lassen, um sie für alle Projekte zu aktivieren.
+  5. Klicke auf **Aktualisieren**.
+</Steps>
+
+<Aside type="caution">
+  Machine-Translation-Engines müssen mit dem Konto des Projekteigentümers konfiguriert werden.
+</Aside>
+
+### Crowdin Translate
+
+Crowdin Translate ist Crowdin's eigene Machine-Translation-Engine und funktioniert daher ohne API-Schlüssel oder Drittanbieterkonto. Die Engine nutzt das globale Translation Memory, um ihre Vorschläge zu erstellen, und ist für Projekte verfügbar, in denen [**Globales Translation Memory verwenden**](/project-settings/translation-memories/) aktiviert ist oder die sich in der Testphase befinden.
+
+Bei der Konfiguration von Crowdin Translate kannst du die folgende Einstellung anpassen:
+
+* **Mehrere Übersetzungen**: Generiert für jeden String vier statt einer Übersetzungsvorschläge.
+
+<Aside type="caution" title="Einschränkungen">
+  Derzeit nur für bestimmte Sprachpaare verfügbar.
+  <details>
+    <Include file="crowdin-translate-supported-languages.mdx" />
+  </details>
+</Aside>
+
+### Microsoft Translator
+
+Öffne [Windows Azure](https://portal.azure.com/#blade/HubsExtension/BrowseAll), um auf deinen Microsoft-Translator-API-Abonnementschlüssel zuzugreifen. Die Translator Text API bietet eine kostenlose Stufe mit 2.000.000 übersetzten Zeichen.
+
+Bei der Konfiguration von Microsoft Translator kannst du die folgenden Einstellungen anpassen:
+
+* **Benutzerdefiniertes Modell**: Erstellt Übersetzungen mit deinem eigenen Microsoft-Translator-Modell statt mit dem allgemeinen Modell. Gib die Modellkennung ein.
+* **Ressourcenstandort**: Legt die mit deinem API-Schlüssel verknüpfte Region fest. Gib ihn an, wenn sich der Standort nicht in `global` befindet.
+
+<LinkCard title="Translator-Ressource in Azure erstellen" href="https://learn.microsoft.com/azure/ai-services/translator/how-to/create-translator-resource" target="_blank" />
+
+### DeepL Übersetzer
+
+Die DeepL API ist nur mit den DeepL-API-Free- und Pro-Abonnementplänen verfügbar (Tab [Für Entwickler](https://www.deepl.com/pro.html#developer)). Rufe die [DeepL-Pro-Kontoseite](https://www.deepl.com/pro-account.html) auf, um einen eindeutigen Authentifizierungsschlüssel zu erhalten. Beachte, dass der DeepL-API-Plan der einzige Plan ist, der diese Funktion bereitstellt.
+
+Wenn du einen anderen Abonnementplan hast, kannst du in deinen [persönlichen Kontoeinstellungen](https://www.deepl.com/pro-account.html) zum DeepL-API-Plan wechseln. DeepL bietet außerdem einen [Simulator](https://www.deepl.com/docs-api/simulator), mit dem du deinen Authentifizierungsschlüssel in Aktion überprüfen kannst.
+
+#### DeepL-Übersetzungseinstellungen
+
+Bei der Konfiguration von DeepL Translator kannst du die folgenden Einstellungen anpassen:
+
+* **Tonalität**: Legt den Grad der von DeepL verwendeten Formalität fest. Gilt nur für Sprachen, die Formalität unterstützen.
+* **Modelltyp**: Wählt die für die Übersetzung verwendeten DeepL-Modelle aus. **Latenzoptimiert** ist die schnellste Option. **Qualität bevorzugt** und **Qualitätsoptimiert** verwenden Modelle der nächsten Generation, die langsamer sind und weniger Sprachen abdecken. Für ein Sprachpaar, das von diesen Modellen nicht abgedeckt wird, erhältst du weiterhin eine Übersetzung von den klassischen Modellen.
+* **Tag-Verarbeitung**: Legt fest, wie DeepL Markup im Quelltext verarbeitet. Wähle **XML** oder **HTML** entsprechend deinen Quelldateien aus. Mehr über [Inline-Tags und Machine Translation](#inline-tags-and-machine-translation) erfahren.
+* **Version der Tag-Verarbeitung**: Steuert, wie DeepL Tags in der Übersetzung positioniert. **Version 2** verbessert die Platzierung von Tags.
+* **Kontext verwenden**: Sendet zusätzlichen Kontext, z. B. den Datei- oder String-Kontext, an DeepL, um Übersetzungen kurzer Texte wie Produktnamen, Artikelüberschriften oder UI-Elemente zu verbessern.
+* **Stilregel**: Wendet einen in deinem DeepL-Konto definierten Schreibstil an. Funktioniert nur, wenn die Zielsprache mit der Sprache der Stilregel übereinstimmt.
+* **Translation Memory**: Verwendet zuvor genehmigte Übersetzungen aus einem DeepL-Translation-Memory für übereinstimmende Segmente wieder.
+* **Schwellenwert für TM-Übereinstimmung**: Legt den Mindestprozentsatz für eine Übereinstimmung fest, den ein Segment erreichen muss, um wiederverwendet zu werden, von 0 bis 100. Standardmäßig 75.
+* **Benutzerdefinierte Anweisungen**: Steuert die Übersetzung anhand deiner eigenen Vorgaben, z. B. *Markennamen nicht übersetzen*. Gib pro Zeile eine Anweisung ein, bis zu 10 Anweisungen mit jeweils 300 Zeichen. Gilt für diese Zielsprachen: Deutsch, Englisch, Spanisch, Französisch, Italienisch, Japanisch, Koreanisch und Chinesisch.
+
+<Aside type="note">
+  Die Optionen **Tag-Handling-Version**, **Stilregel**, **Translation Memory** und **Benutzerdefinierte Anweisungen** werden angezeigt, sobald du den Modelltyp **Qualitätsoptimiert bevorzugen** oder **Qualitätsoptimiert** auswählst. Stilregeln, Translation Memories und benutzerdefinierte Anweisungen erfordern außerdem einen DeepL API Pro-Schlüssel und gelten nur für Sprachpaare, die von den Modellen der nächsten Generation abgedeckt werden. Übersetzungen, die auf die klassischen Modelle zurückfallen, verwenden diese Optionen nicht.
+</Aside>
+
+#### DeepL-Ressourcenkonfiguration
+
+DeepL Translator kann Glossare, Stilregeln und Translation Memories aus deinem verbundenen DeepL-Konto verwenden, um deine Terminologie und Übersetzungen konsistent zu halten. In Crowdin kannst du mehrere Ressourcen jedes Typs konfigurieren und jeder Ressource bestimmte Sprachen oder Sprachpaare zuweisen.
+
+Gehe folgendermaßen vor, um eine DeepL-Ressource zu konfigurieren:
+
+<Steps>
+  1. Wähle im entsprechenden Dropdown-Menü ein Glossar, eine Stilregel oder ein Translation Memory aus. Diese Listen werden automatisch aus deinem verbundenen DeepL-Konto übernommen.
+  2. Wähle im Dropdown-Menü daneben die Sprachen oder Sprachpaare aus, für die die ausgewählte Ressource gelten soll.
+  3. *(Optional)* Um eine weitere Ressource desselben Typs zu konfigurieren, klicke auf <Icon name="mdi:plus" class="inline-icon" /> und wiederhole die obigen Schritte. Um eine Ressourcenkonfiguration zu entfernen, klicke auf <Icon name="mdi:minus" class="inline-icon" />.
+  4. Klicke auf **Aktualisieren**.
+</Steps>
+
+<Aside type="tip" title="Sprachvarianten zuordnen">
+  Crowdin ermöglicht die Zuordnung verschiedener Sprachvarianten. Wenn dein Glossar in DeepL beispielsweise eine allgemeine Quellsprache wie „Englisch“ verwendet, kannst du sie einer bestimmten Variante in deinem Crowdin-Projekt zuordnen, z. B. „Englisch, Vereinigte Staaten“. Dadurch wird sichergestellt, dass das Glossar korrekt angewendet wird, auch wenn die Ausgangssprache deines Projekts eine spezifische Variante ist (z. B. Englisch, Kanada; Spanisch, Mexiko).
+</Aside>
+
+### ModernMT
+
+Die ModernMT-Echtzeitübersetzungs-API ist mit den Abonnementplänen „Real time“ oder „Human-in-the-loop“ verfügbar. Rufe das [ModernMT Dashboard](https://www.modernmt.com/dashboard/) auf, um deinen Lizenzschlüssel zu erhalten. Wenn du einen anderen Abonnementplan hast, kannst du über die Seite [Plan verwalten](https://www.modernmt.com/dashboard/manage-plan) zum Plan „Real time“ oder „Human-in-the-loop“ wechseln.
+
+### Amazon Translate
+
+Die kostenlose Version von Amazon Translate ist 12 Monate lang verfügbar. Danach musst du für die Anzahl der übersetzten Zeichen bezahlen. Crowdin verwendet den von Amazon Translate bereitgestellten Typ „Standard Text Translation“. Mehr über die [verfügbaren Preisoptionen für Amazon Translate](https://aws.amazon.com/translate/pricing/) erfahren.
+
+Mehr über das [Abrufen deines Zugriffsschlüssels](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys) für die Integration von Amazon Translate erfahren.
+
+Bei der Konfiguration von Amazon Translate kannst du die folgenden Einstellungen anpassen:
+
+* **AWS-Region**: Legt die Region deiner Amazon-Translate-Ressourcen fest (z. B. `us-east-2`). Gib sie zuerst an, um deine Terminologien zu laden.
+* **Terminologien**: Wendet deine [benutzerdefinierte Terminologie](https://docs.aws.amazon.com/translate/latest/dg/how-custom-terminology.html) auf die Übersetzungen an. Wähle eine Terminologie aus und anschließend die **Sprachen**, für die sie gilt. Um eine weitere Terminologie zu konfigurieren, klicke auf <Icon name="mdi:plus" class="inline-icon" />.
+
+<QuestionAnswer title="Welche minimalen Berechtigungen benötigt ein IAM-Benutzer, um Amazon Translate für die Verwendung in Crowdin einzurichten?">
+  Die minimal erforderlichen IAM-Bereiche hängen davon ab, ob du Terminologien verwendest oder nicht:
+
+  **Ohne Terminologien:**
+
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "translate:TranslateText",
+        "Resource": "*"
+      }
+    ]
+  }
+  ```
+
+  **Mit Terminologien:**
+
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "translate:TranslateText",
+          "translate:GetTerminology",
+          "translate:ListTerminologies"
+        ],
+        "Resource": "*"
+      }
+    ]
+  }
+  ```
+
+  Alternativ kannst du die [von AWS verwaltete Richtlinie „TranslateReadOnly“](https://docs.aws.amazon.com/translate/latest/dg/security-iam-awsmanpol.html#security-iam-awsmanpol-TranslateReadOnly) verwenden, die den erforderlichen schreibgeschützten Zugriff auf Amazon Translate bereitstellt.
+
+  <Aside>Das `"Resource": "*"` ermöglicht den Zugriff auf alle Ressourcen. Aus Sicherheitsgründen kannst du dies, sofern möglich, auf bestimmte AWS-Regionen oder Ressourcen beschränken.</Aside>
+</QuestionAnswer>
+
+### ### Google Translate
+
+Um Google Translate zu verwenden, benötigst du ein Google-Cloud-Konto mit einem aktiven Abrechnungsprofil. Cloud Translation wird monatlich auf Grundlage der Nutzung abgerechnet. [Mehr erfahren](https://cloud.google.com/translate/pricing).
+
+Gehe folgendermaßen vor, um den für die Integration erforderlichen API-Schlüssel zu erhalten:
+
+<Steps>
+  1. Rufe die [Google Cloud Console](https://console.cloud.google.com/) auf. Melde dich beim vorhandenen Google-Cloud-Konto an oder richte ein neues ein.
+  2. Wähle ein vorhandenes Projekt aus oder füge über **Neues Projekt** ein Projekt hinzu.
+  3. Gehe zu [API & Services > Library](https://console.cloud.google.com/apis/library) und suche nach *Cloud Translation API*.
+  4. Klicke auf **Aktivieren**.
+  5. Gehe zu [API & Services > Credentials](https://console.cloud.google.com/apis/credentials/) und klicke auf **Anmeldedaten erstellen > API-Schlüssel**.
+  6. Kopiere den API-Schlüssel und klicke auf **Schließen**.
+</Steps>
+
+### Google Cloud AutoML Translation
+
+Um AutoML Translation zu verwenden, benötigst du ein Google-Cloud-Konto mit einem aktiven Abrechnungsprofil. Google AutoML Translation wird monatlich danach abgerechnet, wie viele Zeichen du zur Übersetzung sendest. [Mehr erfahren](https://cloud.google.com/translate/automl/pricing#translation_costs).
+
+Gehe folgendermaßen vor, um einen Dienstkontoschlüssel zu erstellen und die für die Integration erforderlichen Zugangsdaten zu erhalten:
+
+<Steps>
+  1. Rufe die [Google Cloud Console](https://console.cloud.google.com/) auf. Melde dich beim vorhandenen Google-Cloud-Konto an oder richte ein neues ein.
+  2. Wähle ein vorhandenes Projekt aus oder füge über **Neues Projekt** ein Projekt hinzu.
+  3. Gehe zu [API & Services > Library](https://console.cloud.google.com/apis/library) und suche nach *Cloud AutoML API*.
+  4. Klicke auf **Aktivieren**.
+  5. Im nächsten Schritt wird ein privates Schlüsselpaaar für das Dienstkonto erstellt. Das Dienstkonto wird von Crowdin verwendet. Anwendungen verwenden Dienstkonten, um autorisierte API-Aufrufe durchzuführen.
+</Steps>
+
+Gehe folgendermaßen vor, um die Authentifizierung einzurichten und deinen privaten Schlüssel zu erstellen:
+
+<Steps>
+  1. Gehe zu [API & Services > Credentials](https://console.cloud.google.com/apis/credentials/).
+  2. Klicke auf **Anmeldedaten erstellen > Dienstkonto**.
+  3. Gib im Feld *Name des Dienstkontos* einen Namen ein, der beschreibt, wofür dieses Dienstkonto verwendet wird.
+  4. Klicke auf **Erstellen und fortfahren**.
+  5. Wähle in der *Rollenliste* *Projekt* > *Cloud Translation API Editor* aus und klicke auf **Fortfahren**.
+  6. Klicke auf **Fertig**.
+  7. Klicke unter [API & Services > Credentials](https://console.cloud.google.com/apis/credentials/) auf das erstellte Dienstkonto.
+  8. Wechsle zum Tab **Schlüssel**.
+  9. Klicke auf **Schlüssel hinzufügen > Neuen Schlüssel erstellen**.
+  10. Wähle **JSON** aus und klicke auf **Erstellen**. Eine JSON-Datei mit deinem Schlüssel wird auf deinen Computer heruntergeladen.
+</Steps>
+
+#### Konfiguration des benutzerdefinierten Glossars von Google Cloud AutoML
+
+Mit dem benutzerdefinierten Glossar von Google Cloud AutoML kannst du deine fachspezifische Terminologie konsistent übersetzen.
+
+Gehe folgendermaßen vor, um dein benutzerdefiniertes Google-Cloud-AutoML-Glossar zu konfigurieren:
+
+<Steps>
+  1. Öffne deine Profilstartseite und wähle in der linken Seitenleiste **MT** aus.
+  2. Klicke neben der Engine **Google AutoML Translation** auf <Icon name="mdi:dots-horizontal" class="inline-icon" /> und wähle **Bearbeiten**.
+  3. Lade deine JSON-Zugangsdaten hoch.
+  4. *(Optional)* Gib deinen **Ressourcenstandort** an (z. B. us-central1). Die Dropdown-Menüs **Glossar** und **Benutzerdefiniertes Modell** werden befüllt, sobald deine Zugangsdaten und der Ressourcenstandort eingerichtet sind.
+  5. *(Optional)* Wähle dein **Glossar** aus dem entsprechenden Dropdown-Menü aus.
+  6. *(Optional)* Wähle dein **Benutzerdefiniertes Modell** und konfiguriere bei Bedarf die Sprachzuordnung zwischen dem benutzerdefinierten Modell und den Crowdin-Sprachen.
+</Steps>
+
+## MT-Engine-IDs
+
+Sobald du die Zugangsdaten deiner MT-Engine angegeben hast, weist das System automatisch eine eindeutige MT-Engine-ID zu. Später kannst du diese IDs in API-Anfragen für die automatische Übersetzung über Machine-Translation-Engines verwenden.
+
+Die ID der MT-Engine findest du im Tab **Machine Translation** deines Profils, nachdem du die Engine-Details geöffnet hast.
+
+Alternativ kannst du deine MT-Engine-IDs über die [API abrufen](/developer/api/v2/#tag/Machine-Translation-Engines/operation/api.mts.getMany).
+
+## Inline-Tags und maschinelle Übersetzung
+
+Je nach Einstellung [*HTML-Tags anzeigen*](/online-editor/#appearance) und Dateiformat zeigt der Editor Inline-Tags möglicherweise in vereinfachter, nummerierter Form an (z. B. `\<0>Beispiel\</0>` statt `<a href="https://sample.com">Beispiel</a>`). Dies ist lediglich eine Anzeigeoption im Editor. Dabei handelt es sich nicht um die Form, die Crowdin an die Machine-Translation-Engine übergibt.
+
+Bei einer maschinellen Übersetzung arbeitet Crowdin mit dem Inline-Markup aus deiner ursprünglichen Quelldatei und nicht mit den vereinfachten Tags, die im Editor angezeigt werden. Maschinelle Übersetzungs-Engines unterscheiden sich darin, wie sie dieses Markup verarbeiten: Einige verschieben die Tags innerhalb des übersetzten Segments, und ihre Platzierung kann je nach Engine unterschiedlich sein. Dies kann sich auch auf die allgemeine Übersetzungsqualität auswirken.
+
+Wenn Tags in einem MT-Vorschlag in einer unerwarteten Reihenfolge oder Position erscheinen, spiegelt dies normalerweise wider, wie die ausgewählte Engine Inline-Markup verarbeitet, und nicht eine Crowdin-Einstellung.
+
+## MT-Engine-Cache leeren
+
+Wenn MT-Engines mit neuen Funktionen oder Modellen aktualisiert werden, entsprechen zwischengespeicherte Übersetzungen in Crowdin möglicherweise nicht mehr den neuesten Übersetzungsmöglichkeiten. Um aktualisierte Übersetzungen im Bereich **Automatisierte Vorschläge** des Editors anzuzeigen, leere den MT-Engine-Cache. Dies kann besonders nützlich sein, wenn du bestimmte Zeichenfolgen bereits im Editor angezeigt hast, da Crowdin zwischengespeicherte MT-Vorschläge für diese Zeichenfolgen speichert.
+
+Ein zwischengespeicherter MT-Vorschlag ist im Editor mit einem Verlaufsymbol <Icon name="mdi:history" class="inline-icon" /> am Logo der Engine gekennzeichnet. Bewege den Mauszeiger über das Symbol, um zu sehen, wann es zuletzt aktualisiert wurde (z. B. *Zuletzt aktualisiert: vor 7 Stunden*).
+
+Gehe folgendermaßen vor, um den Cache deiner konfigurierten MT-Engine zu leeren:
+
+<Steps>
+  1. Öffne deine Profilstartseite und wähle in der linken Seitenleiste **MT** aus.
+  2. Klicke in der Liste bei der gewünschten MT-Engine auf <Icon name="mdi:dots-horizontal" class="inline-icon" />.
+  3. Klicke auf **Cache leeren**.
+</Steps>
+
+Alternativ kannst du die gewünschte MT-Engine öffnen und unten links in ihren Einstellungen auf **Cache löschen** klicken.
+
+## MT-Engines deaktivieren
+
+Wenn du eine der konfigurierten MT-Engines vorübergehend pausieren oder nicht mehr verwenden möchtest, gehe folgendermaßen vor:
+
+<Steps>
+  1. Öffne deine Profilstartseite und wähle in der linken Seitenleiste **MT** aus.
+  2. Klicke neben der gewünschten MT-Engine auf <Icon name="mdi:dots-horizontal" class="inline-icon" /> und wähle **Bearbeiten**. Alternativ kannst du einfach auf die gewünschte MT-Engine doppelklicken.
+  3. Deaktiviere oben rechts den Umschalter **Aktiviert**.
+  4. Klicke auf **Aktualisieren**.
+</Steps>
+
+Die Zugangsdaten der Engine bleiben erhalten, sodass du den Umschalter jederzeit wieder aktivieren kannst, um die Engine erneut zu verwenden.
+
+## Siehe auch
+
+<CardGrid>
+  <LinkCard title="Auto-Übersetzung" description="Speed up die Übersetzungsprozess und ease die arbeiten von Übersetzer." href="/auto-translation/" />
+  <LinkCard title="Projekteinstellungen" description="Konfiguriere die Machine-Translation-Einstellungen für dein Projekt." href="/project-settings/machine-translation/" />
+</CardGrid>

@@ -1,0 +1,126 @@
+---
+title: Screenshot-Verwaltung automatisieren
+description: Erfahre, wie du die Erstellung und Aktualisierung von Screenshots mit Crowdin In-Context und Playwright automatisierst.
+slug: developer/automating-screenshot-management
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Diese Anleitung erklärt, wie du die automatische Erstellung und Aktualisierung von Screenshots in Crowdin [In-Context](/developer/in-context-localization/) automatisierst.
+
+Durch die Automatisierung der Screenshot-Erstellung erhalten Übersetzer einen genauen und aktuellen visuellen Kontext, was den Lokalisierungsprozess und die Übersetzungsqualität verbessert. Die Anleitung behandelt Voraussetzungen, Einrichtung, die Aufnahme von Screenshots über mehrere Webseiten hinweg und das Hochladen der Screenshots über die Crowdin-API.
+
+## Voraussetzungen
+
+Stelle vorab sicher, dass deine Website die [Crowdin-In-Context-Funktionalität](/developer/in-context-localization/#integration) integriert.
+
+### Kontoeinrichtung
+
+Um dein Konto so zu konfigurieren, dass die Automatisierung ordnungsgemäß funktioniert, führe die folgenden Schritte aus:
+
+<Steps>
+  1. **2FA in Crowdin aktivieren**: Öffne dein Projekt und gehe zu **Einstellungen > Datenschutz & Zusammenarbeit > Datenschutz**, um die Zwei-Faktor-Authentifizierung für die Anmeldung einzurichten.
+  2. **Geräteüberprüfung deaktivieren**: Die Geräteüberprüfung erhöht die Kontosicherheit, kann aber automatisierte Abläufe unterbrechen. Wenn du sie in Testumgebungen deaktivierst, ist eine unterbrechungsfreie Automatisierung gewährleistet.
+     * Für Crowdin: Gehe zu **Kontoeinstellungen > Konto > Neues Gerät überprüfen** und deaktiviere die Einstellung.
+     * Für Crowdin Enterprise: Gehe zu **Kontoeinstellungen > Sicherheit > Geräteüberprüfung** und deaktiviere die Einstellung.
+  3. **Geheimen Schlüssel generieren**: Rufe den geheimen Schlüssel für die Generierung von 2FA-Tokens ab. Dieser Schlüssel wird benötigt, um mithilfe der Bibliothek `otplib` programmgesteuert Einmalpasswörter (OTPs) zu erstellen.
+</Steps>
+
+### Abhängigkeiten
+
+Diese Anleitung verwendet die folgenden Abhängigkeiten für Browserautomatisierung und die OTP-Generierung:
+
+* [Playwright](https://playwright.dev/): Ein modernes Testframework für die Browserautomatisierung, ideal zum Navigieren und Interagieren mit Webseiten.
+* [`otplib`](https://www.npmjs.com/package/otplib): Eine Bibliothek zur programmgesteuerten Generierung von Einmalpasswörtern (OTPs), die für die Umgehung von 2FA in automatisierten Abläufen erforderlich ist.
+
+Führe den folgenden Befehl aus, um die Abhängigkeiten zu installieren:
+
+<Tabs syncKey="pkg">
+  <TabItem label="npm">
+
+    ```bash
+    npm install -D @playwright/test otplib
+    ```
+
+  </TabItem>
+  <TabItem label="Yarn">
+
+    ```bash
+    yarn add -D @playwright/test otplib
+    ```
+
+  </TabItem>
+  <TabItem label="pnpm">
+
+    ```bash
+    pnpm add -D @playwright/test otplib
+    ```
+
+  </TabItem>
+</Tabs>
+
+## Screenshots mit Crowdin In-Context aufnehmen
+
+Crowdin stellt die Methode `window.jipt.capture_screenshot(name: string, options: object | null)` bereit, um die Screenshot-Erstellung zu automatisieren. Zusätzlich zu Screenshots sammelt diese Methode Metadaten, um Übersetzern detaillierten und genauen Kontext für ihre Arbeit bereitzustellen. In den folgenden Abschnitten wird erläutert, wie du diese Funktion mit Playwright implementierst.
+
+### Codebeispiel
+
+Das folgende Skript zeigt, wie du eine Website aufrufst, dich anmeldest, Screenshots aufnimmst und sie als Referenz für Übersetzer zu Crowdin hochlädst.
+
+```js
+// @ts-check
+const { test, expect } = require('@playwright/test');
+const { authenticator } = require('otplib');
+
+test('Capture Crowdin Screenshots', async ({ page }) => {
+  const siteUrl = 'https://example.com';
+
+  // Navigate to the application
+  await page.goto(siteUrl);
+
+  // Log in
+  await page.locator('#jipt-login-panel iframe').contentFrame().getByRole('button', { name: 'Log In' }).click();
+  await page.getByLabel('Email or Username').fill('username');
+  await page.getByLabel('Password').fill('password');
+  await page.getByRole('button', { name: 'Log In' }).click();
+
+  // Handle Two-Factor Authentication (if applicable)
+  const token = authenticator.generate('KEY'); // Replace 'KEY' with your 2FA secret
+  await page.getByLabel('Verification Code').fill(token);
+  await page.getByRole('button', { name: 'Log In' }).click();
+
+  // Confirm login and start capturing screenshots
+  await page.getByRole('button', { name: 'Keep Me Logged In' }).click();
+
+  // Capture the first screenshot
+  await page.goto(siteUrl);
+  await page.locator('#crowdin-jipt-mask').click();
+  await expect(page.locator('h1')).toContainText('Crowdin HTML Sample');
+  await page.evaluate(() => {
+    return new Promise((resolve, reject) => {
+      window.jipt.capture_screenshot('HTML Sample File', { success: resolve, error: reject });
+    });
+  });
+
+  // Capture a second screenshot on another page
+  await page.goto(`${siteUrl}/second`);
+  await expect(page.locator('h1')).toContainText('Second Crowdin HTML Sample');
+  await page.evaluate(() => {
+    return new Promise((resolve, reject) => {
+      window.jipt.capture_screenshot('Second HTML Sample File', { override: false, success: resolve, error: reject });
+    });
+  });
+});
+```
+
+### Wichtige Details zur Code-Implementierung
+
+* **Seiten aufrufen**: Verwende `page.goto(url)`, um bestimmte Seiten deiner Anwendung aufzurufen.
+* **Anmelden**: Simuliere Benutzeraktionen, z. B. das Ausfüllen von Formularen und das Klicken auf Schaltflächen, mithilfe von Playwright-Locatoren wie `getByRole()` und `getByLabel()`.
+* **Screenshots aufnehmen**: Verwende `window.jipt.capture_screenshot()`, um Screenshots zu erstellen und zu Crowdin hochzuladen. Die Methode akzeptiert die folgenden Parameter:
+  * `name: string`: Der Name des Screenshots.
+  * `options: object | null`: Benutzerdefinierte Einstellungen:
+    * `override: boolean`: Der Parameter `override` bestimmt, wie Crowdin mit Screenshots mit doppelten Namen umgeht. Verwende `true` (Standard), um den ersten passenden Screenshot zu überschreiben, oder `false`, um einen neuen Screenshot zu erstellen, selbst wenn der Name übereinstimmt.
+    * `success: function`: Eine Callback-Funktion, die bei erfolgreichem Upload ausgelöst wird. Sie erhält ein Objekt mit `{msg_type: 'make_screenshot_data', screenshot_name: string}`, das den Nachrichtentyp und den Namen des hochgeladenen Screenshots bereitstellt.
+    * `error: function`: Eine Callback-Funktion, die bei einem fehlgeschlagenen Upload ausgelöst wird. Sie erhält ein Objekt mit `{msg_type: 'make_screenshot_error', response: object}` oder einem `Error`, das Details zum Fehler enthält.
+* **Zwei-Faktor-Authentifizierung**: Verwende die Bibliothek `otplib`, um bei aktivierter 2FA programmgesteuert OTP-Tokens zu generieren. Ersetze `'KEY'` durch den geheimen Schlüssel deines Projekts, damit gültige OTPs generiert werden.

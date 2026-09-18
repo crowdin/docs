@@ -1,0 +1,145 @@
+---
+title: Benutzerdefinierte Platzhalter
+description: Konfiguriere die Hervorhebung benutzerdefinierter Platzhalter im Editor
+slug: enterprise/custom-placeholders
+---
+
+import { Image } from 'astro:assets';
+import { Steps, LinkCard, CardGrid, Aside } from '@astrojs/starlight/components';
+import organizationSettingsMenuItem from '!/enterprise/organization-management/organization_settings_menu_item.png';
+import customPlaceholderExpression from '!/enterprise/organization-management/custom_placeholders_expression.png';
+
+Benutzerdefinierte Platzhalter sind für Fälle vorgesehen, in denen die Quelltexte weniger häufige Platzhalter enthalten, die in den Quellzeichenketten (im Editor) standardmäßig nicht hervorgehoben werden.
+
+## konfigurieren dein benutzerdefiniert Platzhalter
+
+Du kannst benutzerdefinierte Platzhalter in den **Organisationseinstellungen** verwalten.
+
+<Steps>
+  1. Klicke oben rechts auf dein Profilbild und wähle **Organisationseinstellungen**. <Image src={organizationSettingsMenuItem} alt="Organization Settings" />
+  2. Wechsle in der linken Seitenleiste zum Bereich **Benutzerdefinierte Platzhalter** und klicke auf **Platzhalter hinzufügen**.
+  3. Gib im angezeigten Dialog einen benutzerdefinierten Platzhalterausdruck mithilfe der Syntaxelemente für Ausdrücke an und klicke auf **Erstellen**. <Image src={customPlaceholderExpression} alt="Custom Placeholder Expression" class="width-xl" />
+</Steps>
+
+<LinkCard title="Zuweisen Custom Placeholder to the Project" href="/enterprise/Projekt-Einstellungen/import/#zuweisen-benutzerdefiniert-placeholder" />
+
+Sobald die benutzerdefinierten Platzhalter dem Projekt zugewiesen sind, werden sie den Projektmitgliedern während des Übersetzungsprozesses im Editor hervorgehoben angezeigt.
+
+## Understanding die Syntax: ein einfach Example
+
+Zum Konfigurieren deines benutzerdefinierten Platzhalterausdrucks kannst du die Elemente aus [der Syntax-Tabelle für Ausdrücke](/enterprise/expression-syntax-elements/) verwenden.
+
+Wenn du beispielsweise `[[Placeholder1]]` hervorheben möchtest, könnte dein Ausdruck so aussehen:
+
+```
+start, then "[[", range "a,z,A,Z,0,9", limit "1,20", then "]]", end
+```
+
+Um vereinfachen things a bit, let's deconstruct the expression above.
+
+* `start` &ndash; indicates die beginning von die expression.
+* `then "[["` &ndash; bedeutet, dass dein benutzerdefinierter Platzhalter mit zwei öffnenden eckigen Klammern beginnt.
+* `range "a,z,A,Z,0,9"` &ndash; bedeutet, dass dein benutzerdefinierter Platzhalter Zeichen aus den Bereichen a-z, A-Z und/oder 0-9 enthalten kann.
+* `limit "1,20"` &ndash; means das die length von die Platzhalter ist von 1 zu 20 characters.
+* `then "]]"` &ndash; bedeutet, dass dein benutzerdefinierter Platzhalter mit zwei schließenden eckigen Klammern endet.
+* `end` &ndash; indicates die end von die expression.
+
+<CardGrid>
+  <LinkCard title="Verbal Tester" description="Erstellen, prüfen und bearbeiten von verbalen Ausdrücken in einem Crowdin-Projekt mit der Anwendung Verbal Tester" href="https://store.crowdin.com/verbal-tester" target="_blank" />
+  <LinkCard title="Verbal Expressions GPT ausprobieren" description="Helps mit Verbal Expressions development in Crowdin." href="https://chat.openai.com/g/g-NdFRRXHwm-crowdin-verbal-expressions-maker" target="_blank" />
+</CardGrid>
+
+## benutzerdefiniert Platzhalter Expression Examples
+
+Nachfolgend findest du einige Beispiele für benutzerdefinierte Platzhalterausdrücke und wie sie in den Quellzeichenketten im Editor hervorgehoben werden.
+
+<Aside>
+  Alle folgenden Beispiele verwenden dasselbe Argumenttrennzeichen `"`.
+</Aside>
+
+##### benutzerdefiniert Platzhalter enclosed in percent characters und curly brackets
+
+Zeichenfolge example:
+
+```
+A test string with a benutzerdefiniert %{placeholder}%
+```
+
+Ausdruck:
+
+```graphql
+Start, eventuell „(“, dann „%“, dann „{“, beliebiger Inhalt, dann „}“, eventuell „)“, dann „%“, Ende
+```
+
+dies expression deconstructed:
+
+* `maybe "("` &ndash; ermöglicht die Platzhalter zu optionally starten mit ein `(`.
+* `then "%"` &ndash; erfordert ein `%` character.
+* `then "{"` &ndash; erfordert ein `{` character.
+* `anything` &ndash; entspricht jedem Zeichen oder jeder Zeichenfolge innerhalb des Platzhalters.
+* `then "}"` &ndash; erfordert ein `}` character.
+* `maybe ")"` &ndash; ermöglicht die Platzhalter zu optionally end mit ein `)`.
+* `then "%"` &ndash; erfordert ein `%` character.
+
+##### benutzerdefiniert Platzhalter enclosed in double square brackets
+
+Zeichenfolge example:
+
+```
+A test string with a benutzerdefiniert [[placeholder]]
+```
+
+Ausdruck:
+
+```graphql
+start, then "[[", anythingbut "[[", then "]]", multiple, end
+```
+
+dies expression deconstructed:
+
+* `then "[["` &ndash; erfordert die Platzhalter zu starten mit `[[`.
+* `anythingbut "[["` &ndash; Matches beliebige character *except* die opening `[[` brackets.
+* `then "]]"` &ndash; erfordert die Platzhalter zu end mit `]]`.
+* `multiple` &ndash; ermöglicht die Wiederholung des Musters (des Inhalts innerhalb der Klammern).
+
+##### benutzerdefiniert Platzhalter
+
+Zeichenfolge example:
+
+```
+A test string with a benutzerdefiniert placeholder
+```
+
+Ausdruck:
+
+```graphql
+starten, then "Platzhalter", end
+```
+
+##### benutzerdefiniert Platzhalter enclosed in paragraph characters
+
+Zeichenfolge example:
+
+```
+A test string with a benutzerdefiniert §placeholder§
+```
+
+Ausdruck:
+
+```graphql
+start, then "§", anything,  then "§", end
+```
+
+##### Langer Satz, den du möglicherweise als einzelnen benutzerdefinierten Platzhalter hervorheben möchtest
+
+Zeichenfolge example:
+
+```text wrap
+Eine Testzeichenkette mit einem langen Satz, den du möglicherweise als einzelnen benutzerdefinierten Platzhalter hervorheben möchtest
+```
+
+Ausdruck:
+
+```graphql wrap
+Start, dann „Langer Satz, den du möglicherweise als einzelnen benutzerdefinierten Platzhalter hervorheben möchtest“, Ende
+```

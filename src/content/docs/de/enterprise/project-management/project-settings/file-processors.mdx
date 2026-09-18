@@ -1,0 +1,62 @@
+---
+title: Dateiverarbeitungs-Einstellungen
+description: Passe die Verarbeitung unterstützter Dateiformate an.
+slug: enterprise/project-settings/file-processors
+sidebar:
+  order: 14
+  label: Dateiverarbeitungen
+---
+
+import { Steps, LinkCard, CardGrid, Aside } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import fileProcessors from '!/enterprise/project-management/settings/file_processors.png';
+
+Mit Dateiverarbeitungen kannst du die Verarbeitung unterstützter Dateiformate anpassen. Das kann nützlich sein, wenn du den Dateiinhalt bearbeiten möchtest, bevor er von Crowdin Enterprise importiert wird.
+
+Dateiverarbeitungen sind als Crowdin Apps implementiert. Du kannst deine eigene Dateiverarbeitung erstellen oder vorhandene verwenden.
+
+<Image src={fileProcessors} alt="Dateiverarbeitungen" />
+
+<CardGrid>
+  <LinkCard title="Dateiverarbeitungen im Store ansehen" href="https://store.crowdin.com/tags/file-processors" target="_blank" />
+  <LinkCard title="Dateiverarbeitung erstellen" href="/developer/crowdin-apps-modules-file-processing/" />
+</CardGrid>
+
+## Dateiverarbeitungen verwalten
+
+Um Dateiverarbeitungen zu verwalten, gehe zum Bereich **File Processors** in deinen Projekteinstellungen.
+
+### Verarbeitungsreihenfolge konfigurieren
+
+Die Verarbeitungsreihenfolge von Dateiverarbeitungen bestimmt, wie Module desselben Typs in deinem Projekt ausgeführt werden. Der Reihenfolgewert legt die Priorität fest. Sie beginnt bei 0 (höchste Priorität) und steigt schrittweise an. Die von dir festgelegte Reihenfolge kann das Ergebnis erheblich beeinflussen.
+
+Zum Beispiel, wenn du sind translating ein CSV Datei und haben installed zwei Apps mit `file-post-export` Modul:
+
+* die erste Modul escapes HTML Tags in Strings, transforming `</h1>` in `\<\/h1\>`.
+* die second Modul prüft wenn alle closing Tags sind present und fügt hinzu ihnen wenn sie sind missing.
+
+die Verarbeitungsreihenfolge von diese Modul wird lead zu unterschiedlich Ergebnisse:
+
+* Wenn die HTML Tag escaping Modul runs erste, gefolgt von die Tag verification Modul, die Ausgabe könnte sein:
+  * `<h1>Hello World!` => `\<h1\>Hello World!` => `\<h1\>Hello World!</h1>`
+* Wenn die Reihenfolge ist reversed, mit die Tag verification Modul running erste, die Ausgabe wird sein:
+  * `<h1>Hello World!` => `<h1>Hello World!</h1>` => `\<h1\>Hello World!\<\/h1\>`
+
+<Aside type="caution">
+  Wenn multiple Datei-Verarbeitung Modul von die desselben Typs (e.g., `file-post-export`) Freigeben identical Reihenfolgewert, unexpected behavior kann occur.
+</Aside>
+
+in such cases, die System wählt aus die Modul zu execute erste basierend auf die installation date von Datei-Verarbeitung Apps, potentially disrupting die intended Verarbeitung Reihenfolge. Therefore, es ist recommended zu adjust die identical Reihenfolge Werte zu sicherstellen das Dateien sind processed in die desired Reihenfolge.
+
+### Editing File Verarbeitung Einstellungen
+
+Um Edit die File Verarbeitung Einstellungen, folgen diese Schritten:
+
+<Steps>
+  1. Öffne dein Projekt und go zu **Settings > File Verarbeitungen**.
+  2. Klicke auf <Icon name="mdi:dots-vertical" class="inline-icon" /> neben dem gewünschten Prozessor und wähle **Bearbeiten**.
+  3. machen die notwendig Änderungen und klicke auf **Submit**.
+</Steps>
+
+die Verarbeitung Einstellungen kann vary abhängig auf die Verarbeitung du sind verwenden.

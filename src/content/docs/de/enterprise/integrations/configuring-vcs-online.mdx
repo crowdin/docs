@@ -1,0 +1,166 @@
+---
+title: VCS-Integrationen online konfigurieren
+description: Erfahre, wie du eine DVCS-Integration online in Crowdin konfigurierst.
+slug: enterprise/configuring-vcs-integrations-online
+sidebar:
+  order: 5
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import configuringSpreadsheets from '!/enterprise/integrations/vcs_configuring_spreadsheets.png';
+import configuringXml from '!/enterprise/integrations/vcs_configuring_xml.png';
+import editIntegrationEditBranchBtn from '!/enterprise/integrations/vcs_edit_integration_edit_branch_btn.png';
+import filesList from '!/enterprise/integrations/vcs_files_list.png';
+import filesListFilter from '!/enterprise/integrations/vcs_files_list_filter.png';
+import ignoreFiles from '!/enterprise/integrations/vcs_ignore_files.png';
+import languageMapping from '!/enterprise/integrations/vcs_language_mapping.png';
+import languageMapping2 from '!/enterprise/integrations/vcs_language_mapping2.png';
+
+Um eine Versionskontrollsystem-Integration zu konfigurieren, gib die Quelldateien an, die du übersetzen möchtest, und wie Crowdin Enterprise die übersetzten Dateien in deinem Repository strukturieren soll.
+
+## Branch-Konfiguration
+
+Sobald du dein Repository und den Branch für die Übersetzung ausgewählt hast, besteht der nächste Schritt darin, den ausgewählten Branch zu konfigurieren. Klicke auf <Icon name="mdi:pencil" class="inline-icon" />, um den Dialog **Branch-Konfiguration** zu öffnen und mit der Konfiguration zu beginnen. Im Dialog **Branch-Konfiguration** kannst du entweder die vorhandene Konfigurationsdatei aus deinem Repository laden oder eine neue Konfiguration von Grund auf erstellen.
+
+<Image src={editIntegrationEditBranchBtn} alt="Integration bearbeiten" class="width-2xl" />
+
+Wenn deine VCS-Integration im **Modus für Zielpakete** funktionieren soll, musst du für jeden für die Übersetzung ausgewählten Branch Zielpakete konfigurieren.
+
+<ReadMore>
+  Mehr über [das Konfigurieren von Zieldateipaketen für VCS-Integrationen](/enterprise/bundles/#bundles-in-vcs-integrations) erfahren.
+</ReadMore>
+
+## Konfiguration laden
+
+Gehe wie folgt vor, um die vorhandene Konfigurationsdatei aus deinem Repository zu laden:
+
+<Steps>
+  1. Klicke auf **Konfiguration laden**.
+  2. Gib den Namen der Konfigurationsdatei aus deinem Repository ein.
+  3. Klicke auf **Weiter**.
+</Steps>
+
+Die Konfiguration wird im Dialog **Branch-Konfiguration** angezeigt. Du kannst sie unverändert verwenden oder bei Bedarf ändern.
+
+## Konfiguration erstellen
+
+Um eine neue Konfigurationsdatei für die Integration zu erstellen, gib den gewünschten Namen an und klicke im Dialog **Branch-Konfiguration** auf **Weiter**.
+
+Gib anschließend mithilfe der unten aufgeführten Muster und Platzhalter die Pfade zu den Quelldateien und übersetzten Dateien an. Im rechten Bereich kannst du eine Vorschau der Struktur der zur Übersetzung hochgeladenen Quelldateien und der Struktur der übersetzten Dateien auf Grundlage der angegebenen Pfade anzeigen.
+
+Nachdem du die Konfiguration für den ausgewählten Branch abgeschlossen und die Änderungen gespeichert hast, wird die Konfigurationsdatei im Stammverzeichnis des Übersetzungs-Branches in deinem Repository gespeichert.
+
+### Muster
+
+Du kannst Wildcard-Muster (`*`, `**`, `?`, `[set]`, `\`) verwenden, um anzugeben, welche Dateien zur Übersetzung hochgeladen werden sollen.
+
+<ReadMore>
+  Mehr über [Wildcard-Muster](/developer/configuration-file/#general-configuration) erfahren.
+</ReadMore>
+
+### Variablen
+
+Verwende Platzhalter, um festzulegen, wo übersetzte Dateien abgelegt und wie sie benannt werden:
+
+<Include file="placeholders.mdx" />
+
+## Erweiterte Einstellungen
+
+Die erweiterten Einstellungen bieten mehr Kontrolle über das Verhalten der Integration. Du kannst Dateien von der Übersetzung ausschließen, benutzerdefinierte Sprachcodes zuordnen und Parsing-Optionen für strukturierte Dateiformate wie Tabellen und XML konfigurieren. Dieser Abschnitt behandelt außerdem zusätzliche Parameter, die durch manuelles Bearbeiten der Datei `crowdin.yml` in deinem Repository konfiguriert werden können.
+
+### Dateien ignorieren
+
+Wenn du bestimmte Dateien nicht übersetzen möchtest, wähle **Dateien oder Ordner ignorieren** aus, gib das Muster für diese Dateien an und Crowdin Enterprise lädt diese Dateien nicht zur Übersetzung hoch.
+
+<Image src={ignoreFiles} alt="Dateien oder Ordner ignorieren" class="width-2xl" />
+
+### Sprachzuordnung
+
+Wenn dein Projekt benutzerdefinierte Namen für Locale-Verzeichnisse verwendet, kannst du mithilfe der Sprachzuordnung deine eigenen Sprachen den von Crowdin Enterprise erkannten Sprachen zuordnen.
+
+Gehe wie folgt vor, um eine Sprachzuordnung hinzuzufügen:
+
+<Steps>
+  1. Klicke auf **Sprachzuordnung**. <Image src={languageMapping} alt="Language mapping" class="width-2xl" />
+  2. Wähle die erforderliche Sprache und einen Platzhalter aus.
+  3. Gib deinen benutzerdefinierten Code an.
+  4. Klicke auf **Zuordnung hinzufügen**, um einen weiteren benutzerdefinierten Code hinzuzufügen. <Image src={languageMapping2} alt="Language mapping" class="width-lg" />
+  5. Klicke auf **Speichern**.
+</Steps>
+
+### Tabellen konfigurieren
+
+Du kannst das Schema deiner Tabellendatei im Feld **Schema** angeben. Verwende zum Erstellen des Schemas für deine CSV- oder XLS/XLSX-Datei die folgenden Konstanten:
+
+* `identifier` &ndash; Spalte mit String-IDs.
+* `source_phrase` &ndash; Spalte mit Quellstrings.
+* `source_or_translation` &ndash; Spalte mit Quellstrings, die beim Export der Datei mit Übersetzungen gefüllt wird. Wenn du vorhandene Übersetzungen hochlädst, werden die Werte aus dieser Spalte als Übersetzungen verwendet.
+* `translation` &ndash; Spalte mit Übersetzungen.
+* `context` &ndash; Spalte mit Kommentaren oder Kontextinformationen zu den Quellstrings.
+* `max_length` &ndash; Spalte mit Werten für die maximale Länge der String-Übersetzungen.
+* `labels` &ndash; Spalte mit Labels für die Quellstrings.
+* `none` &ndash; Spalte, die beim Import übersprungen wird.
+
+**Schema-Beispiel**: `identifier,source_phrase,context,fr,de,it,uk` ([Sprachcodes](/developer/language-codes/)).
+
+Wenn eine Tabelle Übersetzungen für mehrere Zielsprachen enthält, wähle **Mehrsprachige Datei** aus. Wenn du den in der ersten Zeile gespeicherten Text nicht übersetzen möchtest, wähle **Erste Zeile als Kopfzeile importieren** aus.
+
+<Image src={configuringSpreadsheets} alt="Tabellen konfigurieren" class="width-2xl" />
+
+### XML-Dateien konfigurieren
+
+Du kannst die Einstellungen für den XML-Dateiimport konfigurieren, um festzulegen, wie Crowdin Enterprise mit den XML-Dateien umgehen soll.
+
+<Image src={configuringXml} alt="XML-Dateien konfigurieren" class="width-2xl" />
+
+| **Option**                | **Beschreibung**                                                                                                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Inhalt übersetzen**     | Auswählen, um Texte innerhalb der Tags zu übersetzen.                                                                                                                                  |
+| **Attribute übersetzen**  | Auswählen, um Tag-Attribute zu übersetzen.                                                                                                                                             |
+| **Inhalt segmentieren**   | Auswählen, um den Inhalt der XML-Quelldatei in kürzere Textsegmente aufzuteilen.                                                                                                       |
+| **Übersetzbare Elemente** | Dies ist ein Array von Strings, wobei jedes Element einen XPath zu dem DOM-Element enthält, das importiert werden soll. Beispielpfad: `/path/to/node` oder `/path/to/attribute[@attr]` |
+
+<Aside>
+  Wenn die Inhaltssegmentierung aktiviert ist, wird der Upload der Übersetzungen mithilfe einer experimentellen Technologie für maschinelles Lernen durchgeführt.
+</Aside>
+
+### Zusätzliche Parameter
+
+Die folgenden Parameter können nicht online konfiguriert werden:
+
+* `preserve_hierarchy` – bewahrt die Verzeichnisstruktur in Crowdin Enterprise
+* `dest` – ermöglicht die Angabe eines Dateinamens in Crowdin Enterprise
+* `type` – ermöglicht die Angabe eines Dateityps in Crowdin Enterprise
+* `update_option` – behält Übersetzungen bei und behält/entfernt Freigaben geänderter Strings während einer Dateiaktualisierung
+* `commit_message` – zusätzlicher Text, der an die Standard-Commit-Nachricht angehängt wird
+* `append_commit_message` – steuert, ob dein benutzerdefinierter Text an die Standard-Commit-Nachricht angehängt wird oder diese ersetzt
+* `export_languages` – exportiert Übersetzungen für die angegebenen Sprachen
+
+Sobald du die Online-Konfiguration speicherst, wird eine `crowdin.yml`-Datei im Stammverzeichnis des konfigurierten Branchs in deinem Repository gespeichert. Du kannst diese Datei manuell bearbeiten, um die erforderlichen Parameter hinzuzufügen.
+
+<ReadMore>
+  Mehr über die [Konfigurationsdatei](/developer/configuration-file/#configuration-file-for-vcs-integrations) erfahren.
+</ReadMore>
+
+## Konfiguration speichern
+
+<Steps>
+  1. Klicke auf **Änderungen speichern**, um eine Vorschau der erstellten Konfiguration anzuzeigen. <Image src={filesListFilter} alt="Save configuration" class="width-2xl" />
+  2. Klicke auf **Dateifilter hinzufügen**, wenn du mehrere Dateigruppen mit unterschiedlichen Konfigurationen hast. <br />Wenn mehrere Branches im Projekt dieselbe Konfiguration haben und du dieselben Filter auf sie anwenden möchtest, wähle **Filter auf alle übersetzbaren Branches anwenden** aus.
+  3. Klicke auf **Speichern**, um die erstellte Konfiguration zu speichern. <Image src={filesList} alt="Apply filters to all translatable branches" class="width-2xl" />
+</Steps>
+
+Sobald die Konfiguration gespeichert ist, werden die lokalisierbaren Dateien in dein Crowdin-Enterprise-Projekt hochgeladen.
+
+## Siehe auch
+
+<CardGrid>
+  <LinkCard title="GitHub" href="/enterprise/github-integration/" />
+  <LinkCard title="GitLab" href="/enterprise/gitlab-integration/" />
+  <LinkCard title="Bitbucket" href="/enterprise/bitbucket-integration/" />
+  <LinkCard title="Azure Repos" href="/enterprise/azure-repos-integration/" />
+</CardGrid>

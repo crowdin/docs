@@ -1,0 +1,185 @@
+---
+title: QA-Prüfungseinstellungen
+description: Konfiguriere QA-Prüfungen, um die Qualität der Übersetzungen sicherzustellen.
+slug: project-settings/qa-checks
+sidebar:
+  order: 4
+  label: QS-Kontrollen
+---
+
+import { Steps, Aside, Badge } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import qaChecksInEditor from '!/crowdin/project-management/settings/qa_checks_in_editor.png';
+import qaChecksSettings from '!/crowdin/project-management/settings/qa_checks_settings.png';
+import qaSaveSettings from '!/crowdin/project-management/settings/qa_checks_save_settings.png';
+import qaChecksView from '!/crowdin/project-management/settings/qa_checks_view.png';
+import qaChecksDetails from '!/crowdin/project-management/settings/qa_checks_details.png';
+import qaChecksAddToIgnoreList from '!/crowdin/project-management/settings/qa_checks_add_to_ignore_list.png';
+
+Quality assurance (QA) prüft scan Übersetzungen für Sprache-bestimmten formatting das doesn't match die Quelle String oder won't fit die UI. Typical Probleme sind missed commas, extra spaces, und typos.
+
+Crowdin hebt die gefundenen Probleme im Editor hervor. Prüfe und behebe sie daher, bevor du das Projekt erstellst und die Übersetzungen herunterlädst.
+
+<Image src={qaChecksInEditor} alt="QA-Prüfungen im Editor" />
+
+<Aside type="note">
+  Die Anzeige von QA-Problemen kann je nach aktivem [Editor-Modus und Layout](/online-editor/#editor-modes) variieren.
+</Aside>
+
+Im Bereich **QA-Prüfungen** wählst du aus, welche Arten von QA-Problemen Crowdin während der Übersetzung hervorhebt.
+
+## QA-Prüfungen konfigurieren
+
+QA-Prüfungen sind standardmäßig aktiviert. Führe die folgenden Schritte aus, um die gewünschten QA-Prüfungen in deinem Projekt auszuwählen:
+
+<Steps>
+  1. Öffne dein Projekt und gehe zu **Einstellungen > QA-Prüfungen**.
+  2. Stelle sicher, dass **QA-Prüfungen aktivieren** ausgewählt ist. <Image src={qaChecksSettings} alt="QA-Prüfungseinstellungen" />
+  3. Wähle die QA-Prüfungstypen entsprechend deinen Präferenzen aus.
+  4. für jedes ausgewählt QA prüfen Typ, auswählen whether Übersetzungen mit QA Probleme kann sein gespeichert: **Error** oder **Warning**.
+     * **Warning**: Übersetzer see die QA Problem along mit Vorschläge für fixes und kann still speichern die Übersetzung mit **speichern anyway**.
+     * **Error**: Übersetzer see die QA Problem along mit Vorschläge für fixes und kann speichern die Übersetzung nur nach resolving es.
+  5. Scrolle bis zum Ende der Liste der QA-Prüfungen und klicke auf **Speichern**. <Image src={qaSaveSettings} alt="Einstellungen zum Speichern von QA-Prüfungen" />
+</Steps>
+
+ein wenige prüft come mit ein fixed Einstellung:
+
+* **Doppelte Übersetzung**, **FTL-Syntax** und **MDX-Syntax** sind immer aktiviert und werden immer als **Fehler** angewendet.
+* **ICU-Syntax** ist immer aktiviert. Du entscheidest, ob sie als **Fehler** oder **Warnung** angewendet wird.
+* **Spelling mistakes**, **AI-powered prüfen**, und **Outdated Übersetzung** sind immer applied as ein **Warning**, und du auswählen whether sie're aktiviert.
+
+Aktivierte Prüfungen laufen im Hintergrund und durchsuchen die Übersetzungen nach potenziellen QA-Problemen.
+
+## QA-Prüfungen erneut validieren
+
+Verwende die Schaltfläche **Erneut validieren**, um aktivierte QA-Prüfungen für alle Projektübersetzungen erneut auszuführen und die Problemstatus zu aktualisieren. Verwende sie, nachdem du Einstellungen, KI-Prompts oder Terminologie geändert hast.
+
+<Aside>
+  Die Schaltfläche **Erneut validieren** ist nur verfügbar, wenn mindestens eine unterstützte QA-Prüfungskategorie aktiv ist (**Konsistente Terminologie** oder **KI-gestützte Prüfung**).
+</Aside>
+
+Sobald die erneute Validierung beginnt, wird die Schaltfläche deaktiviert und eine Schaltfläche **Abbrechen** angezeigt. Crowdin zeigt eine Benachrichtigung an, wenn der Vorgang abgeschlossen ist.
+
+## QA-Prüfparameter
+
+**Leere Übersetzung**: Die Übersetzung ist leer, obwohl die Quellzeichenfolge nicht leer ist, oder die Quellzeichenfolge ist leer, obwohl die Übersetzung nicht leer ist.
+
+**Längenprobleme**: Die Übersetzung ist länger als die für die Zeichenfolge festgelegte Zeichenbegrenzung.
+
+<Aside type="tip">
+  Um eine Zeichenbegrenzung für eine bestimmte Zeichenfolge festzulegen, gehe zu **Quellen > Zeichenfolgen**, klicke bei der gewünschten Zeichenfolge auf **Bearbeiten** und lege die maximale Länge fest. Übersetzer sehen dann, dass die Übersetzung dieser Zeichenfolge nicht länger als die Begrenzung sein darf. Das ist hilfreich, wenn der verfügbare Platz für den Text begrenzt ist.
+</Aside>
+
+**Tag-Abweichung**: Die HTML-Tags in der Übersetzung stimmen nicht mit denen in der Quellzeichenfolge überein oder ihre `id`-Attribute oder CDATA-Abschnitte unterscheiden sich.
+
+**Leerzeichenabweichung**: Die Leerzeichen in der Übersetzung stimmen nicht mit denen in der Quellzeichenfolge überein. Dazu gehören führende und nachgestellte Leerzeichen und Zeilenumbrüche, doppelte Leerzeichen, Leerzeichen um Sonderzeichen und geschützte Leerzeichen.
+
+**Variablenabweichung**: Die Platzhalter in der Übersetzung stimmen nicht mit denen in der Quellzeichenfolge überein.
+
+**Zeichensetzungsabweichung**: Die Satzzeichen in der Übersetzung stimmen nicht mit denen in der Quellzeichenfolge überein, einschließlich der Abstände davor und danach.
+
+**Abweichung bei Groß-/Kleinschreibung**: Die Groß-/Kleinschreibung in der Übersetzung stimmt nicht mit der Quellzeichenfolge überein, entweder am Anfang der Zeichenfolge oder bei mehreren aufeinanderfolgenden Großbuchstaben.
+
+**Abweichung bei Sonderzeichen**: Die Sonderzeichen in der Übersetzung stimmen nicht mit denen in der Quellzeichenfolge überein, z. B. Klammern, Anführungszeichen, Markup-Entitäten, neue Absätze und Währungssymbole.
+
+**Probleme vom Typ „Falsche Übersetzung“**: Die Übersetzung weist ein offenes Problem auf, das von einem Projektmitglied mit dem Typ **Aktuelle Übersetzung ist falsch** gemeldet wurde.
+
+**Rechtschreibfehler**: Die Übersetzung enthält Wörter, die in den von Crowdin unterstützten Wörterbüchern nicht vorhanden sind.
+
+<Aside type="caution" title="Einschränkungen">
+  Derzeit nur für bestimmte Sprachen verfügbar.
+  <details>
+    <Include file="spellcheck-supported-languages.mdx" />
+  </details>
+</Aside>
+
+**ICU-Syntax**: Die Übersetzung verletzt die ICU-Nachrichtensyntax, enthält nicht die Pluralform `other` oder verwendet eine andere Struktur als die Quellzeichenfolge.
+
+**Konsistente Terminologie**: Die Übersetzung verwendet für ein Quellwort nicht den Glossarbegriff oder verwendet einen im Glossar als **nicht empfohlen** oder **veraltet** markierten Begriff.
+
+<Aside type="caution" title="Einschränkungen">
+  Derzeit verfügbar für Englisch, Deutsch, Spanisch, Französisch, Italienisch, Niederländisch, Norwegisch, Norwegisch Bokmål, Polnisch, Russisch, Schwedisch, Ukrainisch, Japanisch, Koreanisch, vereinfachtes Chinesisch und Türkisch.
+</Aside>
+
+**Doppelte Übersetzung**: Die Übersetzung dupliziert eine bereits vorhandene Übersetzung.
+
+**FTL-Syntax**: In FTL-Dateien verletzt die Übersetzung die FTL-Syntax oder fügt die von der Quellzeichenfolge verwendeten Platzhalter und Referenzen hinzu bzw. entfernt sie.
+
+**Android-Syntax**: Die Übersetzung übernimmt nicht die Platzhalter-Tags (`\<xliff:g>`), die die Quellzeichenfolge verwendet.
+
+**Zahlenabweichung**: Die Zahlen in der Übersetzung stimmen nicht mit denen in der Quellzeichenfolge überein oder fehlen.
+
+**KI-gestützte Prüfung**: Die Übersetzung erfüllt nicht die in deinem KI-Prompt definierten Bewertungskriterien. Konfiguriere den Prompt, bevor du die Prüfung aktivierst.
+
+<ReadMore>
+  Weitere Informationen zum [Konfigurieren der KI-gestützten Prüfung](/crowdin-ai/#setting-up-ai-qa-check).
+</ReadMore>
+
+**Veraltete Übersetzung**: Die Übersetzung stammt aus der Zeit vor einer Änderung der Quellzeichenfolge und muss möglicherweise überarbeitet werden.
+
+**MDX-Syntax**: In MDX-Dateien beginnt eine Zeile in der Übersetzung mit `import` oder `export`. MDX behandelt eine solche Zeile als Code statt als Text.
+
+## Rechtschreibprüfung
+
+Die Rechtschreibprüfung unterstützt die QA-Prüfung **Rechtschreibfehler** für unterstützte Sprachen. Du kannst die Wörter verwalten, die sie pro Projekt ignoriert.
+
+### So funktioniert die Rechtschreibprüfung
+
+Neben falsch geschriebenen Wörtern erkennt die Rechtschreibprüfung für unterstützte Sprachen auch Probleme bei Grammatik, Zeichensetzung und Großschreibung, wobei der Abdeckungsgrad je nach Sprache variiert.
+
+Erklärungen der Rechtschreibprüfung werden in der Zielsprache angezeigt, in die du übersetzt, und nicht in deiner Benutzeroberflächensprache, sodass sie für Linguisten dieser Sprache natürlich wirken.
+
+### Ignorierliste der Rechtschreibprüfung
+
+Wenn dein Projekt ungewöhnliche Wörter verwendet, die die Rechtschreibprüfung nicht erkennt, füge sie der Ignorierliste hinzu, um sie von der Prüfung auszunehmen.
+
+Dies eignet sich für projektspezifische Terminologie wie Markennamen oder Eigennamen (z. B. `MyApp`). Rechtschreibprüfung und Glossar sind separate Funktionen. Das Hinzufügen eines Begriffs zum Glossar fügt ihn daher nicht der Ignorierliste hinzu. Dort kannst du ihn von der Prüfung ausnehmen.
+
+<Image src={qaChecksAddToIgnoreList} alt="QA-Prüfungen zur Ignorierliste hinzufügen" />
+
+Führe die folgenden Schritte aus, um die zur Ignorierliste der Rechtschreibprüfung hinzugefügten Wörter zu überprüfen:
+
+<Steps>
+  1. Öffne dein Projekt und gehe zu **Einstellungen > QA-Prüfungen**.
+  2. Klicke unten auf der Seite auf **Ignorierliste der Rechtschreibprüfung**.
+</Steps>
+
+Der sich öffnende Dialog listet die ignorierten Wörter auf. Dort kannst du sie filtern oder aus der Liste entfernen.
+
+## Anzeigen für QA-Probleme
+
+Wenn QA-Prüfungen Probleme erkennen, erscheinen Anzeigen in der gesamten Projektoberfläche, damit du die Zeichenfolgen findest, die Aufmerksamkeit erfordern.
+
+### QK-Statusoptionen
+
+Der Status der QA-Prüfung zeigt einen der folgenden Werte:
+
+* <span>DEAKTIVIERT</span>: QA-Prüfungen sind nicht aktiviert.
+* <Badge text="IN PROGRESS" variant="caution" />: Die Prüfung läuft.
+* <Badge text="NO ISSUES" variant="success" />: Die Prüfung hat keine Probleme gefunden.
+* <Badge text="ISSUES FOUND" variant="danger" />: Die Prüfung hat Probleme gefunden.
+
+### Problemdetails anzeigen
+
+Der Status <Badge text="ISSUES FOUND" variant="danger" /> wird im Bereich **Details** auf der rechten Seite des Projekt-Dashboards angezeigt. Klicke darauf, um zwei Aktionsschaltflächen anzuzeigen:
+
+* **Probleme anzeigen**: Erweitert die Sprachzeile im Dashboard und zeigt die Anzahl der Vorschläge mit QA-Problemen an.
+* **Einstellungen**: Führt dich direkt zu **Einstellungen > QA-Prüfungen**.
+
+<Image src={qaChecksView} alt="QA-Prüfungsansicht" />
+
+Klicke in der erweiterten Sprachzeile auf **N Vorschläge mit QA-Problemen**, um den Editor mit aktiviertem Filter für QA-Probleme zu öffnen.
+
+<Image src={qaChecksDetails} alt="QA-Prüfungsdetails" />
+
+Prüfe im Editor die Zeichenfolgen mit QA-Problemen im [Nebeneinander-Modus](/online-editor/#side-by-side-mode). Genehmige vorhandene Übersetzungen, wenn sie korrekt sind, oder nimm Änderungen vor und genehmige sie anschließend.
+
+### Anzeigen pro Sprache
+
+Sprachen mit ungelösten QA-Problemen werden im Projekt-Dashboard mit einem <Badge text="QA" variant="danger" />-Indikator gekennzeichnet, sodass du auf einen Blick siehst, welche Sprachen Probleme enthalten.
+
+### Anzeigen pro Datei
+
+Dateien mit ungelösten QA-Problemen werden auf der Sprachseite mit einem <Badge text="QA" variant="danger" />-Indikator gekennzeichnet. Bewege den Mauszeiger über den Indikator, um die Anzahl der in dieser Datei gefundenen Probleme anzuzeigen.

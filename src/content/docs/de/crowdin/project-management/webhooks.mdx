@@ -1,0 +1,119 @@
+---
+title: Webhooks
+description: Integriere Crowdin mit deinen Diensten, indem du Webhooks konfigurierst
+slug: webhooks
+---
+
+import { Image } from 'astro:assets';
+import { Aside, Steps } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Icon } from 'astro-icon/components';
+import webhooksAdd from '!/crowdin/project-management/webhooks_add.png';
+import webhooksEditDelete from '!/crowdin/project-management/webhooks_edit_delete.png';
+import webhooksCallsHistory from '!/crowdin/project-management/webhooks_calls_history.png';
+
+Webhooks ermöglichen es dir, Informationen über wichtige Ereignisse in deinem Crowdin-Projekt zu empfangen, z. B. abgeschlossene Übersetzungen oder Korrekturlesen. Nachdem du einen Webhook konfiguriert hast, sendet Crowdin über HTTP POST- oder GET-Anfragen mit Daten an die Webhook-URL.
+
+<Aside title="Berechtigungen">
+  Um Webhooks in einem Projekt zu verwalten, benötigst du die Rolle Projekteigentümer, Manager oder Entwickler / Übersetzungsanforderer. Weitere Informationen findest du unter [Personen einladen](/inviting-people/).
+</Aside>
+
+## Anwendungsfälle
+
+Du kannst Webhooks hinzufügen, um Integrationen mit Diensten oder deinem Backend aufzubauen. Zum Beispiel:
+
+* Richte einen Webhook ein, um Benachrichtigungen an das von dir verwendete System zu senden.
+* Übermittle Informationen an Drittanbieterdienste mit den spezifischen Anforderungen der Anfrage (z. B. HTTP-Methode, Inhaltstyp).
+* Erstelle benutzerdefinierte Integrationen mit Crowdin.
+
+## Events
+
+Du kannst Webhooks für verschiedene Ereignisse konfigurieren, die im Projekt auftreten, z. B. wenn eine Datei übersetzt oder Korrektur gelesen wird oder wenn eine Zeichenfolge hinzugefügt oder aktualisiert wird.
+
+<ReadMore>
+  Weitere Informationen zu [Webhook-Ereignissen](/developer/webhooks/#events) findest du im Crowdin Developer Portal.
+</ReadMore>
+
+## Webhooks hinzufügen
+
+Führe die folgenden Schritte aus, um Webhooks in Crowdin zu konfigurieren:
+
+<Steps>
+  1. Öffne dein Projekt und gehe zum Tab **Tools** (für Webhooks auf Kontoebene öffne deine **Kontoeinstellungen**).
+  2. Wähle **Webhooks** und klicke auf **Webhook hinzufügen**.
+</Steps>
+
+<Image src={webhooksAdd} alt="Webhook hinzufügen" class="width-xl" />
+
+Für die Registrierung eines Webhooks musst du die folgenden Informationen angeben:
+
+* Den Namen des Webhooks (z. B. „App-Projekt übersetzt“).
+* Die Ereignisse, die an die URL gesendet werden sollen. Du kannst entweder ein einzelnes Ereignis oder eine bestimmte Gruppe von Ereignissen auswählen.
+* Die URL, an die die Webhook-Callbacks als direkte Anfragen gesendet werden. Weiterleitungen werden nicht unterstützt und führen zu einer fehlgeschlagenen Zustellung. Der Endpunkt muss innerhalb von **30 Sekunden** eine `2XX`-Antwort zurückgeben.
+* Die Anfragemethode, die die gewünschte Aktion für eine bestimmte Ressource angibt (verwende entweder `GET` oder `POST`).
+* Der Inhaltstyp für die POST-Anfragemethode (`multipart/form-data`, `application/json` oder `application/x-www-form-urlencoded`).
+  * Für den Inhaltstyp `application/json` kannst du **Batch-Webhooks** auswählen, um mehrere Ereignisse in einer einzigen Anfrage zusammenzufassen.
+
+Optional kannst du deinem Webhook spezielle Header hinzufügen. Sie können für zusätzliche Sicherheit, als Autorisierungsmethode und für weitere Zwecke verwendet werden. Wenn du Header hinzufügst, kann dein Webhook-Endpunkt sie prüfen, um sicherzustellen, dass die Informationen von Crowdin stammen.
+
+<Aside type="tip">
+  Klicke beim Hinzufügen eines Webhooks auf **Webhook testen**, um zu sehen, wie deine Anwendung auf diesen Aufruf reagiert.
+</Aside>
+
+<Aside type="caution" title="Einschränkungen">
+  Du kannst bis zu 20 Webhook-Endpunkte für Ereignisse auf Projektebene konfigurieren.
+</Aside>
+
+Je nach Vorgehensweise bei der Webhook-Verwaltung musst du möglicherweise dedizierte Crowdin-IP-Adressen zu deiner Firewall hinzufügen, damit Crowdin die vorkonfigurierten Webhook-URLs öffnen kann.
+
+<ReadMore>
+  Weitere Informationen zu [IP-Adressen](/developer/ip-addresses/#webhooks-ai-providers-and-mt-engines).
+</ReadMore>
+
+## Benutzerdefinierte Payloads
+
+Jeder Ereignistyp in Crowdin verfügt über ein bestimmtes Payload-Format mit den relevanten Ereignisinformationen. Du kannst die Webhook-Payload anpassen, um die Elemente so hinzuzufügen und zu organisieren, wie es dein System benötigt.
+
+Um die möglichen Variablen eines Ereignisses anzuzeigen, bewege den Mauszeiger über das *Info*-Symbol <Icon name="mdi:info-outline" class="inline-icon" /> in der oberen rechten Ecke des Bereichs *Payload*.
+
+## Webhooks bearbeiten oder löschen
+
+In einem bestimmten Projekt kannst du konfigurierte Webhooks aufrufen und verwalten, indem du sie direkt aus der angezeigten Liste bearbeitest oder löschst.
+
+<Image src={webhooksEditDelete} alt="Webhooks bearbeiten oder löschen" />
+
+## Zugriffsverlauf
+
+Im Bereich **Aufrufverlauf** kannst du die Liste der Aufrufe aller konfigurierten Webhooks anzeigen. Verwende den Filter, um alle oder nur fehlgeschlagene Webhook-Benachrichtigungen anzuzeigen.
+
+<Image src={webhooksCallsHistory} alt="Zugriffsverlauf" />
+
+## Fehlgeschlagene Webhooks
+
+Crowdin sendet jedes Ereignis genau einmal an deine Webhook-URL, daher wird ein fehlgeschlagenes Ereignis nicht erneut gesendet.
+
+Webhooks, die in den letzten 24 Stunden mindestens 100 Mal mit Antwortcodes aus dem Bereich 4xx oder 5xx fehlgeschlagen sind, werden automatisch deaktiviert.
+
+### Deaktivierte Webhooks
+
+Deaktivierte Webhooks werden im Bereich **Webhooks** mit einem deaktivierten Häkchen angezeigt. Dies weist darauf hin, dass sie aufgrund anhaltender Fehler derzeit inaktiv sind. Um mehr über fehlgeschlagene Webhooks zu erfahren, gehe zum Bereich **Aufrufverlauf > Fehlgeschlagen**. Dort kannst du detaillierte Informationen zu den bei jedem fehlgeschlagenen Webhook aufgetretenen Problemen anzeigen.
+
+### Manuelles Reaktivieren
+
+Nachdem du die Ursache der Webhook-Fehler identifiziert und behoben hast, kannst du die Webhooks manuell reaktivieren, um ihre Funktion wiederherzustellen. Wähle im Bereich **Webhooks** den deaktivierten Webhook zur Reaktivierung aus.
+
+## Webhooks an Slack senden
+
+Mit Crowdin-Webhooks kannst du Benachrichtigungen über vorkonfigurierte Ereignistypen direkt an einen bestimmten Slack-Kanal senden.
+
+Um das Senden von Webhooks an Slack zu konfigurieren, musst du eine einfache Slack-App erstellen.
+
+<ReadMore>
+  Weitere Informationen zum [Senden von Nachrichten an Slack über Incoming Webhooks](https://api.slack.com/messaging/webhooks).
+</ReadMore>
+
+Sobald du deine Slack-App erstellt und konfiguriert hast, erhältst du eine Webhook-URL, die für die Webhook-Konfiguration in Crowdin verwendet werden sollte.
+
+<Aside>
+  Um Webhooks an Slack zu senden, stelle sicher, dass deine benutzerdefinierte Payload das Feld `"text"` enthält und die Option **Batch-Webhooks** deaktiviert ist.
+</Aside>

@@ -1,0 +1,115 @@
+---
+title: Benutzerdefinierter Code
+description: Eigenen Code-Snippet zum Filtern von Zeichenfolgen im Workflow angeben
+slug: enterprise/custom-code
+sidebar:
+  order: 3
+---
+
+import { Image } from 'astro:assets';
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+import customCodeWorkflowEditor from '!/enterprise/organization-management/custom_code_workflow_editor.png';
+
+Benutzerdefinierter Code ist ein Workflow-Schritt, mit dem Sie Code-Snippets definieren können, um Zeichenfolgen in Ihrem Workflow zu filtern. Er hat eine Eingabe und zwei Ausgaben (`true` und `false`), mit denen Sie Zeichenfolgen anhand benutzerdefinierter JavaScript-Bedingungen in verschiedene Pfade aufteilen können.
+
+## Anwendungsfälle
+
+Sie können den Workflow-Schritt „Benutzerdefinierter Code“ in zahlreichen Szenarien verwenden. Hier sind einige Beispiele:
+
+* Um einen Teil der Zeichenfolgen an interne Übersetzer und einen anderen Teil an eine Übersetzungsagentur zu senden.
+* Um einen Teil der Zeichenfolgen an maschinelle Übersetzung und einen anderen Teil an Crowdsourcing zu senden.
+* Um einen Teil der Zeichenfolgen an interne Korrekturleser und einen anderen Teil zum Korrekturlesen durch eine Übersetzungsagentur zu senden.
+
+<CardGrid>
+  <LinkCard title="Workflow Übersicht" href="/enterprise/workflows/" />
+  <LinkCard title="Crowdin Script Editor" href="https://crowdin.github.io/crowdin-script-editor/" target="_blank" />
+</CardGrid>
+
+## Schritt „Benutzerdefinierter Code“ zu Ihrem Workflow hinzufügen
+
+Sie können den Schritt „Benutzerdefinierter Code“ im Workflow-Editor oder im Workflow-Vorlageneditor zum Workflow Ihres Projekts hinzufügen.
+
+<Image src={customCodeWorkflowEditor} alt="„Benutzerdefinierter Code“ im Workflow-Editor" />
+
+## Code-Snippet-Parameter
+
+Nachdem der Schritt „Benutzerdefinierter Code“ hinzugefügt wurde, definieren Sie im Feld *Benutzerdefinierter Code* ein JavaScript-basiertes Code-Snippet, das Zeichenfolgen entweder zur Ausgabe `true` oder `false` weiterleitet.
+
+Das Code-Snippet basiert auf JavaScript und verwendet ein `crowdin`-Objekt, das die unten aufgeführten Eigenschaften enthält. Verwenden Sie die folgende Objektvorlage, um Ihre Codeeingabe korrekt zu strukturieren:
+
+```text
+object crowdin {  object file {    string name,    string fullName,    string title,    string branchName,    string type  },  object string {    int id,    string key,    string context,    ?int maxLength,    string createdAt,    ?string updatedAt,    string|array text,    object fields  },  string contentType,  array labels }
+```
+
+Sehen Sie sich ein Beispiel für ein benutzerdefiniertes Code-Snippet im [Crowdin Script Editor](https://crowdin.github.io/crowdin-script-editor/) an. Verwenden Sie den Editor, um die Struktur zu prüfen, den Code mit Ihren Daten zu bearbeiten und zu überprüfen, ob er wie erwartet funktioniert.
+
+## Anforderung für ein Code-Snippet
+
+Die Anforderung für das Code-Snippet enthält die folgenden Eigenschaften:
+
+| Eigenschaft<div class="w-48" /> | Beschreibung                                                                                                                                                                                         |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `file.name`                     | Name der Quelldatei                                                                                                                                                                                  |
+| `file.fullName`                 | Vollständiger Pfad zur Quelldatei im Projekt (ohne Branch, sofern vorhanden)                                                                                                                         |
+| `file.title`                    | Titel der Quelldatei, wie er Übersetzern angezeigt wird                                                                                                                                              |
+| `file.branchName`               | Name des Branches, in dem die Quelldatei gespeichert ist                                                                                                                                             |
+| `file.type`                     | Typ der Quelldatei                                                                                                                                                                                   |
+| `string.id`                     | ID der Quellzeichenfolge                                                                                                                                                                             |
+| `string.key`                    | Bezeichner (Schlüssel) der Quellzeichenkette                                                                                                                                                         |
+| `string.context`                | Kontext der Quellzeichenfolge                                                                                                                                                                        |
+| `string.maxLength`              | Maximale Länge der Zeichenfolge (falls festgelegt)                                                                                                                                                   |
+| `string.createdAt`              | Zeitstempel, zu dem die Quellzeichenfolge erstellt wurde (ISO-8601-Format)                                                                                                                           |
+| `string.updatedAt`              | Zeitstempel der letzten Aktualisierung der Zeichenfolge (falls verfügbar) (ISO-8601-Format)                                                                                                          |
+| `string.text`                   | Quelltext der Zeichenfolge; bei Pluralinhalten ist dies ein Array mit Werten für die Pluralformen                                                                                                    |
+| `string.fields`                 | Objekt mit Schlüssel-Wert-Paaren, die [benutzerdefinierte Felder](/enterprise/fields/) darstellen, die der Zeichenfolge zugewiesen wurden                                                            |
+| `Labels`                        | Array der der Quellzeichenfolge zugewiesenen Beschriftungen                                                                                                                                          |
+| `contentType`                   | Typ des Inhalts der Quellzeichenfolge. Beeinflusst die Struktur der `text`-Eigenschaft. Unterstützte Werte: `text/plain`, `application/vnd.crowdin.text+plural`, `application/vnd.crowdin.text+icu`. |
+
+### Beispiel für eine Anforderung für ein Code-Snippet
+
+Unten sehen Sie ein Beispiel für eine Anforderung für ein Code-Snippet:
+
+```json
+{
+  "file": {
+    "name": "file.csv",
+    "fullName": "/folder/file.csv",
+    "branchName": "main",
+    "type": "csv",
+    "title": "index.php"
+  },
+  "labels": [
+    "Translate by Vendor"
+  ],
+  "contentType": "text/plain",
+  "string": {
+    "id": 2814,
+    "key": "hello_world",
+    "context": "Header string",
+    "maxLength": 30,
+    "createdAt": "2019-09-20T12:43:57+00:00",
+    "updatedAt": "2019-09-20T13:24:01+00:00",
+    "text": "Hello World!",
+    "fields": {
+      "seo-priority": "high",
+      "is-critical": true,
+      "word-count": 42
+    }
+  }
+}
+```
+
+## Antwort des Code-Snippets
+
+Nach dem Ausführen des Code-Snippets sollte eine Antwort zurückgegeben werden, die angibt, ob die angegebenen Bedingungen erfüllt sind:
+
+* Das Antwortobjekt sollte die boolesche Eigenschaft `success` enthalten, die angibt, ob die angegebenen Bedingungen erfüllt sind. Zum Beispiel:
+  ```json
+  {
+    "success": true
+  }
+  ```
+* Wenn die angegebenen Bedingungen nicht erfüllt sind, wird die Zeichenfolge an die Ausgabe `false` des Schritts „Benutzerdefinierter Code“ weitergeleitet. Zum Beispiel:
+  ```json
+  {   "success": false }
+  ```
