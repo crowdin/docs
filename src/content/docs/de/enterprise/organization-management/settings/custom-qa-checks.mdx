@@ -1,0 +1,232 @@
+---
+title: Benutzerdefinierte QA-Prüfungen
+description: Konfigurieren Sie benutzerdefinierte QA-Prüfungen, um hochwertige Übersetzungen sicherzustellen
+slug: enterprise/custom-qa-checks
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import organizationSettingsMenuItem from '!/enterprise/organization-management/organization_settings_menu_item.png';
+import createCustomQAChecks from '!/enterprise/organization-management/custom_qa_checks_create.png';
+
+Zusätzlich zu den integrierten QA-Prüfungen, die in jedem Projekt verfügbar sind, kannst du auf Organisationsebene zwei weitere Arten von QA-Prüfungen konfigurieren: [Benutzerdefinierte QA-Prüfungen](#custom-qa-checks) und [Externe QA-Prüfungen](#external-qa-checks).
+
+* **Benutzerdefinierte QA-Prüfungen** sind leichtgewichtig und synchron. Sie verwenden eine vereinfachte JavaScript-Syntax und werden in einer Sandbox-Umgebung ohne Zugriff auf Netzwerkanfragen ausgeführt. Diese Prüfungen eignen sich ideal zur Validierung einfacher sprachspezifischer Regeln wie Platzhalterformatierung, Zeichensetzung, Leerzeichen oder regulärer Ausdrücke.
+* **Externe QA-Prüfungen** sind fortgeschrittener und asynchron. Sie werden als [Crowdin-Apps](/developer/crowdin-apps-about/) implementiert und können komplexe Logik ausführen, Netzwerkanfragen stellen und in externe Dienste integriert werden (z. B. KI-gestützte QA, Styleguide-Validierung oder Rendern übersetzter Texte zur Größenmessung). Verwende sie, wenn du mehr Flexibilität benötigst, als die Einschränkungen der benutzerdefinierten QA-Prüfungen zulassen.
+
+Beide Arten von Prüfungen werden unter **Organisationseinstellungen > Benutzerdefinierte QA-Prüfungen** verwaltet, unterscheiden sich aber in ihrer Funktionsweise und ihren geeigneten Einsatzbereichen.
+
+## Benutzerdefinierte QA-Prüfungen
+
+Benutzerdefinierte QA-Prüfungen helfen dabei, sprachspezifische Aspekte wie Zeichensetzung, Zahlen und reguläre Ausdrücke effizient zu verarbeiten und so genauere QA-Ergebnisse und hochwertige Übersetzungen in allen Sprachen zu gewährleisten. Mit benutzerdefinierten QA-Prüfungen kannst du genau die Fehler erkennen, die du finden möchtest. Es hilft Kunden, Fehler in den Texten zu vermeiden, und Übersetzern, Inhalte effizienter zu übersetzen.
+
+### Erstellen und Hinzufügen Benutzerdefinierte QA-Prüfungen
+
+Du kannst benutzerdefinierte QA-Prüfungen in den **Organisationseinstellungen** verwalten. Es gibt zwei Möglichkeiten, neue benutzerdefinierte QA-Prüfungen zu deiner Organisation hinzuzufügen: Erstelle eigene Prüfungen von Grund auf oder füge sie aus dem [Crowdin Store](https://store.crowdin.com/types/qa-check) hinzu.
+
+<Steps>
+  1. Klicke oben rechts auf dein Profilbild und wähle **Organisationseinstellungen**. <Image src={organizationSettingsMenuItem} alt="Open Organization Settings" />
+  2. Wechsle in der linken Seitenleiste zum Bereich **Benutzerdefinierte QA-Prüfungen** und klicke auf **Erstellen**.
+  3. Gib die Details der benutzerdefinierten QA-Prüfung in den erforderlichen Feldern an:
+     * *Name* – gib deiner benutzerdefinierten QA-Prüfung einen eindeutigen Namen, damit Übersetzer verstehen, was korrigiert werden muss.
+     * *Beschreibung* – erkläre, was die benutzerdefinierte QA-Prüfung überprüft oder korrigiert.
+     * *(Optional)* *In allen Projekten aktivieren* – wähle diese Option aus, wenn die benutzerdefinierte QA-Prüfung in allen Projekten deiner Organisation verfügbar sein soll.
+     * *Codeausschnitt* – stelle den JavaScript-basierten [Codeausschnitt](#code-snippet) bereit, der die QA-Prüfung ermöglicht. Es enthält ein `crowdin`-Objekt und mehrere Eigenschaften.
+  4. Klicke auf **Erstellen**. <Image src={createCustomQAChecks} alt="Create Custom QA Check" />
+</Steps>
+
+Alternativ kannst du vorhandene benutzerdefinierte QA-Prüfungen aus dem [Crowdin Store](https://store.crowdin.com/types/qa-check) hinzufügen. Gehe dazu wie folgt vor:
+
+<Steps>
+  1. Gehen Sie zu **Organisationseinstellungen > Benutzerdefinierte QA-Prüfungen**.
+  2. Klicken Sie **Hinzufügen from store**.
+  3. Klicke neben der gewünschten benutzerdefinierten QA-Prüfung auf <Icon name="mdi:plus" class="inline-icon" />.
+  4. Klicke auf **Erstellen**.
+</Steps>
+
+### Codeausschnitt
+
+Benutzerdefinierte QA-Prüfungen verwenden JavaScript-basierte Codeausschnitte. Diese Codeausschnitte sind für Benutzer mit grundlegenden JavaScript-Kenntnissen gedacht, die automatisierte Validierungsregeln für Übersetzungen erstellen möchten.
+
+Jede benutzerdefinierte QA-Prüfung funktioniert, indem sie ein `crowdin`-Objekt auswertet, das den Kontext und Inhalt der aktuell geprüften Übersetzung enthält. Dein Codeausschnitt sollte die Übersetzung analysieren und zurückgeben, ob sie die Prüfung besteht oder korrigiert werden muss.
+
+<Aside type="tip">
+  Verwende den [Crowdin Script Editor](https://crowdin.github.io/crowdin-script-editor/), um deinen Codeausschnitt zu schreiben, zu testen und zu validieren, bevor du ihn zu Crowdin Enterprise hinzufügst.
+</Aside>
+
+#### Parameter
+
+Der Codeausschnitt enthält ein `crowdin`-Objekt und mehrere Eigenschaften. Verwende diese Objektvorlage als Eingabestruktur, um den Codeausschnitt zu erstellen:
+
+```text
+object crowdin {
+ object file {
+   string name,
+   string fullName,
+   string branch,
+   string type
+ }
+ string sourceLanguage,
+ string targetLanguage,
+ object context {
+   string context,
+   ?int maxLength,
+   ?string pluralForm,
+   ?string identifier
+ },
+ string contentType,
+ string source,
+ string translation
+}
+```
+
+#### Anforderungsbeispiel
+
+Im Anfrageobjekt werden die folgenden Schlüssel verwendet:
+
+| Eigenschaft<div class="w-48" /> | Beschreibung                                                                                                                                  |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `file.name`                     | Name der Quelldatei                                                                                                                           |
+| `file.fullName`                 | Vollständiger Pfad zur Quelldatei im Projekt (ohne Branch, sofern vorhanden)                                                                  |
+| `file.branch`                   | Name des Branches, in dem die Quelldatei gespeichert ist                                                                                      |
+| `file.type`                     | Typ der Quelldatei                                                                                                                            |
+| `sourceLanguage`                | [Crowdin-Code](/developer/language-codes/) für die Quellsprache des Projekts                                                                  |
+| `targetLanguage`                | [Crowdin-Code](/developer/language-codes/) für die Zielsprache des Projekts                                                                   |
+| `source`                        | Quelltext                                                                                                                                     |
+| `translation`                   | Übersetzte Zeichenkette                                                                                                                       |
+| `context.context`               | Kontext der Quellzeichenkette                                                                                                                 |
+| `context.maxLength`             | Maximale Länge der übersetzten Zeichenkette                                                                                                   |
+| `context.pluralForm`            | PluralForm gibt an, welche Pluralform derzeit übersetzt wird                                                                                  |
+| `context.identifier`            | Bezeichner (Schlüssel) der Quellzeichenkette                                                                                                  |
+| `contentType`                   | Die Zeichenkette kann einen der drei Typen enthalten: `text/plain`, `application/vnd.crowdin.text+plural`, `application/vnd.crowdin.text+icu` |
+
+Nachfolgend findest du ein Beispiel für eine Anfrage mit einem Codeausschnitt für eine benutzerdefinierte QA-Prüfung:
+
+```json
+{
+   "file": {
+     "name": "strings.json",
+     "fullName": "backend/strings.json",
+     "branch": "master",
+     "type": "json"
+   },
+   "sourceLanguage": "en",
+   "targetLanguage": "de",
+   "context": {
+     "context": "backend.string.example.plain",
+     "maxLength": 10,
+     "pluralForm": "one",
+     "identifier": "6a1821e6499ebae94de4b880fd93b985"
+   },
+   "contentType": "application/vnd.crowdin.text+plural",
+   "source": '{"one":"Password", "other":"Passwords"}',
+   "translation": "das Passwort "
+}
+```
+
+#### Antwort
+
+Nach der Ausführung des Codeausschnitts sollte eine Antwort zurückgegeben werden, die angibt, ob die benutzerdefinierte QA-Prüfung erfolgreich bestanden oder nicht bestanden wurde.
+
+##### Beispiel für eine erfolgreiche QA-Prüfung
+
+```json
+{
+  "success": true
+}
+```
+
+##### Beispiel für eine fehlgeschlagene QA-Prüfung
+
+```json
+{
+  "success": false,
+  "message": "The sentence starts with a space. Please remove 1 space at the beginning of the translation.",
+  "fixes": [
+    {
+      "from_pos": 0,
+      "to_pos": 1,
+      "replacement": ""
+    }
+  ]
+}
+```
+
+Die Eigenschaft `message` erklärt, was der Übersetzer korrigieren soll.
+Das Array `fixes` enthält Anweisungen, um die Übersetzung direkt im Crowdin-Editor automatisch zu korrigieren.
+
+* `from_pos` – die Zeichenposition in der `translation`-Zeichenkette, an der der Ersatz beginnt.
+* `to_pos` – The end character position.
+* `replacement` – der Text, der die Zeichen zwischen `from_pos` und `to_pos` ersetzen soll.
+
+##### Beispiel für Korrekturen
+
+```json
+{
+  "from_pos": 0,
+  "to_pos": 1,
+  "replacement": ""
+}
+```
+
+<Aside type="tip">
+  Füge die Eigenschaft `fixes` nach Möglichkeit immer ein. So können Übersetzer Korrekturen mit einem einzigen Klick anwenden und ihre Effizienz steigern.
+</Aside>
+
+### Einschränkungen
+
+Custom QA check code snippets have Folgende limitations:
+
+* Der Code wird vollständig in einer isolierten Sandbox-Umgebung ausgeführt. Neither browser context nor Node.js context ist verfügbar.
+* Standard-JavaScript-Objekte wie `Date`, `Math` und andere sind nicht verfügbar.
+* Die Ausführungszeit ist auf **100 ms** begrenzt. Wenn dein Code länger ausgeführt wird, wird die QA-Prüfung beendet. Vereinfache deine Logik und teste sie mit dem [Crowdin Script Editor](https://crowdin.github.io/crowdin-script-editor/).
+
+**Bewährte Vorgehensweisen:**
+
+* Keep Ihre code lightweight to avoid execution timeouts.
+* Verwende reguläre Ausdrücke für einen effizienten Mustervergleich.
+* Füge `fixes` hinzu, um den Prüfprozess für Übersetzer zu beschleunigen.
+
+## Externe QA-Prüfungen
+
+Externe QA-Prüfungen sind Crowdin-Apps, die die integrierte QA-Funktionalität erweitern. Diese Prüfungen laufen asynchron und eignen sich ideal für komplexere Anwendungsfälle, die Netzwerkanforderungen, externe Integrationen oder erweiterte Logik erfordern.
+
+**Anwendungsfälle:**
+
+* Validate translations against Ihre style guide using AI.
+* Führe serverseitiges Rendering durch, um Textabmessungen mit benutzerdefinierten Schriftarten zu messen.
+* Integriere Drittanbieterdienste, um sensible Inhalte zu überprüfen.
+
+Externe QA-Prüfungen arbeiten unabhängig von den synchronen Prüfungen von Crowdin und bieten mehr Flexibilität, da sie als separate Dienste ausgeführt werden.
+
+### Externe QA-Prüfungen installieren und konfigurieren
+
+Du kannst externe QA-Prüfungen aus dem [Crowdin Store](https://store.crowdin.com/types/qa-check) hinzufügen oder über das [Crowdin Developer Portal](/developer/crowdin-apps-module-external-qa-check/) eigene Apps entwickeln.
+
+So installierst und konfigurierst du eine externe QA-Prüfung:
+
+<Steps>
+  1. Gehen Sie zu **Organisationseinstellungen > Benutzerdefinierte QA-Prüfungen**.
+  2. Scroll to the **Externe QA-Prüfungen** section.
+  3. Klicken Sie **Hinzufügen from store**.
+  4. Suche im Crowdin Store die externe QA-Prüfungs-App, die du hinzufügen möchtest, und klicke auf **Installieren**.
+  5. Konfiguriere nach der Installation die App-Einstellungen (falls erforderlich). Each app may have different configuration steps abhängig von its functionality.
+  6. Klicken Sie **Submit** to Speichern the configuration.
+</Steps>
+
+<LinkCard title="Censor Guard QA" description="Verwende diese App, um deine Übersetzungen auf zensurrelevante Inhalte zu prüfen." href="https://store.crowdin.com/censor-guard-qa" target="_blank" />
+
+## Benutzerdefinierte und externe QA-Prüfungen in Projekten aktivieren
+
+Nach dem Hinzufügen werden sowohl benutzerdefinierte als auch externe QA-Prüfungen in deinem Projekt unter **Einstellungen > Qualitätssicherung** zusammen mit den integrierten QA-Prüfungen von Crowdin angezeigt. Sie können Aktivieren or Deaktivieren them abhängig von Ihre project requirements.
+
+<Steps>
+  1. Öffne dein Projekt und gehe zu **Einstellungen > Qualitätssicherung**.
+  2. Wählen Sie die needed QA checks (Custom and External).
+</Steps>
+
+<ReadMore>
+  Mehr über die [Einstellungen für die Qualitätssicherung](/enterprise/project-settings/qa-checks/) erfahren.
+</ReadMore>

@@ -1,0 +1,193 @@
+---
+title: CDN-Verteilungen
+description: Übersetzte Inhalte sofort per CDN an deine App liefern
+slug: enterprise/cdn-distributions
+sidebar:
+  order: 6
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import webFlow from '!/crowdin/integrations/cdn_distributions_web.png';
+import mobileFlow from '!/crowdin/integrations/cdn_distributions_mobile_server_desktop.png';
+import addDistribution from '!/enterprise/integrations/cdn_distributions_add_distribution.png';
+import releaseDistribution from '!/enterprise/integrations/cdn_distributions_release_distribution.png';
+import usagePrice from '!/enterprise/integrations/cdn_distributions_usage_price.png';
+import usageStats from '!/enterprise/integrations/cdn_distributions_usage_statistics.png';
+
+Mit CDN-Distributionen kannst du Quellen und Übersetzungen in deinen mobilen, Server-, Desktop- oder Web-Apps mit nur einem Klick sofort aktualisieren, ohne eine neue Version vorbereiten zu müssen.
+
+Distributionen sind plattformunabhängig (z. B. iOS, macOS, Android, Windows oder Linux). Crowdin stellt deine Inhalte über das CDN als reguläre Dateien bereit, die jede App unabhängig von ihrer Plattform abrufen kann. Du kannst auf diese Inhalte über eines der Crowdin-SDKs, den Crowdin-OTA-JavaScript-Client oder direkt über eine URL zugreifen.
+
+## So funktioniert es
+
+Die folgenden Abbildungen zeigen visuell, wie die Bereitstellung von Quell- und Übersetzungsinhalten für verschiedene Arten von Anwendungen funktioniert.
+
+<Tabs>
+  <TabItem label="Mobile-, Server- und Desktop-Apps">
+    <Image src={mobileFlow} alt="Ablauf von CDN-Distributionen für mobile Apps" />
+  </TabItem>
+  <TabItem label="Web-Apps">
+    <Image src={webFlow} alt="Ablauf von CDN-Distributionen für Web-Apps" />
+  </TabItem>
+</Tabs>
+
+## Distribution einrichten
+
+Eine Distribution ist ein CDN-Speicher, der die übersetzten Inhalte deines Projekts spiegelt und für die Integration mit deinen Apps erforderlich ist. Distributionen verwenden [Bundles](/enterprise/bundles/), um deine Dateien zu paketieren und bereitzustellen.
+
+Gehe wie folgt vor, um eine Distribution zu konfigurieren:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dateibasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und Wähle **Übersetzungen** auf der left Seitenleiste.
+      2. Klappe den Bereich **CDN-Distributionen** auf.
+      3. Klicke auf **Hinzufügen**.
+      4. Gib im Dialog **Verteilung hinzufügen** den gewünschten Namen für deine Verteilung ein.
+      5. Wähle die Pakete aus, die du in diese Verteilung aufnehmen möchtest, oder klicke auf **Paket hinzufügen**, um eines von Grund auf zu erstellen. Mit dem Feld **Bundles durchsuchen** kannst du bestimmte Bundles schnell nach Namen finden.
+      6. Klicke auf **Erstellen**.
+      7. Kopiere <Icon name="material-symbols:file-copy" class="inline-icon" /> den **Distribution-Hash** und das **Distribution-Manifest**. Das Manifest ist eine JSON-Datei mit wichtigen Details zur Verteilung (z. B. Dateien, Sprachen und Pfade), die in deiner Integration verwendet werden kann.
+    </Steps>
+  </TabItem>
+  <TabItem label="Zeichenfolgenbasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und Wähle **Lade herunter** auf der left Seitenleiste.
+      2. Klappe den Bereich **CDN-Distributionen** auf.
+      3. Klicke auf **Hinzufügen**.
+      4. Gib im Dialog **Verteilung hinzufügen** den gewünschten Namen für deine Verteilung ein.
+      5. Wähle die Pakete aus, die du in diese Verteilung aufnehmen möchtest, oder klicke auf **Paket hinzufügen**, um eines von Grund auf zu erstellen. Mit dem Feld **Bundles durchsuchen** kannst du bestimmte Bundles schnell nach Namen finden.
+      6. Klicke auf **Erstellen**.
+      7. Kopiere <Icon name="material-symbols:file-copy" class="inline-icon" /> den **Distribution-Hash** und das **Distribution-Manifest**. Das Manifest ist eine JSON-Datei mit wichtigen Details zur Verteilung (z. B. Dateien, Sprachen und Pfade), die in deiner Integration verwendet werden kann.
+    </Steps>
+  </TabItem>
+</Tabs>
+
+<Image src={addDistribution} alt="CDN-Distribution mit Bundles" />
+
+<Aside>
+  Das CDN cached alle Übersetzungen in einer Version bis zu 1 Stunde lang. Selbst nachdem neue Übersetzungen in Crowdin Enterprise veröffentlicht wurden, kann das CDN sie daher verzögert zurückgeben.
+</Aside>
+
+## Für mobile Anwendungen
+
+Um übersetzte Inhalte über CDN-Distributionen an deine mobilen Apps zu senden, verwende die Crowdin-SDKs.
+
+<CardGrid>
+  <LinkCard title="iOS SDK" href="https://crowdin.github.io/mobile-sdk-ios/" target="_blank" />
+  <LinkCard title="Android SDK" href="https://crowdin.github.io/mobile-sdk-android/" target="_blank" />
+  <LinkCard title="Flutter-SDK" href="https://store.crowdin.com/flutter" target="_blank" />
+  <LinkCard title="React-Native-SDK" href="https://store.crowdin.com/react-native-sdk" target="_blank" />
+</CardGrid>
+
+## Für Webanwendungen
+
+Um übersetzte Inhalte über CDN-Distributionen an deine Web-Apps zu senden, verwende den Crowdin-OTA-JavaScript-Client.
+
+<ReadMore>
+  Mehr über den [Crowdin-OTA-JavaScript-Client](https://crowdin.github.io/ota-client-js/) erfahren.
+</ReadMore>
+
+Um die Bereitstellung übersetzter Inhalte für deine Web-Apps manuell zu verwalten, kannst du entweder:
+
+* Die **Distribution-Manifest-URL** verwenden, die eine JSON-Datei mit den Distributionsdetails (Dateien, Sprachen usw.) anzeigt, oder
+* Die URL für jede Datei anhand des **Distribution-Hashs** bilden, wie unten gezeigt.
+
+Forme die URL zur Übersetzungsdatei wie folgt:
+
+```shell
+https://distributions.crowdin.net/{distribution_hash}/content/{path_to_file}
+```
+
+`{path_to_file}` entspricht dem Pfad, der in deinem regulären Übersetzungs-Build verwendet wird. Wenn deine Dateien keine Exportmuster mit Platzhaltern für Sprachcodes enthalten (z. B. `%locale%`, `%two_letters_code%` usw.), fügt Crowdin Enterprise automatisch den Crowdin-Sprachcode am Anfang des Pfads hinzu.
+
+Um alle verfügbaren Dateien und Sprachen für deine Distribution anzuzeigen, kopiere die Distribution-Manifest-URL (die in der Crowdin-Enterprise-Oberfläche bereitgestellt wird) und öffne sie in deinem Browser.
+
+Du siehst dann eine JSON-Struktur wie folgt:
+
+```json
+{
+  "files": ["/crowdin_sample_android.xml"],
+  "languages": ["fr","de","uk"],
+  "language_mapping": [],
+  "custom_languages": [],
+  "timestamp": 1234567890,
+  "content": {
+    "fr": ["/content/fr/crowdin_sample_android.xml"],
+    "de": ["/content/de/crowdin_sample_android.xml"],
+    "uk": ["/content/uk/crowdin_sample_android.xml"]
+  },
+  "mapping": ["/mapping/en/crowdin_sample_android.xml"]
+}
+```
+
+Dieses JSON enthält die genauen Pfade, die mit der Distribution verwendet werden sollen.
+
+## Preise
+
+| **Preiskomponente** | **Kostenloses Kontingent** | **Preis**    |
+| ------------------- | -------------------------- | ------------ |
+| Anzahl der Anfragen | 1 Mio./Monat               | $3,00/1 Mio. |
+| Datenübertragung    | 10 GB/Monat                | $2,00/10 GB  |
+
+Als Anfrage gilt jede einzelne Abfrage an ein CDN (z. B. eine Anfrage an ein Distributionsmanifest, eine Anfrage an eine Distributionsdatei usw.).
+
+Datenübertragung bezeichnet die über das Netzwerk übertragene Datenmenge (einschließlich Header). Das System stellt deine Sprachpakete über ein CDN bereit, die alle vorhandenen Übersetzungen enthalten.
+
+Wenn die Distribution Inhalte auf mehrere Dateien verteilt enthält, wird die Anfrage zum Herunterladen jeder Datei als separate Anfrage gezählt. Zusätzlich wird auch die Anzahl der Dateien als Datenübertragung gezählt.
+
+Wenn eine Distribution beispielsweise 20 Dateien mit jeweils 5 MB enthält, wird der Download als 20 Anfragen und 100 MB Datenübertragung gezählt.
+
+Um die Anzahl der CDN-Anfragen zu reduzieren, kannst du alle erforderlichen Inhalte in eine Datei packen (mithilfe von Bundles). Beim Download zählt das System dann eine statt 20 separater Anfragen. Zusätzlich kann die Caching-Konfiguration auf der Seite der App vorgenommen werden.
+
+In unseren Statistiken verwenden wir von AWS bereitgestellte Daten. Wenn in einem Monat 1.000.001 Anfragen (1 Million und 1) gestellt werden, beträgt der Preis für die Anfragen 6 $. Wenn in einem Monat 10 GB und 1 Byte übertragen werden, beträgt der Preis für die Datenübertragung 4 $. Die Gesamtsumme beträgt 10 $ pro Monat für Anfragen und Datenübertragung.
+
+## CDN-Nutzung verwalten
+
+Du kannst den Preis deiner CDN-Nutzung verwalten und Benachrichtigungen für tägliche Nutzungslimits unter **Organisationseinstellungen > Abrechnung > CDN-Distributionen** einrichten.
+
+### Preis der CDN-Nutzung
+
+Im Nutzungsbereich **CDN-Distributionen** kannst du den insgesamt während des aktuellen Abrechnungszeitraums (eines Monats) ausgegebenen Betrag sehen. Dies umfasst eine detaillierte Aufschlüsselung der Anfragen und der Datenübertragung mit den jeweiligen Preisen. Die Zahlung für die CDN-Nutzung wird im nächsten Abrechnungszeitraum in dein Crowdin-Abonnement aufgenommen. Crowdin Credits decken die CDN-Nutzung nicht ab.
+
+<Image src={usagePrice} alt="Preis der CDN-Nutzung" />
+
+### Tägliche Warnschwelle für das Guthaben festlegen
+
+Du kannst ein tägliches CDN-Nutzungslimit festlegen. Sobald diese Schwelle überschritten wird, erhältst du eine Benachrichtigung. Standardmäßig ist das Limit auf 30 $ pro Tag festgelegt. Diese Funktion hilft dir, über deine Nutzung informiert zu bleiben und unerwartete Mehrkosten zu vermeiden. Du kannst das Limit jederzeit aktualisieren. Wenn dein kostenloses Kontingent (1 Mio. Anfragen und 10 GB Datenübertragung) überschritten wird, wird zusätzlich eine einmalige Benachrichtigung gesendet.
+
+Gehe wie folgt vor, um Nutzungsbenachrichtigungen einzurichten:
+
+<Steps>
+  1. Öffne deine **Organisationseinstellungen** und gehe zum Tab **Abrechnung**.
+  2. Klicke auf **CDN-Distributionen**.
+  3. Gib den gewünschten Schwellenwert im Feld **Warnschwelle für das tägliche Guthaben, $** ein.
+  4. Klicken Sie auf **Speichern**, um Ihre Einstellungen zu bestätigen.
+</Steps>
+
+### Nutzungsstatistiken
+
+Der Bereich **Nutzungsstatistiken** bietet eine visuelle Analyse deiner CDN-Nutzung über ein interaktives Diagramm mit detaillierten Statistiken für den Monat. Du kannst Daten für alle Distributionen anzeigen oder dich auf bestimmte Distributionen konzentrieren.
+
+Das Diagramm zeigt gleichzeitig drei Linien: Anzahl der Anfragen, Übertragungskosten und übertragene Daten. Bewege den Mauszeiger über die Datenpunkte, um die Tagessummen für jede Kategorie anzuzeigen.
+
+Du kannst dich auch auf eine bestimmte Kategorie konzentrieren, indem du den Mauszeiger über ihren Titel unter dem Diagramm bewegst. Um eine bestimmte Kategorie im Diagramm auszublenden, klicke auf ihren Titel.
+
+<Image src={usageStats} alt="Nutzungsstatistiken" />
+
+### Projektstatistiken
+
+Der Bereich **Projektstatistiken** unterhalb des Diagramms bietet eine detaillierte Aufschlüsselung deiner CDN-Nutzung, gruppiert nach Projekt. Diese Tabelle hilft dir dabei, zu verfolgen, welche Projekte im ausgewählten Zeitraum die meisten Ressourcen verbrauchen.
+
+Jede Zeile der Tabelle stellt ein einzelnes Projekt dar und enthält die folgenden Informationen:
+
+* **Projekt**: Der Name des Projekts.
+* **Anfragen**: Die Gesamtzahl der vom Projekt gestellten Anfragen.
+* **Übertragene Daten (GB)**: Die Gesamtmenge der vom Projekt übertragenen Daten.
+* **Preis**: Die ungefähren Kosten für die Nutzung des Projekts.
+
+<Aside>
+  Die im Nutzungsdiagramm und in der Projektstatistiktabelle angezeigten Kosten sind Schätzungen. Der endgültig abgerechnete Betrag kann geringfügig abweichen.
+</Aside>

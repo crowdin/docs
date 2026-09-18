@@ -1,0 +1,121 @@
+---
+title: Jira-Integration
+description: Behalte in Crowdin den Überblick über gemeldete Probleme mit Quellstrings und Übersetzungen
+slug: enterprise/jira-integration
+sidebar:
+  order: 7
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside } from '@astrojs/starlight/components';
+import linkAppStep1 from '!/enterprise/integrations/jira_link_app_step1.png';
+import linkAppStep2 from '!/enterprise/integrations/jira_link_app_step2.png';
+import providingAccess from '!/enterprise/integrations/jira_providing_access.png';
+import createNewLink from '!/crowdin/integrations/jira_create_new_link.png';
+import applicationUrl from '!/enterprise/integrations/jira_application_url.png';
+import setUp from '!/enterprise/integrations/jira_set_up.png';
+import integrationSettings from '!/enterprise/integrations/jira_integration_settings.png';
+import subtask from '!/crowdin/integrations/jira_subtask.png';
+import syncIssues from '!/enterprise/integrations/jira_sync_issues.png';
+import warning from '!/enterprise/integrations/jira_warning.png';
+import allowAccess from '!/enterprise/integrations/jira_allow_access.png';
+
+Die Integration mit Atlassian Jira ermöglicht es dir, den Überblick über Quellstring- und Übersetzungsprobleme zu behalten, die von Nutzern gemeldet werden, die an der Projektübersetzung in Crowdin arbeiten.
+
+<Aside>
+  Du musst die [Jira-Software-Integration](https://store.crowdin.com/jira) in deiner Crowdin-Enterprise-Organisation installieren, bevor du sie einrichten und verwenden kannst.
+</Aside>
+
+Die aktuelle Integration unterstützt für das Jira-Dashboard die folgenden in Crowdin Enterprise gemeldeten Problemtypen:
+
+* Allgemeine Probleme
+* Probleme aufgrund fehlenden Kontexts
+* Übersetzungsprobleme
+* Probleme mit Quellstrings
+
+Für jeden synchronisierten Problemtyp wird in Jira eine übergeordnete Aufgabe mit seinem Namen erstellt. Jedes in Crowdin Enterprise gemeldete Problem erstellt in Jira eine Teilaufgabe in der entsprechenden übergeordneten Aufgabe.
+
+<Aside type="caution">
+  Die Integration deaktiviert E-Mail-Benachrichtigungen für Projektprobleme in Crowdin Enterprise, die mit Jira synchronisiert werden.
+</Aside>
+
+Sobald alle gemeldeten Probleme gelöst und die entsprechenden Unteraufgaben in Jira geschlossen wurden, kannst du auch die übergeordnete Jira-Aufgabe schließen, die einen der Problemtypen von Crowdin Enterprise darstellt.
+
+Wenn Übersetzer neue Probleme im Crowdin-Enterprise-Projekt melden, erstellt die Jira-Integration für jedes Problem im Crowdin-Enterprise-Projekt eine neue übergeordnete Jira-Aufgabe mit den entsprechenden Unteraufgaben.
+
+<Image src={subtask} alt="In Jira angezeigtes Crowdin-Enterprise-Problem" />
+
+<Aside>
+  Geteilte Probleme müssen nach ihrer Lösung in Jira manuell in deinem Crowdin-Enterprise-Projekt gelöst werden. Mehr über [geteilte Probleme](/enterprise/online-editor/#exchanging-comments-with-external-organizations) erfahren.
+</Aside>
+
+## Jira mit Crowdin Enterprise verbinden
+
+Gehe wie folgt vor, um Jira mit deinem Projekt in Crowdin Enterprise zu verbinden:
+
+<Steps>
+1. Wähle **application/json** als **Inhaltstyp** aus.
+
+2. Klicke in der Integrationsliste auf **Jira Software**.
+
+3. Gib die Basis-URL deines Jira-Projekts ein und klicke auf **Integration einrichten**. <Image src={setUp} alt="Basis-URL" />
+   Du erhältst anschließend Zugriff auf das Dialogfenster **Zugriff auf dein Jira-Projekt gewähren**.
+
+4. Richte in Jira eine **Anwendungsverknüpfung** ein:
+   <Aside>Nur Projektadministratoren können Anwendungsverknüpfungen einrichten.</Aside>
+   1. Melde dich bei Jira als Benutzer mit **Jira-Administrator**-Berechtigungen an.
+   2. Gehe zu **Jira-Einstellungen > Produkte > Anwendungsverknüpfungen**.
+   3. Klicke auf **Verknüpfung erstellen**.
+      <Image src={createNewLink} alt="Jira-Administration" />
+   4. Wähle **Direkter Anwendungslink** aus, gib deine Crowdin-Enterprise-URL ein und klicke auf **Weiter**.
+      <Image src={applicationUrl} alt="Anwendungs-URL" class="width-lg" />
+      Aufgrund der Funktionsweise von Jira erhält Jira manchmal keine Antwort von der eingegebenen URL. Wenn die folgende Meldung angezeigt wird, überprüfe, ob die angegebene URL korrekt ist, und klicke auf **Fortfahren**.
+      <Image src={warning} alt="Anwendungsverknüpfungen" class="width-lg" />
+   5. Fülle in den Dialogfenstern alle erforderlichen Felder aus und klicke auf **Fortfahren**, um die Verknüpfung fertig zu konfigurieren:
+      * Anwendungsname: Crowdin Enterprise Integration
+      * Anwendungstyp: Generische Anwendung
+      * Wähle **Eingehende Verknüpfung erstellen** und klicke auf **Fortfahren** <Image src={linkAppStep1} alt="Verknüpfung erstellen" class="width-lg" />
+      * Consumer Key: Crowdin Enterprise
+      * Consumer Name: Crowdin Enterprise
+      * Öffentlicher Schlüssel: Kopiere ihn aus dem Dialog **Zugriff auf dein Jira-Projekt gewähren** in Crowdin Enterprise <Image src={linkAppStep2} alt="Link applications" class="width-lg" />
+        Klicke auf **Weiter**, um die Einrichtung des Anwendungslinks abzuschließen.
+
+5. Gehe zurück zu Crowdin Enterprise und klicke im Dialog **Zugriff auf dein Jira-Projekt gewähren** auf **Weiter**. <Image src={providingAccess} alt="Providing Access to Your Jira Project" />
+
+6. Erlaube Lese- und Schreibzugriff auf Projektdaten in Jira. Crowdin Enterprise verwendet diesen Zugriff, damit die Integration ordnungsgemäß funktioniert. <Image src={allowAccess} alt="Zugriff erlauben" class="width-lg" />
+
+7. Wähle den Jira-Projektschlüssel aus, wähle die Typen aus und konfiguriere die Einstellungen der Crowdin-Enterprise-Probleme, die mit deinem Jira-Projekt synchronisiert werden sollen.
+   Verfügbare Jira-Problem-Einstellungen:
+   * Typ
+   * Unteraufgabentyp
+     <Aside>Wenn du keinen Unteraufgabentyp auswählst, wird automatisch die erste verfügbare Option angewendet.</Aside>
+   * Priorität
+   * Bearbeiter
+   * Labels (optional)
+   * Status &ndash; wird verwendet, um den Jira-Statuswert auszuwählen, der das Schließen eines zugehörigen String-Problems im Crowdin-Enterprise-Projekt auslöst.
+     <Aside>Die auswählbaren Statuswerte stammen ausschließlich aus der Statuskategorie <i>Fertig</i> in Jira (einschließlich Fertig, Geschlossen usw.).</Aside>
+
+8. Klicke auf **Speichern**. <Image src={integrationSettings} alt="Jira Integration settings" class="width-lg crowdin-modal" />
+</Steps>
+
+## Probleme synchronisieren
+
+Nachdem du die Integration eingerichtet hast, kannst du bereits vorhandene Probleme in Crowdin Enterprise synchronisieren (falls vorhanden). Eine kurze Meldung zeigt dir, wie viele Probleme noch nicht synchronisiert sind. Klicke zum Synchronisieren auf **Probleme synchronisieren**.
+
+<Image src={syncIssues} alt="Probleme synchronisieren" />
+
+## Jira-Integrationseinstellungen verwalten
+
+Um die Integrationseinstellungen zu ändern, klicke auf **Einstellungen** und nimm die erforderlichen Änderungen vor. Die aktualisierten Einstellungen gelten nur für neu synchronisierte Probleme. Alle zuvor synchronisierten Probleme bleiben unverändert.
+
+<Aside>
+  Wenn du den Jira-Projektschlüssel änderst, bleiben bereits synchronisierte Probleme als Unteraufgaben in Jira bestehen, werden aber nicht automatisch in Crowdin Enterprise gelöst.
+</Aside>
+
+## Integration löschen
+
+Um die Integration zu löschen, klicke auf **Integration löschen**.
+
+<Aside>
+  Alle synchronisierten Probleme bleiben als Unteraufgaben in Jira bestehen, werden aber nicht automatisch in Crowdin Enterprise gelöst.
+</Aside>

@@ -1,0 +1,154 @@
+---
+title: CSV-/XLSX-Dateikonfiguration
+description: Konfiguriere CSV- oder XLSX-Dateien, bevor du deren Inhalte importierst
+slug: csv-xlsx-configuration
+---
+
+import { Steps, Aside, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import csvFileConfigure from '!/crowdin/project-management/sources/csv_file_configure.png';
+import csvFileConfigureSb from '!/crowdin/project-management/sources/csv_file_configure_sb.png';
+import xlsxInitialOptions from '!/crowdin/project-management/sources/xlsx_initial_options.png';
+import csvFileConfiguration from '!/crowdin/project-management/sources/csv_file_configuration.png';
+
+Nachdem CSV- oder XLSX-Dateien in das Projekt hochgeladen wurden, müssen sie konfiguriert werden, bevor das System ihre Inhalte korrekt parsen und importieren kann.
+
+## Dateikonfiguration
+
+Gehe wie folgt vor, um die Konfiguration zu starten:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dateibasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zu **Quellen > Dateien**.
+      2. Klicke neben der Datei auf **Konfigurieren**, um den Konfigurationsdialog zu öffnen.
+    </Steps>
+    <Image src={csvFileConfigure} alt="Datei konfigurieren" />
+    <Aside type="tip">
+      Du kannst mehrere Dateien auf verschiedene Arten gleichzeitig konfigurieren:
+      * **Bestimmte Dateien konfigurieren:** Wähle die gewünschten Dateien aus, klicke mit der rechten Maustaste und wähle **Dateien konfigurieren**.
+      * **Alle Dateien eines Typs konfigurieren:** Klicke auf **Alle konfigurieren**, um alle CSV- oder alle XLSX-Dateien gleichzeitig einzurichten.
+    </Aside>
+  </TabItem>
+  <TabItem label="Zeichenfolgenbasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zum Tab **Upload**.
+      2. Ziehe deine Dateien per Drag-and-drop hinein oder klicke auf **Dateien auswählen**.
+      3. Klicke neben der Datei, die du einrichten möchtest, auf **Konfigurieren**.
+    </Steps>
+    <Image src={csvFileConfigureSb} alt="Datei konfigurieren (string-basiert)" />
+  </TabItem>
+</Tabs>
+
+Die in diesem Artikel beschriebenen Konfigurationen gelten auch für das TSV-Dateiformat. Der Hauptunterschied zwischen CSV- und TSV-Dateien besteht darin, dass sie unterschiedliche Trennzeichen zwischen den Spalten verwenden (Kommas bei CSV und Tabulatoren bei TSV).
+
+### Ersteinrichtung für XLSX-Dateien
+
+Beim Konfigurieren einer XLSX-Datei wird zunächst ein Dialog mit zwei Hauptoptionen angezeigt, die festlegen, wie die Datei verarbeitet wird:
+
+* **Alle Zellen importieren** – Importiert den Inhalt jeder Zelle als separaten Quellstring. Wenn du diese Option auswählst, kannst du außerdem **Inhaltssegmentierung** aktivieren, um Text automatisch in kleinere Übersetzungseinheiten wie Sätze oder kurze Absätze aufzuteilen. Dies ist hilfreich beim Übersetzen von Inhaltseinheiten mit mehreren Sätzen, da kleinere Textabschnitte leichter zu übersetzen sind. Für die automatische Inhaltssegmentierung werden Segmentation Rules eXchange (SRX) verwendet.
+* **Spalten für den Import konfigurieren** – Diese Option öffnet den detaillierten Konfigurationsdialog, in dem du Spalten für Quellen, Übersetzungen, Kontext und mehr manuell zuordnen kannst.
+
+<Image src={xlsxInitialOptions} alt="Erste Konfigurationsoptionen für XLSX-Dateien" />
+
+Der detaillierte Konfigurationsdialog wird bei CSV-Dateien sofort angezeigt oder bei XLSX-Dateien, nachdem du **Spalten für den Import konfigurieren** ausgewählt hast.
+
+### Spaltenkonfiguration
+
+Der Hauptbereich des Dialogs dient dazu, die Spalten deiner Datei dem entsprechenden Datentyp in Crowdin zuzuordnen. Die Oberfläche enthält direkt über der Spaltenzuordnung die folgenden Steuerelemente:
+
+* **Erkennen** – Führt die [automatische Erkennung des Spaltenschemas](#automatic-column-detection) anhand der Überschriften in der ersten Zeile erneut aus.
+* **Zurücksetzen** – Löscht die aktuelle Spaltenkonfiguration und setzt alle Spalten auf **Nicht ausgewählt** zurück.
+* <Icon name="mdi:plus" class="inline-icon" /> und <Icon name="mdi:minus" class="inline-icon" /> – Verwende diese Schaltflächen, um eine neue Sprachspalte hinzuzufügen oder eine ausgewählte zu entfernen. Dies ist hilfreich, wenn in deiner mehrsprachigen Quelldatei Spalten für einige Zielsprachen deines Projekts fehlen. Diese Schaltflächen sind nur aktiv, wenn du im Bereich **Importoptionen** die Option **Mehrsprachige Tabelle** auswählst.
+
+Du kannst den Zweck jeder Spalte festlegen, indem du ihr über das Dropdown-Menü darüber einen Typ zuweist. Die verfügbaren Spaltentypen sind:
+
+* *Schlüssel* – Die Spalte enthält String-Bezeichner. Typischerweise ein alphanumerischer Wert.
+* *Quellstring* – Die Spalte enthält Quellstrings, die übersetzt werden sollen.
+* *Quellstring/Übersetzung* – Die Spalte enthält Quellstrings; beim Export wird dieselbe Spalte mit Übersetzungen gefüllt. Beim Hochladen vorhandener Übersetzungen werden die Werte aus dieser Spalte als Übersetzungen verwendet.
+* *Übersetzung* – Spalte für die beim Export hinzugefügten fertigen Übersetzungen. Beim Import und beim Hochladen vorhandener Übersetzungen prüft das System diese Spalte auf vorhandene Übersetzungen und lädt sie in das Projekt hoch.
+* *Kontext* – Die Spalte enthält Kommentare oder Kontextinformationen für die Quellstrings.
+* *Labels* – Die Spalte enthält Labels für die Quellstrings. Du kannst jedem String mehrere Labels hinzufügen, indem du sie durch Kommas trennst.
+* \*Max. *Länge* – Die Spalte enthält maximale Längenwerte für die Übersetzungen der Strings.
+* *Nicht ausgewählt* – Die Spalte wird beim Import übersprungen.
+
+<Image src={csvFileConfiguration} alt="Detaillierter Konfigurationsdialog für eine CSV-Datei" />
+
+#### Automatische Spaltenerkennung
+
+Wenn du den Konfigurationsdialog öffnest, erkennt das System automatisch das Dateischema anhand der Spaltennamen in der ersten Zeile. die detection ist case-insensitive. Spalten, die nicht automatisch erkannt werden, bleiben für die manuelle Konfiguration auf **Nicht ausgewählt**.
+
+Die automatische Spaltenerkennung ist besonders hilfreich, wenn du mehrere mehrsprachige Tabellen mit vielen Sprachen und zusätzlichen Spalten hochlädst (z. B. Kontext, Labels, Max. Länge).
+
+Standardmäßig behandelt das System Tabellen zunächst als einsprachig. Um Spalten mit Übersetzungen für mehrere Sprachen korrekt automatisch zu erkennen, wähle im Bereich [**Importoptionen**](#import-options) die Option **Mehrsprachige Tabelle** und klicke anschließend auf **Erkennen**.
+
+Um die automatische Spaltenerkennung optimal zu nutzen, benenne die Spalten in deinen CSV- oder XLSX-Dateien anhand der Werte aus der folgenden Tabelle:
+
+| Spaltentyp                          | Erwarteter Wert                                                                                                                                                                                                          |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Schlüssel                           | `identifier`, `key`                                                                                                                                                                                                      |
+| Quelltext                           | `source phrase`, `source_phrase`, `source string`, `source_string`                                                                                                                                                       |
+| Quellstring/Übersetzung             | `Quelle oder Übersetzung`, `source_or_translation`, `source/translation`                                                                                                                                                 |
+| Übersetzung                         | `translation`                                                                                                                                                                                                            |
+| Kontext                             | `Kontext`                                                                                                                                                                                                                |
+| Labels                              | `Labels`                                                                                                                                                                                                                 |
+| Max. Länge                          | `max. Länge`, `max_length`                                                                                                                                                                                               |
+| Sprache (für mehrsprachige Dateien) | Sprachname (z. B. Ukrainisch), Crowdin-Sprachcode (z. B. uk-UA), Gebietsschema (z. B. uk-UA), Gebietsschema mit Unterstrich (z. B. uk_UA), Sprachcode nach ISO 639-1 (z. B. uk), Sprachcode nach ISO 639-2/T (z. B. ukr) |
+
+<Aside type="tip">
+  Auf der Seite [Crowdin-Sprachcodes](/developer/language-codes/) findest du alle unterstützten Sprachen und ihre verschiedenen Codes (z. B. Gebietsschema, Zwei-Buchstaben- und Drei-Buchstaben-Codes).
+</Aside>
+
+### Importoptionen
+
+Über die rechte Seitenleiste kannst du festlegen, wie die Dateistruktur behandelt wird.
+
+* **Erste Zeile (Kopfzeile) nicht importieren** – Aktiviere diese Option, wenn die erste Zeile deiner Datei Spaltenüberschriften enthält, die nicht zur Übersetzung importiert werden sollen.
+* **Mehrsprachige Tabelle** – Wähle diese Option, wenn deine Datei Quelltexte in einer Spalte und Übersetzungen in verschiedenen Spalten enthält. Dadurch kann das System Sprachen den entsprechenden Spalten korrekt zuordnen und den Bereich **Übersetzungen** freischalten.
+* **Ausgeblendete Tabellenblätter importieren** (nur XLSX) – Importiert Inhalte aus ausgeblendeten Tabellenblättern deiner XLSX-Datei.
+* **Ausgeblendete Zeilen importieren** (nur XLSX) – Importiert Inhalte aus ausgeblendeten Zeilen deiner XLSX-Datei.
+
+### Übersetzungen
+
+Diese Optionsgruppe in der rechten Seitenleiste ermöglicht es dir ebenfalls, die Verarbeitung vorhandener Übersetzungen aus deiner Datei genauer festzulegen. Diese Optionen werden verfügbar, wenn **Mehrsprachige Tabelle** ausgewählt ist.
+
+* **Übersetzungen importieren** – Standardmäßig importiert Crowdin alle in der Datei vorhandenen Übersetzungen. Deaktiviere dieses Kontrollkästchen, wenn du nur Quellstrings importieren möchtest.
+* **Übersetzung darf mit der Quelle übereinstimmen** – Aktiviere dies, wenn eine Übersetzung absichtlich mit dem Quelltext identisch ist (z. B. bei Produktnamen, Marken oder Codebegriffen).
+* **Hinzugefügte Übersetzungen freigeben** – Gibt die hochgeladenen Übersetzungen automatisch frei. Das ist hilfreich, wenn du von der Genauigkeit der Übersetzungen in deiner Datei überzeugt bist.
+* **Ausgeblendete Strings übersetzen** – Importiert Übersetzungen für Strings, die in Crowdin als ausgeblendet markiert sind. Ausgeblendete Strings sind im Editor normalerweise für Übersetzer nicht sichtbar und werden für Systemzwecke oder Platzhalter verwendet.
+* **Zu TM hinzufügen** – Fügt die importierten Übersetzungen zum primären Translation Memory (TM) des Projekts hinzu.
+
+<Aside>
+  In string-basierten Projekten befinden sich einige der oben beschriebenen Übersetzungseinstellungen (**Übersetzung darf mit der Quelle übereinstimmen**, **Hinzugefügte Übersetzungen freigeben** und **Ausgeblendete Strings übersetzen**) in der rechten Seitenleiste des Upload-Tabs und nicht im Konfigurationsdialog selbst.
+</Aside>
+
+### Konfigurationsvorlagen
+
+Diese Option befindet sich am unteren Rand des Dialogs und ermöglicht es dir, Konfigurationen für Dateien mit derselben Spaltenstruktur zu verwalten.
+
+* Um deine aktuelle Konfiguration als Vorlage zu speichern, klicke auf **Vorlagen** > **Als Vorlage speichern**, gib einen Vorlagennamen ein und klicke auf **Speichern**.
+* Anschließend kannst du diese Vorlage auf neu importierte Dateien anwenden. Um eine bestimmte Vorlage aus einer langen Liste zu finden, verwende das Feld **Suche** in der Vorlagenauswahl.
+
+## Schema für CSV- und XLSX-Dateien ändern
+
+Du möchtest möglicherweise CSV- oder XLSX-Dateien aktualisieren und das zunächst konfigurierte Schema ändern. Eine Aktualisierung des Schemas kann erforderlich sein, wenn du deinem Crowdin-Projekt eine neue Zielsprache hinzufügst.
+
+Gehe wie folgt vor, um das Schema deiner Quelldatei zu ändern:
+
+<Steps>
+  1. Klicke mit der rechten Maustaste auf die gewünschten Dateien und wähle **Schema ändern**.
+  2. Wähle die neue Datei auf deinem Computer aus.
+  3. Lege die neue Konfiguration/Vorlage entsprechend für die Datei fest.
+</Steps>
+
+<Aside type="caution" title="Einschränkungen">
+  Du kannst die vorhandene Konfigurationsvorlage nicht bearbeiten. Stattdessen kannst du sie entfernen oder eine neue erstellen.
+</Aside>
+
+## Siehe auch
+
+<CardGrid>
+  <LinkCard title="Quelldateien hochladen" description="Erfahre, wie du Quelldateien zur Übersetzung in dein Projekt hochlädst." href="/uploading-files/" />
+  <LinkCard title="Dateiverwaltung" description="Verwalte und konfiguriere Quelldateien in deinem Projekt." href="/file-management/" />
+</CardGrid>

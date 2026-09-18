@@ -1,0 +1,294 @@
+---
+title: Modul zur Verarbeitung der Übersetzungszuordnung
+description: Verwende einen benutzerdefinierten Dienst, um Übersetzungen für Nicht-Schlüssel-Wert-Dateien zuzuordnen
+slug: developer/crowdin-apps-module-translation-alignment-processing
+sidebar:
+  order: 7
+  label: Verarbeitung der Übersetzungszuordnung
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Mit dem Modul zur Verarbeitung der Übersetzungszuordnung kannst du Crowdins Standardmechanismus zur Zuordnung überschreiben, wenn du Übersetzungen für Nicht-Schlüssel-Wert-Dateien (z. B. HTML oder MD) hochlädst.
+
+Standardmäßig ordnet Crowdin hochgeladene Übersetzungen automatisch den vorhandenen Source-Strings zu. Wenn du dieses Modul in deiner Crowdin-App verwendest, kannst du diesen Prozess abfangen und deine eigene Zuordnungslogik anwenden, beispielsweise mithilfe eines Zuordnungsdienstes eines Drittanbieters. Damit hast du die volle Kontrolle darüber, wie Übersetzungen bei komplexen Dokumentformaten den entsprechenden Source-Strings zugeordnet werden.
+
+<Aside>
+  Dieses Modul ist *nur* für [Nicht-Schlüssel-Wert-Dateiformate](/uploading-translations/#text-and-html-based-formats) wie HTML, Markdown (MD) und andere vorgesehen.
+</Aside>
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+Für Crowdin:
+
+* Nur ich (also der Projektinhaber)
+* Ich, Projektmanager und Entwickler
+* Ausgewählte Benutzer
+
+Für Crowdin Enterprise:
+
+* Nur Organisationsadministratoren
+* Organisationsadministratoren, Projektmanager und Entwickler
+* Ausgewählte Benutzer
+
+## Struktur
+
+```json title="manifest.json"
+{
+  "modules": {
+    "file-translations-alignment": [
+      {
+        "key": "your-translations-alignment-module-key",
+        "url": "/translations-alignment",
+        "signaturePatterns": {
+          "fileName": "^.+\.html$",
+          "fileContent": "<html.*>"
+        }
+      }
+    ]
+  }
+}
+```
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Die relative URL, die beim Hochladen einer Übersetzung aufgerufen wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>object</code></p>
+        <p><strong>Beschreibung:</strong> Enthält reguläre Ausdrücke für <code>fileName</code> und/oder <code>fileContent</code>, die zum Erkennen des Dateityps beim Hochladen von Übersetzungen über die UI (oder über die API ohne angegebenen <code>type</code>-Parameter) verwendet werden.</p>
+        <p><Aside><code>fileContent</code> regular expression checks only the first 64 KB of the file content.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Kommunikation zwischen der App zur Verarbeitung der Übersetzungszuordnung und Crowdin
+
+Beim Hochladen einer Übersetzungsdatei für ein Nicht-Schlüssel-Wert-Format erkennt das System anhand des Parameters `signaturePatterns` ein geeignetes Modul zur Verarbeitung der Übersetzungszuordnung. Crowdin sendet anschließend eine HTTP-Anfrage an die URL der App (`$baseUrl`. `$url`).
+
+Diese Anfrage enthält zwei Hauptarrays: `sourceStrings` (aus dem Projekt) und `translationStrings` (aus der hochgeladenen Übersetzungsdatei geparst). Die Aufgabe der App besteht darin, diese beiden String-Mengen zu verarbeiten, die Zuordnung durchzuführen und eine strukturierte Antwort zurückzugeben, die die Übersetzungen den korrekten IDs der Source-Strings zuordnet.
+
+### Anfrage an die App zur Verarbeitung der Übersetzungszuordnung
+
+Beispiel für die Nutzlast der Anfrage:
+
+```json
+// max request payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "jobType": "translation-alignment-file",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name",
+    "userId": 1,
+    "sourceLanguageId": "en",
+    "targetLanguageIds": [
+      "ja",
+      "uk",
+      "et"
+    ],
+    "createdAt": "2030-01-15T07:00:00+00:00",
+    "updatedAt": "2030-01-15T07:00:15+00:00",
+    "lastActivity": "2030-01-15T10:12:13+00:00",
+    "description": null,
+    "url": "/project/your-project-identifier",
+    "cname": null
+  },
+  "sourceLanguage": {
+    "id": "en",
+    "name": "English",
+    "editorCode": "en",
+    "twoLettersCode": "en",
+    "threeLettersCode": "eng",
+    "locale": "en-US",
+    "androidCode": "en-rUS",
+    "osxCode": "en.lproj",
+    "osxLocale": "en",
+    "pluralCategoryNames": [
+      "one",
+      "other"
+    ],
+    "pluralRules": "(n != 1)",
+    "pluralExamples": [
+      "1",
+      "0, 2-999; 1.2, 2.07..."
+    ],
+    "textDirection": "ltr",
+    "dialectOf": null
+  },
+  "targetLanguages": [
+    {
+      // Language object for the translation being aligned. Has the same structure as sourceLanguage.
+    }
+  ],
+  "file": {
+    "id": 4219,
+    "name": "en.html",
+    "title": null,
+    "path": "/en.html",
+    "type": "html32",
+    "isMultilingual": false,
+    "status": "active",
+    "revision": 1,
+    "branchId": null,
+    "directoryId": 0
+  },
+  "sourceStrings": [
+    {
+      "id": 1234567,
+      "text": "Welcome!",
+      "context": "Document Title\r\nXPath: \/html\/head\/title"
+    }
+    // other source strings ...
+  ],
+  "translationStrings": [
+    {
+      "id": null,
+      "text": "Ласкаво просимо!",
+      "context": "Document Title\r\nXPath: \/html\/head\/title"
+    }
+    // other translation strings ...
+  ]
+}
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>jobType</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Wert:</strong> <code>translation-alignment-file</code></p>
+        <p><strong>Beschreibung:</strong> Gibt die Aktion des Moduls zur Verarbeitung der Übersetzungszuordnung an.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>object</code></p>
+        <p><strong>Beschreibung:</strong> Enthält Informationen über die Source-Datei in Crowdin, in die die Übersetzungen hochgeladen werden.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>targetLanguages</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>array</code></p>
+        <p><strong>Beschreibung:</strong> Ein Array, das das Sprachobjekt der hochgeladenen und zugeordneten Übersetzungsdatei enthält.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>sourceStrings</code>, <code>sourceStringsUrl</code></td>
+      <td>
+        <p><strong>Typ(sourceStrings):</strong> <code>array</code></p>
+        <p><strong>Typ(sourceStringsUrl):</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Parameter für die Source-Strings aus der Originaldatei. <code>sourceStrings</code> – Array mit Source-String-Objekten. <code>sourceStringsUrl</code> – öffentliche URL zu einem <a href="https://github.com/ndjson/ndjson-spec" target="_blank">Newline-delimited-JSON</a> mit Source-Strings.<br />
+        Either of these two parameters can be used.<Aside title="Limitations">Das maximale Limit für die Nutzlast der Anfrage beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">translationStrings</code>, <code>translationStringsUrl</code></td>
+      <td>
+        <p><strong>Typ(translationStrings):</strong> <code>array</code></p>
+        <p><strong>Typ(translationStringsUrl):</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Parameter für die aus der hochgeladenen Übersetzungsdatei geparsten Strings.
+        <code>translationStrings</code> – Array mit einfachen String-Objekten. <code>translationStringsUrl</code> – öffentliche URL zu einem <a href="https://github.com/ndjson/ndjson-spec" target="_blank">Newline-delimited-JSON</a> mit Übersetzungsstrings.<br />
+        Either of these two parameters can be used.<Aside title="Limitations">Das maximale Limit für die Nutzlast der Anfrage beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Erwartete Antwort der App
+
+Die App muss ihre benutzerdefinierte Zuordnung durchführen und eine Antwort mit einem `translations`-Array zurückgeben. Dieses Array ordnet jeden Übersetzungstext seiner entsprechenden `sourceStringId` zu.
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+// max response payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "data": {
+    "translations": [
+      {
+        "sourceStringId": 1234567,
+        "text": "Ласкаво просимо!"
+      },
+      // other translation mappings...
+    ],
+    // or use translationsUrl for large payloads
+    "translationsUrl": "https://app.example.com/jKe8ujs7a-aligned.ndjson" // new-line delimited json file with aligned translations
+  },
+  "error": {
+    "message": "Optional error message"
+  }
+}
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+    <tr>
+     <td><code class="whitespace-nowrap">data.translations</code>, <code>data.translationsUrl</code></td>
+      <td>
+        <p><strong>Typ(data.translations):</strong> <code>array</code></p>
+        <p><strong>Typ(data.translationsUrl):</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Parameter zur Übergabe der zugeordneten Übersetzungen.
+        <code>data.translations</code> – Array mit Zuordnungsobjekten. <code>data.translationsUrl</code> – öffentliche URL zu einem <a href="https://github.com/ndjson/ndjson-spec" target="_blank">Newline-delimited-JSON</a> mit Zuordnungsobjekten.<br />
+        Either of these two parameters can be used.<Aside title="Limitations">Das maximale Limit für die Nutzlast der Antwort beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">data.translations.sourceStringId</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>integer</code></p>
+        <p><strong>Beschreibung:</strong> Die numerische ID des Source-Strings, auf den die Übersetzung angewendet werden soll.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>data.translations.text</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code> oder <code>object</code></p>
+        <p><strong>Beschreibung:</strong> Der anzuwendende Übersetzungstext. Für Strings mit Pluralformen muss dies ein Objekt sein, dessen Schlüssel den Pluralkategorien der Zielsprache entsprechen (z. B. <code>one</code>, <code>other</code>).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Eine Fehlermeldung, die von der App an Crowdin übergeben wird und für einen Benutzer in der UI sichtbar ist.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>

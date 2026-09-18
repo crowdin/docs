@@ -1,0 +1,144 @@
+---
+title: OpenID verbinden
+description: Erfahre, wie du OpenID Connect für deine Organisation einrichtest.
+slug: enterprise/oidc
+sidebar:
+  order: 3
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import { Image } from 'astro:assets';
+import { Steps, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import authenticationMethod from '!/enterprise/organization-management/oidc_authentication_method.png';
+import idpCredentials from '!/enterprise/organization-management/oidc_idp_credentials.png';
+
+OpenID Connect (OIDC) ist eine auf dem OAuth-2.0-Protokoll basierende Authentifizierungsmethode, mit der sich Benutzer über den Identitätsanbieter (IDP) deiner Organisation bei Crowdin Enterprise anmelden können.
+
+OIDC vereinfacht Konfiguration und Benutzerverwaltung und verbessert gleichzeitig Sicherheit und Zugriffskontrolle. es’s ein ideal choice für Organisationen looking für streamlined Authentifizierung mit ein focus auf ease von integration und scalability.
+
+## Konfigurieren Ihre Identitätsanbieter
+
+Zu Beginn musst du eine Verbindung (oder einen Connector) zwischen Crowdin Enterprise und deinem IDP einrichten (z. B. [Okta](https://support.okta.com/help/s/article/create-an-oidc-web-app-in-dashboard), [Auth0](https://auth0.com/docs/get-started/auth0-overview/create-applications) und andere).
+
+<CardGrid>
+  <LinkCard title="konfigurieren OpenID verbinden für Okta" href="#okta" />
+  <LinkCard title="konfigurieren OpenID verbinden für Auth0" href="#auth0" />
+</CardGrid>
+
+## Lege up OpenID verbinden für Crowdin Enterprise fest
+
+Sobald du deinen Identitätsanbieter konfiguriert hast, kann ein Organisationsadministrator OpenID Connect in Crowdin Enterprise unter **Organisationseinstellungen** aktivieren.
+
+<Steps>
+  1. Klicke oben rechts auf dein Profilbild und wähle **Organisationseinstellungen**.
+  2. Wechsle in der linken Seitenleiste zum Bereich **Authentifizierung** und klicke unten auf der Seite auf die Authentifizierungsmethode **OpenID Connect**. <Image src={authenticationMethod} alt="OpenID Connect authentication method" />
+  3. Füge deine Anmeldedaten vom IDP ein und klicke auf **Speichern**. <Image src={idpCredentials} alt="OpenID Connect IDP credentials" />
+  4. Go back zu die **Authentifizierung** Seite und aktivieren die OpenID verbinden Authentifizierung Methode.
+  5. Anschließend können Benutzer auf der Anmeldeseite OpenID Connect verwenden, um sich bei deiner Crowdin-Enterprise-Organisation anzumelden.
+</Steps>
+
+## OpenID verbinden Settings
+
+Auf der Seite **OpenID-Connect-Authentifizierungseinstellungen** kannst du die für die Aktivierung der OpenID-Connect-Authentifizierung in deiner Crowdin-Enterprise-Organisation erforderlichen Details konfigurieren.
+
+* **Weiterleitungs-URL** &ndash; die URL, an die der Benutzer nach der Authentifizierung weitergeleitet wird. Crowdin Enterprise generiert diese URL automatisch anhand der Domain deiner Organisation. Sie muss bei deinem IDP registriert werden.
+* **Methodenname** &ndash; der Name, den du der OpenID-Connect-Authentifizierungsmethode zuweist und der auf deiner Crowdin-Enterprise-Anmeldeseite angezeigt wird. So können Benutzer die Authentifizierungsoption bei der Anmeldung erkennen.
+* **Kunde ID** &ndash; die unique identifier bereitgestellt von dein IDP während die OpenID verbinden Einrichtung Prozess. es distinguishes dein Crowdin Enterprise Anwendung und ermöglicht secure communication mit die IDP.
+* **Client-Secret** &ndash; gib das von deinem IDP bereitgestellte Client-Secret ein und stelle sicher, dass es sicher gespeichert wird, da es den Zugriff zur Authentifizierung von Benutzern ermöglicht.
+* **Provider-URL** &ndash; gib die Autorisierungs-URL deines IDP ein, um die Kommunikation zwischen Crowdin Enterprise und dem IDP zu ermöglichen. Refer zu dein IDP’s Dokumentation für dies URL.
+* **erlauben eingeladen Registration ohne Invitation Links** &ndash; eingeladen Benutzer kann register ohne ein dedicated invitation link. Das System gewährt Berechtigungen automatisch nur dann, wenn die E-Mail-Adresse des Benutzers (vom OIDC-Anbieter validiert) mit einem Eintrag in deiner Einladungsliste übereinstimmt.
+
+## What du get wenn OpenID verbinden ist aktiviert
+
+Sobald OpenID verbinden (OIDC) ist festlegen up und aktiviert, beliebige Benutzer already logged in wird remain logged in. Ab diesem Zeitpunkt greifen Benutzer, die OIDC als Anmeldemethode wählen, mit ihren IDP-Anmeldedaten auf deine Crowdin-Enterprise-Organisation zu. Wenn ein Benutzer noch kein Konto in deiner Crowdin-Enterprise-Organisation hat, wird bei der ersten Anmeldung automatisch ein Konto erstellt.
+
+## Konfiguration OpenID verbinden für Okta {#okta}
+
+Um Crowdin Enterprise OpenID Connect in Okta einzurichten, befolge die folgenden Schritte.
+
+#### Lege up Crowdin Enterprise OpenID verbinden App fest {#setup-okta}
+
+<Steps>
+1. Öffnen Sie die Okta-Dashboard mit einem Administratorkonto.
+2. Gehe auf der Dashboard-Seite zu **Anwendungen**.
+3. Klicke auf on the **Applications** submenu.
+4. Klicke auf **Erstellen App Integration**.
+5. Setze im Dialog *Neue App-Integration erstellen* die *Anmeldemethode* auf *OIDC – OpenID Connect* und klicke auf **Weiter**.
+6. Set *Application Typ* to *Web application*, klicke **Next**.
+7. auf die *neu Web App Integration* Seite, festlegen die folgend parameters:
+   * Gib im Bereich *Allgemeine Einstellungen* einen Anwendungsnamen (z. B. *Crowdin Enterprise*) ein.
+   * *(Optional)* Lade eine PNG-, JPG- oder GIF-Datei hoch, die als Logo für deine Crowdin-Enterprise-OpenID-Connect-App dient. Das Crowdin-Symbol findest du auf der Seite [Crowdin-Logo verwenden](/using-logo/).
+   * Gib `https://accounts.crowdin.com/auth/oidc` im Bereich *Anmelde-Weiterleitungs-URIs* ein. Dies ist deine **Weiterleitungs-URL** von Crowdin Enterprise. Du findest sie jederzeit unter **Organisationseinstellungen > Authentifizierung > OpenID Connect**.
+   * Im Bereich **Zuweisungen** kannst du auswählen, wer in deiner Organisation die App verwenden darf. Alternativ kannst du **Gruppenzuweisung vorerst überspringen** auswählen und später zur [Zuweisung von Benutzern](#assign-users-okta) zurückkehren.
+8. Klicke auf **Speichern**.
+9. Nachdem du finished Einstellung up die App auf die Okta's side, du'll sein redirected zu die App's *General* Tab.
+10. In den Bereichen *Clientanmeldedaten* und *Client-Secrets* siehst du die Anmeldedaten, die du unter **Organisationseinstellungen > Authentifizierung > OpenID Connect** in Crowdin Enterprise angeben musst.
+11. kopieren die *Kunde ID* und *Kunde Secret*.
+12. Kopiere deine [Okta-Domain](https://developer.okta.com/docs/guides/find-your-domain/main/).
+13. Melde dich in einem separaten Browser-Tab oder -Fenster bei deiner Crowdin-Enterprise-Organisation an, gehe zu **Organisationseinstellungen > Authentifizierung** und klicke am Ende der Liste *Authentifizierungsmethoden* auf OpenID Connect.
+14. Gib die aus Okta kopierten Informationen ein (füge die *Client-ID* in das Feld *Client-ID*, das *Client-Secret* in das Feld *Client-Secret* und deine Okta-Domain (z. B. `https://{organization-name}.okta.com`) in das Feld *Provider-URL* ein).
+15. *(Optional)* Gib im Feld *Methodenname* deinen eigenen Namen für die OpenID-Connect-Authentifizierungsmethode an.
+16. Klicke auf **Speichern**.
+17. Aktiviere in der Liste *Authentifizierungsmethoden* das Kontrollkästchen neben OpenID Connect, damit deine Benutzer diese Methode als gewünschte Authentifizierungsmethode verwenden können, um sich über die Anmeldeseite bei deiner Crowdin-Enterprise-Organisation anzumelden.
+</Steps>
+
+#### Zugewiesene Nutzer {#assign-users-okta}
+
+In diesem Bereich ermöglichst du Benutzern die Verwendung von Okta OpenID Connect, indem du ihnen Zugriff auf deine Crowdin-Enterprise-Organisation gewährst.
+
+<Steps>
+  1. Öffnen Sie Ihre Okta-Dashboard mit einem Administratorkonto and Gehen Sie zu **Applications**.
+  2. Klicke auf on the **Applications** submenu.
+  3. Klicke bei deiner neuen Crowdin-Enterprise-OpenID-Connect-App auf das Dropdown-Menü <Icon name="mdi:cog" class="inline-icon" />.
+  4. Wähle **Zuweisen to Gruppen**.
+  5. Klicke im Dialog *Crowdin Enterprise OpenID Connect Gruppen zuweisen* bei **Alle** auf **Zuweisen**, um die Crowdin-Enterprise-OpenID-Connect-App für alle Benutzer deiner Organisation zu aktivieren, und klicke auf **Fertig**. Alternatively, Sie können assign separate groups or individual users.
+</Steps>
+
+#### Test OpenID verbinden {#test-oidc-okta}
+
+<Steps>
+  1. Auf der [Anmeldeseite](https://accounts.crowdin.com/) von Crowdin Enterprise wählst du deine Organisation aus und klickst auf **Anmelden**.
+  2. Klicke auf on **OpenID Connect**. Du solltest automatisch zur Okta-Anmeldeseite weitergeleitet werden.
+  3. Geben Sie Ihre Anmeldedaten ein. Nach der Authentifizierung Ihrer Anmeldedaten werden Sie automatisch zu Crowdin Enterprise weitergeleitet.
+</Steps>
+
+## Konfiguration OpenID verbinden für Auth0 {#auth0}
+
+Um Crowdin Enterprise OpenID Connect in Auth0 einzurichten, befolge die folgenden Schritte.
+
+#### Lege up Crowdin Enterprise OpenID verbinden App fest {#setup-auth0}
+
+<Steps>
+1. Öffnen Sie die Auth0-Verwaltungsdashboard mit einem Administratorkonto.
+2. Gehe im *Dashboard* zu *Anwendungen*.
+3. Klicke auf on the **Applications** submenu.
+4. Klicke auf **+ Erstellen Application** on the right.
+5. Gib im Feld **Name** einen Anwendungsnamen (z. B. *Crowdin Enterprise*) an, wähle den Anwendungstyp **Reguläre Webanwendungen** und klicke auf **Erstellen**.
+6. Wechsle zum Tab **Einstellungen** deiner neuen Anwendung.
+7. *(Optional)* Specify die URL für dein Crowdin Enterprise OpenID verbinden App. Das Crowdin-Symbol findest du auf der Seite [Crowdin-Logo verwenden](/using-logo/).
+8. Gib im Bereich **Anwendungs-URIs** `https://accounts.crowdin.com/auth/oidc` in das Feld *Zulässige Callback-URLs* ein. Dies ist deine **Weiterleitungs-URL** von Crowdin Enterprise. Du findest sie jederzeit unter **Organisationseinstellungen > Authentifizierung > OpenID Connect**.
+9. Klicke auf **Save Changes**.
+10. Scrolle nach oben zum Bereich **Grundlegende Informationen**. Dort siehst du die Anmeldedaten, die du unter **Organisationseinstellungen > Authentifizierung > OpenID Connect** in Crowdin Enterprise angeben musst.
+11. kopieren die *Domain*, *Kunde ID*, und *Kunde Secret*.
+12. Melde dich in einem separaten Browser-Tab oder -Fenster bei deiner Crowdin-Enterprise-Organisation an, gehe zu **Organisationseinstellungen > Authentifizierung** und klicke am Ende der Liste *Authentifizierungsmethoden* auf OpenID Connect.
+13. Gib die aus Auth0 kopierten Informationen ein (füge die *Client-ID* in das Feld *Client-ID*, das *Client-Secret* in das Feld *Client-Secret* und deine Auth0-Domain (z. B. `https://{organization-name}.auth0.com`) in das Feld *Provider-URL* ein).
+14. *(Optional)* Gib im Feld *Methodenname* deinen eigenen Namen für die OpenID-Connect-Authentifizierungsmethode an.
+15. Klicke auf **Speichern**.
+16. Aktiviere in der Liste *Authentifizierungsmethoden* das Kontrollkästchen neben OpenID Connect, damit deine Benutzer diese Methode als gewünschte Authentifizierungsmethode verwenden können, um sich über die Anmeldeseite bei deiner Crowdin-Enterprise-Organisation anzumelden.
+</Steps>
+
+#### Verwalte Access to Crowdin Enterprise OpenID Connect App
+
+Standardmäßig werden alle Benutzer eines einzelnen Auth0-Tenants zwischen den Anwendungen des Tenants geteilt und haben daher Zugriff auf die Anwendungen.
+Bei Bedarf kannst du den Zugriff bestimmter Benutzer auf die Anwendung mithilfe von [Regeln](https://auth0.com/docs/rules) einschränken. Siehe [diese Regel als Beispiel](https://github.com/auth0/rules/blob/aeaf93bc058408e260192d0941a688963449d6be/src/rules/simple-user-whitelist-for-app.js).
+
+#### Test OpenID verbinden {#test-oidc-auth0}
+
+<Steps>
+  1. Auf der <a href="https://accounts.crowdin.com/" target="_blank">Anmeldeseite</a> von Crowdin Enterprise wählst du deine Organisation aus und klickst auf **Anmelden**.
+  2. Klicke auf on **OpenID Connect**. Du solltest automatisch zur Auth0-Anmeldeseite weitergeleitet werden.
+  3. Geben Sie Ihre Anmeldedaten ein. Nach der Authentifizierung Ihrer Anmeldedaten werden Sie automatisch zu Crowdin Enterprise weitergeleitet.
+</Steps>

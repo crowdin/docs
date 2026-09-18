@@ -1,0 +1,645 @@
+---
+title: Crowdin-MCP-Server
+description: Verwalte deine Crowdin-Projekte mit KI-Befehlen in natürlicher Sprache.
+slug: developer/crowdin-mcp-server
+---
+
+import { Steps, Aside, Tabs, TabItem, LinkCard } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+Der Crowdin-MCP-Server (Model Context Protocol) ermöglicht KI-Agenten, mit deinem Crowdin-Konto über Befehle in natürlicher Sprache zu interagieren. So kannst du Übersetzungen automatisieren, Terminologie verwalten, Teams koordinieren und Erkenntnisse gewinnen – alles, ohne deine Chat-Oberfläche zu verlassen.
+
+Betrachte den MCP-Server als universellen Adapter und Dolmetscher. Dein KI-Assistent (z. B. Crowdin Copilot, Claude, Cursor oder ChatGPT) spricht „menschliche Sprache“, während die Crowdin-API eine präzise „technische Sprache“ verwendet. Der MCP-Server sitzt dazwischen, übersetzt deine Anfragen in natürlicher Sprache in die exakten Befehle, die Crowdin versteht, und übersetzt die Antworten anschließend wieder in eine klare, leicht verständliche Antwort.
+
+<ReadMore>
+  Weitere Informationen findest du unter [Crowdin Skills](/developer/crowdin-skills/). Diese zeigen einem KI-Coding-Agenten, wie er lokal mit den Entwicklertools von Crowdin arbeitet.
+</ReadMore>
+
+## Warum den MCP-Server verwenden?
+
+* **Geschwindigkeit und Effizienz:** Automatisiere wiederkehrende Aufgaben wie das Hochladen von Dateien, Statusprüfungen und die Erstellung von Berichten.
+* **Kontextbezogene Intelligenz:** KI-Agenten erhalten sofort ein Verständnis deiner Projekte, Fristen, Teammitglieder und Workflows – eine manuelle Erklärung ist nicht erforderlich.
+* **Nahtloser Workflow:** Verwalte Übersetzungsaufgaben dialogbasiert direkt in deinem bevorzugten KI-Tool oder deiner bevorzugten IDE.
+
+## Voraussetzungen
+
+* Ein Crowdin-Konto.
+* Eine Möglichkeit zur [Authentifizierung](#authentication-access-tokens-and-scopes) – entweder der OAuth-Anmeldefluss (kein Token erforderlich) oder ein über ein persönliches Zugriffstoken oder eine OAuth-App generiertes Zugriffstoken.
+* Ein MCP-kompatibler Client (z. B. Crowdin Copilot, Claude Desktop, Cursor, VS Code oder Windsurf).
+
+## Einrichtung und Konfiguration
+
+In diesem Abschnitt werden die erforderlichen Details beschrieben, um deinen KI-Client mit Crowdin zu verbinden.
+
+### Authentifizierung: Zugriffstoken und Bereiche
+
+Der MCP-Server unterstützt zwei Möglichkeiten zur Authentifizierung deines Clients:
+
+* **OAuth-Anmeldefluss** — Dein Client verbindet sich nur mit der MCP-Endpunkt-URL und öffnet einen Browser, in dem du dich bei Crowdin anmeldest. Dies ist die einfachste Option für interaktive Clients (die meisten IDEs und Desktop-Apps) und erfordert weder die Erstellung noch die Speicherung eines Tokens.
+* **Zugriffstoken** – Du übergibst ein statisches Token im Header `Authorization: Bearer {YOUR_CROWDIN_TOKEN}`. Verwende dies für Headless-Setups, Automatisierung oder Clients, die den OAuth-Anmeldefluss nicht unterstützen. Du kannst ein Token erhalten, indem du ein **persönliches Zugriffstoken (PAT)** erstellst oder eine **OAuth-App** verwendest.
+
+Unabhängig von der Methode vergibst du bestimmte **Bereiche** (Berechtigungen), die festlegen, welche Aktionen zulässig sind. Damit der MCP-Server ordnungsgemäß funktioniert, müssen die verwendeten Anmeldedaten über die erforderlichen Bereiche für die Befehle verfügen, die du ausführen lassen möchtest. Um beispielsweise eine Projektaufgabe zu erstellen, benötigen deine Anmeldedaten den Bereich **Tasks (Lesen und Schreiben)**.
+
+#### OAuth-Anmeldefluss
+
+Bei Clients, die MCP OAuth unterstützen, konfigurierst du nur die MCP-Endpunkt-URL – kein Token erforderlich. Bei der ersten Verbindung öffnet der Client einen Browser, in dem du den Zugriff auf dein Crowdin-Konto autorisierst. Anschließend speichert und aktualisiert er die Tokens für dich. Du musst zuvor keine OAuth-App erstellen: Der Client registriert sich automatisch. Die Bereiche, die du bei der Anmeldung genehmigst, bestimmen, was der Client tun kann.
+
+#### Persönliches Zugriffstoken (PAT)
+
+Ein PAT ist ein sicherer persönlicher Schlüssel, der direkt mit deinem Konto verknüpft ist. Dies ist die schnellste Möglichkeit, dich für den individuellen persönlichen Gebrauch mit einem statischen Token zu authentifizieren.
+
+<ReadMore>
+  Weitere Informationen findest du unter [Persönliches Zugriffstoken erstellen (Crowdin)](/account-settings/#creating-a-personal-access-token) oder [Persönliches Zugriffstoken erstellen (Crowdin Enterprise)](/enterprise/account-settings/#creating-a-personal-access-token).
+</ReadMore>
+
+#### OAuth Apps
+
+Wenn du eine Integration entwickelst, eine benutzerdefinierte App erstellst oder keine persönlichen Anmeldedaten verwenden möchtest, kannst du dich mit einer OAuth-App authentifizieren. Du kannst in deinen Konto- oder Organisationseinstellungen eine neue OAuth-Anwendung erstellen, die erforderlichen Bereiche konfigurieren und sie für autorisierte Anfragen verwenden.
+
+<ReadMore>
+  Weitere Informationen zur Verwaltung von OAuth-Anwendungen findest du unter [Crowdin](/account-settings/#oauth) und [Crowdin Enterprise](/enterprise/organization-settings/#oauth-apps).
+</ReadMore>
+
+### Endpunktstruktur
+
+Der Crowdin-MCP-Server stellt zwei API-Versionen bereit. **V2 wird für neue Integrationen empfohlen.** Der Kern des MCP-Ablaufs bleibt vertraut und wird um ein verbessertes Tooldesign, umfangreichere Parameter, serverseitige Filterung über Header und MCP-Ressourcen für einen schnelleren Kontextzugriff ergänzt.
+
+<Tabs syncKey="apiVersion">
+  <TabItem label="V2 (empfohlen)">
+    Crowdin-MCP-Endpunkt:
+
+    ```
+    https://mcp.crowdin.com/v2/mcp
+    ```
+
+    Crowdin Enterprise MCP-Endpunkt:
+
+    ```
+    https://{your-organization-domain}.mcp.crowdin.com/v2/mcp
+    ```
+  </TabItem>
+  <TabItem label="V1 (veraltet)">
+    Crowdin-MCP-Endpunkt:
+
+    ```
+    https://mcp.crowdin.com/mcp
+    ```
+
+    Crowdin Enterprise MCP-Endpunkt:
+
+    ```
+    https://{your-organization-domain}.mcp.crowdin.com/mcp
+    ```
+  </TabItem>
+</Tabs>
+
+Beide Versionen können so konfiguriert werden, dass nur die Tools bereitgestellt werden, die dein Agent benötigt. In V1 erfolgt diese Filterung normalerweise auf der Agentenseite. In V2 kannst du die Filterung auch direkt auf der MCP-Seite mithilfe von Headern anwenden, wodurch die Einrichtung schneller und bequemer wird.
+
+### Verfügbare Tool-Sets
+
+In V2 sind die Tool-Sets nach Produktbereichen organisiert. Wähle die Tool-Sets aus, die zu deinem Workflow passen.
+
+#### Kern-Lokalisierung und Inhalte
+
+* **`source_files`** – Verwalte Quelldateien, Branches, Verzeichnisse und geprüfte Builds.
+* **`source_strings`** – Füge Quellzeichenketten hinzu, bearbeite, lade sie hoch und organisiere sie.
+* **`string_comments`** – Verwalte Kommentare und Diskussionsthreads zu Zeichenketten und Assets.
+* **`string_translations`** – Arbeite mit Übersetzungen, Freigaben, Abstimmungen und Korrekturen.
+* **`translations`** – Erstelle, exportiere, importiere und validiere Projektübersetzungen.
+* **`translation_status`** – Prüfe den Übersetzungsfortschritt und den QA-Status für Projekte, Branches, Dateien und Sprachen.
+* **`languages`** – Zeige unterstützte Sprachen an und verwalte benutzerdefinierte Sprachen.
+* **`glossaries`** – Verwalte Glossare, Begriffe, Konzepte und die Konkordanzsuche.
+* **`tm`** – Verwalte Translation Memories und TM-Segmente.
+* **`style_guides`** – Verwalte Styleguides für eine konsistente Übersetzung.
+* **`screenshots`** – Lade Screenshots und Tags hoch und organisiere sie für visuellen Kontext.
+* **`labels`** – Organisiere Inhalte und Screenshots mit Labels.
+
+#### Projektoperationen und Bereitstellung
+
+* **`projects_groups`** – Verwalte Projekte, Gruppen und Einstellungen auf Projektebene.
+* **`tasks`** – Erstelle, weise zu, kommentiere und verfolge Projekt- und Organisationsaufgaben.
+* **`reports`** – Erstelle Berichte zu Fortschritt, Kosten, Qualität, Aktivitäten und Leistung.
+* **`distributions`** – Konfiguriere und veröffentliche Übersetzungsdistributionen.
+* **`bundles`** – Verwalte herunterladbare Bundles und Exporte.
+* **`storage`** – Lade Dateien in den temporären Speicher hoch und verwalte ihn für Dateien und Importe.
+* **`webhooks`** – Verwalte Webhooks auf Projektebene.
+* **`organization_webhooks`** – Verwalte Webhooks auf Organisationsebene.
+
+#### KI, Automatisierung und Integrationen
+
+* **`ai`** – Arbeite mit KI-Prompts, Anbietern, Berichten und KI-gestützten Übersetzungsworkflows.
+* **`applications`** – Verwalte App-Installationen, Synchronisierungsaufträge und Integrationseinstellungen.
+* **`machine_translations`** – Konfiguriere Anbieter maschineller Übersetzung und führe MT-Übersetzungen aus.
+* **`notifications`** – Sende Benachrichtigungen an Benutzer und Rollen.
+* **`external_qa_checks`** – Greife auf externe QA- und benutzerdefinierte Rechtschreibprüfungsintegrationen zu. **(Nur Crowdin Enterprise.)**
+
+#### Personen- und Organisationsverwaltung
+
+* **`users`** – Verwalte Benutzer, Projektmitglieder, Berechtigungen und Beiträge.
+* **`teams`** – Verwalte Teams, Mitgliedschaften und Team-zu-Projekt-Berechtigungen. **(Nur Crowdin Enterprise.)**
+* **`clients`** – Zeige Clientkonten an. **(Nur Crowdin Enterprise.)**
+* **`vendors`** – Zeige Anbieterentitäten an. **(Nur Crowdin Enterprise.)**
+* **`fields`** – Verwalte benutzerdefinierte Felder. **(Nur Crowdin Enterprise.)**
+* **`organization`** – Zeige Organisationsdetails und Authentifizierungseinstellungen an. **(Nur Crowdin Enterprise.)**
+* **`workflows`** – Zeige Workflow-Schritte, Vorlagen und Inhalte an, die einem Workflow-Schritt zugewiesen sind. **(Nur Crowdin Enterprise.)**
+* **`security_logs`** – Prüfe Sicherheitsprotokolle von Benutzern und Organisationen.
+
+<Aside>
+  Für die beste Leistung solltest du nur die Tool-Sets angeben, die du benötigst. Wenn du diese Angabe weglässt, wird standardmäßig ein Satz häufig verwendeter Tools geladen. Du kannst die verfügbaren Tools mithilfe der unten beschriebenen [Konfigurationsheader](#fine-tuning-with-headers) gezielt anpassen.
+</Aside>
+
+### Beispiel einer Basiskonfiguration
+
+Hier ist ein einfaches JSON-Konfigurationsbeispiel für deinen Client.
+
+<Tabs syncKey="Produkt">
+  <TabItem label="Crowdin">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://mcp.crowdin.com/v2/mcp",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}"
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Crowdin Enterprise">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}"
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+### Feinabstimmung mit Headern
+
+Der V2-Endpunkt unterstützt optionale HTTP-Header, die das Filtern von Tools erleichtern. In V1 wird eine ähnliche Filterung normalerweise auf der Agentenseite konfiguriert, nachdem alle Tools geladen wurden. In V2 kannst du die Filterung auch direkt auf der MCP-Seite anwenden, bevor die Tool-Liste zurückgegeben wird.
+
+| Header                 | Werte                                                                                                                     | Beschreibung                                                                                                                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `crowdin-tool-sets`    | `all` oder durch Kommas getrennte Namen (z. B. `ai,reports,webhooks`; siehe [Verfügbare Tool-Sets](#available-tool-sets)) | Steuert, welche Tool-Sets geladen werden. Standardmäßig lädt der Server alle verfügbaren Tool-Sets. Lege eine durch Kommas getrennte Liste fest, um die Tools auf einen fokussierten Workflow zu beschränken. |
+| `crowdin-read-only`    | `true` oder `false`                                                                                                       | Wenn `true` festgelegt ist, werden nur schreibgeschützte Tools (Listen- und Abrufoperationen) bereitgestellt. Nützlich für eine sichere Erkundung oder schreibgeschützte Integrationen.                       |
+| `crowdin-project-type` | `string-based` oder `file-based`                                                                                          | Filtert Tools heraus, die für den angegebenen Projekttyp nicht relevant sind, und reduziert so die Ablenkung für den KI-Agenten.                                                                              |
+| `crowdin-tool-filter`  | Durch Kommas getrennte Muster (z. B. `project*`, `list_*`)                                                                | Wendet Wildcard-Muster auf Toolnamen an, sodass du nur eine bestimmte Teilmenge der Tools einbeziehen kannst.                                                                                                 |
+
+**Beispiel – schreibgeschützter Zugriff für ein stringbasiertes Projekt:**
+
+<Tabs syncKey="Produkt">
+  <TabItem label="Crowdin">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://mcp.crowdin.com/v2/mcp",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}",
+          "crowdin-read-only": "true",
+          "crowdin-project-type": "string-based"
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Crowdin Enterprise">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}",
+          "crowdin-read-only": "true",
+          "crowdin-project-type": "string-based"
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+**Beispiel – Tool-Sets für einen fokussierten Workflow einschränken:**
+
+Standardmäßig lädt der Server alle verfügbaren Tool-Sets. Wenn du den Agenten auf einen bestimmten Workflow fokussieren möchtest, lege `crowdin-tool-sets` explizit fest.
+
+<Tabs syncKey="Produkt">
+  <TabItem label="Crowdin">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://mcp.crowdin.com/v2/mcp",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}",
+          "crowdin-tool-sets": "source_files,source_strings,string_translations,translation_status,tasks,reports,webhooks"
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Crowdin Enterprise">
+    ```json
+    {
+      "crowdin": {
+        "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+        "headers": {
+          "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}",
+          "crowdin-tool-sets": "source_files,source_strings,string_translations,translation_status,tasks,reports,webhooks,teams,organization,workflows,security_logs"
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip">
+  Beginne mit den für deinen Workflow erforderlichen Tool-Sets und füge bei Bedarf weitere hinzu. Das Laden von weniger Tools hilft dem Agenten, fokussiert zu bleiben, und verbessert die Genauigkeit.
+</Aside>
+
+### MCP-Ressourcen
+
+Der V2-Endpunkt stellt **MCP-Ressourcen** bereit – schreibgeschützte Referenzen, auf die KI-Agenten direkt über das URI-Schema `crowdin://` zugreifen können, ohne einzelne Tools aufzurufen. Sie bieten eine einfache Möglichkeit, Kontext abzurufen, ohne auf eine lange Liste von Parametern oder Filtern angewiesen zu sein.
+
+Ressourcen geben nur die Daten zurück, die für das aktuelle Token verfügbar sind. Beispielsweise listet `crowdin://projects` die Projekte auf, auf die der authentifizierte Benutzer zugreifen darf und die durch den Token-Bereich freigegeben sind. Breit gefasste Ressourcen können große Ergebnismengen zurückgeben, wenn das Token Zugriff auf viele Elemente hat.
+
+Verfügbare Ressourcen:
+
+| Ressourcen-URI                               | Beschreibung                                                                      |
+| -------------------------------------------- | --------------------------------------------------------------------------------- |
+| `crowdin://projects`                         | Liste aller Projekte, auf die der authentifizierte Benutzer zugreifen kann.       |
+| `crowdin://projects/{projectId}`             | Vollständige Details eines bestimmten Projekts.                                   |
+| `crowdin://projects/{projectId}/progress`    | Übersetzungsfortschritt nach Sprache für ein Projekt.                             |
+| `crowdin://projects/{projectId}/files`       | Quelldateien in einem Projekt.                                                    |
+| `crowdin://projects/{projectId}/branches`    | Versionsbranches in einem Projekt.                                                |
+| `crowdin://projects/{projectId}/directories` | Verzeichnisse in einem Projekt.                                                   |
+| `crowdin://projects/{projectId}/strings`     | Quellzeichenketten in einem Projekt.                                              |
+| `crowdin://projects/{projectId}/tasks`       | Aufgaben in einem Projekt.                                                        |
+| `crowdin://projects/{projectId}/labels`      | Labels in einem Projekt.                                                          |
+| `crowdin://projects/{projectId}/languages`   | Für ein Projekt konfigurierte Zielsprachen.                                       |
+| `crowdin://tasks`                            | Aufgaben, die dem authentifizierten Benutzer projektübergreifend zugewiesen sind. |
+| `crowdin://glossaries`                       | Liste aller Glossare.                                                             |
+| `crowdin://glossaries/{glossaryId}`          | Vollständige Details eines bestimmten Glossars.                                   |
+| `crowdin://glossaries/{glossaryId}/terms`    | Begriffe in einem Glossar.                                                        |
+| `crowdin://glossaries/{glossaryId}/concepts` | Konzepte in einem Glossar.                                                        |
+| `crowdin://tms`                              | Liste aller Translation Memories.                                                 |
+| `crowdin://tms/{tmId}`                       | Vollständige Details eines bestimmten Translation Memorys.                        |
+| `crowdin://tms/{tmId}/segments`              | Segmente in einem Translation Memory.                                             |
+| `crowdin://languages`                        | Liste aller von Crowdin unterstützten Sprachen.                                   |
+| `crowdin://languages/{languageId}`           | Vollständige Details einer bestimmten Sprache.                                    |
+| `crowdin://groups`                           | Liste aller Gruppen. **(Nur Crowdin Enterprise.)**                                |
+| `crowdin://groups/{groupId}`                 | Vollständige Details einer bestimmten Gruppe. **(Nur Crowdin Enterprise.)**       |
+
+<Aside>
+  Ressourcen sind bei Verwendung des V2-Endpunkts automatisch verfügbar. Dein KI-Client kann sie verwenden, um vor der Ausführung von Befehlen Kontext zu sammeln, was zu genaueren Antworten führt. Verwende spezifischere Ressourcenpfade, wenn du die Ergebnismenge eingrenzen möchtest.
+</Aside>
+
+## KI-Client konfigurieren
+
+Dieser Abschnitt führt dich durch die Verbindung deines bevorzugten KI-Clients mit dem Crowdin-MCP-Server. Die genauen Schritte können je nach Client leicht variieren. Der grundlegende Ablauf besteht jedoch darin, deinem Client die Server-URL und dein Token zur Authentifizierung bereitzustellen.
+
+### Kompatible MCP-Clients
+
+Der Crowdin-MCP-Server basiert auf dem Model Context Protocol, einem offenen Standard für die Interaktion mit KI. Das bedeutet, dass jeder KI-Client oder jede Entwicklungsumgebung kompatibel sein sollte, die die Konfiguration benutzerdefinierter Tools oder externer Kontexte unterstützt.
+
+Wir haben den MCP-Server erfolgreich mit verschiedenen beliebten Clients getestet, darunter Crowdin Copilot, Desktop-Anwendungen wie Claude Desktop, KI-native IDEs wie Cursor und Plattformen wie OpenAI (ChatGPT).
+
+<LinkCard title="Crowdin-Copilot-Anwendung" description="Verwende Crowdin Copilot mit integrierter Unterstützung für Crowdin MCP V2 – keine manuelle MCP-Konfiguration erforderlich." href="https://store.crowdin.com/crowdin-copilot" target="_blank" />
+
+Diese Liste ist nicht vollständig, und wir empfehlen dir, den MCP-Server mit deinen bevorzugten KI-Tools zu verbinden.
+
+### Allgemeine Konfigurationsschritte
+
+Wenn du Crowdin Copilot verwendest, ist keine manuelle MCP-Einrichtung erforderlich. Für externe MCP-kompatible Clients umfasst der grundlegende Ablauf die folgenden Schritte:
+
+1. **Authentifizierungsmethode auswählen:** Entscheide, ob du den OAuth-Anmeldefluss (kein vorzubereitendes Token) oder ein statisches Zugriffstoken mit den erforderlichen Bereichen für deine vorgesehenen Aufgaben verwenden möchtest, wie im Abschnitt [Authentifizierung](#authentication-access-tokens-and-scopes) beschrieben.
+2. **Einstellungen deines Clients öffnen:** Öffne deinen KI-Client und suche den Einstellungsbereich zum Verbinden externer Tools oder MCP-Server.
+3. **Konfigurationsdetails eingeben:** Bei den meisten Clients musst du Folgendes angeben:
+   * Die **Endpunkt-URL** für den Crowdin-MCP-Server.
+   * Bei tokenbasierter Authentifizierung einen **Authorization-Header**, der dein Token enthält (z. B. `Authorization: Bearer {YOUR_CROWDIN_TOKEN}`). Beim OAuth-Anmeldefluss gibst du nur die URL an und meldest dich stattdessen über den Browser an.
+   * Optionale **Filter-Header**, wenn du die verfügbaren Tool-Sets einschränken oder den schreibgeschützten Zugriff aktivieren möchtest.
+
+<Aside type="tip" title="Token sicher verwalten">
+  Sofern dies von der Hostanwendung unterstützt wird (z. B. Claude Desktop), empfehlen wir, dein Crowdin-Token als Umgebungsvariable zu speichern, statt es direkt in Konfigurationsdateien fest einzutragen.
+</Aside>
+
+### Claude Desktop
+
+Führe die folgenden Schritte aus, um den MCP-Client in Claude Desktop einzurichten:
+
+<Steps>
+  1. Gehe in der Claude-Desktop-App zu **Settings > Developer**.
+
+  2. Klicke auf **Edit Config**, um die Datei `claude_desktop_config.json` zu finden und zu öffnen.
+
+  3. Gib die folgende Konfiguration ein und passe die URL an dein Produkt an:
+
+     <Tabs syncKey="Produkt">
+            <TabItem label="Crowdin">
+              ```json
+              {
+                "mcpServers": {
+                  "crowdin": {
+                    "command": "npx",
+                    "args": [
+                      "mcp-remote@latest",
+                      "https://mcp.crowdin.com/v2/mcp",
+                      "--header",
+                      "Authorization:${AUTH_TOKEN}"
+                    ],
+                    "env": {
+                      "AUTH_TOKEN": "Bearer {YOUR_CROWDIN_TOKEN}"
+                    }
+                  }
+                }
+              }
+              ```
+            </TabItem>
+            <TabItem label="Crowdin Enterprise">
+              ```json
+              {
+                "mcpServers": {
+                  "crowdin": {
+                    "command": "npx",
+                    "args": [
+                      "mcp-remote@latest",
+                      "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+                      "--header",
+                      "Authorization:${AUTH_TOKEN}"
+                    ],
+                    "env": {
+                      "AUTH_TOKEN": "Bearer {YOUR_CROWDIN_TOKEN}"
+                    }
+                  }
+                }
+              }
+              ```
+            </TabItem>
+     </Tabs>
+
+  4. Speichere die Datei und starte die Claude-Desktop-App neu.
+</Steps>
+
+<Aside type="tip" title="OAuth bevorzugt?">
+  Um dich stattdessen über den OAuth-Anmeldefluss anzumelden, entferne das Argument `--header` (und seinen Wert) sowie den Block `env`, sodass nur `mcp-remote@latest` und die URL-Argumente verbleiben. Bei der ersten Verbindung wird ein Browser geöffnet, damit du den Zugriff auf Crowdin autorisieren kannst.
+</Aside>
+
+### Claude Code
+
+Um den Crowdin-MCP-Server zur Claude-Code-CLI hinzuzufügen, führe den folgenden Befehl in deinem Terminal aus:
+
+<Tabs syncKey="Produkt">
+  <TabItem label="Crowdin">
+    ```bash
+    claude mcp add --transport http --header "Authorization: Bearer {YOUR_CROWDIN_TOKEN}" crowdin https://{your-organization-domain}.mcp.crowdin.com/v2/mcp
+    ```
+  </TabItem>
+  <TabItem label="Crowdin Enterprise">
+    ```bash
+    claude mcp add --transport http --header "Authorization: Bearer {YOUR_CROWDIN_TOKEN}" crowdin https://{your-organization-domain}.mcp.crowdin.com/v2/mcp
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip" title="OAuth bevorzugt?">
+  Um dich über den OAuth-Anmeldefluss anzumelden, anstatt ein Token zu verwalten, lasse das Flag `--header` weg: `claude mcp add --transport http crowdin https://mcp.crowdin.com/v2/mcp`. Bei der ersten Verwendung des Servers öffnet Claude Code einen Browser, damit du den Zugriff auf Crowdin autorisieren kannst.
+</Aside>
+
+### Cursor
+
+So integrierst du den Crowdin-MCP-Server in Cursor:
+
+<Steps>
+  1. Erstelle oder öffne die Cursor-MCP-Konfigurationsdatei – `~/.cursor/mcp.json` für den globalen Zugriff auf alle Projekte oder `.cursor/mcp.json` in deinem Projekt für projektspezifischen Zugriff.
+  2. Füge den Serverblock `crowdin` zum Objekt `mcpServers` hinzu:
+
+     <Tabs syncKey="Produkt">
+            <TabItem label="Crowdin">
+              ```json
+              {
+                "mcpServers": {
+                  "crowdin": {
+                    "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+                    "headers": {
+                      "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}"
+                    }
+                  }
+                }
+              }
+              ```
+            </TabItem>
+            <TabItem label="Crowdin Enterprise">
+              ```json
+              {
+                "mcpServers": {
+                  "crowdin": {
+                    "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+                    "headers": {
+                      "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}"
+                    }
+                  }
+                }
+              }
+              ```
+            </TabItem>
+     </Tabs>
+  3. Speichere die Datei. Cursor übernimmt den neuen Server automatisch – du kannst in den MCP-Einstellungen von Cursor überprüfen, ob er aktiviert ist.
+</Steps>
+
+<Aside type="tip" title="OAuth bevorzugt?">
+  Um dich über den OAuth-Anmeldefluss anzumelden, entferne den Block `headers`, sodass nur `url` verbleibt. Bei der ersten Verbindung öffnet Cursor einen Browser, damit du den Zugriff auf Crowdin autorisieren kannst.
+</Aside>
+
+### VS Code
+
+So konfigurierst du den Crowdin-MCP-Server in VS Code:
+
+<Steps>
+  1. Erstelle oder öffne die Datei `.vscode/mcp.json` in deinem Arbeitsbereich.
+  2. Füge die folgende Konfiguration hinzu:
+
+     <Tabs syncKey="Produkt">
+            <TabItem label="Crowdin">
+              ```json
+              {
+                "servers": {
+                  "crowdin": {
+                    "type": "http",
+                    "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+                    "headers": {
+                      "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}"
+                    }
+                  }
+                }
+              }
+              ```
+            </TabItem>
+            <TabItem label="Crowdin Enterprise">
+              ```json
+              {
+                "servers": {
+                  "crowdin": {
+                    "type": "http",
+                    "url": "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+                    "headers": {
+                      "Authorization": "Bearer {YOUR_CROWDIN_TOKEN}"
+                    }
+                  }
+                }
+              }
+              ```
+            </TabItem>
+     </Tabs>
+  3. Öffne die Befehlspalette und führe **MCP: List Servers** aus, um die Verbindung zu starten.
+</Steps>
+
+<Aside type="tip" title="OAuth bevorzugt?">
+  Um dich über den OAuth-Anmeldefluss anzumelden, entferne den Block `headers`, sodass `type` und `url` verbleiben. Bei der ersten Verbindung fordert VS Code dich auf, dich im Browser bei Crowdin anzumelden.
+</Aside>
+
+### Windsurf
+
+So konfigurierst du den Crowdin-MCP-Server für Windsurf:
+
+<Steps>
+  1. Öffne die Windsurf-MCP-Konfigurationsdatei unter `~/.codeium/windsurf/mcp_config.json`.
+  2. Füge den Serverblock `crowdin` zum Objekt `mcpServers` hinzu:
+
+     <Tabs syncKey="Produkt">
+            <TabItem label="Crowdin">
+              ```json
+              {
+                "mcpServers": {
+                  "crowdin": {
+                    "command": "npx",
+                    "args": [
+                      "mcp-remote@latest",
+                      "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+                      "--header",
+                      "Authorization: Bearer {YOUR_CROWDIN_TOKEN}"
+                    ]
+                  }
+                }
+              }
+              ```
+            </TabItem>
+            <TabItem label="Crowdin Enterprise">
+              ```json
+              {
+                "mcpServers": {
+                  "crowdin": {
+                    "command": "npx",
+                    "args": [
+                      "mcp-remote@latest",
+                      "https://{your-organization-domain}.mcp.crowdin.com/v2/mcp",
+                      "--header",
+                      "Authorization: Bearer {YOUR_CROWDIN_TOKEN}"
+                    ]
+                  }
+                }
+              }
+              ```
+            </TabItem>
+     </Tabs>
+  3. Speichere die Datei und starte Windsurf neu.
+</Steps>
+
+<Aside type="tip" title="OAuth bevorzugt?">
+  Um dich über den OAuth-Anmeldefluss anzumelden, entferne das Argument `--header` und seinen Wert aus `args`, sodass nur `mcp-remote@latest` und die URL verbleiben. Bei der ersten Verbindung wird ein Browser geöffnet, damit du den Zugriff auf Crowdin autorisieren kannst.
+</Aside>
+
+## Erste Anfrage senden
+
+Sobald dein Client konfiguriert ist, kannst du die Verbindung mit einer einfachen, aufgabenbezogenen Eingabeaufforderung testen.
+
+Starte einen neuen Chat mit deinem KI-Assistenten und gib Folgendes ein: `Welche Aufgaben bearbeite ich derzeit?`
+
+Bevor die Anfrage ausgeführt wird, identifiziert der KI-Client wahrscheinlich das erforderliche Tool auf dem Crowdin-MCP-Server und bittet dich um deine Erlaubnis, fortzufahren. Du musst diese Bestätigung genehmigen, damit der Befehl ausgeführt werden kann. Viele Clients bieten auch Möglichkeiten, dieses Verhalten für vertrauenswürdige Quellen zu vereinfachen.
+
+Nachdem du die Erlaubnis erteilt hast, antwortet die KI mit einer Liste der dir aktuell zugewiesenen Aufgaben. Damit wird bestätigt, dass deine Verbindung funktioniert und dein Client auf den erwarteten Crowdin-Kontext zugreifen kann.
+
+## Praxisnahe Workflows für deine Rolle
+
+Die eigentliche Stärke des MCP-Servers zeigt sich beim Verketten von Befehlen, um reale Lokalisierungsaufgaben zu erledigen. Hier sind einige Beispiele dafür, wie verschiedene Rollen damit ihre Arbeit optimieren können.
+
+### Projektmanager
+
+1. **Fortschritt prüfen:**
+   ```text wrap
+   Wie weit ist die Korrekturlesung für das Projekt „Q4 Mobile Release“ auf Deutsch?
+   ```
+2. **Engpass ermitteln:** Die KI antwortet, dass die deutsche Korrekturlesung erst zu 30 % abgeschlossen ist.
+3. **Maßnahmen ergreifen:**
+   ```text wrap
+   Erstelle für dieses Projekt eine Aufgabe, um alle nicht genehmigten deutschen Zeichenketten Korrektur zu lesen, und weise sie „John Doe“ zu.
+   ```
+4. **Aktive Arbeit prüfen:**
+   ```text wrap
+   Zeige alle meine derzeit laufenden Aufgaben an und hebe überfällige Elemente hervor.
+   ```
+5. **Arbeit automatisch verteilen:**
+   ```text wrap
+   Finde im Projekt „Mobile App Q4“ nicht übersetzten Inhalt, erstelle dafür Aufgaben und verteile die Arbeit gleichmäßig auf die verfügbaren Übersetzer.
+   ```
+
+### Entwickler / Übersetzungsanforderer
+
+1. **Neue Quelldateien hinzufügen:** Wenn ein neues Feature fertig ist, fügt der Entwickler die Quelldateien mithilfe von Cursor zum Lokalisierungsprojekt hinzu.
+   ```text wrap
+   Füge die Datei „new_onboarding_feature.json“ zum Projekt „Mobile App Q4“ hinzu.
+   ```
+2. **Übersetzungsfortschritt überwachen:** Wenn die Frist näher rückt, prüfen sie den Fortschritt der Übersetzer, um sicherzustellen, dass das Projekt planmäßig voranschreitet.
+   ```text wrap
+   Wie ist der Übersetzungsfortschritt für das Projekt „Mobile App Q4“?
+   ```
+3. **Endgültige Übersetzungen veröffentlichen:** Sobald die Übersetzungen vollständig und genehmigt sind, veröffentlicht der Entwickler sie über eine vorkonfigurierte Distribution in seiner Produktionsumgebung.
+   ```text wrap
+   Erstelle eine neue Version für unsere Distribution „Production CDN“.
+   ```
+
+### Übersetzer
+
+1. **Arbeit finden:** Der erste Schritt eines Übersetzers besteht darin, Zeichenketten zu finden, an denen er arbeiten kann.
+   ```text wrap
+   Zeige mir alle nicht übersetzten Zeichenketten mit hoher Priorität für Französisch im Projekt „iOS App“.
+   ```
+2. **Konsistenz sicherstellen:** Um die Qualität zu wahren, prüfen sie das Glossar auf die richtige Terminologie.
+   ```text wrap
+   Wie lautet die genehmigte Übersetzung für den Begriff „workspace“ im französischen Glossar?
+   ```
+3. **Kontext anfordern:** Wenn eine Zeichenkette mehrdeutig ist, fordert der Übersetzer visuellen Kontext für eine genaue Übersetzung an.
+   ```text wrap
+   Zeige mir den Screenshot für die Zeichenketten-ID „xyz-789“.
+   ```
+
+### Administrator (nur Crowdin Enterprise)
+
+1. **Berechtigungen prüfen:**
+   ```text wrap
+   Zeige die Organisationsmitglieder des Teams „German Translation“ an.
+   ```
+2. **Änderungsbedarf ermitteln:** Die KI listet die Mitglieder auf. Der Administrator bemerkt einen Benutzer, der das Unternehmen verlassen hat.
+3. **Maßnahmen ergreifen:**
+   ```text wrap
+   Lösche „John Doe“ aus der Organisation.
+   ```
+4. **Inaktive Konten prüfen:**
+   ```text wrap
+   Zeige inaktive Benutzer der Organisation an, liste ihre Teammitgliedschaften und ihren Projektzugriff auf und schlage vor, welche Konten deaktiviert werden sollten.
+   ```
+
+## Best Practices
+
+* **V2-Endpunkt verwenden:** Der V2-Endpunkt (`/v2/mcp`) bietet intelligentes Tool-Laden, erweiterte Filterung und MCP-Ressourcen, die die Genauigkeit und Leistung von KI-Agenten verbessern. Verwende V2 für alle neuen Integrationen.
+* **Nur benötigte Tool-Sets laden:** Beginne mit den für deinen Workflow erforderlichen Tool-Sets und füge nur bei Bedarf weitere hinzu. Eine kleinere Tool-Liste hilft dem Agenten, fokussiert zu bleiben.
+* **Projekttyp festlegen:** Wenn du deinen Projekttyp kennst, übergib den Header `crowdin-project-type` (`string-based` oder `file-based`). Dadurch werden irrelevante Tools herausgefiltert und der KI-Agent kann bessere Entscheidungen treffen.
+* **Schreibgeschützten Modus für sichere Erkundung verwenden:** Setze `crowdin-read-only: true`, wenn du neue Teammitglieder einarbeitest oder Integrationen testest. Dadurch werden versehentliche Änderungen verhindert und gleichzeitig vollständiger Lesezugriff bereitgestellt.
+* **Sei in deinen Eingabeaufforderungen spezifisch:** Verwende Projektname und IDs statt allgemeiner Begriffe. Zum Beispiel ist `List tasks for project ID 12345 in French` besser als `Show me my tasks.`
+* **Mit einer einfachen Abfrage beginnen:** Beginne mit einer sicheren Eingabe wie `Welche Aufgaben bearbeite ich derzeit?`, um zu bestätigen, dass dein Client auf den erwarteten Crowdin-Kontext zugreifen kann.
+* **Token sicher verwalten:** Behandle deine Zugangsdaten wie Passwörter und gehe sorgfältig damit um.
+  * **Minimale Bereiche verwenden:** Wenn du ein Token erstellst oder eine App konfigurierst, erteile nur die Berechtigungen, die für die von dir vorgesehenen Aufgaben erforderlich sind.
+  * **Sicher speichern:** Bewahre Tokens in verschlüsselten Tresoren oder sicheren Umgebungsvariablen auf, nicht in gemeinsam genutzten Konfigurationsdateien.
+  * **Regelmäßig rotieren:** Widerrufe alte Tokens regelmäßig und erstelle neue, um die Sicherheit zu erhöhen.

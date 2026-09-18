@@ -1,0 +1,118 @@
+---
+title: Modul für das Editor-Assetpanel
+description: Die standardmäßige Asset-Vorschau im Editor für bestimmte Dateitypen durch eine benutzerdefinierte App ersetzen
+slug: developer/crowdin-apps-module-editor-asset-panel
+sidebar:
+  order: 7
+  label: Editor-Assetpanel
+---
+
+import { Image } from 'astro:assets';
+import editorAP from '!/developer/module_editor_asset_panel.png';
+
+Mit dem Editor-Assetpanel-Modul kann deine App das standardmäßige Vorschaupanel für Assets im Editor ersetzen. Wenn ein Benutzer ein Asset öffnet, kann deine App den gesamten Vorschaubereich übernehmen, wenn der Dateiname des Assets einem von dir definierten Muster entspricht.
+
+Diese Funktion ist besonders hilfreich für Dateitypen, die im Editor nicht nativ in der Vorschau angezeigt werden können, etwa Video, Audio oder andere proprietäre Formate. Wenn der Dateiname eines Assets mit dem in deinem Manifest angegebenen `fileNamePattern` übereinstimmt, wird deine App anstelle der standardmäßigen Vorschau geladen. Wenn keine Übereinstimmung vorliegt, wird das standardmäßige Crowdin-Vorschaupanel angezeigt.
+
+<Image src={editorAP} alt="Modul für das Editor-Assetpanel" />
+
+## So funktioniert es
+
+Das Editor-Assetpanel-Modul arbeitet ereignisgesteuert. Wenn ein Benutzer im Editor zu einem Asset navigiert, überprüft das System, ob installierte Apps dieses Modul verwenden.
+
+1. **Musterabgleich**: Crowdin übernimmt `fileNamePattern` aus der `manifest.json` deiner App und vergleicht es mit dem Namen des aktuell geöffneten Assets (z. B. `clip.mov`).
+2. **App-Initialisierung**: Wenn der Dateiname des Assets dem Muster entspricht, ersetzt Crowdin das standardmäßige Vorschaupanel durch ein iframe, das auf die `url` deiner App verweist.
+3. **Ereignisverarbeitung**: Sobald deine App geladen ist, sendet Crowdin Ereignisse an sie, die deine App abonnieren und verarbeiten muss. Diese Ereignisse enthalten die erforderlichen Daten (Payload), damit deine App den richtigen Asset-Inhalt anzeigen kann.
+
+Die wichtigsten Ereignisse sind:
+
+* `asset.source.preview`: Wird ausgelöst, wenn der Benutzer auf die Vorschau des Source-Assets klickt.
+* `asset.suggestion.preview`: Wird ausgelöst, wenn der Benutzer auf die Vorschau eines übersetzten Assets klickt.
+
+Deine App sollte auf diese Ereignisse reagieren, um ihre benutzerdefinierte Vorschau-Logik zu implementieren, z. B. zum Rendern eines Videoplayers oder einer Audiokonsole. Wenn der Dateiname eines Assets nicht mit `fileNamePattern` übereinstimmt, wird der standardmäßige Crowdin-Asset-Viewer wie gewohnt geladen.
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+Für Crowdin:
+
+* Nur ich (also der Projektinhaber)
+* Ich, Projektmanager und Entwickler
+* Alle Projektmitglieder
+* Ausgewählte Benutzer
+
+Für Crowdin Enterprise:
+
+* Nur Organisationsadministratoren
+* Organisationsadministratoren, Projektmanager und Entwickler
+* Alle Benutzer in den Projekten der Organisation
+* Ausgewählte Benutzer
+
+## Struktur
+
+```json title="manifest.json"
+{
+  "modules": {
+    "editor-asset-panel": [
+      {
+        "key": "your-module-key",
+        "name": "Module name",
+        "url": "/editor-page",
+        "fileNamePattern": "^.+\.xyz$",
+        "environments": [
+          "crowdin", "crowdin-enterprise"
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Der für Menschen lesbare Name des Moduls.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja (nur selbst gehostete Apps)</p>
+        <p><strong>Beschreibung:</strong> Die relative URL zur Inhaltsseite des Moduls, die in das Assetpanel des Editors eingebettet wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">fileNamePattern</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Ein regulärer Ausdruck, mit dem Crowdin die Dateinamen der Assets abgleicht, die deine App verarbeiten kann. Wenn der Name des Assets diesem Muster entspricht, wird deine App im Vorschaupanel geladen. Beispielsweise kannst du mit <code>^.+.mov$</code> alle MOV-Dateien abgleichen.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Zulässige Werte:</strong> <code>crowdin</code>, <code>crowdin-enterprise</code></p>
+        <p><strong>Beschreibung:</strong> Menge der Umgebungen, in denen ein Modul installiert werden kann.<br />
+        Dieser Parameter wird für produktübergreifende Anwendungen benötigt.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>

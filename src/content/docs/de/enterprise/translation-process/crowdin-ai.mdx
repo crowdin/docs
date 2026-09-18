@@ -1,0 +1,606 @@
+---
+title: Crowdin AI
+description: Leistungsstarke KI-Funktionen zur Verbesserung von Lokalisierungsabläufen
+slug: enterprise/crowdin-ai
+sidebar:
+  order: 1
+---
+
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { Badge } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+Crowdin Enterprise integriert sich mit führenden KI-Anbietern, darunter OpenAI, Google Gemini, Microsoft Azure OpenAI und weitere, und ermöglicht es Ihnen, fortschrittliche KI-gestützte Übersetzungen zu nutzen, die zusätzlichen Kontext auf verschiedenen Ebenen berücksichtigen. Diese Übersetzungen kannst du mit wenigen Klicks mithilfe der [automatischen Übersetzung über KI](#auto-translation-via-ai) auf deine Inhalte anwenden. Außerdem kann KI in Crowdin Enterprise für [KI-Vorschläge im Editor](#using-ai-in-the-editor), [KI-Abgleich](#ai-alignment), [KI-QA-Prüfungen](#ai-qa-check) und die [Überprüfung der Qualität des Zeichenkettenkontexts](#advisor-string-context-review) verwendet werden.
+
+Du kannst deine Auswahl an KI-Anbietern erweitern, indem du die entsprechenden Anwendungen aus dem Crowdin [Store](https://store.crowdin.com/tags/ai) installierst.
+
+## KI konfigurieren
+
+Die Crowdin-AI-Integration bietet leistungsstarke Funktionen zur Verbesserung von Lokalisierungsabläufen. Zur Konfiguration von KI gehören das [Einrichten von Anbietern](#configuring-ai-providers) und das [Erstellen von Prompts](#configuring-ai-prompts).
+
+<Aside type="tip">
+  Klicke in den Tabs **Prompts** und **Anbieter** auf <Icon name="mdi:information" class="inline-icon" />, um die Seitenleiste mit Konfigurationshinweisen wie verfügbaren KI-Funktionen, Anforderungen an Prompts und Tipps zur Anbieterkonfiguration zu öffnen.
+</Aside>
+
+### KI-Prompts konfigurieren
+
+Prompt Engineering ist entscheidend, um die KI beim Verständnis von Kontext zu unterstützen und genaue Übersetzungen bereitzustellen. Die Anpassung von Prompts innerhalb von Crowdin Enterprise stellt sicher, dass KI-Algorithmen die Feinheiten Ihres Projekts verstehen, was zu einer verbesserten Übersetzungsqualität führt.
+
+* **Kontextbezogene Prompts** &ndash; Passe Prompts an, um Kontextinformationen wie projektspezifische Terminologie, Stileinstellungen und die Anforderungen der Zielgruppe bereitzustellen. Füge beispielsweise Anweisungen hinzu, um technische Begriffe konsistent zu übersetzen oder den Markenstil über verschiedene Sprachen hinweg beizubehalten.
+* **Platzhalter verwenden** &ndash; Baue Platzhalter ein, um kontextspezifische Informationen dynamisch in Prompts einzufügen, sodass die KI Übersetzungen erstellen kann, die auf die Projektanforderungen abgestimmt sind.
+* **Kontext auf Dateiebene** &ndash; Verwende Kontext auf Dateiebene, um Anweisungen und kontextbezogene Informationen bereitzustellen und so das Verständnis der KI für die inhaltlichen Besonderheiten zu verbessern. Füge Dateibeschreibungen, Zusammenfassungen oder Verweise auf Glossare und Style Guides hinzu.
+
+Führe die folgenden Schritte aus, um KI-Prompts zu konfigurieren:
+
+<Steps>
+  1. Öffnen Sie den **Arbeitsbereich** Ihrer Organisation und wählen Sie **KI** in der linken Seitenleiste aus.
+  2. Klicken Sie im Tab **Prompts** auf **Neuer Prompt**. Alternativ kannst du Prompt-Beispiele erstellen, indem du auf **Beispiel ausprobieren** klickst. Mit Crowdin kannst du schnell vorkonfigurierte Prompts einrichten, die bereits ab ihrer Erstellung effektiv funktionieren. Obwohl diese Beispiele zunächst gut funktionieren, kannst du sie an deine persönlichen Anforderungen anpassen.
+  3. Lege im geöffneten Dialog die Prompt-Parameter fest:
+     * Wähle den Prompt-Typ aus (z. B. [Automatische Übersetzung & KI-Vorschlag](#auto-translation-via-ai), [Alignment](#ai-alignment), [QA-Prüfung](#ai-qa-check), [Advisor-Kontextüberprüfung](#advisor-string-context-review) oder Benutzerdefinierter Typ).
+     * Name des benutzerdefinierten Typs (gilt nur für den benutzerdefinierten Prompt-Typ)
+     * Verwende diesen Prompt als Standard-Prompt für KI-Vorschläge im Editor (gilt nur für den Prompt-Typ „Automatische Übersetzung und KI-Vorschlag“).
+     * Titel
+     * Modell (einschließlich des KI-Anbieters)
+     * Erweiterte Einstellungen:
+       * Sichtbarkeit &ndash; Wähle Projekte aus, in denen ein Prompt verwendet werden kann:
+         * Alle Projekte &ndash; Der Prompt ist in allen Projekten verfügbar.
+         * Ausgewählte Projekte &ndash; Der Prompt ist nur in den von dir ausgewählten Projekten verfügbar. Wenn keine Projekte ausgewählt sind oder alle zugewiesenen Projekte später gelöscht werden, ist der Prompt in keinem Projekt verfügbar.
+       * Automatischer erneuter Versuch bei QA-Problemen &ndash; Ermöglicht, automatisch eine zusätzliche Anfrage an die KI zu senden, wenn die erhaltene Übersetzung die QA-Prüfungen nicht besteht.
+     * Prompt-Editor-Modus (z. B. Einfach oder Erweitert)
+     * Zusätzlicher Kontext (Einfach-Modus) &ndash; Lege fest, welche Daten mithilfe der folgenden Felder in den Prompt aufgenommen werden:
+       <Aside>Standardmäßig eingeschlossener Kontext: Zeichenfolgenkontext, Zeichenfolgenbezeichner (Schlüssel), maximale Übersetzungslänge.</Aside>
+       * Übersetzungen anderer Sprachen &ndash; Wähle bestimmte Sprachübersetzungen aus, die von der KI als zusätzlicher Kontext berücksichtigt werden sollen, oder lasse dieses Feld unverändert, um Übersetzungen aus allen Sprachen zu verwenden.
+       * Glossarbegriffe &ndash; Ermöglicht der KI, domänenspezifische Glossarbegriffe zu berücksichtigen.
+       * TM-Vorschläge &ndash; Ermöglicht der KI, TM-Vorschläge zu berücksichtigen.
+       * Style Guides &ndash; Ermöglicht der KI, die in den dem Projekt zugewiesenen Style Guides definierten Regeln, den Ton und die sprachlichen Präferenzen zu berücksichtigen.
+       * Vorherige und nächste Zeichenfolgen &ndash; Ermöglicht der KI, vorherige und nächste Zeichenfolgen als zusätzlichen Kontext zu berücksichtigen.
+       * Dateikontext &ndash; ermöglicht es der KI, eine Textbeschreibung der Datei zu berücksichtigen, die in den [Dateieinstellungen](/enterprise/file-management/#file-context) oder im [Editor](/enterprise/online-editor/#file-context) hinzugefügt wurde.
+       * Von der KI generierter Dateikontext &ndash; Generiert automatisch Dateikontext, wenn dieser fehlt. Wenn der Dateikontext nicht manuell bereitgestellt wird, analysiert die KI den Quellinhalt und erstellt eine kontextbezogene Zusammenfassung. Diese Zusammenfassung wird sowohl bei der automatischen Übersetzung als auch als Referenzmaterial im Editor verwendet. <Aside type="caution">Diese Option ist nur in dateibasierten Projekten verfügbar und setzt voraus, dass die Option „Dateikontext“ aktiviert ist.</Aside>
+       * Screenshots &ndash; Ermöglicht der KI, visuellen Kontext aus Screenshots zu berücksichtigen, in denen die Zeichenfolgen gekennzeichnet sind. Dies verbessert die Genauigkeit und das Kontextverständnis. <ReadMore>Mehr über [Screenshots](/enterprise/screenshots/) erfahren.</ReadMore>
+       * Projektkontext &ndash; ermöglicht es der KI, den Namen und die Beschreibung des Projekts zu berücksichtigen. Dadurch erhält die KI ein übergeordnetes Verständnis Ihres Produkts und kann passende Terminologie und einen geeigneten Ton wählen.
+       * Organisationskontext &ndash; ermöglicht es der KI, den Namen und die Beschreibung der Organisation zu berücksichtigen. Dies fügt umfassenderen Kontext zu deinem Unternehmen oder deiner Marke hinzu und trägt dazu bei, Übersetzungen projektübergreifend konsistent zu halten.
+       * Snippets &ndash; wähle wiederverwendbare Inhalte aus, die zuvor in **KI > Snippets** der Organisation erstellt wurden, um schnell Standardtext-Snippets in deinen Prompt einzufügen.
+       * Evaluierungsschritte (gilt nur für den Prompt-Typ „QA-Prüfung“) &ndash; Definiere die Kriterien, anhand derer die KI Übersetzungen bewertet. Du kannst Schritte anpassen, entfernen oder neue Schritte erstellen, die auf deine Qualitätsanforderungen zugeschnitten sind.
+     * Erweiterter Modus &ndash; Klicke auf **Erweiterter Modus**, um deinen Prompt mit höherer Präzision zu erstellen. Verwende die folgenden Platzhalter, um Kontext einzufügen: <Aside type="tip">Klicke auf den Platzhalter, um ihn zum späteren Einfügen in das Prompt-Feld zu kopieren.</Aside>
+       * `%sourceLanguage%` &ndash; Die Quellsprache des Projekts.
+       * `%targetLanguages%` &ndash; Eine Liste aller Zielsprachen des Projekts.
+       * `%targetLanguage%` &ndash; Die Sprache, in die der Inhalt übersetzt wird.
+       * `%pluralForms%` &ndash; Eine Liste der Pluralformen für die Zielsprache.
+       * `%strings%` &ndash; Eine Sammlung von Zeichenfolgen für das aktuelle Segment, einschließlich Zeichenfolgenbezeichner (Schlüssel), Kontext, Text, maximaler Länge und Übersetzungen in andere Sprachen (sofern der Platzhalter für Übersetzungen angegeben ist).
+       * `%translationUnits%` &ndash; Eine Liste von Übersetzungseinheiten (Quelle und Übersetzung), die die KI während der QA-Prüfungen bewertet.
+       * `%alignmentPairs%` &ndash; Eine Liste von Ausgangs- und Zielübersetzungspaaren, die die KI während des KI-Alignments analysieren soll.
+       * `%fileName%` &ndash; Der Dateiname des aktuellen Segments.
+       * `%fileContext%` &ndash; Der Dateikontext des aktuellen Segments (bereitgestellt über das Dateieinstellungs-Modal im Bereich „Dateien“).
+       * `%siblingsStrings%` &ndash; Die vorherigen und nächsten Segmente in der Datei, die eine kontextbezogene Übersetzung ermöglichen.
+       * `%filteredStrings%` &ndash; Zeichenfolgen, die dem aktuellen Filter im Editor entsprechen und der KI für eine genauere und effizientere Bewertung bereitgestellt werden.
+       * `%projectName%` &ndash; Der Projektname.
+       * `%projectDescription%` &ndash; Die Projektbeschreibung.
+       * `%organizationName%` &ndash; Der Name der Organisation.
+       * `%organizationDescription%` &ndash; Die Beschreibung der Organisation.
+       * `%assignedStyleGuides%` &ndash; Die dem Projekt zugewiesenen Style Guides.
+       * Snippets &ndash; füge zuvor definierte wiederverwendbare Inhalte aus **KI > Snippets** der Organisation mithilfe des Formats `%custom:snippetName%` ein.
+     <Aside type="tip">
+             Verwende die Schaltfläche **Auf Standard zurücksetzen**, um den ursprünglichen Standardinhalt und die Platzhalter des Crowdin-Enterprise-Prompts wiederherzustellen. Dies ist nützlich, wenn du Änderungen verwerfen und vor dem Speichern von Grund auf neu beginnen möchtest.
+     </Aside>
+  4. Klicke auf **Erstellen**.
+</Steps>
+
+<Aside type="tip">
+  Neben **Basic** und **Advanced** steht ein dritter Modus **External** zur Verfügung, wenn du eine App installierst, die Prompts bereitstellt. In diesem Modus wird der Prompt von der App statt von Crowdin erstellt und verarbeitet, wodurch eine benutzerdefinierte Prompt-Logik über die integrierten Optionen hinaus möglich ist.
+</Aside>
+
+<LinkCard title="AI-Pipeline-App" description="Führe Übersetzungen durch eine Abfolge fokussierter KI-Schritte (Übersetzung, Überprüfung und Selbstkorrektur), um die Qualität zu maximieren." href="https://store.crowdin.com/ai-pipeline" target="_blank" />
+
+#### Prompts in den Projekteinstellungen erstellen
+
+Du kannst Prompts auch direkt im Bereich **Einstellungen > KI** eines Projekts erstellen. Bei dieser Methode erstellte Prompts sind standardmäßig nur für dieses bestimmte Projekt sichtbar.
+
+<ReadMore>
+  Weitere Informationen zu [KI-Einstellungen in einem Projekt](/project-settings/ai/).
+</ReadMore>
+
+### KI-Prompts verwalten
+
+Die Verwaltung von KI-Prompts in Crowdin Enterprise umfasst verschiedene Vorgänge wie das Filtern und Suchen, Bearbeiten, Klonen und Löschen von KI-Prompts. Nachfolgend findest du Anweisungen für jeden Vorgang.
+
+#### KI-Prompts anzeigen und filtern
+
+Nachdem du die **KI**-Seite geöffnet hast, kannst du im Tab **Prompts** Prompts anzeigen und suchen.
+
+Du kannst die Liste der hinzugefügten Prompts mit den folgenden Details anzeigen:
+
+* **Name** – Der Name des Prompts.
+* **Sichtbarkeit** – Zeigt einen Zähler der Projekte an, in denen der Prompt verfügbar ist, zusammen mit der Liste der Projekte (mit anklickbaren Links).
+* **Typ** – Der Typ des Prompts (z. B. Automatische Übersetzung & KI-Vorschlag, Alignment, QA-Prüfung, Benutzerdefinierter Typ).
+* **Modell** – Das vom Prompt verwendete KI-Modell. Eine Statusanzeige neben dem Modellnamen zeigt, ob der Prompt einsatzbereit ist:
+  * Ein **grüner Punkt** zeigt an, dass der Prompt korrekt konfiguriert und einsatzbereit ist.
+  * Ein **roter Punkt** zeigt an, dass ein Problem mit der Konfiguration des Prompts vorliegt (z. B. der ausgewählte Anbieter ist deaktiviert). Bewege den Mauszeiger über den Modellnamen, um die konkrete Fehlermeldung anzuzeigen.
+* **Erstellt am** – Das Datum, an dem der Prompt erstellt wurde.
+* **Erstellt von** – Der Benutzer, der den Prompt erstellt hat.
+* **Geändert am** – Das Datum der letzten Aktualisierung des Prompts.
+* **Geändert von** – Der Benutzer, der den Prompt zuletzt geändert hat.
+* **Zuletzt verwendet am** – Das Datum, an dem der Prompt zuletzt verwendet wurde.
+* **Zuletzt verwendet von** – Der Benutzer, der den Prompt zuletzt verwendet hat.
+* **Anzahl der Verwendungen** – Die Gesamtzahl der Verwendungen des Prompts.
+
+<Aside type="tip">
+  Einige Spalten wie **Erstellt von**, **Geändert von** und **Nutzungshäufigkeit** sind standardmäßig ausgeblendet. Klicke auf das Symbol für die Spaltenauswahl <Icon name="material-symbols:table-chart" class="inline-icon" />, um auszuwählen, welche Spalten angezeigt werden sollen.
+</Aside>
+
+Um einen bestimmten Prompt zu finden, verwende das Feld **Suchen**. Um die Liste einzugrenzen, klicke auf die Schaltfläche **Filter**. Damit kannst du nach **Typ**, Benutzer **Erstellt von**, Datum **Erstellt am**, Benutzer **Geändert von**, Datum **Geändert am**, Benutzer **Zuletzt verwendet von** und Datum **Zuletzt verwendet am** filtern.
+
+#### KI-Prompts bearbeiten
+
+Wenn du einen bereits konfigurierten Prompt anpassen musst, kannst du ihn einfach bearbeiten.
+
+Führe die folgenden Schritte aus, um KI-Prompts zu bearbeiten:
+
+<Steps>
+  1. Öffnen Sie den **Arbeitsbereich** Ihrer Organisation und wählen Sie **KI** in der linken Seitenleiste aus.
+  2. Klicke im Tab **Prompts** beim gewünschten Prompt auf <Icon name="mdi:dots-vertical" class="inline-icon" /> und wähle **Bearbeiten**.
+  3. Passe den Prompt nach Bedarf an und klicke auf **Aktualisieren**, um die Änderungen zu speichern.
+</Steps>
+
+Beim Bearbeiten eines Prompts findest du den Bereich **Prompt-Metadaten**. Diese Informationen bieten eine klare Prüfungsspur für die Zusammenarbeit und Fehlerbehebung. Durch die Erfassung von Erstellungs-, Änderungs- und Nutzungsdaten kannst du erkennen, welche Prompts am effektivsten sind, beliebte Prompts zur Optimierung identifizieren und Kosten effizienter verwalten. Der Bereich enthält die folgenden schreibgeschützten Details:
+
+* **Erstellt von** – Der Benutzer, der den Prompt erstellt hat.
+* **Erstellt am** – Das Datum und die Uhrzeit, zu denen der Prompt erstellt wurde.
+* **Geändert von** – Der Benutzer, der den Prompt zuletzt geändert hat.
+* **Geändert am** – Das Datum und die Uhrzeit der letzten Änderung des Prompts.
+* **Zuletzt verwendet von** – Der Benutzer, der den Prompt zuletzt verwendet hat.
+* **Zuletzt verwendet am** – Das Datum und die Uhrzeit, zu denen der Prompt zuletzt verwendet wurde.
+* **Anzahl der Verwendungen** – Die Gesamtzahl der an die KI über diesen Prompt gesendeten Anfragen.
+
+Durch das Bearbeiten von Prompts kannst du sie nach Bedarf aktualisieren und verbessern, damit sie effektiv bleiben und deinen Anforderungen entsprechen. Wenn du die aktuelle Prompt-Konfiguration nicht verlieren möchtest und bei den Änderungen unsicher bist, kannst du deinen Prompt [klonen](#cloning-ai-prompts) und mit der Kopie experimentieren.
+
+#### KI-Prompts klonen
+
+Durch das Klonen von KI-Prompts kannst du mit Prompt-Konfigurationen experimentieren und sie verfeinern, ohne das Original zu verändern. Diese Funktion eignet sich besonders zum Testen verbesserter Prompt-Versionen, während die ursprüngliche Konfiguration erhalten bleibt.
+
+Führe die folgenden Schritte aus, um KI-Prompts zu klonen:
+
+<Steps>
+  1. Öffnen Sie den **Arbeitsbereich** Ihrer Organisation und wählen Sie **KI** in der linken Seitenleiste aus.
+  2. Klicke im Tab **Prompts** beim gewünschten Prompt auf <Icon name="mdi:dots-vertical" class="inline-icon" /> und wähle **Klonen**.
+  3. Daraufhin erscheint eine Kopie des Prompts in der Prompt-Liste.
+</Steps>
+
+Du kannst den geklonten Prompt anschließend [bearbeiten](#editing-ai-prompts), um verschiedene Konfigurationen auszuprobieren. So kannst du Verbesserungen sicher testen und die Leistung optimieren, ohne den Verlust der ursprünglichen Prompt-Konfiguration zu riskieren.
+
+#### KI-Prompts löschen
+
+Das Löschen von KI-Prompts ist unkompliziert, sollte aber mit Vorsicht erfolgen, um den Verlust wertvoller Konfigurationen zu vermeiden. Diese Aktion ist nützlich, wenn du einen bestimmten Prompt nicht mehr benötigst oder ungenutzte Prompts bereinigen möchtest.
+
+Führe die folgenden Schritte aus, um KI-Prompts zu löschen:
+
+<Steps>
+  1. Öffnen Sie den **Arbeitsbereich** Ihrer Organisation und wählen Sie **KI** in der linken Seitenleiste aus.
+  2. Klicke im Tab **Prompts** beim gewünschten Prompt auf <Icon name="mdi:dots-vertical" class="inline-icon" /> und wähle **Entfernen**.
+  3. Bestätige den Löschvorgang.
+</Steps>
+
+<Aside>
+  Überprüfe den Prompt vor dem Löschen sorgfältig, um sicherzustellen, dass du ihn nicht mehr benötigst, da diese Aktion nicht rückgängig gemacht werden kann und gelöschte Prompts nicht wiederhergestellt werden können.
+</Aside>
+
+### KI-Anbieter konfigurieren
+
+Crowdin Enterprise unterstützt verschiedene KI-Anbieter, die jeweils eigene Modelle und Funktionen für Übersetzungsaufgaben anbieten. Durch die Konfiguration von Anbietern kannst du die KI-Funktionen an deine spezifischen Lokalisierungsanforderungen anpassen. Unabhängig davon, ob du von Crowdin verwaltete Dienste verwendest oder eigene API-Schlüssel integrierst, ermöglicht Crowdin Enterprise eine nahtlose Integration mit KI-Diensten.
+
+Im Tab **Anbieter** kannst du die Liste der Anbieter mit den folgenden Details anzeigen:
+
+* **Name**
+* **Status**: Aktiviert, Deaktiviert.
+* **Von Crowdin verwaltet**: Ja, Nein.
+* **Prompts**: Wenn für einen bestimmten Anbieter ein oder mehrere Prompts konfiguriert sind, wird die tatsächliche Anzahl der Prompts angezeigt. Andernfalls wird die Schaltfläche **Erstellen** angezeigt, die zum Dialog zum Erstellen eines Prompts weiterleitet.
+
+Crowdin-AI-Anbieter werden in zwei Typen unterteilt. Systemanbieter (z. B. OpenAI, Microsoft Azure OpenAI, Google Gemini) sind integriert und können sofort konfiguriert werden. Außerdem kannst du deine Möglichkeiten erweitern, indem du weitere KI-Anbieter aus dem Crowdin Store installierst.
+
+Derzeit unterstützt Crowdin Enterprise die folgenden KI-Anbieter:
+
+* Crowdin AI <Badge text="System" variant="note" size="small" />
+* OpenAI <Badge text="System" variant="note" size="small" />
+* Microsoft Azure OpenAI <Badge text="System" variant="note" size="small" />
+* Microsoft Foundry <Badge text="System" variant="note" size="small" />
+* Google Gemini (Vertex AI) <Badge text="System" variant="note" size="small" />
+* Google Gemini (AI Studio) <Badge text="System" variant="note" size="small" />
+* Mistral AI <Badge text="System" variant="note" size="small" />
+* Anthropic <Badge text="System" variant="note" size="small" />
+* xAI <Badge text="System" variant="note" size="small" />
+* IBM Watsonx <Badge text="System" variant="note" size="small" />
+* DeepSeek <Badge text="System" variant="note" size="small" />
+* [Groq](https://store.crowdin.com/groq)
+* [Cloudflare Workers AI](https://store.crowdin.com/cloudflare-workers-ai)
+* [Fireworks AI](https://store.crowdin.com/fireworks-ai)
+* [Together AI](https://store.crowdin.com/together-ai)
+* [OpenRouter](https://store.crowdin.com/openrouter)
+* [Cohere](https://store.crowdin.com/cohere)
+* [Replicate](https://store.crowdin.com/replicate)
+* [Credal](https://store.crowdin.com/credal)
+* [AWS Bedrock](https://store.crowdin.com/aws-bedrock)
+* [Alibaba Cloud Model Studio](https://store.crowdin.com/alibaba-cloud-model-studio)
+* [Xiaomi MiMo](https://store.crowdin.com/xiaomi-mimo)
+* [NVIDIA NIM](https://store.crowdin.com/ndivia-nim-ai-models)
+
+Neue KI-Anbieter werden regelmäßig hinzugefügt.
+
+Bei der Konfiguration von KI-Anbietern kannst du zwischen zwei Optionen wählen:
+
+* **Eigene API-Schlüssel verwenden** &ndash; Crowdin empfiehlt diese Option, wenn Datensicherheit eine Rolle spielt und du mehr Datenschutz und Kontrolle über die Daten benötigst. Für diese Option ist eine externe Registrierung erforderlich, um API-Schlüssel/Zugangsdaten von KI-Anbietern zu erhalten.
+* **Von Crowdin verwalteten Dienst verwenden** &ndash; vereinfachte KI-Integration, ohne dass du eigene API-Schlüssel verwalten musst. Damit kannst du die Standardeinstellungen und Infrastruktur von Crowdin nutzen, um bequem auf KI-Funktionen zuzugreifen. Ideal für einfache, schnelle Aufgaben. Um mit von Crowdin verwalteten KI-Anbietern zu beginnen, musst du lediglich Guthaben auf dein Konto einzahlen.
+
+Führe die folgenden Schritte aus, um einen KI-Anbieter zu konfigurieren:
+
+<Steps>
+  1. Öffnen Sie den **Arbeitsbereich** Ihrer Organisation und wählen Sie **KI** in der linken Seitenleiste aus.
+  2. Klicke im Tab **Anbieter** beim gewünschten Anbieter auf <Icon name="mdi:dots-vertical" class="inline-icon" /> und wähle **Bearbeiten**. Alternativ kannst du einfach auf den gewünschten Anbieter klicken.
+  3. Wähle **Aktiviert** aus.
+  4. Wähle deinen Anmeldedatentyp:
+     * Um den [von Crowdin verwalteten Dienst](/enterprise/crowdin-credits/) zu verwenden, wähle **\{Provider} von Crowdin verwaltet** aus. In diesem Fall musst du [Guthaben auf dein Kontoguthaben einzahlen](#adding-funds-to-account-balance).
+     * Um dein eigenes Konto zu verwenden, wähle **Eigenen API-Schlüssel verwenden** und gib die erforderlichen Zugangsdaten ein. Anweisungen zum Erstellen eines API-Schlüssels findest du in der offiziellen Dokumentation deines KI-Anbieters. Einige KI-Anbieter benötigen möglicherweise zusätzliche spezifische Zugangsdaten. Weitere Informationen findest du im Abschnitt [Anbieterspezifische Zugangsdaten](#provider-specific-credentials) weiter unten.
+  5. *(Optional)* Klicke auf **Erweiterte Einstellungen**, um zusätzliche Optionen aufzurufen:
+     * **Basis-URL überschreiben** &ndash; Ermöglicht es dir, Anfragen an den KI-Anbieter statt an die Standard-URL an einen benutzerdefinierten oder regionsspezifischen Endpunkt zu senden. Dies ist nützlich, wenn du einen Proxy verwendest oder KI über einen Drittanbieterdienst nutzt, der einen benutzerdefinierten Endpunkt bereitstellt. Andernfalls kannst du dieses Feld leer lassen.
+       <Aside>
+                 * **Basis-URL überschreiben** ist bei Verwendung des Dienstes **Von Crowdin verwaltet** nicht verfügbar.
+                 * Für Microsoft Azure OpenAI erwartet Crowdin Enterprise die standardmäßige Azure-URL-Struktur. Zum Beispiel: `https://{baseUrl}/deployments/{deploymentName}/chat/completions`
+       </Aside>
+     * **Headers** &ndash; Füge benutzerdefinierte HTTP-Header hinzu, die mit jeder Anfrage an den KI-Anbieter gesendet werden. Dies ist nützlich, wenn ein selbst gehosteter Proxy oder ein Gateway zusätzliche Header für die Authentifizierung oder Weiterleitung benötigt. Gib den Namen und den Wert des Headers ein und klicke dann auf <Icon name="mdi:plus" class="inline-icon" />, um einen weiteren hinzuzufügen. Autorisierungsheader werden von Crowdin Enterprise verwaltet und können nicht überschrieben werden, es sei denn, du wählst **Nur benutzerdefinierte Header senden**.
+       * **Nur benutzerdefinierte Header senden** &ndash; Sendet nur deine benutzerdefinierten Header und überspringt die Header, die Crowdin Enterprise für den Anbieter hinzufügt, einschließlich der Autorisierung. Wähle diese Option, wenn dein Proxy oder Gateway die Authentifizierung selbst übernimmt und die von dir eingegebenen Header alle vom Endpunkt des Anbieters benötigten Angaben enthalten.
+       <Aside>
+                 - **Header** sind bei Verwendung des Dienstes **Von Crowdin verwaltet** nicht verfügbar.
+                 - **Nur benutzerdefinierte Header senden** ist verfügbar, sobald du mindestens einen Header hinzugefügt hast.
+       </Aside>
+  6. Klicke auf **Aktualisieren**.
+</Steps>
+
+#### Anbieterspezifische Zugangsdaten
+
+Einige KI-Anbieter benötigen für die Authentifizierung zusätzliche Informationen über einen Standard-API-Schlüssel hinaus, wenn du deine eigenen Zugangsdaten verwendest.
+
+##### Google Gemini (Vertex AI)
+
+Bei der Konfiguration von Google Gemini (Vertex AI) musst du die folgenden Zugangsdaten angeben:
+
+* **Projekt-ID**: Die eindeutige ID deines Google-Cloud-Projekts. Du findest sie im Dashboard deiner Google Cloud Console.
+* **Region**: Die Region, in der dein Modell gehostet wird. Stelle sicher, dass das von dir geplante Modell in der ausgewählten Region verfügbar ist. Du findest diese Information in deinem Vertex-AI-Dashboard. Eine Liste der [verfügbaren Gemini-Modelle und Regionen](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations) findest du in der offiziellen Dokumentation von Google Cloud.
+* **Autorisierungsmethode**: Die Methode, mit der Crowdin Enterprise Zugriff auf Vertex AI erhält:
+  * **Dienstkonto**: Verwendet eine JSON-Schlüsseldatei, die du im Feld **Dienstkonto-Schlüssel** hochlädst.
+  * **Workload-Identity-Föderation**: Verwendet von Google Cloud ausgestellte kurzlebige Zugriffstoken anstelle einer gespeicherten Schlüsseldatei. Erfordert die **Workload Identity Federation Audience** und optional die **Workload Identity Federation Service Account Email**, damit Crowdin Enterprise sich als entsprechendes Konto ausgeben kann.
+
+###### Dienstkonto-Schlüssel einrichten
+
+Um die JSON-Schlüsseldatei zu erstellen und zu Crowdin Enterprise hinzuzufügen, folge diesen Schritten:
+
+<Steps>
+  1. Gehe in deinem Google-Cloud-Projekt zu **IAM & Admin > Dienstkonten**.
+  2. Erstelle ein neues Dienstkonto oder wähle ein vorhandenes aus.
+  3. Weise ihm die Rolle **Vertex AI User** (`roles/aiplatform.user`) zu. Um Screenshots als Prompt-Kontext zu verwenden, weise ihm zusätzlich die Rolle **Storage Admin** (`roles/storage.admin`) zu. Crowdin Enterprise lädt die Screenshots in einen temporären Bucket in deinem Google-Cloud-Projekt hoch.
+  4. Gehe zum Tab **Schlüssel** des Dienstkontos, klicke auf **Schlüssel hinzufügen > Neuen Schlüssel erstellen**, wähle **JSON** und klicke auf **Erstellen**. Der Schlüssel wird automatisch heruntergeladen.
+  5. Klicke in Crowdin Enterprise auf **Datei auswählen**, um diesen JSON-Schlüssel hochzuladen.
+</Steps>
+
+###### Workload-Identity-Föderation einrichten
+
+Die Workload-Identity-Föderation erfordert in deinem Google-Cloud-Projekt einen Workload-Identity-Pool, der der AWS-Rolle von Crowdin vertraut. Folge der Google-Cloud-Anleitung zum [Konfigurieren der Workload-Identity-Föderation mit AWS](https://cloud.google.com/iam/docs/workload-identity-federation-with-other-clouds) und verwende die folgenden Werte:
+
+* **AWS-Konto-ID**: `459083373173`. Gib sie ein, wenn du den [Workload-Identity-Pool und -Anbieter erstellst](https://cloud.google.com/iam/docs/workload-identity-federation-with-other-clouds#create-the-workload-identity-pool-and-provider).
+* **Attributbedingung**: `assertion.arn == 'arn:aws:sts::459083373173:assumed-role/crowdin-federated-identity/SESSION_NAME'`. Dadurch wird das Vertrauen auf deine Crowdin-Organisation beschränkt. Crowdin zeigt den Wert `SESSION_NAME` als **Sitzungsname** im Feld **E-Mail-Adresse des Dienstkontos für die Workload-Identity-Föderation** an.
+* **Rollen**: **Vertex AI User** (`roles/aiplatform.user`) sowie **Storage Admin** (`roles/storage.admin`), um Screenshots als Prompt-Kontext zu verwenden. Weise sie entweder über [direkten Ressourcenzugriff](https://cloud.google.com/iam/docs/workload-identity-federation-with-other-clouds#direct-resource-access) oder über [Dienstkonto-Impersonation](https://cloud.google.com/iam/docs/workload-identity-federation-with-other-clouds#service-account-impersonation) zu.
+* **APIs**: die Vertex-AI-API (`aiplatform.googleapis.com`) sowie die von der Anleitung aktivierten APIs.
+
+Wenn der Anbieter bereit ist, gib seine Audience im Feld **Workload Identity Federation Audience** in Crowdin Enterprise ein:
+
+```text
+//iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID
+```
+
+Wenn du den Zugriff über Dienstkonto-Impersonation gewährt hast, gib außerdem die E-Mail-Adresse dieses Kontos im Feld **E-Mail-Adresse des Dienstkontos für die Workload-Identity-Föderation** ein.
+
+##### Microsoft Azure OpenAI
+
+Bei der Konfiguration von Microsoft Azure OpenAI musst du die folgenden Zugangsdaten angeben:
+
+* **Ressourcenname**: Der Name deiner Azure-OpenAI-Dienstressource, den du in deinem Azure-Hauptportal findest.
+* **Bereitstellungsname**: Der Name, den du deiner Bereitstellung zugewiesen hast.
+* **API-Version**: Die für dein Modell erforderliche API-Version. Die empfohlene Version findest du normalerweise in den Eigenschaften der Bereitstellung oder in den von Azure bereitgestellten Codebeispielen. Zum Beispiel: `2024-02-01`.
+
+##### IBM Watsonx
+
+Bei der Konfiguration von IBM Watsonx musst du die folgenden Zugangsdaten angeben:
+
+* **Projekt-ID**: Deine Watsonx.ai-Projekt-ID. Um sie zu finden, navigiere zu deinem Projekt, öffne den Tab **Verwalten** und kopiere die **Projekt-ID** aus dem Bereich **Allgemein**.
+* **Region**: Die Region, in der sich dein Watsonx-Projekt befindet. Du findest diese Information im Dashboard deines Projekts. Eine Liste der [verfügbaren Regionen für watsonx.ai](https://dataplatform.cloud.ibm.com/docs/content/wsj/getting-started/regional-datactr.html) findest du in der offiziellen IBM-Cloud-Dokumentation.
+
+### KI-Anbieter deaktivieren
+
+Bei Bedarf kannst du zuvor aktivierte Anbieter jederzeit deaktivieren.
+
+Führe die folgenden Schritte aus, um den KI-Anbieter zu deaktivieren:
+
+<Steps>
+  1. Öffnen Sie den **Arbeitsbereich** Ihrer Organisation und wählen Sie **KI** in der linken Seitenleiste aus.
+  2. Klicke im Tab **Anbieter** beim gewünschten Anbieter auf <Icon name="mdi:dots-vertical" class="inline-icon" /> und wähle **Deaktivieren**. Alternativ kannst du auf den gewünschten Anbieter klicken und in den Einstellungen des Anbieters **Aktiviert** deaktivieren.
+</Steps>
+
+### Guthaben zum Kontoguthaben hinzufügen
+
+MT-Engines und von Crowdin verwaltete KI-Modelle sind kostenpflichtige Dienste. Um sie zu verwenden, musst du zuerst Geld auf dein Guthaben bei Crowdin Enterprise einzahlen.
+
+<ReadMore>
+  Mehr über [Geld auf das Guthaben einzahlen](/enterprise/crowdin-credits/#adding-funds-to-account-balance) erfahren.
+</ReadMore>
+
+### Snippets für KI-Prompts
+
+Snippets sind wiederverwendbare Informationsbausteine, die der KI helfen, dein Projekt besser zu verstehen. Sie liefern Kontext zu deinem Unternehmen, Produkt oder spezifischen Anforderungen wie Markenstimme und Zielgruppe. Die Verwaltung dieser Informationen als Snippets spart Zeit und hilft dabei, bessere und konsistentere Übersetzungen zu erstellen.
+
+Im Tab **Snippets** kannst du Snippets mit den folgenden Details anzeigen:
+
+* **Name** – die eindeutige Kennung, mit der das Snippet in Prompts eingefügt wird.
+* **Beschreibung** – eine kurze Erklärung des Zwecks des Snippets.
+* **Erstellt am** – das Datum, an dem das Snippet erstellt wurde.
+
+Verwende das Feld **Suchen**, um bestimmte Snippets schnell zu finden.
+
+#### Snippets erstellen
+
+Führe die folgenden Schritte aus, um ein neues Snippet zu erstellen:
+
+<Steps>
+  1. Klicke im Tab **Snippets** auf <Icon name="mdi:plus" class="inline-icon" />**Snippet hinzufügen**.
+  2. Fülle im Dialog **Snippet hinzufügen** die folgenden Felder aus:
+     * **Platzhalter** – Eine eindeutige Kennung für dein Snippet (z. B. `company-description` oder `target-audience`).
+     * **Beschreibung** – Eine kurze Zusammenfassung des Zwecks des Snippets zur einfachen Identifizierung.
+     * **Wert** – Der tatsächliche Text, der beim Verwenden des Snippets in Prompts eingefügt wird.
+  3. Klicke auf **Erstellen**.
+</Steps>
+
+#### Snippets in Prompts verwenden
+
+Nach der Erstellung können Snippets in jeden KI-Prompt eingefügt werden:
+
+* Wähle im **Einfach-Modus** im Bereich **Snippets** ein oder mehrere Snippets aus dem Dropdown-Menü aus.
+* Füge im **Erweiterten Modus** ein Snippet mithilfe seines Platzhalterformats `%custom:snippetName%` ein. Ein Snippet mit dem Namen `company-description` würde beispielsweise als `%custom:company-description%` eingefügt.
+
+#### Vorhandene Snippets verwalten
+
+Um ein Snippet zu bearbeiten oder zu löschen, klicke beim gewünschten Snippet auf <Icon name="mdi:dots-horizontal" class="inline-icon" /> und wähle **Bearbeiten** oder **Löschen**. Alternativ kannst du einfach darauf klicken, um es zu bearbeiten.
+
+### KI-Nutzungslimits
+
+Im Tab **Limits** kannst du steuern, wie viel deine Organisation für KI-Funktionen ausgibt, indem du tägliche und monatliche Budgets festlegst. Du kannst Limits organisationsweit, als Basiseinstellung pro Benutzer und für bestimmte Benutzer festlegen. Die Limits gelten für deine Organisationsmitglieder, die KI-Funktionen verwenden.
+
+Hier sind einige Punkte, die du beachten solltest:
+
+* Für unterstützte KI-Anbieter und deren Modelle gelten Limits. Um unerwartete Kosten zu vermeiden, werden Modelle ohne Preisangaben vorübergehend deaktiviert, solange ein Limit aktiv ist. Klicke im Banner auf **Unterstützte Modelle anzeigen**, um Modelle mit bekannten Preisen anzuzeigen, die auf aktive Limits angerechnet werden.
+* Für benutzerdefinierte KI-Anbieter kann kein Preis ermittelt werden. Sie bleiben daher verfügbar und werden nicht auf dein Limit angerechnet.
+* Die Ausgaben werden anhand der Standardpreise der Modelle geschätzt, daher können die tatsächlichen Kosten leicht abweichen.
+* Tageslimits werden jeden Tag um 00:00 UTC zurückgesetzt. Monatslimits werden am ersten Tag jedes Monats um 00:00 UTC zurückgesetzt.
+* Wenn ein Limit erreicht ist, werden die betroffenen KI-Anfragen pausiert, bis der Zeitraum zurückgesetzt wird.
+
+Für jedes Limit kannst du einen **Tagesbetrag**, einen **Monatsbetrag** oder beides festlegen. Wenn du ein Feld leer lässt, gibt es für diesen Zeitraum kein Limit. Ein Tageslimit darf nicht höher sein als das Monatslimit.
+
+#### Organisationsweite Limits
+
+Das Gesamtbudget für KI-Funktionen in deiner gesamten Organisation. Wenn ein Limit erreicht ist, werden KI-Anfragen für alle Organisationsmitglieder pausiert, bis der Zeitraum zurückgesetzt wird. Unter jedem Feld zeigt ein Nutzungsbalken an, wie viel im aktuellen Zeitraum ausgegeben wurde.
+
+#### Standardlimits pro Benutzer
+
+Wird auf jedes Organisationsmitglied angewendet, das keine eigene benutzerspezifische Überschreibung hat. Verwende diese Felder, um eine Basis für deine Organisation festzulegen, indem du die Standardwerte erhöhst oder verringerst. Wenn ein Mitglied sein Limit erreicht, werden nur die eigenen KI-Anfragen pausiert, bis der Zeitraum zurückgesetzt wird.
+
+Standardlimits pro Benutzer können nicht höher sein als die organisationsweiten Limits.
+
+#### Benutzerbezogene Überschreibungen
+
+Gib bestimmten Organisationsmitgliedern ein benutzerdefiniertes Limit, das die Standardlimits pro Benutzer ersetzt. Dies ist nützlich für Power-User, Evaluatoren oder Nutzer, die strengere Limits als die Standardwerte benötigen.
+
+Im Bereich **Benutzerbezogene Überschreibungen** kannst du die Benutzer mit einer Überschreibung mit den folgenden Details anzeigen:
+
+* **User** &ndash; der Nutzer, für den die Überschreibung gilt.
+* **Daily limit** &ndash; das für den Nutzer festgelegte Tageslimit.
+* **Monthly limit** &ndash; das für den Nutzer festgelegte Monatslimit.
+* **Today usage** &ndash; wie viel der Nutzer heute ausgegeben hat.
+* **Month usage** &ndash; wie viel der Nutzer in diesem Monat ausgegeben hat.
+
+Verwende das Feld **Search**, um bestimmte Nutzer schnell zu finden.
+
+Sie können außerdem auswählen, welche Spalten angezeigt werden. Klicke auf das Spaltenauswahlsymbol <Icon name="material-symbols:table-chart" class="inline-icon" /> und wähle die anzuzeigenden oder auszublendenden Spalten aus oder verwende **Alle ausgewählt**, um alle Spalten gleichzeitig ein- oder auszublenden. Die Spalte **Benutzer** ist immer sichtbar.
+
+Um eine Überschreibung hinzuzufügen, gehe wie folgt vor:
+
+<Steps>
+  1. Klicke im Abschnitt **Per-user overrides** auf <Icon name="mdi:plus" class="inline-icon" />**Add user override**.
+  2. Wähle im Dialog **Benutzerüberschreibung hinzufügen** im Feld **Benutzer** ein oder mehrere Mitglieder deiner Organisation aus. Benutzer, die bereits eine Überschreibung haben, können nicht ausgewählt werden.
+  3. Wähle aus, wie die ausgewählten Nutzer eingeschränkt werden sollen:
+     * Gib ein **Tageslimit**, ein **Monatslimit** oder beides ein. Wenn du ein Feld leer lässt, wird das benutzerbezogene Limit für diesen Zeitraum entfernt. Wenn du beide Felder leer lässt, können diese Mitglieder KI ohne persönliches Limit verwenden (die organisationsweiten Limits gelten weiterhin).
+     * Alternativ kannst du **Diesen Benutzer von der KI-Nutzung ausschließen** aktivieren, um die ausgewählten Benutzer für alle KI-Anfragen zu sperren, unabhängig von Limits. Dies gilt auch für benutzerdefinierte KI-Anbieter.
+  4. Klicke auf **Speichern**.
+</Steps>
+
+Um eine vorhandene Überschreibung zu bearbeiten oder zu entfernen, klicke neben dem Benutzer auf <Icon name="mdi:dots-vertical" class="inline-icon" /> und wähle **Bearbeiten** oder **Entfernen**. Alternativ kannst du auf den Benutzer klicken, um seine Überschreibung zu bearbeiten.
+
+<Aside>
+  Eine benutzerspezifische Überschreibung hat Vorrang vor den Standardlimits pro Benutzer, aber die organisationsweiten Limits gelten immer zusätzlich. Auch ein Mitglied ohne persönliches Limit unterliegt weiterhin dem organisationsweiten Budget.
+</Aside>
+
+### KI-Einstellungen für die Organisation
+
+Um die Standard-KI-Einstellungen für deine Crowdin-Enterprise-Organisation zu konfigurieren, öffne den **Workspace** deiner Organisation und gehe zu **KI > Einstellungen**. Diese globalen Einstellungen werden standardmäßig auf alle neuen Projekte angewendet, können aber für jedes Projekt im Bereich **Einstellungen > KI** überschrieben werden.
+
+Für jede Einstellung kannst du entweder einen vorhandenen Prompt aus dem Dropdown-Menü auswählen oder auf <Icon name="mdi:plus" class="inline-icon" /> klicken, um einen neuen zu erstellen. Durch Klicken auf das Plus-Symbol wird der Dialog zum Erstellen eines Prompts geöffnet, wobei der passende Prompt-Typ bereits ausgewählt ist.
+
+#### Automatische Übersetzung
+
+Wähle einen Standard-Prompt vom Typ **Automatische Übersetzung und KI-Vorschlag**. Dieser Prompt wird automatisch ausgewählt, wenn du in einem Projekt eine automatische Übersetzung über KI ausführst, wodurch die Konfiguration beschleunigt wird. Du kannst vor dem Start der automatischen Übersetzung weiterhin einen anderen Prompt auswählen.
+
+#### KI-Vorschläge im Editor
+
+Wähle für KI-Vorschläge im Editor einen Standard-Prompt vom Typ **Automatische Übersetzung und KI-Vorschlag**. Wenn kein Prompt ausgewählt ist, werden im Bereich **Kontext & Übersetzungen** keine KI-Vorschläge angezeigt.
+
+#### KI-Alignment {#ai-alignment-organization-settings}
+
+Wenn diese Funktion aktiviert ist, erzeugt [KI-Alignment](#ai-alignment) automatisch Entwürfe für zweisprachige Begriffe auf Grundlage der im Projekt erstellten Übersetzungen und stellt so zusätzlichen Kontext für menschliche Übersetzer und die KI bereit. Diese Funktion verbessert Übersetzungsgenauigkeit und -konsistenz, ohne zusätzliche Eingaben zu erfordern.
+
+#### KI-QA-Prüfung {#ai-qa-check-organization-settings}
+
+Wähle den Standard-Prompt vom Typ **QA-Prüfung** aus, der für die KI-gestützte Qualitätssicherung in allen Projekten deiner Crowdin-Enterprise-Organisation verwendet werden soll. Wenn kein organisationsweiter Prompt konfiguriert ist, wird die KI-gestützte Prüfung nicht angewendet, es sei denn, in den Einstellungen eines bestimmten Projekts wurde ein Prompt ausgewählt.
+
+#### Advisor-Prüfung des String-Kontexts {#advisor-string-context-review-organization-settings}
+
+Wähle einen Standard-Prompt vom Typ **Advisor-Kontextüberprüfung** aus, der die Qualität des für Quell-Strings bereitgestellten Kontexts in allen Projekten deiner Organisation überprüft. Es kennzeichnet Strings, deren Kontext fehlt oder Übersetzern nicht dabei hilft zu verstehen, wie ein String verwendet wird.
+
+<LinkCard title="KI-Prompts in den Projekteinstellungen" description="Konfiguriere und verwalte KI-Prompts zur Verwendung in einem Projekt." href="/enterprise/project-settings/ai/" />
+
+### KI-Protokolle
+
+Im Tab **Protokolle** werden KI-Anfragen für deine gesamte Organisation aufgezeichnet, sodass du die KI-Nutzung überwachen, fehlgeschlagene Anfragen untersuchen und den Token-Verbrauch verfolgen kannst. Protokolle sind für die letzten 30 Tage verfügbar. Ältere Einträge werden automatisch entfernt.
+
+Im Tab **Protokolle** kannst du die Liste der KI-Anfragen mit den folgenden Details anzeigen:
+
+* **Datum** – Das Datum und die Uhrzeit, zu der die Anfrage gestellt wurde.
+* **Status** – Der Status der Anfrage (z. B. Erfolg, Fehler, Timeout, Ausstehend).
+* **Benutzer** – Der Benutzer, der die Anfrage initiiert hat.
+* **Modell** – Das für die Anfrage verwendete KI-Modell.
+* **Prompt-Typ** – Der Typ des verwendeten Prompts (z. B. Automatische Übersetzung & KI-Vorschlag, Alignment, QA-Prüfung).
+* **Projekt** – Das Projekt, auf das sich die Anfrage bezieht.
+* **Aktion** – Die ausgeführte KI-Aktion (z. B. KI-Vorschlag, Alignment, QA-Prüfung).
+* **Dauer** – Die Zeit, die die Anfrage bis zum Abschluss benötigt hat, in Millisekunden.
+* **Eingabetoken** – Die Anzahl der in der Anfrage gesendeten Token.
+* **Ausgabetoken** – Die Anzahl der in der Antwort empfangenen Token.
+* **HTTP-Status** – Der vom KI-Anbieter zurückgegebene HTTP-Statuscode.
+* **Von Crowdin verwaltet** – Gibt an, ob die Anfrage einen von Crowdin verwalteten Anbieter verwendet hat.
+* **Prompt** – Der für die Anfrage verwendete Prompt.
+
+<Aside type="tip">
+  Einige Spalten sind standardmäßig ausgeblendet. Klicke auf das Symbol für die Spaltenauswahl <Icon name="material-symbols:table-chart" class="inline-icon" />, um auszuwählen, welche Spalten angezeigt werden sollen.
+</Aside>
+
+Um die Liste einzugrenzen, klicke auf die Schaltfläche **Filter**. Damit kannst du nach **Status**, **Aktion**, **Projekt**, **Benutzer**, **Modell**, **Prompt-Typ**, **Von Crowdin verwaltet**, **Token**, **Anwendungsname** und **Zeitraum** filtern.
+
+Um die vollständigen Details einer bestimmten Anfrage anzuzeigen, klicke auf einen Protokolleintrag, um den Dialog **Protokolldetails** zu öffnen. Er zeigt alle oben aufgeführten Details sowie:
+
+* **Initiiert von** – Gibt an, ob die Anfrage manuell von einem Benutzer (Benutzer) oder automatisch ausgelöst wurde.
+* **Autorisierungstyp** – Die Art, wie die Anfrage autorisiert wurde (z. B. Benutzersitzung, persönlicher Zugriffstoken, OAuth-Anwendung).
+* **IP** – Die IP-Adresse, von der die Anfrage stammt.
+* **User-Agent** – Der verwendete Browser oder Client.
+* **Fehlermeldung** – Der Grund, warum die Anfrage fehlgeschlagen ist (wird für fehlgeschlagene Anfragen angezeigt).
+
+## Automatische Übersetzung über KI
+
+Die automatische Übersetzung über KI ermöglicht es dir, deine Inhalte mithilfe von KI-Modellen mit hochwertigen, kontextbezogenen Übersetzungen automatisch zu übersetzen.
+
+<LinkCard title="Automatische Übersetzung" description="Erkunde verschiedene Optionen für die automatische Übersetzung, um die Lokalisierung deines Projekts zu beschleunigen." href="/enterprise/auto-translation/" />
+
+<Aside type="tip">
+  Du kannst außerdem den [Workflow-Schritt für die automatische KI-Übersetzung](/enterprise/workflows/) für neue Inhalte in deinem Projekt konfigurieren.
+</Aside>
+
+## KI im Editor verwenden
+
+Um KI im Editor zu verwenden, konfiguriere einen Prompt vom Typ **Automatische Übersetzung und KI-Vorschlag** und wähle ihn unter **KI > Einstellungen > KI-Vorschläge im Editor** aus.
+
+Nach der Konfiguration können Übersetzer im Bereich **Kontext & Übersetzungen** für jede Zeichenfolge KI-gestützte Übersetzungsvorschläge verwenden.
+
+Für erweiterte Chat-basierte Unterstützung im Editor kannst du die Crowdin-Copilot-Anwendung verwenden:
+
+<LinkCard title="Crowdin-Copilot-Anwendung" description="Verwende die Crowdin-Copilot-App aus dem Store für kontextbezogenen KI-Chat und Aufgabenautomatisierung in Crowdin." href="https://store.crowdin.com/crowdin-copilot" target="_blank" />
+
+## KI-Alignment
+
+KI-Alignment verwendet KI, um menschliche Übersetzungen zu analysieren und automatisch Entwürfe für Glossarbegriffe auf Grundlage wiederkehrender Terminologiemuster zu erstellen. Diese Begriffe liefern wertvollen Kontext für Übersetzer und KI und unterstützen eine konsistente Terminologie in allen Projektübersetzungen. Beachte, dass KI-Alignment nur Übersetzungen analysiert, die von Benutzern im Editor übermittelt oder in das Projekt hochgeladen wurden. Automatische Übersetzungen werden nicht berücksichtigt.
+
+<Aside>
+  KI-Alignment ist nur im Business-[Abonnement](https://crowdin.com/pricing#enterprise-plans) von Crowdin Enterprise verfügbar.
+</Aside>
+
+### So funktioniert KI-Alignment
+
+Wenn ein Übersetzer eine Übersetzung übermittelt, analysiert KI-Alignment die verwendete Terminologie, um Entwürfe für Glossarbegriffe zu identifizieren und vorzuschlagen. Dabei werden Übersetzungen auf wiederkehrende Begriffe und Formulierungen überprüft, die die zentrale Terminologie des Projekts darstellen. KI-Alignment erzeugt anschließend Glossareinträge in vereinfachten Formen (z. B. `location` statt `locations`), um einen einheitlichen Begriffssatz für das Projekt zu erstellen.
+
+Beispielsweise könnte bei einem Projekt mit dem Quell-String `Remove this location` der erste KI-Übersetzungsvorschlag `Видалити це місце` lauten. Ein menschlicher Übersetzer wählt jedoch `Видалити цю локацію` und verwendet `локація` konsistent für `location`. Auf Grundlage dieser Auswahl erstellt KI-Alignment einen Glossarbegriffentwurf, der `location` mit `локація` verknüpft.
+
+Wenn später ein anderer Quell-String `Add location` übersetzt wird, gleicht die KI ihn mit diesem Glossarbegriff ab und schlägt `Додати локацію` vor, um die Konsistenz sicherzustellen. Dies geschieht, wenn der KI-Prompt für KI-Vorschläge im Editor so eingestellt ist, dass Glossarbegriffe berücksichtigt werden.
+
+Wenn menschliche Übersetzer außerdem auf Quell-Strings stoßen, die `location` enthalten, sehen sie den Glossarbegriff `location` zusammen mit seiner Übersetzung `локація`. Dies hilft Übersetzern, die bevorzugte Terminologie zu verwenden und erhöht die Konsistenz im gesamten Projekt.
+
+Wenn ein vorhandener Begriff von der vorgeschlagenen KI-Übersetzung abweicht, fügt KI-Alignment dem aktuellen Eintrag einen Begriffs-Entwurf hinzu, sodass Projektmanager die bevorzugte Terminologie prüfen und bestätigen können. Dieser Ansatz stellt sicher, dass neue Begriffe vorhandene Glossareinträge nicht überschreiben oder mit ihnen in Konflikt geraten.
+
+### Einrichten von KI-Alignment
+
+Um KI-Alignment zu verwenden, [konfiguriere einen Prompt](#configuring-ai-prompts) vom Typ **Alignment** und [wende ihn](/enterprise/project-settings/ai/#assigning-project-specific-prompts) auf die gewünschten Projekte an. Mit diesem Prompt-Typ kann KI-Alignment Übersetzungen verarbeiten und Entwürfe für Glossarbegriffe erstellen, während Übersetzer ihre Übersetzungsvorschläge hinzufügen.
+
+Im erweiterten Modus können Projektmanager die Kriterien für die Erstellung von Glossarbegriffentwürfen aus Übersetzungen weiter anpassen. Dazu gehört das Filtern von Begriffen, sodass nur solche aus bestimmten Fachgebieten als Entwürfe erstellt werden, oder das Anpassen von Toleranzwerten, um irrelevante Vorschläge zu minimieren. Mit diesen Anpassungen kann KI-Alignment sich auf die wesentliche Terminologie des Projekts konzentrieren.
+
+Beispielsweise können Manager KI-Alignment so konfigurieren, dass Begriffsentwürfe nur für branchenspezifische Terminologie erstellt werden, damit nur relevante Einträge aufgenommen werden.
+
+Nach der Konfiguration erscheinen alle von KI-Alignment erzeugten Begriffsentwürfe mit dem Status „Entwurf“ im Glossar, sodass Manager diese Begriffe prüfen und bestätigen können, bevor sie Teil des aktiven Glossars werden. Dieser Prüfschritt bietet Kontrolle über die Konsistenz und Genauigkeit der Terminologie im gesamten Projekt.
+
+## KI-QA-Prüfung
+
+Die KI-QA-Prüfung verwendet KI, um Übersetzungen automatisch anhand festgelegter Qualitätsstandards zu bewerten. Sie hilft Übersetzern, Probleme schnell zu erkennen und zu beheben, und gewährleistet Genauigkeit, Konsistenz und die Einhaltung projektspezifischer Anforderungen. Die KI-QA-Prüfung ergänzt und erweitert andere QA-Methoden (d. h. standardmäßige QA-Prüfungen, benutzerdefinierte QA-Prüfungen und externe QA-Prüfungen), indem sie umfassende Flexibilität bietet, den manuellen Prüfaufwand reduziert und die allgemeine Übersetzungsqualität verbessert.
+
+### So funktioniert die KI-QA-Prüfung
+
+Wenn die KI-QA-Prüfung aktiviert ist, bewertet sie jede eingereichte Übersetzung anhand anpassbarer Bewertungskriterien (Evaluierungsschritte), die im konfigurierten QA-Prüfungs-Prompt definiert sind. Von der KI erkannte Probleme werden direkt im Editor als Warnungen angezeigt, zusammen mit kurzen Vorschlägen zur Korrektur.
+
+Die Evaluierungsschritte können Folgendes umfassen:
+
+* **Genauigkeit** – Stellt sicher, dass kein Inhalt ausgelassen, hinzugefügt oder falsch übersetzt wird.
+* **Sprachliche Qualität** – Prüft Grammatik, Rechtschreibung, Zeichensetzung und Lesbarkeit.
+* **Terminologie** – Bestätigt die konsistente und korrekte Verwendung projektspezifischer Begriffe.
+* **Stil** – Prüft, ob Übersetzungen den festgelegten Stilrichtlinien entsprechen.
+* **Design** – Stellt sicher, dass Übersetzungen die Designvorgaben einschließlich Länge und Markup einhalten.
+* **Lokale Konventionen** – Passt Formate für Datumsangaben, Währungen, Adressen und mehr an.
+* **Kulturelle Anpassung (Verity)** – Lokalisiert kulturspezifische Verweise angemessen.
+* **Allgemeine Probleme** – Identifiziert sonstige Probleme mit der Übersetzungsqualität.
+
+Wenn eine Übersetzung beispielsweise von festgelegten Glossarbegriffen abweicht oder lokale Formatierungsstandards nicht erfüllt, hebt die KI dies hervor und gibt Empfehlungen, damit Übersetzer Konformität und Konsistenz erreichen.
+
+### KI-QA-Prüfung einrichten
+
+Um die KI-QA-Prüfung zu verwenden, erstelle und konfiguriere einen [QA-Prüfungs-Prompt](#configuring-ai-prompts). Jeder QA-Prüfungs-Prompt enthält klar definierte Evaluierungsschritte, denen die KI folgt, um Übersetzungsprobleme zu erkennen. Im Gegensatz zu anderen KI-Prompts enthält der QA-Prüfungs-Prompt einen eigenen Bereich **Evaluierungsschritte**, in dem du vordefinierte Prüfungen anpassen, bearbeiten oder erweitern kannst.
+
+Du kannst die Genauigkeit der KI-Analyse außerdem verbessern, indem du verschiedene Arten von zusätzlichem Kontext einbeziehst, der für den Inhalt deines Projekts relevant ist.
+
+Nach der Konfiguration kannst du einen Prompt für die QA-Prüfung als Standard für deine gesamte Organisation oder für einzelne Projekte festlegen.
+
+### KI-QA-Prüfung in Projekten anwenden
+
+Führe die folgenden Schritte aus, um die KI-QA-Prüfung in deinen Projekten zu aktivieren:
+
+<Steps>
+  1. [Erstelle und aktiviere einen QA-Prüfungs-Prompt](#configuring-ai-prompts).
+  2. Lege ihn als Standard-QA-Prompt unter **Einstellungen > KI > Einstellungen** des Projekts fest.
+  3. Aktiviere die **KI-gestützte Prüfung** unter **Einstellungen > QA-Prüfungen** des Projekts.
+</Steps>
+
+Nach der Einrichtung prüft die KI eingereichte Übersetzungen kontinuierlich und stellt so die Einhaltung deiner Qualitätsrichtlinien sicher.
+
+## Advisor-Prüfung des String-Kontexts
+
+Die Prüfung des String-Kontexts durch den Advisor verwendet KI, um die Qualität des für deine Quell-Strings bereitgestellten Kontexts zu bewerten, und kennzeichnet Strings, bei denen der Kontext fehlt oder Übersetzern nicht dabei hilft zu verstehen, wie ein String verwendet wird. Sie unterstützt die Prüfung **Low string context coverage** auf der Registerkarte **Advisors** des Projekts.
+
+<LinkCard title="Berater" description="Führe automatisierte Hintergrundprüfungen deiner Lokalisierungskonfiguration durch, einschließlich der KI-gestützten Prüfung des String-Kontexts." href="/enterprise/advisors/" />
+
+## Einschränkungen von KI-Übersetzungen
+
+KI-gestützte Übersetzungen basieren auf großen Sprachmodellen. Ihre Ausgabe ist daher probabilistisch, und ihre Genauigkeit kann je nach Sprachpaar und Komplexität des Inhalts variieren. Beachte bei der Verwendung der automatischen Übersetzung und von KI-Vorschlägen die folgenden Verhaltensweisen.
+
+### Ausgabe in falscher Sprache und Halluzinationen
+
+Gelegentlich kann ein KI-Modell eine Übersetzung in der falschen Sprache oder Schrift zurückgeben oder Text erzeugen, der die Quelle nicht korrekt wiedergibt (eine Halluzination). Dies ist eine allgemeine Einschränkung großer Sprachmodelle und kein spezifisches Crowdin-Problem. Sie tritt bei weniger verbreiteten Sprachpaaren oder bei wenig bereitgestelltem Kontext häufiger auf. Bei einer Übersetzung in eine Zielsprache, die eine nichtlateinische Schrift verwendet, kann ein Modell beispielsweise gelegentlich Zeichen aus einer anderen Schrift zurückgeben.
+
+**Bewährte Vorgehensweisen:**
+
+* Wähle für den Prompt ein anderes Modell oder einen anderen KI-Anbieter aus.
+* [Gib dem Prompt mehr Kontext](#configuring-ai-prompts), z. B. Dateikontext, Projektkontext, vorherige und nächste Zeichenfolgen, Glossarbegriffe, TM-Vorschläge und Style Guides.
+* Überprüfe KI-generierte Übersetzungen immer, bevor du sie genehmigst, und verwende [QA-Prüfungen](/enterprise/project-settings/qa-checks/) (einschließlich [KI-QA-Prüfung](#ai-qa-check)), um Probleme zu erkennen.
+
+### Identische Ausgabe bei verschiedenen Modellen
+
+Verschiedene Modelle erzeugen nicht immer unterschiedliche Übersetzungen. Bei derselben Prompt-Konfiguration und demselben Kontext können verschiedene Modelle identische Ausgaben liefern, insbesondere bei kurzen, eindeutigen oder klar definierten Zeichenfolgen. Wenn du Modelle vergleichst, um das passende auszuwählen, teste sie mit repräsentativen Inhalten deines Projekts, damit identische Ergebnisse nicht fälschlicherweise als Fehlkonfiguration angesehen werden.
+
+## Siehe auch
+
+<LinkCard title="So holst du das Beste aus KI-Übersetzungen heraus" description="Erfahre, wie KI den Lokalisierungsprozess und Workflow revolutioniert, indem sie die Übersetzungsgenauigkeit durch kontextbezogenes Verständnis verbessert." href="https://crowdin.com/blog/2024/04/24/how-to-get-the-most-from-the-ai-translations" target="_blank" />

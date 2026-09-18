@@ -1,0 +1,123 @@
+---
+title: Quelldateien hochladen
+description: Erfahre, wie du Quelldateien zur Übersetzung in dein Projekt hochlädst.
+slug: uploading-files
+sidebar:
+  order: 0
+---
+
+import { Aside, Tabs, TabItem, Steps, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import uploadFiles from '!/crowdin/project-management/sources/upload_files.png';
+import uploadFilesSB from '!/crowdin/project-management/sources/upload_files_sb.png';
+import baseHtmlEditor from '!/crowdin/project-management/sources/base_html_editor.png';
+
+Nachdem du [ein Projekt erstellt hast](/creating-project/), besteht der nächste Schritt darin, die Quelldateien für den Upload vorzubereiten. Crowdin unterstützt eine Vielzahl von [Dateiformaten](/supported-formats/), darunter Android XML, iOS Strings, JSON usw. Wenn deine Dateien vorbereitet sind, kannst du sie zur Übersetzung zu deinem Crowdin-Projekt hinzufügen.
+
+Crowdin bietet mehrere Möglichkeiten, Inhalte zu einem Projekt hinzuzufügen:
+
+* Manuell über die Weboberfläche (UI).
+* Integriere dein Crowdin-Projekt mit den Tools, die du bereits verwendest. ansehen verfügbar integrations auf die [Crowdin Store](https://store.crowdin.com/).
+* Verwende die [API](/developer/api/) oder [Entwickler Tool](/developer/dev-tools/) von dein choice.
+
+normalerweise, dies task ist accomplished von Entwickler. Du kannst [deinen Entwicklerkollegen einladen](/inviting-people/), dich bei diesem Schritt zu unterstützen.
+
+Du kannst auch verwenden Crowdin sample Dateien zu test die Übersetzung Workflows vor beginnend dein Projekt mit die actual Quelldateien.
+
+<Aside type="tip">
+  Füge Support für mehr Formate von installing die corresponding Apps in die [Crowdin Store](https://store.crowdin.com/categories/file-formats). hinzu
+</Aside>
+
+## Dateien hochladen
+
+Um hochladen Dateien via die Weboberfläche, folgen diese Schritten:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dateibasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zu **Quellen > Dateien**.
+      2. Ziehe Dateien von deinem Computer an eine beliebige Stelle im Tab **Dateien** – in das Stammverzeichnis des Projekts oder direkt in einen vorhandenen Ordner. Du kannst hochladen ZIP archives wenn du möchten zu hinzufügen ein strukturiert festlegen von Ordner und Dateien.
+      3. *(Optional)* Klicke auf **Dateien hochladen** oder **Datei hinzufügen**, um Dateien hinzuzufügen, auf **Beispiele verwenden**, um Übersetzungsworkflows zu testen, auf **Integration einrichten**, um Inhalte automatisch zu synchronisieren, oder auf **Entwickler / Übersetzungsanforderer einladen**, wenn dein Entwicklerkollege den Upload der Inhalte übernimmt. Du kannst auch auf den Dropdown-Pfeil neben der Schaltfläche **Datei hinzufügen** klicken, um weitere Optionen aufzurufen, z. B. **String Vault erstellen** (fügt eine leere CSV-Datei hinzu) oder eine weitere Verknüpfung zu **Integration einrichten**. <Image src={uploadFiles} alt="Dateien-Tab in den Projekteinstellungen" />
+    </Steps>
+  </TabItem>
+  <TabItem label="Zeichenfolgenbasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zum Tab **Upload**.
+      2. Wähle die Ziel Branch zu die du're uploading Quelldateien. von Standard, die `main` Branch ist ausgewählt. Erstelle neu Branches wenn benötigt.
+      3. Ziehe und drop Dateien von dein machine, oder Klicke **Wähle Dateien**. Du kannst auch Lade hoch ZIP archives wenn du want ein Setze von Dateien zu sein hinzugefügt.
+      4. Crowdin versucht automatisch zu erkennen, ob du Quellinhalte oder Übersetzungen hochlädst. Verify die detection ist correct und adjust die Sprache Einstellungen wenn benötigt (e.g., English (Quelle) sollte sein ausgewählt für Quelldateien wenn die Projekt's Quellsprache ist English).
+      5. *(Optional)* in die **Quelldateien** Bereich, zu die right von die hochgeladen Datei Liste, konfigurieren [erweitert Quelle Datei importieren Einstellungen](#advanced-import-settings).
+      6. Klicke auf **hochladen** zu finish uploading die Quelle Inhalt. <Image src={uploadFilesSB} alt="Dateien-Tab in den Projekteinstellungen" />
+    </Steps>
+    <Aside>
+      Wenn uploading übersetzbar Inhalt zu ein String-basiertes Projekt, du kann verwenden die folgend Dateiformate:
+
+      <details>
+        <summary>View File Formate</summary>
+        <Include file="sb-file-formats.mdx" />
+      </details>
+    </Aside>
+  </TabItem>
+</Tabs>
+
+<ReadMore>
+  Mehr über [Projekttypen](/creating-project/#project-types) erfahren.
+</ReadMore>
+
+<Aside type="caution" title="Einschränkungen">
+  Der maximum Datei size ist 100 MB. wenn dein Datei exceeds dies limit, it ist recommended zu split it in several smaller Dateien, und Lade hoch them one bei ein Zeit.
+</Aside>
+
+### XML-, CSV- und XLSX-Dateien
+
+einige Dateiformate, wie XML, CSV, XLSX, und andere, könnte erfordern zusätzliche Konfiguration.
+
+* [CSV/XLSX-Dateikonfiguration](/csv-xlsx-configuration/)
+* [XML-Dateikonfiguration](/xml-configuration/)
+* [Parserkonfiguration](/project-settings/parser-configuration/)
+
+<Aside type="caution" title="Einschränkungen">
+  die XLSX/XLS Datei size ist limited zu 2 000 000 cells.
+</Aside>
+
+### HTML-Dateien mit relativen URLs
+
+Um anzeigen images und styles in die HTML Datei verwendet outside von die website, wo es belongs, hinzufügen die `<base>` Tag zu specify die base URL/Ziel für alle relative URLs in ein document.
+
+```html wrap
+<html>
+  <head>
+    <base href="https://www.w3schools.com/images/">
+  </head>
+  <body>
+    <p><img src="stickman.gif" width="24" height="39" alt="Stickman">Beachte, dass wir für das Bild nur eine relative Adresse angegeben haben. Da wir im Head-Bereich eine Basis-URL angegeben haben, sucht der Browser nach dem Bild unter „https://www.w3schools.com/images/stickman.gif“.</p>
+  </body>
+</html>
+```
+
+Sobald du hinzufügen die `<base>` Tag, Übersetzer wird see images in die HTML Dateien wenn translating in die Editor.
+
+<Image src={baseHtmlEditor} alt="HTML Datei mit ein base Tag angezeigt in die Editor" />
+
+<Aside type="caution" title="Einschränkungen">
+  HTML-Dateien werden in [string-basierten](/creating-project/#string-based-project) Projekten nicht unterstützt.
+</Aside>
+
+## Erweiterte Importeinstellungen
+
+Du kannst konfigurieren die desired System behavior für hochgeladen Quelldateien in String-basiert Projekte verwenden die verfügbar Optionen:
+
+* **Update Strings** &ndash; update Strings mit die gleich identifiers. By default, this option is selected.
+* **Cleanup Modus** &ndash; entfernen previously hochgeladen Strings nicht present in die newly hochgeladen Datei. von Standard, dies Option ist cleared.
+* **hinzufügen Bezeichnungen** &ndash; Tag hochgeladen Strings mit die ausgewählt Bezeichnungen. Wenn uploading Quelldateien, Crowdin auch fügt hinzu System Bezeichnungen das einschließen die Quelle Datei Name.
+
+## Siehe auch
+
+<CardGrid>
+  <LinkCard title="Vorhandene Übersetzungen hochladen" description="Erfahre, wie du hochladen vorhanden Übersetzungen zu dein Projekt." href="/uploading-translations/" />
+  <LinkCard title="Dateiverwaltung" description="Verwalte und konfiguriere Quelldateien in deinem Projekt." href="/file-management/" />
+  <LinkCard title="Versionen Management" description="Erfahre, wie du verschiedene Versionen deines Projekts verwaltest." href="/version-management/" />
+  <LinkCard title="importieren Settings" description="konfigurieren wie Platzhalter, duplicates, und word counts sind handled." href="/project-settings/import/" />
+</CardGrid>

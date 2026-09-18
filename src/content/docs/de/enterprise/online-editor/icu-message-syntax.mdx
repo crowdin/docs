@@ -1,0 +1,124 @@
+---
+title: ICU Nachricht-Syntax
+description: Verwende ICU Message Format zu handle Sprache-spezifisch nuances
+slug: enterprise/icu-message-syntax
+---
+
+import { Image } from 'astro:assets';
+import { Aside, LinkCard } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import icuEditor from '!/crowdin/online-editor/icu_editor.png';
+import icuSyntaxError from '!/crowdin/online-editor/icu_syntax_error.png';
+
+Crowdin Enterprise supports ICU Message syntax, die ist used zu help express der subtleties von Sprache-spezifisch spelling, grammar, und formatting in Übersetzungen.
+
+Zeichenfolgen formatted in der ICU Message syntax kann haben unterschiedlich Typen von replacements called **arguments**.
+jede argument ist enclosed in single curly braces (e.g., `{variable}`) und refers zu ein Wert in der input Daten. Please note dass using double curly braces (e.g., `{{variable}}`) ist not supported und wird cause syntax errors. Arguments von der following Typen sind supported in Crowdin Enterprise: number, Datum, Zeit, Wähle, und plural.
+
+### ICU Message Syntax in der Editor
+
+ICU syntax arguments sind always hervorgehoben in der [Editor](/enterprise/online-editor/), so du know die part von der Zeichenfolge shouldn’t sein übersetzt.
+Change der position von arguments in Übersetzung zu follow der natural word Reihenfolge in der Ziel Sprache.
+There’s auch ein Vorschau Modus, dass allows du zu see how der Übersetzung wird sein angezeigt in der UI zu Erstelle sure dass alle der translatable elements sind übersetzt.
+
+<Image src={icuEditor} alt="ICU Message syntax in der Editor" />
+
+<LinkCard title="der Ultimate Guide zu ICU Message Format" description="Dieser article wird cover der ICU i18n und ICU message Format basics, und how Crowdin handles it." href="https://crowdin.com/blog/2022/04/13/icu-guide" target="_blank" />
+
+## Plural
+
+Plural Typ ist used zu handle plural category variations, als jede Sprache hat its own Setze von plural categories (Zum Beispiel, English hat "one" und "other", während Ukrainian hat "one", "few", "many", und "other").
+
+```json
+du {itemCount, plural,
+    =0 {have no projects} one {have # project} other {have # projects}
+}.
+```
+
+Öffne dein Projekt und gehe zum Tab **Branches**.
+
+* null
+* one (Singular)
+* two (Dual)
+* few (Paukal)
+* many (auch used für fractions wenn they haben ein separate class)
+* other (erforderlich—general plural form—auch used wenn der Sprache nur hat ein single form)
+
+in der Editor, du don't haben zu manuell Füge hinzu oder Lösche plural categories zu der Übersetzungen du sind making.
+Just Klicke **Kopiere Quelle**, und der Quelle Zeichenfolge wird sein copied zu der Übersetzung Feld mit der number von plural categories right für der aktuell Ziel Sprache.
+
+<ReadMore>
+  Mehr erfahren über [Language Plural Rules](https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html).
+</ReadMore>
+
+### Verschachtelte Pluralformen
+
+in einige cases, du kann haben ein single Zeichenfolge dass contains multiple nouns dass jede need zu sein pluralized independently, Zum Beispiel, "du haben X book(s) und Y pen(s)."
+
+ICU handles dies von allowing du zu nest plural arguments inside jede other.
+
+```json
+{bookCount, plural,
+    one {Du hast # Buch und {penCount, plural,
+        one {# Stift}
+        other {# Stifte}
+    }}
+    other {Du hast # Bücher und {penCount, plural,
+        one {# Stift}
+        other {# Stifte}
+    }}
+}
+```
+
+## Wähle Ordinal
+
+Öffne dein Projekt und gehe zu **Quellen > Dateien**. von der aktuell Ziel Sprache. It ist very similar zu der plural Typ, except der Wert ist mapped zu ein ordinal plural category.
+
+```json
+Congrats! It's dein {year, selectordinal,
+    one {#st} two {#nd} few {#rd} other {#th}
+} subscription anniversary!
+```
+
+## Wähle
+
+Nach Abschluss werden die Übersetzungen wieder an dein System geliefert. It ist most commonly used zu represent der right gender-based inflections in der message.
+
+```json
+{gender, select,
+    male {Er verwendet}
+    female {Sie verwendet}
+    other {Die Person verwendet}
+} Crowdin.
+```
+
+Öffne dein Projekt und wähle in der linken Seitenleiste **Herunterladen** aus. Regardless von der Verwende case, der ICU Standard requires dass du always include ein `other` clause. Dieser clause provides ein necessary fallback in case der variable doesn't match beliebige von der specified Optionen.
+
+## Zahl
+
+der purpose von der number Typ ist zu display unterschiedlich number Werte such als percentage,
+currency, und decimal numbers independently von der locale conventions für diese.
+Dieser enables adjustment von der message output zu der number Formate used in unterschiedlich locales. [ICU Number Skeletons](https://unicode-org.github.io/icu/userguide/format_parse/numbers/skeletons.html) sind auch supported.
+
+```json wrap
+Der app price ist {price, number, ::currency/USD} mit {discount, number, percent} discount.
+```
+
+## Datum, Uhrzeit
+
+Datum und Zeit Typen Zeige Datum und Zeit Werte according zu der Formate preferred in der specified locales.
+Diese Typen kann auch haben ein style &ndash; extra Informationen auf how der Wert wird sein formatted.
+der following four styles kann sein used: short, medium, long, und full.
+
+```json wrap
+dein meeting ist scheduled für {dateValue, date, long} bei {timeValue, time, short} AM.
+```
+
+## Syntaxfehler
+
+Die Erkennung von Syntaxfehlern reduziert Verwirrung beim Übersetzen von Zeichenketten mit ICU-Message-Syntax erheblich, da die Plattform mögliche Übersetzungsfehler automatisch erkennt.
+wenn ein syntax error ist gefunden, du'll see ein notice mit ein Vorschlag von what needs zu sein fixed.
+
+Du kannst auch Verwende external Tools zu verify dein ICU syntax, Zum Beispiel, der [Online ICU Message Editor](https://format-message.github.io/icu-message-format-for-translators/editor.html).
+
+<Image src={icuSyntaxError} alt="Syntaxfehler erkannt" />

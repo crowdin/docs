@@ -1,0 +1,249 @@
+---
+title: Modul für externe QA-Prüfung
+description: Füge eine externe QA-Prüfung für erweiterte, KI-gestützte und andere spezialisierte Überprüfungen hinzu.
+slug: developer/crowdin-apps-module-external-qa-check
+sidebar:
+  label: Externe QA-Prüfung
+---
+
+Mit diesem Modul kannst du erweiterte, KI-gestützte und andere spezialisierte QA-Prüfungen integrieren und so Übersetzungen auf differenzierte Probleme überprüfen, die von den [standardmäßigen QA-Prüfungen](/enterprise/project-settings/qa-checks/) oder JavaScript-basierten [benutzerdefinierten QA-Prüfungen](/enterprise/custom-qa-checks/) nicht erkannt werden können.
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+* Nur Organisationsadministratoren
+* Alle Benutzer in den Projekten der Organisation
+* Ausgewählte Benutzer
+
+## Struktur
+
+```json title="manifest.json"
+{
+  "modules": {
+    "external-qa-check": [
+      {
+        "key": "custom-check-qa",
+        "name": "QA Check",
+        "description": "Description",
+        "runQaCheckUrl": "/validate",
+        "getBatchSizeUrl": "/batch-size",
+        "url": "/settings/index.html"
+      }
+    ]
+  }
+}
+```
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Der für Menschen lesbare Name des Moduls.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Die für Menschen lesbare Beschreibung der Funktion des Moduls.<br />
+        Die Beschreibung wird in der Crowdin-Enterprise-Benutzeroberfläche angezeigt.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>runQaCheckUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p> <p><strong>Erforderlich:</strong> ja</p> <p><strong>Beschreibung:</strong> Die relative URL, die ausgelöst wird, wenn Texte zur QA-Validierung gesendet werden.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">getBatchSizeUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p> <p><strong>Erforderlich:</strong> nein</p> <p><strong>Beschreibung:</strong> Die relative URL, die beim Abrufen der vom Modul unterstützten Batchgröße ausgelöst wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p> <p><strong>Erforderlich:</strong> nein</p> <p><strong>Beschreibung:</strong> Die relative URL zur Einstellungsseite des Moduls.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Zulässige Werte:</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>Beschreibung:</strong> Menge der Umgebungen, in denen ein Modul installiert werden kann.<br />
+        Dieser Parameter wird für produktübergreifende Anwendungen benötigt.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Kommunikation zwischen der App für externe QA-Prüfungen und Crowdin
+
+Das System sendet Texte zur QA-Validierung über `runQaCheckUrl`, entweder aus dem Editor nach dem Speichern der Übersetzung oder wenn QA-Prüfungen durchgeführt werden. Die App verarbeitet die Texte und antwortet dem System mit einer von zwei möglichen Antwortarten: [ohne QA-Probleme](#expected-response-from-the-app-without-qa-issues) oder [mit QA-Problemen](#expected-response-from-the-app-with-qa-issues). Wenn die App die maximale Batchgröße für die QA-Prüfung bestimmen muss, setzt sie den Schlüssel `getBatchSizeUrl` in der `manifest.json` auf die URL zu einem Endpunkt, der die optimale Batchgröße bereitstellt.
+
+### Anfrage von Crowdin an die App für runQaCheckUrl
+
+Beispiel für die Nutzlast der Anfrage:
+
+```json collapse={26-82}
+{
+  "data": {
+    "translations": [
+      {
+        "id": 12345,
+        "stringId": 1234567,
+        "languageId": "fr",
+        "userId": 1,
+        "text": "La mise à jour est installé avec succès.",
+        "provider": null,
+        "pluralCategoryName": null,
+        "isPreTranslated": false,
+        "rating": 0
+      }
+    ],
+    "strings": [
+      {
+        "id": 1234567,
+        "key": "update_success",
+        "context": "Confirmation of successful software update",
+        "maxLength": null,
+        "text": "The update was successfully installed.",
+        "fields": []
+      }
+    ],
+    "sourceLanguage": {
+      "id": "en",
+      "name": "English",
+      "twoLettersCode": "en",
+      "threeLettersCode": "eng",
+      "locale": "en-US",
+      "pluralCategoryNames": ["one", "other"],
+      "pluralRules": "(n != 1)",
+      "pluralExamples": [1, 2],
+      "textDirection": "ltr",
+      "dialectOf": null
+    },
+    "targetLanguage": {
+      "id": "fr",
+      "name": "French",
+      "twoLettersCode": "fr",
+      "threeLettersCode": "fra",
+      "locale": "fr-FR",
+      "pluralCategoryNames": ["one", "other"],
+      "pluralRules": "(n > 1)",
+      "pluralExamples": [1, 2],
+      "textDirection": "ltr",
+      "dialectOf": null
+    },
+    "project": {
+      "id": 123,
+      "type": 0,
+      "sourceLanguage": {
+        "id": "en",
+        "name": "English",
+        "twoLettersCode": "en",
+        "threeLettersCode": "eng",
+        "locale": "en-US",
+        "pluralCategoryNames": ["one", "other"],
+        "pluralRules": "(n != 1)",
+        "pluralExamples": [1, 2],
+        "textDirection": "ltr",
+        "dialectOf": null
+      },
+      "targetLanguages": [
+        {
+          "id": "fr",
+          "name": "French",
+          "twoLettersCode": "fr",
+          "threeLettersCode": "fra",
+          "locale": "fr-FR",
+          "pluralCategoryNames": ["one", "other"],
+          "pluralRules": "(n > 1)",
+          "pluralExamples": [1, 2],
+          "textDirection": "ltr",
+          "dialectOf": null
+        }
+      ],
+      "name": "Project Name",
+      "description": "Project Description",
+      "fields": []
+    },
+    "file": {
+      "id": 123,
+      "name": "filename.csv",
+      "title": null,
+      "context": null,
+      "type": "csv",
+      "path": "/filename.csv",
+      "fields": []
+    }
+  }
+}
+```
+
+### Erwartete Antwort der App (ohne QA-Probleme)
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+{
+  "data": {
+    "validations": [
+      {
+        "translationId": 123,
+        "passed": true
+      }
+    ]
+  }
+}
+```
+
+### Erwartete Antwort der App (mit QA-Problemen)
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+{
+  "data": {
+    "validations": [
+      {
+        "translationId": 456,
+        "passed": false,
+        "error": {
+          "message": "Example error message"
+        }
+      }
+    ]
+  }
+}
+```
+
+### Antwort der App an Crowdin für getBatchSizeUrl
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+{
+  "data": {
+    "size": 10
+  }
+}
+```
+
+Die Struktur der Antworten der App muss den dargestellten Beispielen entsprechen. Andernfalls betrachtet Crowdin sie als ungültig.

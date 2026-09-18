@@ -1,0 +1,219 @@
+---
+title: Modul zur Verarbeitung vor dem Dateiimport
+description: Ändere deine Dateien, bevor du sie in Crowdin importierst
+slug: developer/crowdin-apps-module-file-pre-import-processing
+sidebar:
+  order: 3
+  label: Verarbeitung vor dem Dateiimport
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Mit dem Modul zur Verarbeitung vor dem Import kannst du deine Dateien ändern, bevor du sie in Crowdin importierst. Mit dem Modul zur Verarbeitung vor dem Import kannst du automatische Änderungen auf ausgewählte Dateien anwenden. Dieses Modul kann mit einer Vielzahl von Dateiformaten wie TXT, XML, JSON und vielen weiteren arbeiten, um deren Inhalte anzupassen.
+
+Mit dem Modul zur Verarbeitung vor dem Import in deiner Crowdin-App kannst du Dateiformat, Struktur und Inhalt anpassen. Da das Modul ausgeführt wird, bevor Crowdin die Datei importiert, kannst du den Inhalt vor der Verarbeitung durch das System gezielt anpassen.
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+Für Crowdin:
+
+* Nur ich (also der Projektinhaber)
+* Alle Projektmitglieder
+* Ausgewählte Benutzer
+
+Für Crowdin Enterprise:
+
+* Nur Organisationsadministratoren
+* Alle Benutzer in den Projekten der Organisation
+* Ausgewählte Benutzer
+
+## Struktur
+
+```json title="manifest.json"
+{
+  "modules": {
+    "file-pre-import": [
+      {
+        "key": "your-pre-import-module-key",
+        "url": "/import-file",
+        "signaturePatterns": {
+          "fileName": "^.+\.xml$",
+          "fileContent": "<properties>\s*<property\s+name=.*value=.*/>"
+        }
+      }
+    ]
+  }
+}
+```
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Die relative URL, die beim Dateiimport, bei Aktualisierungen und beim Hochladen von Übersetzungen aufgerufen wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>object</code></p>
+        <p><strong>Beschreibung:</strong> Enthält reguläre Ausdrücke für <code>fileName</code> und/oder <code>fileContent</code>, die zum Erkennen des Dateityps beim Hochladen einer neuen Source-Datei über die UI (oder über die API ohne angegebenen <code>type</code>-Parameter) verwendet werden.</p>
+        <p><Aside><code>fileContent</code> regular expression checks only the first 64 KB of the file content.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Kommunikation zwischen der File-Processing-App und Crowdin
+
+Beim Import einer Datei erkennt Crowdin anhand des Parameters `signaturePatterns` ein geeignetes Modul und sendet eine HTTP-Anfrage an die URL der App (`$baseUrl`. $url\`), damit die Datei weiterverarbeitet werden kann.
+
+Zusätzlich überprüft Crowdin während des Dateiimports den Dateinamen und den Inhalt, um sicherzustellen, dass sie zu den passenden Modulen zur Dateiverarbeitung passen. Dieser Prozess kann das Modul zur Verarbeitung vor dem Import umfassen, um den Dateiinhalt vor dem Import zu ändern, sowie das Modul zur Verarbeitung nach dem Import, um die aus der Datei extrahierten Strings zu ändern.
+
+Um den Dateiinhalt zu ändern, sucht das System zunächst das passende Modul zur Verarbeitung vor dem Import und sendet ihm den Dateiinhalt. Das Modul führt anschließend die zuvor festgelegten Änderungen durch, die Änderungen am Dateiformat, an der Struktur und am Inhalt umfassen können.
+
+Nachdem das Modul zur Verarbeitung vor dem Import die Dateiänderungen abgeschlossen hat, erhält Crowdin den geänderten Dateiinhalt sowie gegebenenfalls einen neuen Dateinamen oder eine neue Dateierweiterung.
+
+### Anfrage an die Dateiverarbeitungs-App
+
+Beispiel für die Nutzlast der Anfrage:
+
+```json
+// max request payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "jobType": "file-pre-import",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name"
+  },
+  "file": {
+    "id": 1,
+    "name": "file.xml",
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded source file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // source file public URL
+  },
+  "sourceLanguage": {
+    "id": "es",
+    "name": "Spanish",
+    "editorCode": "es",
+    "twoLettersCode": "es",
+    "threeLettersCode": "spa",
+    "locale": "es-ES",
+    "androidCode": "es-rES",
+    "osxCode": "es.lproj",
+    "osxLocale": "es",
+    "pluralCategoryNames": [
+      "one"
+    ],
+    "pluralRules": "(n != 1)"
+  },
+  "targetLanguages": [
+    {
+      // same structure as for sourceLanguage, empty when uploading a new source file, one element for import_translations, can be more for multilingual files
+    }
+  ]
+}
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>jobType</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Wert:</strong> <code>file-pre-import</code></p>
+        <p><strong>Beschreibung:</strong> Gibt die Aktion des Moduls zur Verarbeitung vor dem Dateiimport an.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.content</code>, <code>file.contentUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Parameter zur Übergabe des base64-codierten Inhalts der Source-Datei (<code>file.content</code>) oder einer öffentlichen URL zur Source-Datei (<code>file.contentUrl</code>).<br />
+        Either of these two parameters can be used.<Aside title="Limitations">Das maximale Limit für die Nutzlast der Anfrage beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Erwartete Antwort der App
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+// max response payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "data": {
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded modified file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=...", // modified file public URL
+    "fileName": "file.html", // optional, new file name with extension
+    "fileType": "webxml"  // optional, an importer Crowdin should use to import a file
+  },
+  "error": {
+    "message": "Your error message"
+  }
+}
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>data.content</code>, <code>data.contentUrl</code></td>
+      <td>
+        <p><strong>Type(data.content):</strong> <code>string</code></p>
+        <p><strong>Type(data.contentUrl):</strong> <code>string</code></p>
+        <p><strong>Description:</strong> Parameters used to pass the base64 encoded modified file content (<code>data.content</code>) or a modified file public URL (<code>data.contentUrl</code>).<br />
+        Either of these two parameters can be used.<Aside title="Limitations">Das maximale Limit für die Nutzlast der Antwort beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>fileName</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Optionaler Parameter, mit dem Dateiname und Dateierweiterung durch einen neuen Namen bzw. eine neue Erweiterung überschrieben werden können.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>fileType</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Optionaler Parameter zur Angabe eines Importers, den Crowdin zum Importieren einer Datei verwenden soll.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Eine Fehlermeldung, die von der App an Crowdin übergeben wird und für einen Benutzer in der Benutzeroberfläche sichtbar ist.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>

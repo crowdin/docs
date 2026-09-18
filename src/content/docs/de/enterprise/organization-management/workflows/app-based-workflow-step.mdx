@@ -1,0 +1,98 @@
+---
+title: App-basierter Workflow-Schritt
+description: Neue Workflow-Schritte konfigurieren, die durch die Installation von Apps aus dem Crowdin Store freigeschaltet werden
+slug: enterprise/app-based-workflow-step
+sidebar:
+  order: 5
+---
+
+import { Image } from 'astro:assets';
+import { Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import appBasedStepWorkflowEditor from '!/enterprise/organization-management/app_based_step_workflow_editor.png';
+import workflowIssuesBanner from '!/enterprise/organization-management/workflow_issues_banner.png';
+
+App-basierte Workflow-Schritte werden verfügbar, nachdem Sie bestimmte Apps aus dem [Crowdin Store](https://store.crowdin.com/) installiert oder private Apps zu Ihrer Crowdin-Enterprise-Organisation hinzugefügt haben. Diese Schritte können spezielle Funktionen wie KI-gestütztes Korrekturlesen oder verzögerte Verarbeitung bereitstellen und sind eine leistungsstarke Möglichkeit, Workflows genau an die Anforderungen Ihres Teams anzupassen. Indem Sie sie Ihrem Workflow hinzufügen, erweitern Sie die Standardfunktionen von Crowdin Enterprise um einzigartige Bedingungen, Automatisierungen und Integrationen.
+
+Im Gegensatz zu integrierten Schritten definiert ein app-basierter Schritt eigene Abschlussregeln: Die App entscheidet, wann Zeichenfolgen in diesem Schritt abgeschlossen sind und welche Ausgabe sie zum nächsten Workflow-Schritt weiterleitet.
+
+## Anwendungsfälle
+
+Im Folgenden finden Sie einige Beispiele dafür, wie app-basierte Schritte Ihre Workflows erweitern können. Einige stammen aus vorhandenen Crowdin-Store-Apps, während andere weitergehende Möglichkeiten veranschaulichen:
+
+* **Workflow-Verzögerung** – Die App [Workflow Delay](https://store.crowdin.com/workflow-step-delay) fügt schrittartige Prüfpunkte hinzu, an denen Zeichenfolgen pausiert werden, bis Bedingungen erfüllt sind oder ein festgelegter Zeitplan erreicht ist. Dies verhindert, dass unvollständige oder nicht verifizierte Zeichenfolgen zu früh weitergeleitet werden, und verbessert so die allgemeine Übersetzungskonsistenz.
+
+* **KI-Quelltextprüfung** – Ein weiteres mögliches Szenario wäre eine App, die Quelltexte vor der Übersetzung automatisch prüft und verbessert und dabei Tippfehler, Inkonsistenzen im Stil oder Platzhalter erkennt, die später Probleme verursachen könnten. Dieser Ansatz trägt zu hochwertigeren Übersetzungen bei, indem er mit sorgfältig überarbeiteten Quellzeichenfolgen beginnt.
+
+* **KI-Beschriftung** – Ein Schritt, der Ihre Zeichenfolgen analysieren und automatisch Beschriftungen anwenden könnte (z. B. „Marketinginhalt“, „Technische Dokumentation“, „Hohe Priorität“), um Inhalte an die passenden Übersetzungs- oder Prüfpfade weiterzuleiten.
+
+<CardGrid>
+  <LinkCard title="Workflow Übersicht" href="/enterprise/workflows/" />
+  <LinkCard title="Crowdin Store" href="https://store.crowdin.com/" />
+</CardGrid>
+
+## Apps aus dem Crowdin Store installieren
+
+Bevor Sie einen app-basierten Workflow-Schritt hinzufügen können, müssen Sie die entsprechende App installieren. Sie können Apps aus dem Crowdin Store installieren oder, wenn Sie eine eigene entwickelt haben, sie als private App hinzufügen.
+
+<ReadMore>
+  Erfahren Sie mehr über [Erstellen von Apps für Workflow-Schritte](/developer/crowdin-apps-module-workflow-step-type/).
+</ReadMore>
+
+Je nach App benötigen Sie möglicherweise bestimmte Berechtigungen (z. B. Manager oder Administrator), um sie zu installieren. Nach der Installation erscheinen die neuen Schritttypen im Workflow-Editor oder Workflow-Vorlageneditor.
+
+<ReadMore>
+  Erfahren Sie mehr über [Crowdin-Apps installieren](/developer/crowdin-apps-installation/#installation-in-crowdin-enterprise).
+</ReadMore>
+
+### Bot-Benutzer
+
+Wenn Sie eine App installieren, die Workflow-Schritte bereitstellt, erstellt Crowdin Enterprise einen dedizierten Bot-Benutzer, der die App in Ihrer Organisation repräsentiert. Die App verarbeitet Zeichenfolgen in ihren Workflow-Schritten im Namen dieses Benutzers, sodass ihre Aktionen in der Projektaktivität dem Bot zugeordnet werden.
+
+Der Bot muss in jedem Projekt, in dem der app-basierte Schritt verwendet wird, über Manager-Zugriff verfügen:
+
+* Wählen Sie im Dialog zur App-Installation **Bot als Manager allen vorhandenen Projekten zuweisen**.
+* Alternativ können Sie den Bot als Manager zum Projekt einladen, wenn Sie den app-basierten Schritt zum Workflow dieses Projekts hinzufügen.
+
+Wenn der Manager-Zugriff des Bots widerrufen wird, schlägt die Validierung des Schritts fehl und Sie können den Workflow nicht veröffentlichen, sodass der Schritt keine Zeichenfolgen mehr verarbeitet. Belassen Sie den Bot mit der Rolle „Manager“ in den Projektmitgliedern. Wenn die App deinstalliert wird, wird der Bot-Benutzer automatisch entfernt.
+
+<Aside type="caution">
+  Wenn Sie die App später deinstallieren, zeigt jeder Workflow, der den app-basierten Schritt verwendet, einen Fehler oder wird als fehlerhaft gekennzeichnet.
+</Aside>
+
+## App-basierte Workflow-Schritte zu Ihrem Workflow hinzufügen
+
+Sie können app-basierte Workflow-Schritte direkt zum Workflow eines Projekts im Workflow-Editor hinzufügen oder sie über den Workflow-Vorlageneditor in Workflow-Vorlagen aufnehmen.
+
+<Image src={appBasedStepWorkflowEditor} alt="App-basierte Workflow-Schritte im Workflow-Editor" />
+
+## Schrittkonfiguration
+
+Je nach Implementierung der App kann ein app-basierter Workflow-Schritt verschiedene Konfigurationsoptionen oder gar keine bieten. Zum Beispiel:
+
+* **Konfigurierbare Schritte** – Bei einigen Schritten können Sie Parameter im Workflow-Editor anpassen (z. B. eine Verzögerung für die Inhaltsverarbeitung festlegen). In diesen Fällen können Sie die verfügbaren Optionen an Ihre Anforderungen anpassen.
+
+* **Vorkonfigurierte Schritte** – Bei anderen Schritten sind alle Einstellungen von der App vorgegeben (z. B. Verzögerung der Verarbeitung, bis eine gesamte Datei vollständig übersetzt ist), sodass im Workflow-Editor keine zusätzlichen Felder angezeigt werden.
+
+Wenn ein Schritt Konfigurationsfelder bereitstellt, werden diese in der Regel im Einstellungsbereich des Schritts angezeigt, sobald Sie ihn in den Workflow ziehen.
+
+Diese Felder können von KI-Prompts und zulässigen Aktionen (z. B. Übersetzungen genehmigen oder löschen, Übersetzungsvorschläge oder Kommentare hinzufügen) bis hin zu API-Tokens, Verzögerungsintervallen oder Match-Bedingungen alles umfassen, was der App-Entwickler aktiviert hat. Wenn keine sichtbaren Konfigurationsoptionen vorhanden sind, verwaltet die App wahrscheinlich alle erforderlichen Einstellungen intern.
+
+<Aside type="tip">
+  In der Dokumentation der App finden Sie Einzelheiten zu den bereitgestellten Einstellungen.
+</Aside>
+
+## Fehlerbehebung
+
+Wenn ein app-basierter Schritt falsch konfiguriert ist, kennzeichnet Crowdin Enterprise den Workflow als fehlerhaft. Möglicherweise sehen Sie:
+
+* **Fehlerbanner und inaktive Schritte** – Wenn die App entfernt oder inaktiv wird, kann das Dashboard Ihres Projekts ein Banner anzeigen, das über die Workflow-Probleme und deren Behebung informiert.
+  <Image src={workflowIssuesBanner} alt="Banner mit Workflow-Problemen" />
+  Im Workflow-Editor werden möglicherweise Schritte mit fehlgeschlagenen Validierungen angezeigt (z. B. *Die für diesen Schritttyp erforderliche Anwendung ist deinstalliert oder für das Projekt nicht zulässig*). Um dies zu beheben, installieren Sie die App erneut und konfigurieren Sie ihren Schritt neu oder entfernen Sie den Schritt, wenn er nicht mehr benötigt wird.
+* **Validierungswarnungen** – Beim Speichern von Änderungen am Workflow kann eine Warnung erscheinen, wenn der app-basierte Schritt falsch konfiguriert ist oder Abhängigkeiten fehlen (z. B. *„Workflow Delay Agent“ erfordert Manager-Berechtigungen für das Projekt*). Eine solche Warnung bedeutet normalerweise, dass der [Bot-Benutzer](#bot-user) der App den Manager-Zugriff auf das Projekt verloren hat – fügen Sie den Bot mit der Rolle „Manager“ erneut zu den Projektmitgliedern hinzu.
+* **Fehlgeschlagene Zeichenfolgen im Schritt** – Wenn die App nicht über Zeichenfolgen benachrichtigt werden konnte, die ihren Schritt erreicht haben (z. B. weil der Dienst der App vorübergehend nicht verfügbar war), werden diese Zeichenfolgen als fehlgeschlagene Wörter im Schritt gezählt. Der Schritt zeigt dann eine Warnung mit der Anzahl der fehlgeschlagenen Wörter an. Sobald die App wieder verfügbar ist, kann ein Projektmanager auf dem Schritt auf **Erneut senden** klicken, um diese Zeichenfolgen erneut an die App zu senden.
+* **Kein Zugriff auf den app-basierten Schritt** – Gelegentlich wird ein app-basierter Schritt möglicherweise nicht im Workflow-Editor angezeigt, wenn die App mit eingeschränktem Projektzugriff installiert wurde oder Ihnen die erforderliche Rolle (z. B. Manager) fehlt. Überprüfen Sie Ihre Projekteinstellungen, um sicherzustellen, dass Sie über Manager- oder Administratorrechte verfügen und die App im vorgesehenen Projekt zulässig ist.
+* **Verbindungs- oder Fehler bei externen Diensten** – Wenn ein app-basierter Schritt von einem Drittanbieterdienst oder einer API abhängt, können Timeouts oder Netzwerkausfälle dazu führen, dass der Schritt fehlschlägt oder hängen bleibt.
+  * **Dienststatus prüfen**: Stellen Sie sicher, dass jeder von der App verwendete externe Dienst online ist und ordnungsgemäß funktioniert.
+  * **Protokolle prüfen**: Wenn die App Protokolle oder ein Admin-Panel bereitstellt, überprüfen Sie dort alle Fehlermeldungen, die möglicherweise generiert wurden.
+  * **Netzwerk- und Firewall-Einstellungen**: Stellen Sie sicher, dass Ihre Firewall oder Ihr VPN die Anfragen der App nicht blockiert.

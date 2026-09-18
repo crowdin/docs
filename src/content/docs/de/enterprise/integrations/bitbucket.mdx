@@ -1,0 +1,236 @@
+---
+title: Bitbucket-Einbindung
+description: Dateien zwischen deinem Bitbucket-Repository und Crowdin synchronisieren
+slug: enterprise/bitbucket-integration
+sidebar:
+  order: 3
+---
+
+import { Image } from 'astro:assets';
+import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import setUpIntegrationDropdown from '!/enterprise/integrations/set_up_integration_dropdown.png';
+import authorization from '!/crowdin/integrations/bitbucket_integration_authorization.png';
+import unconfigured from '!/enterprise/integrations/integration_unconfigured.png';
+import unconfiguredSb from '!/enterprise/integrations/integration_unconfigured_sb.png';
+import syncNow from '!/enterprise/integrations/integration_sync_now.png';
+
+Mit der Bitbucket-Integration kannst du Dateien zwischen deinem Bitbucket-Repository und dem Crowdin-Enterprise-Projekt synchronisieren.
+
+<Aside>
+  Installiere vor dem Einrichten der Integration in deiner Crowdin-Enterprise-Organisation die Variante, die zu deinem Setup passt:
+
+  * [Bitbucket-Integration](https://store.crowdin.com/bitbucket) &ndash; für Repositories, die in Bitbucket Cloud gehostet werden.
+  * [Bitbucket-Server-&-Data-Center-Integration](https://store.crowdin.com/bitbucket-server) &ndash; für eine selbst gehostete Bitbucket-Instanz.
+</Aside>
+
+Bei dateibasierten Projekten gibt es zwei mögliche Bitbucket-Integrationsmodi, zwischen denen Sie wählen können:
+
+* **Modus für Quell- und Übersetzungsdateien** &ndash; Quell- und Übersetzungsdateien zwischen deinem Bitbucket-Repository und dem Crowdin-Enterprise-Projekt synchronisieren.
+* **Modus für Zielpakete** &ndash; Übersetzungsdateien aus dem Crowdin-Enterprise-Projekt im ausgewählten Format generieren und in dein Bitbucket-Repository übertragen. In diesem Modus überträgt die Integration Übersetzungsdateien und synchronisiert keine Quellen aus deinem Repository. Wenn du in deinem Crowdin-Enterprise-Projekt eine Quelltextprüfung durchführst und aktualisierte Quelltexte in dein Repository übertragen möchtest, kannst du eine Quellsprache als Zielsprache hinzufügen. Sie wird zusammen mit den Übersetzungen in dein Repository übertragen.
+
+In stringbasierten Projekten arbeitet die Bitbucket-Integration ausschließlich im **Modus für Zieldateibundles**.
+
+<ReadMore>
+  Mehr über [Projekttypen](/enterprise/creating-project/#project-types) erfahren.
+</ReadMore>
+
+Alle übersetzten und bestätigten Dateien (oder Zieldateibundles) werden automatisch in den `l10n`-Branch des Bitbucket-Repositorys zusammengeführt.
+
+## Bitbucket-Konto verbinden
+
+<Steps>
+  1. Wähle **application/json** als **Inhaltstyp** aus.
+  2. Klicke in der Integrationsliste auf **Bitbucket**.
+  3. Klicke auf **Integration einrichten** und wähle in der Dropdown-Liste **Modus für Quell- und Übersetzungsdateien** oder **Modus für Zieldateibundles** aus, um dein Bitbucket-Konto zu verbinden. <Image src={setUpIntegrationDropdown} alt="Bitbucket verbinden" class="width-sm" />
+     <Aside>In stringbasierten Projekten arbeitet die Bitbucket-Integration ausschließlich im **Modus für Zieldateibundles**.</Aside>
+  4. Autorisiere anschließend die Verbindung mit Crowdin auf der Bitbucket-Seite: <Image src={authorization} alt="Autorisierung" class="width-lg" />
+</Steps>
+
+Wenn das benötigte Repository privat ist und du nur eingeschränkten oder keinen Zugriff darauf hast, bitte den Repository-Eigentümer, dir ein [Zugriffstoken](https://support.atlassian.com/bitbucket-cloud/docs/repository-access-tokens/) bereitzustellen. Die erforderlichen Scopes sind: `pullrequest:write`, `repository:write`, `webhook`. Gib anschließend im Abschnitt **Persönliches Zugriffstoken verwenden (optional)** deinen Workspace-Namen in das Feld *Workspace*, das Token in das Feld *Token* ein und klicke auf **Integration einrichten**.
+
+<Aside title="Berechtigungen">
+  Wenn die Konfiguration abgeschlossen ist, klicke auf **Speichern**.
+</Aside>
+
+### Repository auswählen
+
+Wähle im angezeigten Dialogfeld dein Repository und die zu übersetzenden Branches aus.
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dateibasiertes Projekt">
+    <Image src={unconfigured} alt="Bitbucket-Integration unkonfiguriert" />
+
+    Es wird empfohlen, „Doppelte Strings“ auf **In einem Versions-Branch anzeigen** umzuschalten, damit identische Strings zwischen Branches ausgeblendet werden. Wenn deine Quelldateien Strings mit offensichtlichen Bezeichnern (Schlüsseln) enthalten, ist es besser, eine *strikte* Variante dieser Option zu verwenden. In anderen Fällen kannst du gerne die *reguläre* Variante verwenden.
+  </TabItem>
+  <TabItem label="Zeichenfolgenbasiertes Projekt">
+    <Image src={unconfiguredSb} alt="Bitbucket-Integration unkonfiguriert" />
+  </TabItem>
+</Tabs>
+
+<CardGrid>
+  <LinkCard title="Doppelte Strings" href="/enterprise/project-settings/import/#duplicate-strings" />
+  <LinkCard title="Versionsverwaltung" href="/enterprise/version-management/" />
+</CardGrid>
+
+Bei der Arbeit mit der Bitbucket-Integration im **Modus für Zielpakete** sendet die Integration die fertigen Übersetzungen aus deinem Crowdin-Enterprise-Projekt, ohne die Quellen aus deinem Repository abzurufen. Wenn du also ein Repository und Branches auswählst, die übersetzt werden sollen, legst du fest, wohin die Integration die generierten Bundles mit den Übersetzungen ablegen soll.
+
+<ReadMore>
+  Mehr über [das Konfigurieren von Zieldateipaketen für VCS-Integrationen](/enterprise/bundles/#bundles-in-vcs-integrations) erfahren.
+</ReadMore>
+
+Wenn Sie mit privaten Integrationen arbeiten (z. B. Integrationen mit selbst gehostetem VCS), müssen Sie dedizierte Crowdin-IP-Adressen in die Erlaubnisliste aufnehmen, um sicherzustellen, dass die Integration ordnungsgemäß funktioniert und sicher bleibt.
+
+<ReadMore>
+  Mehr über [IP-Adressen](/developer/ip-addresses/#integrations-and-applications) erfahren.
+</ReadMore>
+
+### Service-Branches
+
+Wenn die Übersetzungen fertig sind und Ihre Sprachen live gehen können, sendet Crowdin Enterprise die Pull-Anfrage mit den Übersetzungen an Ihr Versionskontrollsystem. Für jeden Zweig, der lokalisiert werden soll, erstellt Crowdin Enterprise einen zusätzlichen Servicezweig mit Übersetzungen. Wir committen nicht direkt in den Master-Branch, damit du die Übersetzungen zuerst überprüfen kannst.
+
+Standardmäßig wird `l10n_` dem Namen des erstellten Service-Branchs vorangestellt. Falls erforderlich, kannst du dies problemlos ändern.
+
+<Aside type="tip">
+  Wir empfehlen, den `l10n_`-Branch nach dem Zusammenführen des Pull Requests aus deinem Repository zu löschen, um mögliche Konflikte zu vermeiden. Crowdin Enterprise erstellt den Service-Branch automatisch neu, sobald neue Übersetzungen zur Synchronisierung bereitstehen.
+</Aside>
+
+### Synchronisierungseinstellungen
+
+Konfiguriere die Synchronisierungseinstellungen entsprechend deinen Anforderungen und Präferenzen.
+
+<Aside type="caution" title="Einschränkungen">
+  Die Optionen *Vorhandene Übersetzungen importieren* und *Quellen übertragen* sind nur für dateibasierte Projekte verfügbar.
+</Aside>
+
+#### Vorhandene Übersetzungen importieren
+
+Um vorhandene Übersetzungen aus deinem Repository zu importieren, wähle eine der folgenden Optionen:
+
+* **Einmaliger Übersetzungsimport nach dem Verbinden des Branchs**
+* **Neue Übersetzungen aus dem Repository immer importieren**
+
+Standardmäßig ist die erste Option ausgewählt, sodass Übersetzungen nur einmal importiert werden. Alternativ kannst du beide Optionen deaktivieren, wenn du keine Übersetzungen aus deinem Repository importieren möchtest.
+
+<Aside type="tip">
+  Wir empfehlen, vorhandene Übersetzungen aus dem Repository während der Einrichtung der Integration nur einmal zu importieren. Behandle Crowdin Enterprise anschließend als maßgebliche Quelle und verwalte Übersetzungen ausschließlich in Crowdin Enterprise, um zu verhindern, dass nicht freigegebene Übersetzungen überschrieben werden.
+</Aside>
+
+Klicke auf **Optionen für das Hochladen von Übersetzungen**, um auf die folgenden zusätzlichen Optionen zuzugreifen:
+
+* **Zielübersetzung darf mit der Quelle übereinstimmen**
+* **Hinzugefügte Übersetzungen freigeben**
+
+#### Quellen übertragen
+
+Standardmäßig werden Quellen nicht zusammen mit den Übersetzungen in das Repository übertragen. Wenn du jedoch in deinem Crowdin-Enterprise-Projekt eine Überprüfung des Quelltexts durchführst und die Änderungen an deinen Quelldateien in Crowdin Enterprise zurück in dein Repository übertragen möchtest, klicke auf **Bearbeiten**, wähle in den Integrationseinstellungen *Quellen übertragen* und klicke auf **Speichern**.
+
+#### Synchronisierungszeitplan
+
+Die Synchronisierung wird automatisch jede Stunde durchgeführt. Falls erforderlich, kannst du das Aktualisierungsintervall in den Integrationseinstellungen ändern. Um den Synchronisierungszeitplan zu konfigurieren, klicke auf **Bearbeiten**, scrolle nach unten zu *Synchronisierungszeitplan*, lege das gewünschte Intervall fest und klicke auf **Speichern**.
+
+Es gibt Fälle, in denen Übersetzungen vorübergehend nicht in das Repository übertragen werden sollen. Klicke in diesem Fall auf **Bearbeiten**, deaktiviere *Synchronisierungszeitplan* in den Integrationseinstellungen und klicke auf **Speichern**. Wenn du die Übersetzungen wieder mit dem Repository synchronisieren möchtest, wähle *Synchronisierungszeitplan* aus und klicke auf **Speichern**.
+
+Unabhängig von den Synchronisationseinstellungen werden die Änderungen an den Quelldateien im Repo weiterhin kontinuierlich mit Crowdin Enterprise synchronisiert.
+
+### Automatisch zu synchronisierende Branches
+
+Wenn Sie die Integration einrichten, wählen Sie bestehende Repository-Zweige aus, die dem Crowdin Enterprise-Projekt hinzugefügt werden sollen. Um zukünftige Branches aus Bitbucket automatisch zu Crowdin Enterprise hinzuzufügen, erstelle in den Integrationseinstellungen ein Muster für die Branch-Namen.
+
+Beispielsweise fügst du in den Einstellungen der Bitbucket-Integration das Muster \**feature* hinzu. In diesem Fall werden zukünftige Branches, die dieses Wort am Ende ihres Titels enthalten, dem Projekt hinzugefügt.
+
+Führe die folgenden Schritte aus, um ein Muster für Branch-Namen hinzuzufügen:
+
+<Steps>
+  1. Klicke im Bereich der Bitbucket-Integration auf **Bearbeiten**.
+  2. Scrolle im angezeigten Dialogfeld nach unten zu *Automatisch zu synchronisierende Branches*.
+  3. Verwende im Feld *Automatisch zu synchronisierende Branches* Platzhalter wie `*`, `?`, `[set]`, `\` und weitere, um die benötigten Branches zu bestimmen.
+  4. Klicke auf **Speichern**.
+</Steps>
+
+### Standardname der Konfigurationsdatei
+
+`crowdin.yml` ist der Standarddateiname, der für automatisch synchronisierte Branches verwendet wird. Um die Standardeinstellungen zu ändern, klicke auf **Bearbeiten**, gib im Feld *Standardname der Konfigurationsdatei* in den Integrationseinstellungen den gewünschten Namen ein und klicke auf **Speichern**.
+
+Wenn du keinen eigenen Namen für die Konfigurationsdatei automatisch synchronisierter Branches angibst und die Integration im Stammverzeichnis des Branchs keine Konfigurationsdatei mit dem Standardnamen `crowdin.yml` findet, werden diese Branches in den Integrationseinstellungen mit einem roten Symbol mit Ausrufezeichen und dem Hinweis „Nicht bereit. Konfiguration prüfen“ markiert. Konfiguration prüfen
+
+## Auswählen von Inhalten für die Synchronisierung
+
+Damit die Integration funktioniert, musst du festlegen, welche Quelldateien übersetzt werden sollen und wie Crowdin Enterprise die übersetzten Dateien in deinem Repository strukturieren soll. Damit die Integration im Modus für Zieldateibundles funktioniert, musst du die benötigten Bundles auswählen, die du in dein Repository übertragen möchtest.
+
+<Aside type="tip">
+  Wenn neben dem Namen des Service-Branchs ein rotes Symbol mit Ausrufezeichen angezeigt wird, bedeutet dies, dass du keinen Inhalt für die Synchronisierung ausgewählt hast.
+</Aside>
+
+Es gibt zwei Möglichkeiten, den zu synchronisierenden Inhalt festzulegen:
+
+* Online konfigurieren
+* Manuell durch Erstellen einer Konfigurationsdatei konfigurieren
+
+### Online konfigurieren
+
+Dieses Verfahren ist für alle Integrationen mit Versionskontrollsystemen (VCS) gleich.
+
+<ReadMore>
+  Lies [VCS-Integrationen online konfigurieren](/enterprise/configuring-vcs-integrations-online/), um zu erfahren, wie du Inhalte für die Synchronisierung online auswählst.
+</ReadMore>
+
+### Konfigurationsdatei erstellen
+
+Die Konfigurationsdatei `crowdin.yml` sollte zusammen mit jedem separaten Branch, den du übersetzen möchtest, im Bitbucket-Repository gespeichert werden, damit Crowdin Enterprise genau weiß, welche Dateien zur Übersetzung gesendet werden sollen.
+
+Sie sollte dieselbe Struktur haben, die für die CLI erforderlich ist. Aus Sicherheitsgründen dürfen die Anmeldedaten deines Projekts jedoch nicht im Header der Datei gespeichert werden.
+
+<ReadMore>
+  Mehr über das [Erstellen einer Konfigurationsdatei](/developer/configuration-file/) erfahren.
+</ReadMore>
+
+## Mit mehreren Repositorys in einem Projekt arbeiten
+
+Wenn du an einem plattformübergreifenden Produkt arbeitest, das Versionen für verschiedene Betriebssysteme enthält, möchtest du möglicherweise mehrere Repositorys verbinden, die Quelldateien für die einzelnen Betriebssysteme enthalten. In diesem Fall können Lokalisierungsressourcen (z. B. TMs und Glossare) und Übersetzungen effizienter genutzt werden, wodurch sich die für die Projektlokalisierung benötigte Zeit verkürzt.
+
+Führe die folgenden Schritte aus, um ein weiteres Repository hinzuzufügen:
+
+<Steps>
+  1. Wähle **application/json** als **Inhaltstyp** aus.
+  2. Klicke in der Integrationsliste auf **Bitbucket**.
+  3. Klicke auf **Repository hinzufügen**.
+  4. Konfiguriere die Integration mit dem neuen Repository entsprechend deinen Anforderungen und Präferenzen.
+</Steps>
+
+## Überprüfe den Status der Synchronisation
+
+Nachdem die Integration eingerichtet wurde, werden alle zugehörigen Informationen unter **Integrationen > Bitbucket** gespeichert.
+
+Nach dem Verbinden der Integration können die Einstellungen nur noch von dem Projektmitglied aktualisiert werden, das sie konfiguriert hat. Alle Projektmanager außer der Person, die die Integration konfiguriert hat, sehen die Schaltfläche **Bearbeiten** deaktiviert. Beim Darüberfahren wird folgende Meldung angezeigt: `Integration was configured by {Full Name} ({username})`.
+
+Standardmäßig wird die Synchronisierung automatisch jede Stunde durchgeführt. Wenn du die Synchronisierung sofort starten möchtest, klicke auf **Jetzt synchronisieren**.
+
+<Image src={syncNow} alt="Bitbucket jetzt synchronisieren" />
+
+Wenn du stattdessen nur einen Branch separat synchronisieren musst, klicke beim gewünschten Branch auf <Icon name="mdi:dots-vertical" class="inline-icon" /> und wähle **Branch synchronisieren** aus.
+
+## Übersetzungen aus dem Repository hochladen
+
+Standardmäßig werden die im Repo gespeicherten Übersetzungen nur bei der ersten Synchronisierung in Crowdin Enterprise hochgeladen. Um Übersetzungen manuell in Crowdin Enterprise hochzuladen, klicke auf das <Icon name="mdi:dots-vertical" class="inline-icon" />-Symbol neben der Schaltfläche **Jetzt synchronisieren** und anschließend auf **Übersetzungen mit Crowdin Enterprise synchronisieren**. Die Integration lädt vorhandene Übersetzungen in dein Crowdin-Enterprise-Projekt hoch.
+
+<Aside type="caution" title="Einschränkungen">
+  * Die Option **Übersetzungen mit Crowdin Enterprise synchronisieren** ist nur für dateibasierte Projekte verfügbar.
+  * Verwende diese Funktion mit Vorsicht, wenn bereits eine Übersetzung läuft.<br />
+    Das manuelle Hochladen von Übersetzungen aus dem Repository kann nicht freigegebene Übersetzungen, die sich derzeit im Projekt befinden, überschreiben – ähnlich wie die Option [**Neue Übersetzungen aus dem Repository immer importieren**](#import-existing-translations).
+</Aside>
+
+## Fragen und Antworten
+
+<QuestionAnswer title="Wie kann ich unnötige Anwendungs-Builds vermeiden, die durch Commits aus Crowdin Enterprise ausgelöst werden?">
+  Da VCS-Integrationen in Crowdin Enterprise die API zum Committen von Dateien verwenden, aber nicht Git, wird jede Datei separat committed.
+
+  Hier sind einige Empfehlungen, die dir bei der Lösung ähnlicher Situationen helfen können:
+
+  * Verwende die Option `export_languages`, um Commits von Sprachen zu überspringen, die du noch nicht benötigst. Mehr über den [Parameter „Export languages“](/developer/configuration-file/#export-languages) erfahren.
+  * Standardmäßig wird der Tag `[ci skip]` zur Commit-Nachricht hinzugefügt, um unnötige Builds zu überspringen. Mehr über den [Parameter „Commit Message“](/developer/configuration-file/#commit-message) erfahren.
+  * Konfiguriere das gewünschte Synchronisierungsintervall mithilfe von [Synchronisierungszeitplan](#synchronization-settings) (z. B. Synchronisierung einmal alle 24 Stunden).
+  * Führe Commits beim Zusammenführen eines Lokalisierungs-Branchs zusammen, damit die Historie des Master-Branchs übersichtlich und sauber bleibt.
+</QuestionAnswer>

@@ -189,14 +189,14 @@ query {
 
 GraphQL API 的限制与 [REST API 速率限制](/zh/developer/api/v2/#section/Introduction/Rate-Limits) 有很大不同。
 
-如前所述，您只需一次 GraphQL 调用即可获取与多次 REST 调用相同数量的数据。 虽然单个复杂的 GraphQL 调用可能等同于数千次 REST 请求，且不会超过 REST API 速率限制，但其计算开销对 Crowdin 服务器来说可能同样高昂。
+如前所述，您只需一次 GraphQL 调用即可获取与多次 REST 调用相同数量的数据。虽然单个复杂的 GraphQL 调用可能等同于数千次 REST 请求，且不会超过 REST API 速率限制，但其计算开销对 Crowdin 服务器来说可能同样高昂。
 
-GraphQL API 使用归一化积分制，通过计算调用的速率限制分数来精确反映查询的服务器成本。 该分数包括父 connection 及其子项上的 first 和 last 参数。
+GraphQL API 使用归一化积分制，通过计算调用的速率限制分数来精确反映查询的服务器成本。该分数包括父 connection 及其子项上的 first 和 last 参数。
 
 * 该公式使用父 connection 及其子项上的 `first` 和 `last` 参数来预先确定对 Crowdin 系统（如 MySQL 和 ElasticSearch）的可能负载。
-* 每个新 connection 都有自己的积分值。 这些积分会与调用的其他积分相加，形成最终的速率限制分数。
+* 每个新 connection 都有自己的积分值。这些积分会与调用的其他积分相加，形成最终的速率限制分数。
 
-GraphQL API 的速率限制设置为每小时 5,000 积分。 由于 GraphQL API 和 REST API 使用不同的速率限制，每小时 5,000 积分并不等同于每小时 5,000 次调用。
+GraphQL API 的速率限制设置为每小时 5,000 积分。由于 GraphQL API 和 REST API 使用不同的速率限制，每小时 5,000 积分并不等同于每小时 5,000 次调用。
 
 <Aside type="caution">
   当前的计算方法和速率限制并非一成不变，可能会在未来发生变化。
@@ -227,11 +227,11 @@ query {
 
 #### 在执行调用前估算速率限制分数
 
-虽然查询 `rateLimit` 对象可以获取调用的分数，但这会计入限制。 为绕过这一问题，您可以提前估算调用的分数。 使用以下计算方法，您可以获得与 `rateLimit { cost }` 返回值大致相同的成本。
+虽然查询 `rateLimit` 对象可以获取调用的分数，但这会计入限制。为绕过这一问题，您可以提前估算调用的分数。使用以下计算方法，您可以获得与 `rateLimit { cost }` 返回值大致相同的成本。
 
 <Steps>
-  1. 首先，将调用中每个唯一 connection 所需的请求数加总。 假设每个请求都会达到 `first` 或 `last` 参数的限制值。
-  2. 然后，将该数字除以 100 并取整，即可得到最终综合成本。 此步骤用于将较大的数字归一化。
+  1. 首先，将调用中每个唯一 connection 所需的请求数加总。假设每个请求都会达到 `first` 或 `last` 参数的限制值。
+  2. 然后，将该数字除以 100 并取整，即可得到最终综合成本。此步骤用于将较大的数字归一化。
 </Steps>
 
 <Aside>
@@ -287,12 +287,12 @@ query {
 }
 ```
 
-* 在返回 100 个项目时，API 需要连接到用户账户一次以获取项目列表。 因此，项目的请求数 = 1
-* 在返回 50 个文件时，API 需要连接到 100 个项目中的每一个以获取文件列表。 因此，文件的请求数 = 100
-* 在返回 60 个字符串时，API 需要连接到最多 5,000 个文件中的每一个以获取字符串列表。 因此，字符串的请求数 = 5,000
+* 在返回 100 个项目时，API 需要连接到用户账户一次以获取项目列表。因此，项目的请求数 = 1
+* 在返回 50 个文件时，API 需要连接到 100 个项目中的每一个以获取文件列表。因此，文件的请求数 = 100
+* 在返回 60 个字符串时，API 需要连接到最多 5,000 个文件中的每一个以获取字符串列表。因此，字符串的请求数 = 5,000
 * 总计 = 5,101
 
-现在，将总计 5,101 除以 100 并取整。 最终得到该查询的分数为 51。
+现在，将总计 5,101 除以 100 并取整。最终得到该查询的分数为 51。
 
 ## 分页
 
@@ -304,9 +304,9 @@ query {
 
 在深入了解分页的具体使用方式之前，让我们先澄清一些关键术语：
 
-* **Connection** &ndash; 在 Crowdin GraphQL 中，connection 是一种包含条目列表的结构。 它通常包含 edges、pageInfo 和 totalCount。 edges 包含实际数据条目，pageInfo 提供分页相关信息，totalCount 表示 connection 中的条目总数。
-* **Edges** &ndash; edges 是 connection 中的各个条目。 每个 edge 包含 node（数据条目）和 cursor，cursor 是用于在集合中导航的字符串。
-* **PageInfo** &ndash; pageInfo 提供帮助您判断是否还有更多条目可检索的信息。 它包含 `hasNextPage`、`hasPreviousPage`、`startCursor` 和 `endCursor` 等字段。
+* **Connection** &ndash; 在 Crowdin GraphQL 中，connection 是一种包含条目列表的结构。它通常包含 edges、pageInfo 和 totalCount。 edges 包含实际数据条目，pageInfo 提供分页相关信息，totalCount 表示 connection 中的条目总数。
+* **Edges** &ndash; edges 是 connection 中的各个条目。每个 edge 包含 node（数据条目）和 cursor，cursor 是用于在集合中导航的字符串。
+* **PageInfo** &ndash; pageInfo 提供帮助您判断是否还有更多条目可检索的信息。它包含 `hasNextPage`、`hasPreviousPage`、`startCursor` 和 `endCursor` 等字段。
 
 ### 在 Crowdin GraphQL 中使用分页
 
@@ -314,7 +314,7 @@ query {
 
 #### 使用分页查询项目
 
-`User` 类型中的 `projects` 字段用于查询与用户关联的项目。 它接受多个输入参数，允许您控制结果的分页。 这些参数包括：
+`User` 类型中的 `projects` 字段用于查询与用户关联的项目。它接受多个输入参数，允许您控制结果的分页。这些参数包括：
 
 * `after` &ndash; 一个 cursor，指示查询应从项目列表的哪个位置开始。
 * `first` &ndash; 在指定 cursor 之后要检索的项目数量。
@@ -323,7 +323,7 @@ query {
 
 #### 示例查询
 
-以下示例查询从提供的 cursor（`cursor_string`）开始，请求与已认证用户关联的前十个项目。 响应将包含含有项目数据的 `edges` 数组，以及用于分页控制的 `pageInfo` 和 `totalCount` 字段。
+以下示例查询从提供的 cursor（`cursor_string`）开始，请求与已认证用户关联的前十个项目。响应将包含含有项目数据的 `edges` 数组，以及用于分页控制的 `pageInfo` 和 `totalCount` 字段。
 
 ```graphql
 query {
@@ -401,9 +401,9 @@ query {
 
 #### 获取上一页
 
-在某些情况下，您可能需要在数据集中向后翻页。 这可能出于各种原因，例如：查看较早的数据、更正或修改等。
+在某些情况下，您可能需要在数据集中向后翻页。这可能出于各种原因，例如：查看较早的数据、更正或修改等。
 
-要向后翻页，您可以使用 `last` 和 `before` 参数。 `last` 参数指定从列表末尾起要获取的条目数量，`before` 参数接受您想要检索的第一个条目的 cursor。 以下是一个示例：
+要向后翻页，您可以使用 `last` 和 `before` 参数。 `last` 参数指定从列表末尾起要获取的条目数量，`before` 参数接受您想要检索的第一个条目的 cursor。以下是一个示例：
 
 ```graphql
 query {
@@ -433,11 +433,11 @@ Crowdin GraphQL 提供了筛选和排序（排序）数据的功能，允许您�
 
 ### 筛选数据
 
-筛选是指定条件以从较大数据集中选取数据子集的过程。 在 Crowdin GraphQL 中，筛选允许您根据特定条件缩小查询结果的范围。 当您想要检索满足特定要求或特征的数据时，这尤其有用。
+筛选是指定条件以从较大数据集中选取数据子集的过程。在 Crowdin GraphQL 中，筛选允许您根据特定条件缩小查询结果的范围。当您想要检索满足特定要求或特征的数据时，这尤其有用。
 
 #### `ProjectFilterInput`
 
-Crowdin GraphQL 提供了 `ProjectFilterInput` 类型，允许您根据各种属性筛选项目。 以下是一些可用于筛选的关键属性：
+Crowdin GraphQL 提供了 `ProjectFilterInput` 类型，允许您根据各种属性筛选项目。以下是一些可用于筛选的关键属性：
 
 * `and` &ndash; 逻辑合取运算符，用于组合多个筛选条件。
 * `or` &ndash; 逻辑析取运算符，用于组合多个筛选条件。
@@ -453,7 +453,7 @@ Crowdin GraphQL 提供了 `ProjectFilterInput` 类型，允许您根据各种属
 * `updatedAt` &ndash; 按项目最后更新日期筛选。
 * `lastActivityAt` &ndash; 按项目最后活动日期筛选。
 
-筛选是一种灵活的方式，可以精确定位查询中所需的数据。 您可以使用 `and` 和 `or` 等逻辑运算符组合多个筛选条件，进一步细化查询。
+筛选是一种灵活的方式，可以精确定位查询中所需的数据。您可以使用 `and` 和 `or` 等逻辑运算符组合多个筛选条件，进一步细化查询。
 
 #### 筛选示例
 
@@ -486,11 +486,11 @@ query {
 
 ### 排序数据
 
-排序是指定查询结果呈现顺序的过程。 它不会减少结果数量，而是将结果按特定顺序排列。 Crowdin GraphQL 提供了基于项目名称、创建日期或其他相关因素对数据进行排序的选项。
+排序是指定查询结果呈现顺序的过程。它不会减少结果数量，而是将结果按特定顺序排列。 Crowdin GraphQL 提供了基于项目名称、创建日期或其他相关因素对数据进行排序的选项。
 
 #### `ProjectOrderInput`
 
-Crowdin GraphQL 中的 `ProjectOrderInput` 类型允许您指定查询结果的排序顺序。 您可以根据以下属性对项目进行排序：
+Crowdin GraphQL 中的 `ProjectOrderInput` 类型允许您指定查询结果的排序顺序。您可以根据以下属性对项目进行排序：
 
 * `id` &ndash; 按项目的唯一标识符排序。
 * `userId` &ndash; 按创建项目的用户标识符排序。
@@ -534,7 +534,7 @@ query {
 
 ### 结合筛选与排序
 
-Crowdin GraphQL 允许您同时结合筛选和排序，以精确定制查询。 您可以先筛选数据以选取满足特定条件的子集，然后按所需顺序对结果进行排序。 这种组合方式使您能够根据具体需求检索和排列数据。
+Crowdin GraphQL 允许您同时结合筛选和排序，以精确定制查询。您可以先筛选数据以选取满足特定条件的子集，然后按所需顺序对结果进行排序。这种组合方式使您能够根据具体需求检索和排列数据。
 
 #### 筛选与排序示例
 

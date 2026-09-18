@@ -1,0 +1,337 @@
+---
+title: In-Context
+description: Übersetze deine Webanwendung direkt im Kontext und in Echtzeit
+slug: developer/in-context-localization
+sidebar:
+  order: 0
+---
+
+import { Steps, Aside, LinkCard, Tabs, TabItem, Code, LinkButton } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { YouTube } from 'astro-embed';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import ReadMore from '~/components/ReadMore.astro';
+import { Image } from 'astro:assets';
+import strings from '!/developer/in_context_strings.png';
+import tab from '!/developer/in_context_tab.png';
+import tabE from '!/developer/in_context_tab_e.png';
+import login from '!/developer/in_context_login.png';
+import loginClose from '!/developer/in_context_login_close.png';
+import addScreenshot from '!/developer/in_context_add_screenshot.png';
+import replaceScreenshot from '!/developer/in_context_replace_screenshot.png';
+import editStringsContextCode from '/src/assets/code/in-context/edit_strings_context.html?raw';
+
+Crowdin In-Context funktioniert mithilfe eines einzeiligen JavaScript-Snippets und eines Pseudo-Sprachpakets. Es erstellt ein Pseudo-Sprachpaket auf Grundlage der in dein Projekt hochgeladenen Lokalisierungsdateien, das später als zusätzliches Lokalisierungspaket in deine Anwendung integriert wird.
+
+## Schnelle Demo
+
+<YouTube id="ktfw7UsW3qw" />
+
+Die In-Context-Lokalisierung ist mit deinem Crowdin-Projekt verknüpft, in dem die übersetzbaren Dateien gespeichert sind. Mit In-Context erstellte Übersetzungen werden genauso zu deinem Projekt hinzugefügt wie Übersetzungen, die direkt im Editor erstellt wurden.
+
+Dieses Tool zeigt deine Anwendung mit bearbeitbaren Texten an, sodass der Übersetzungsprozess in Echtzeit sichtbar ist. Auf diese Weise können sogar dynamische Teile der Anwendung und Zeichenfolgen mit Platzhaltern übersetzt werden.
+
+<div>
+  <LinkButton href="https://demo.crowdin.com/" icon="external" target="_blank">In Aktion ansehen</LinkButton>
+  <LinkButton href="https://crowdin.com/demo-request" variant="secondary" icon="right-arrow" target="_blank">Personalisierte Demo erhalten</LinkButton>
+</div>
+
+Das integrierte Pseudo-Sprachpaket enthält spezielle Kennungen anstelle der ursprünglichen Texte. Wenn du deine App auf diese Sprache umstellst, werden alle Beschriftungen in spezielle Kennungen umgewandelt. JavaScript sucht nach diesen Kennungen und ersetzt sie durch bearbeitbare Beschriftungen. Dadurch sieht die In-Context-Seite deiner Web-App genauso aus wie deine Anwendung. Der einzige Unterschied besteht darin, dass übersetzbare Zeichenfolgen bearbeitbar sind.
+
+<Image src={strings} alt="In-Context-Ansicht" />
+
+Übersetzungen werden direkt in der App erstellt, ohne dass du den Editor öffnen musst. Eine vereinfachte Version des Crowdin Editors wird angezeigt und bietet alle Funktionen wie TM, maschinelle Übersetzung, Genehmigungs-/Abstimmungsoption, Kommentare und Begriffe. Dadurch lassen sich Übersetzungen einfacher erstellen und überprüfen, da Übersetzer sie direkt im Kontext betrachten können.
+
+## Integration
+
+Es gibt zwei gängige Ansätze, um Crowdin In-Context in deine Anwendung zu integrieren:
+
+* **Staging- oder Übersetzungsumgebung**
+  Wenn du nicht vorhast, deine Endnutzer zur Unterstützung bei Übersetzungen einzuladen, oder keinen „Übersetzungsmodus“ in deiner Produktionsanwendung einsetzen möchtest, ist die Integration von Crowdin In-Context in deine Staging-Umgebung oder eine eigene Übersetzungsumgebung eine gute Lösung.
+
+* **Produktionsumgebung**
+  Crowdin In-Context erfordert keine Codeänderungen an deiner Anwendung, sodass du es auch in der Produktion verwenden kannst. Du entscheidest, wie du es aktivierst und welcher Teil der Nutzer es verwendet. Die häufigsten Anwendungsfälle sind folgende:
+  * Du kannst eine Spiegel-Website erstellen, die eine vollständige Kopie deiner Anwendung unter einer anderen URL ist (zum Beispiel `translate.crowdin.com` statt `crowdin.com`). Dort können Übersetzer Übersetzungen so erstellen, als wäre es deine tatsächliche Anwendung.
+  * Du kannst In-Context auch als zusätzliche Sprache hinzufügen. Wenn Übersetzer deine Anwendung öffnen, wählen sie diese zusätzliche Sprache aus der Liste aus, wodurch In-Context für sie geöffnet wird.
+
+Befolge die Anleitung zur Integrationseinrichtung in deinem Crowdin-Projekt, um In-Context einzurichten. Die Anleitung findest du in deinem Projekt unter **Tools > In-Context**.
+
+<Tabs syncKey="Produkt">
+  <TabItem label="Crowdin">
+    <Image src={tab} alt="In-Context-Tab in Crowdin" />
+  </TabItem>
+  <TabItem label="Crowdin Enterprise">
+    <Image src={tabE} alt="In-Context-Tab in Enterprise" />
+  </TabItem>
+</Tabs>
+
+<Aside>
+  Wenn du CSP verwendest, stelle sicher, dass du der Richtlinie die folgenden Regeln hinzufügst: zum Laden der In-Context-Ressourcendateien sowie für CORS-Anfragen an <code>&lt;organization_domain&gt;.crowdin.com</code>.
+</Aside>
+
+Nachdem die Integration erfolgreich eingerichtet und deine Anwendung aktualisiert wurde, solltest du den Einladungsdialog und das Crowdin-Anmeldefenster sehen.
+
+<Image src={login} alt="Anmeldefenster" />
+
+### String-URLs zum Kontext hinzufügen
+
+Bei der Integration von In-Context in deine Website kannst du optional ein Skript hinzufügen, das URLs sammeln und zum [Kontextabschnitt](/online-editor/#requesting-context) jedes Strings hinzufügen kann, der auf der Website verwendet wird.
+
+Dadurch können Übersetzer auf die URL eines bestimmten Strings klicken und werden zu der Website-Seite weitergeleitet, auf der dieser String verwendet wird. So erhalten sie zusätzlichen Kontext für eine genaue Übersetzung.
+
+Um String-URLs zum Kontext hinzuzufügen, befolge diese Schritte:
+
+<Steps>
+  1. Kopiere das folgende JavaScript-Snippet und füge es direkt nach dem primären In-Context-JavaScript-Snippet (das du im Tab **Tools** deines Crowdin-Projekts findest) in den `head`-Bereich jeder Seite mit lokalisierbarem Text ein. <Code code={editStringsContextCode} lang="html" />
+     Nach Abschluss sollte jede Webseite, deren Inhalt du über In-Context übersetzen möchtest, zwei JavaScript-Codeausschnitte enthalten:
+     * Primäres JavaScript-Snippet, das die In-Context-Funktion startet.
+     * Zusätzlicher JavaScript-Snippet, der URLs sammelt und sie zum Quelltextkontext hinzufügt.
+  2. Nachdem du die JavaScript-Snippets hinzugefügt hast, solltest du jede Website-Seite öffnen, auf der In-Context integriert ist. Dadurch kann der zusätzliche JavaScript-Snippet die URLs von Zeichenfolgen sammeln und deinem Crowdin-Projekt hinzufügen.
+</Steps>
+
+Wenn du deiner Website eine neue Seite hinzufügst, lade die zugehörigen Quelldateien in dein Crowdin-Projekt hoch. Wiederhole anschließend die obigen Schritte, um die URLs für Zeichenfolgen von der neuen Seite zu sammeln und hinzuzufügen.
+
+Wenn sich die URL einer Website-Seite ändert, öffne sie in In-Context, um die ursprünglich gesammelten URLs der Zeichenfolgen zu aktualisieren.
+
+## Optionale Parameter
+
+Du kannst diese Parameter zum `_jipt`-Array im Konfigurations-Snippet hinzufügen.
+
+### Vorab-Laden von Texten
+
+```js
+_jipt.push(['preload_texts', true]);
+```
+
+Beschleunigt die Anzeige dynamischer Inhalte im In-Context-Tool, indem alle Quellzeichenfolgen vorab geladen werden.
+Für große Projekte (mehr als 5.000 Zeichenfolgen) automatisch deaktiviert. Zulässige Werte: `true`, `false`.
+
+### Übersetzungsschaltfläche immer sichtbar
+
+```js
+_jipt.push(['touch_optimized', true]);
+```
+
+Diese Option ist auf Touchscreens standardmäßig aktiviert und sorgt dafür, dass die Übersetzungsschaltfläche neben jeder übersetzbaren Zeichenfolge dauerhaft sichtbar ist, anstatt beim Darüberfahren mit der Maus eingeblendet zu werden. Zulässige Werte: `true`, `false`.
+
+### Callback vor dem Commit
+
+```js
+_jipt.push(['before_commit', function(source, translation, context, language_code) {
+  return status_obj;
+}]);
+```
+
+Funktion zur Validierung des Vorschlags vor dem Übernehmen.
+
+<table>
+  <tbody>
+    <tr><td colSpan="2"><b>Parameter</b></td></tr>
+    <tr><td>source</td><td>Quelltext</td></tr>
+    <tr><td>translation</td><td>Übersetzungstext</td></tr>
+    <tr><td>context</td><td>Kontext der Quellzeichenfolge</td></tr>
+    <tr><td>language_code</td><td>Zielsprachencode (<a href="/developer/language-codes/">Sprachcodes</a>)</td></tr>
+    <tr><td colSpan="2"><b>Rückgabewerte</b></td></tr>
+    <tr>
+      <td>status_obj</td>
+      <td>Objekt. <code>status_obj.status</code> kann <code>"ok"</code>, <code>"error"</code> oder <code>"corrected"</code> sein.
+      Bei einem Fehler enthält <code>status_obj.message</code> die Fehlerbeschreibung.
+      Wenn der Status <code>corrected</code> lautet, enthält <code>status_obj.correction</code> die korrigierte Übersetzung</td>
+    </tr>
+  </tbody>
+</table>
+
+### Callback vor dem Einfügen in das DOM
+
+```js
+_jipt.push(['before_dom_insert', function(text, node, attribute) {
+  return 'text';
+}]);
+```
+
+Funktion zum Umwandeln der Zeichenfolge, bevor sie in das DOM eingefügt wird.
+
+<table>
+  <tbody>
+    <tr><td colspan="2"><b>Parameter</b></td></tr>
+    <tr><td>text</td><td>Einzufügende Zeichenfolge</td></tr>
+    <tr><td>node <br /><span class="text-muted">optional</span></td><td>DOM-Element, in das der Text eingefügt werden muss. Es kann weggelassen werden, wenn der Text kein Zielelement hat (Text innerhalb der Pop-ups des Browsers)</td></tr>
+    <tr><td>attribute <br /><span class="text-muted">optional</span></td><td>Attribut des DOM-Elements, wenn der Text Teil eines Attributs ist</td></tr>
+    <tr><td colspan="2"><b>Rückgabewerte</b></td></tr>
+    <tr><td>text</td><td>Einzufügende Zeichenfolge</td></tr>
+    <tr><td>false</td><td>Wenn die Funktion <i>false</i> zurückgibt, wird das DOM nicht aktualisiert</td></tr>
+  </tbody>
+</table>
+
+### Callback zum Schließen des In-Context-Overlays
+
+```js
+_jipt.push(['escape', function() {
+  window.location.href = "http://app_domain.com";
+}]);
+```
+
+Wenn diese Funktion definiert ist, können Benutzer das In-Context-Overlay schließen, wenn sie nicht übersetzen möchten. Implementiere diese Funktion auf deiner Seite. Je nach Integrationsmethode von In-Context muss die Sprache der App geändert oder von der Übersetzungsumgebung zur Produktions-App weitergeleitet werden.
+
+<Image src={loginClose} alt="Anmeldefenster schließen" />
+
+### Starttyp
+
+```js
+_jipt.push(['start_type', 'manual']);
+```
+
+Legt fest, wie In-Context initialisiert wird. Zulässige Werte:
+
+* **`default`** – In-Context startet automatisch, nachdem das Skript geladen wurde.
+* **`manual`** – In-Context startet nur, wenn du [`window.jipt.start()`](#start-and-stop-methods) aufrufst.
+
+Verwende `manual`, wenn du mehr Kontrolle benötigst. Das ist zum Beispiel in Single-Page-Apps sinnvoll, wenn du In-Context abhängig von Benutzeraktionen ein- oder ausschalten möchtest.
+
+### Nur sichtbare Zeichenfolgen markieren
+
+```js
+_jipt.push(['tag_only_visible_phrases', true]);
+```
+
+Wenn dieser Wert auf `true` gesetzt ist, verarbeitet die Screenshot-Markierungsfunktion nur Zeichenfolgen, die momentan im Ansichtsbereich des Benutzers sichtbar sind. Das ist ideal für dynamische Benutzeroberflächen wie Single-Page-Anwendungen, die Modalfenster oder Dialoge verwenden, die andere Inhalte auf der Seite überdecken. Wenn du diese Option aktivierst, werden ausgeblendete Zeichenfolgen nicht markiert. Dadurch werden Screenshots übersichtlicher und der Kontext für Übersetzer genauer. Zulässige Werte: `true`, `false`.
+
+### Nur sichtbaren Bereich erfassen
+
+```js
+_jipt.push(['screenshot_visible_area_only', true]);
+```
+
+Wenn dieser Wert auf `true` gesetzt ist, erfasst In-Context nur den Teil der Seite, der momentan im Ansichtsbereich des Benutzers sichtbar ist, statt einen Screenshot der gesamten Seite zu erstellen. Das ist für lange Seiten oder dynamische Benutzeroberflächen hilfreich, wenn der Screenshot genau das zeigen soll, was Übersetzer auf dem Bildschirm sehen. Zulässige Werte: `true`, `false`.
+
+## Optionale Funktionen
+
+Du kannst verschiedene Funktionen des globalen Objekts `window.jipt` aufrufen, um In-Context in Echtzeit zu verwalten oder anzupassen.
+
+### Start- und Stoppmethoden
+
+```js
+window.jipt.start();
+```
+
+Aktiviert In-Context manuell für die aktuelle Seite. Verwende dies, wenn du `start_type` auf `manual` gesetzt hast oder In-Context nach dem Stoppen erneut aktivieren möchtest.
+
+```js
+window.jipt.stop();
+```
+
+Beendet die In-Context-Überlagerung. Alle interaktiven Übersetzungselemente werden entfernt, bis du `start()` erneut aufrufst.
+
+**Anwendungsbeispiel: Single-Page-Anwendung**
+
+In einer Single-Page-Anwendung kannst du In-Context ein- oder ausschalten, wenn ein Benutzer die Sprache ändert:
+
+```js
+const handleLanguageChange = (event) => {
+  const language = event.target.value;
+  setSelectedLanguage(language);
+
+  if (language === inContextLanguage) {
+    window.jipt.start();
+  } else {
+    window.jipt.stop();
+  }
+};
+```
+
+Im obigen Snippet wird In-Context aktiviert, sobald der Benutzer die In-Context-Pseudosprache auswählt. Wenn eine andere Sprache ausgewählt wird, wird In-Context beendet.
+
+## Screenshots mit In-Context verwalten
+
+Mit Crowdin In-Context kannst du Screenshots der Seiten deiner Webanwendung direkt während des Aufrufs verwalten. Mit dieser Funktion kannst du Übersetzern aktuellen visuellen Kontext bereitstellen und sicherstellen, dass die Markierung der Zeichenfolgen korrekt und relevant bleibt.
+
+Screenshots, die über In-Context erstellt werden, werden automatisch in dein Crowdin-Projekt hochgeladen. Alle sichtbaren Zeichenfolgen auf der Seite werden automatisch markiert, wodurch die Kontextverwaltung für dein Übersetzungsteam vereinfacht wird.
+
+<Aside title="Berechtigungen">
+  Diese Funktion steht Projektmitgliedern mit Manager-Berechtigungen (oder höher) zur Verfügung.
+</Aside>
+
+<ReadMore>
+  Weitere Informationen findest du unter [Screenshots](/screenshots/).
+</ReadMore>
+
+<LinkCard title="Automatisierte Screenshot-Verwaltung" description="Erfahre, wie du die Erstellung und Aktualisierung von Screenshots automatisierst." href="/developer/automating-screenshot-management/" />
+
+### Screenshots über den In-Context-Modus hinzufügen
+
+Du kannst während der Verwendung von In-Context einen Screenshot einer beliebigen Seite deiner Website erstellen und in dein Crowdin-Projekt hochladen. Crowdin markiert automatisch alle Zeichenfolgen, die auf der Seite im Screenshot angezeigt werden.
+
+Gehe wie folgt vor, um einen Screenshot über In-Context hinzuzufügen:
+
+<Steps>
+  1. Öffne die Seite deiner Website, auf der In-Context aktiviert ist.
+  2. Wechsle im Crowdin-In-Context-Dialog zum Tab <Icon name="mdi:camera-plus-outline" class="inline-icon" />**Screenshot**.
+  3. Prüfe im Feld **Name** den automatisch vorgeschlagenen Screenshot-Namen, der auf dem Seitentitel basiert. Bearbeite ihn bei Bedarf. Wenn für diese Seite bisher keine Screenshots hinzugefügt wurden, zeigt das Dropdown-Menü **Vorhandenen Screenshot ersetzen** den Eintrag *Für diesen Namen gibt es keinen Screenshot*.
+  4. Klicke auf **Screenshot hinzufügen**.
+</Steps>
+
+<Image src={addScreenshot} alt="Screenshot hinzufügen" />
+
+Crowdin lädt den Screenshot in dein Projekt hoch und markiert automatisch alle auf der Seite angezeigten Zeichenfolgen.
+
+### Screenshots über In-Context aktualisieren
+
+Du kannst vorhandene Screenshots in deinem Crowdin-Projekt direkt über In-Context manuell aktualisieren. So bleiben Screenshots und Zeichenfolgenmarkierungen aktuell, wenn deine Webseiten mit neuen Inhalten oder Layoutänderungen aktualisiert werden.
+
+Gehe wie folgt vor, um einen vorhandenen Screenshot über In-Context zu aktualisieren:
+
+<Steps>
+  1. Öffne die aktualisierte Seite deiner Website, auf der In-Context aktiviert ist.
+  2. Wechsle im Crowdin-In-Context-Dialog zum Tab <Icon name="mdi:camera-plus-outline" class="inline-icon" />**Screenshot**.
+  3. Prüfe im Feld **Name** den automatisch vorgeschlagenen Screenshot-Namen, der auf dem Seitentitel basiert.
+  4. Wähle im Dropdown-Menü **Vorhandenen Screenshot ersetzen** den Screenshot aus, den du ersetzen möchtest. Du kannst auch Datum und Uhrzeit der vorhandenen Aufnahme anzeigen, um sicherzustellen, dass du den richtigen Screenshot ersetzt.
+  5. Klicke auf **Screenshot ersetzen**.
+</Steps>
+
+<Image src={replaceScreenshot} alt="Screenshot ersetzen" />
+
+Crowdin ersetzt den bisherigen Screenshot in deinem Projekt durch den neuen und markiert automatisch alle auf der Seite angezeigten Zeichenfolgen.
+
+## Fehlerbehebung und häufige Fragen
+
+<QuestionAnswer title="Fehler: Crowdin In-Context konnte keine übersetzbaren Texte erkennen (Nichts zu übersetzen)">
+  Dieser Fehler kann auftreten, wenn einige Zeichenfolgen im Crowdin-Projekt aktualisiert wurden, diese Texte aber auf deiner Website fehlen. Lade in diesem Fall die neueste Version der Pseudosprache deines Projekts über **Tools > In-Context** herunter und aktualisiere die Pseudosprache auf deiner Website.
+</QuestionAnswer>
+
+<QuestionAnswer title="Kann ich In-Context mit einer React-App verwenden?">
+  In-Context ist technologieunabhängig. Du kannst es gemäß den regulären Anweisungen konfigurieren und einfach ein `script`-Tag verwenden.
+</QuestionAnswer>
+
+<QuestionAnswer title="Kann ich In-Context verwenden, wenn mehrere Pakete eine Anwendung in der Produktion bilden?">
+  Es spielt keine Rolle, wie viele Pakete und Repositories beteiligt sind. Du kannst mehrere Repositories innerhalb eines Crowdin-Projekts verbinden. Wenn sie zur selben Webanwendung gehören, sollte das nahtlos funktionieren.
+</QuestionAnswer>
+
+<QuestionAnswer title="Einschränkung: In-Context nur in einem Crowdin-Projekt verwenden">
+  Solange die auf der Webseite angezeigten Texte aus einem Crowdin-Projekt stammen, kann In-Context sie problemlos verarbeiten. Entscheidend ist, dass sich die Texte deiner Website im normalen DOM befinden und nicht im Shadow DOM.
+</QuestionAnswer>
+
+<QuestionAnswer title="Kann ich dieselbe Pseudosprache in mehreren Crowdin-Projekten verwenden?">
+  Eine Pseudosprache kann nur mit dem Projekt verwendet werden, für das sie generiert wurde. Sie kodiert die Zeichenfolgenkennungen dieses Projekts, und In-Context ordnet diese Kennungen wieder demselben Projekt zu. Wenn deine Inhalte auf mehrere Projekte verteilt sind, konsolidiere die Quelldateien in einem Projekt, um In-Context zu verwenden.
+</QuestionAnswer>
+
+<QuestionAnswer title="Möglichkeit, In-Context-Zeichenfolgen aus dem Shadow DOM zu extrahieren">
+  Das ist technisch nicht möglich. Das Shadow DOM ist für unsere Skripte unsichtbar. Es kann nur von dem Code bearbeitet werden, der das Shadow DOM erstellt hat.
+</QuestionAnswer>
+
+<QuestionAnswer title="Möglichkeit, automatisch aktualisierte Quelldateien zum Pseudo-Sprachpaket und anschließend zur Website hinzuzufügen">
+  Dies ist über die Crowdin API möglich. Verwende die API-Methode [Get Project](/developer/api/v2/#operation/api.projects.get), um das Objekt `inContextPseudoLanguage` abzurufen, das den Sprachcode der Pseudosprache enthält. Mit diesem Sprachcode kannst du die Pseudosprache separat erstellen, herunterladen und in deine Website integrieren. Alle anderen Methoden sind regulär: Lade die Datei hoch bzw. aktualisiere sie, rufe mit der API-Methode [Get Project](/developer/api/v2/#operation/api.projects.get) die Liste der Zielsprachen ab und erstelle die Zielsprachen. Alternativ kannst du auch das gesamte Crowdin-Projektarchiv auf einmal erstellen und herunterladen. Es enthält dann auch die Pseudosprache.
+</QuestionAnswer>
+
+<QuestionAnswer title="Kürzlich hinzugefügte neue Quellzeichenfolgen werden auf der Website als `unrecognized text` angezeigt">
+  Die Kennzeichnung „Unrecognized text“ wird auf der Website angezeigt, wenn Zeichenfolgen im Crowdin-Projekt gelöscht oder Zeichenfolgenschlüssel in den Quelldateien geändert wurden, dieselben Zeichenfolgen aber weiterhin in der auf der Website integrierten Pseudosprache vorhanden sind.
+  Um das zu beheben, musst du lediglich die Quelldateien im Crowdin-Projekt erneut aktualisieren, die Pseudosprache herunterladen und sie auf der Website aktualisieren.
+</QuestionAnswer>
+
+<QuestionAnswer title="Warum Pseudosprache-Kennungen (z. B. `crwdns...crwdne...`) anstelle des Textes angezeigt werden">
+  Die Pseudosprache ersetzt jede Quellzeichenfolge durch eine spezielle Kennung (zum Beispiel `crwdns123456:0crwdne123456:0`), die das In-Context-Skript beim Scannen der Seite durch bearbeitbaren Text ersetzt. Jeder Text, den das Skript noch nicht verarbeitet hat, zeigt weiterhin die rohe Kennung an – normalerweise während die Seite noch geladen wird oder wenn der Text außerhalb des Zugriffsbereichs des Skripts liegt (zum Beispiel im Shadow DOM oder wenn er nach dem ersten Scan von einem Framework neu gerendert wird).
+
+  So kannst du das vermeiden:
+    * Stelle sicher, dass das In-Context-Skript auf jeder Seite geladen wird und die Initialisierung abgeschlossen hat, bevor du mit den Inhalten interagierst.
+    * Halte übersetzbaren Text im regulären DOM statt im Shadow DOM.
+    * Aktiviere für dynamische Inhalte und Single-Page-Anwendungen [Texts Preloading](#texts-preloading) und steuere die Initialisierung mit [Start Type](#start-type) sowie den [Start-/Stoppmethoden](#start-and-stop-methods).
+</QuestionAnswer>

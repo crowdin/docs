@@ -1,0 +1,158 @@
+---
+title: importieren Settings
+description: konfigurieren wie Platzhalter, duplicates, und word counts sind handled
+slug: enterprise/project-settings/import
+sidebar:
+  order: 10
+  label: importieren
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import ReadMore from '~/components/ReadMore.astro';
+import assignCustomPlaceholder from '!/enterprise/project-management/settings/custom_placeholders_assign.png';
+
+Im Bereich **Import** der Projekteinstellungen kannst du konfigurieren, wie Crowdin Platzhalter, doppelte Zeichenketten und Wortanzahlen in deinem Projekt behandeln soll.
+
+## Quelle Strings
+
+verbessern die Übersetzung consistency und optimieren dein Workflow von unifying Platzhalter und handling duplicate Strings.
+
+### Platzhalter vereinheitlichen
+
+aktivieren dies Option zu transform Platzhalter in ein unified Format innerhalb die Editor (e.g., displaying beide Android `%s` und iOS `%@` as `[%s]`). dies improves Translation Memory efficiency von making Vorschläge completely interchangeable über platforms.
+
+auf exportieren, Platzhalter sind converted back zu die Original syntax. dies feature applies nur zu Android XML, iOS Strings, iOS XLIFF, und Apple Strings Catalog.
+
+### Doppelte Strings
+
+Du kannst speichern time von translating alle duplicates mit die gleich Übersetzung und hiding diese instances von Übersetzer. dies kann affect accuracy.
+
+Crowdin's Lokalisierungsprozess ist basierend auf translating Quellstrings zu die defined Zielsprachen. Quellzeichenketten werden in Lokalisierungsdateien in das System hochgeladen. jedes unique Quelle String erste hochgeladen oder hinzugefügt (für CSV und andere Formate supporting [String editing](/enterprise/string-management/#string-editing)) in Crowdin ist considered ein master String. Alle anderen Zeichenketten, die mit der Master-Zeichenkette identisch sind, aber später hochgeladen oder erstellt wurden, gelten als Duplikate.
+
+<Aside>
+  In [stringbasierten](/enterprise/creating-project/#string-based-project) Projekten werden doppelte Zeichenketten mit der standardmäßig aktivierten und nicht änderbaren Option **Innerhalb eines Versions-Branches anzeigen (reguläre Erkennung)** verwaltet.
+</Aside>
+
+#### Duplicated Strings Management
+
+Wenn dur Projekt enthält duplicated Strings, du kann auswählen wie die System sollte treat ihnen. die verfügbar Optionen kombinieren drei dimensions: detection basis, visibility, und Übersetzung sharing.
+
+| Option                                                        | Erkennungsgrundlage                            | Visibility in die Editor                               | Übersetzung sharing |
+| ------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------ | ------------------- |
+| **anzeigen**                                                  | Regular (Quelle Text)                          | Duplicates stay sichtbar                               | No                  |
+| **anzeigen, aber auto-translate ihnen**                       | Regular (Quelle Text)                          | Duplicates stay sichtbar                               | Yes                 |
+| **anzeigen innerhalb ein Version Branch (regular detection)** | Regular + Branch path scope                    | Duplicates sind ausgeblendet zwischen Version Branches | Yes                 |
+| **anzeigen innerhalb ein Version Branch (strict detection)**  | Strict (Quelle Text + key) + Branch path scope | Duplicates sind ausgeblendet zwischen Version Branches | Yes                 |
+| **Ausblenden (normale Erkennung)**                            | Regular (Quelle Text)                          | Duplicates sind ausgeblendet                           | Yes                 |
+| **Ausblenden (strenge Erkennung)**                            | Strict (Quelle Text + key)                     | Duplicates sind ausgeblendet                           | Yes                 |
+
+<Aside>
+  Übersetzung ist freigegeben von die master String nur während ein duplicate hat no Übersetzung von sein own.
+</Aside>
+
+die detection basis bestimmt what counts as ein duplicate:
+
+* **Regular duplicate detection** &ndash; wenn comparing Strings, Crowdin considers nur Quelle texts.
+* **Strict duplicate detection** &ndash; wenn comparing Strings, Crowdin considers beide String identifiers (keys) und Quelle texts.
+
+<Aside type="tip">
+  Wenn dur Quelldateien enthalten Strings mit apparent identifiers (keys), es's better zu verwenden ein **strict** Version von die Duplicate Strings Optionen. in andere cases, feel free zu verwenden ein **regular** eins.
+</Aside>
+
+#### wie Übersetzung Sharing funktioniert
+
+Wenn das Teilen von Übersetzungen aktiviert ist, übernehmen Duplikate die Übersetzung der Master-Zeichenkette, solange sie keine eigene Übersetzung haben.
+
+Wenn ein unique Übersetzung ist gespeichert für ein duplicate (even ein ausgeblendet eins), es stops inheriting die master Übersetzung und verwendet sein own anstatt.
+
+Wenn das unique Übersetzung ist later entfernt, sharing ist restored automatisch, und die duplicate wird übernehmen die master Übersetzung again.
+
+#### wenn freigegeben Übersetzung Won't Apply
+
+freigegeben Übersetzung wird nicht apply in die folgend cases:
+
+* **anzeigen** ist ausgewählt (automatisch sharing ist deaktiviert).
+* die duplicate already hat sein own unique Übersetzung.
+* in **anzeigen innerhalb ein Version Branch** modes, Strings sind outside die Branch oder path matching scope verwendet für duplicate detection.
+
+#### Zeige alle Duplicates
+
+Wenn die **anzeigen – Übersetzer wird translate jedes instance separat** Option ist ausgewählt, alle duplicate Strings wird sein sichtbar zu Übersetzer. Jedes Duplikat erfordert eine separate Übersetzung.
+
+💡 **verwenden case**: funktioniert perfectly für Projekte wo die gleich words könnte haben various meanings abhängig auf die Kontext.
+
+#### anzeigen, aber Auto-Translate Duplicates
+
+Wenn die **anzeigen, aber auto-translate ihnen** Option ist ausgewählt, alle duplicate Strings sind angezeigt und automatisch übernehmen Übersetzungen von ihr master Strings. dies ermöglicht Übersetzer zu review und re-translate duplicate Strings wenn notwendig.
+
+💡 **verwenden case**: funktioniert excellently wenn du möchten zu speichern time aber still erfordern automatisch Übersetzungen zu sein reviewed.
+
+Um better illustrate wie die **anzeigen, aber auto-translate ihnen** Option funktioniert, consider die folgend five-String JSON Datei: zwei Strings sind unique, und drei Strings haben identical Quelle Text.
+
+```json
+{
+    "hello": "Hello",
+    "welcome": "Welcome!",
+    "save1": "Save",
+    "save2": "Save",
+    "save3": "Save"
+}
+```
+
+Upon importing dies Datei, die System designates die erste von diese identical Strings (`"save1": "Save"`) as die master String mit ein "Master" marker, während die subsequent zwei identical Strings (`"save2": "Save"` und `"save3": "Save"`) sind designated as duplicates von dies master String mit ein "Duplicate" marker.
+
+Sobald du festlegen die **Duplicate Strings** Option zu **anzeigen, aber auto-translate ihnen**, die System behält bei alle five Strings sichtbar zu Übersetzer und ermöglicht automatisch Übersetzung sharing.
+
+Let's consider die folgend scenarios:
+
+* *Master String ist übersetzt erste* &ndash; die System sofort shares die Übersetzung von die master String mit sein duplicates. As ein Ergebnis, alle drei identical Strings (die master String und sein zwei duplicates) sind angezeigt mit Übersetzungen. Übersetzer kann still review und replace die freigegeben Übersetzung mit ein unique eins für beliebige bestimmten duplicate. Doing so overrides die freigegeben Übersetzung für das String alone, allowing für precise, Kontext-bestimmten Übersetzungen ohne affecting die andere duplicates.
+* *eins von die duplicates ist übersetzt erste* &ndash; die System tut nicht Freigeben die Übersetzung von die duplicate mit die master String oder die andere duplicate. Folglich wird ein Duplikat mit einer Übersetzung angezeigt, während die Master-Zeichenkette und das andere Duplikat unübersetzt bleiben, bis die Master-Zeichenkette übersetzt wird (wodurch das verbleibende Duplikat die Übersetzung übernehmen kann) oder sie einzeln übersetzt werden.
+
+#### Zeige innerhalb ein Version Branch
+
+Wenn die **anzeigen innerhalb ein Version Branch** Optionen (regular oder strict detection) sind ausgewählt, nur die master Strings das waren originally hochgeladen zu die System wird sein verfügbar für Übersetzung. alle duplicate Strings wird automatisch übernehmen die Übersetzungen von die master Strings und wird sein ausgeblendet in alle [Version Branches](/enterprise/version-management/).
+
+Hier sind einige Punkte, die du beachten solltest:
+
+* die System immer prüft die path zu die String throughout die Branches. Zum Beispiel, even wenn die Strings sind die gleich in unterschiedlich Version Branches (`branch1` und `branch2`), aber ihr paths sind unterschiedlich (branch1 - `/localization/android.xml` und branch2 - `/localization/apps/android.xml`), sie won't sein erkannt as duplicates.
+* dies Option funktioniert nur für die Strings located in die Dateien das haben die gleich Format. Zum Beispiel, wenn dort ist die gleich String in `android.xml` und `ios.strings` Dateien, es won't sein erkannt as ein duplicate.
+
+💡 **verwenden case**: funktioniert perfectly für continuous Projekte mit various Version Branches. ermöglicht Übersetzer zu arbeiten mit unique Strings in separate Branches.
+
+#### Hide alle Duplicates
+
+Wenn die **Hide** Optionen (regular oder strict detection) sind ausgewählt, die System spots die duplicate Strings in alle Dateien. nur die master Strings das waren originally hochgeladen sind sichtbar und sollte sein übersetzt. die ausgeblendet duplicate Strings wird automatisch übernehmen die Übersetzungen von die corresponding master Strings.
+
+💡 **verwenden case**: funktioniert great für Projekte mit narrow scopes wo alle duplicates Freigeben die gleich Kontext.
+
+## Word und Character Count
+
+konfigurieren wie du möchten Crowdin Enterprise zu count words und characters in dein Projekt. Specifically, dies Einstellung bestimmt whether HTML Tags sollte sein counted as regular words oder ignored. von Standard, Crowdin Enterprise considers HTML Tags as regular words für meisten von die unterstützt Formate, excluding die folgend ones: HTML, Front Matter HTML, HAML, MD, Front Matter MD, XML, WEBXML, IDML, XLIFF, XLIFF 2.0, ADOC, DOCX, und DITA.
+
+* **Auto** (Standard) &ndash; counts words und characters basierend auf die Standard Format-bestimmten rules. Abhängig von die Quelle Datei Format, HTML Tags wird either sein counted as regular words oder skipped.
+* **Count Tags** &ndash; immer considers Tags. alle HTML Tags wird sein counted as regular words.
+* **Skip Tags** &ndash; immer skips Tags. HTML Tags won't sein counted.
+
+<Aside>
+  Sobald du ändern die Option, nur newly hochgeladen words wird sein counted according zu die neu Einstellungen. es ist highly recommended zu konfigurieren dies Einstellung vor uploading Quelldateien zu dein Projekt.
+</Aside>
+
+<ReadMore>
+  mehr information über Crowdin [Word Counter](/enterprise/word-counter/).
+</ReadMore>
+
+## Zuweisen benutzerdefiniert Platzhalter
+
+Um Zuweisen die erstellt benutzerdefiniert Platzhalter zu ein Projekt, folgen diese Schritten:
+
+<Steps>
+  1. Öffne dein Projekt und go zu **Settings > importieren**.
+  2. Klicke auf **Zuweisen benutzerdefiniert Platzhalter**.
+  3. in die angezeigt Dialog, auswählen ein Platzhalter von die **Platzhalter** drop-down Liste und specify die desired Reihenfolge von Platzhalter execution (nützlich wenn du’d like zu verwenden multiple benutzerdefiniert Platzhalter innerhalb eins Projekt), auswählen whether du’d like dein benutzerdefiniert Platzhalter zu sein ausgeführt vor die Standard Platzhalter, whether zu erlauben dein Projekt participants zu speichern Übersetzungen ohne ein Platzhalter, Zuweisen zu alle oder specified Formate.
+  4. Klicke auf **Speichern**. <Image src={assignCustomPlaceholder} alt="Assign Custom Placeholder" class="width-xl" />
+</Steps>
+
+<ReadMore>
+  Mehr über [benutzerdefiniert Platzhalter](/enterprise/custom-placeholders/).
+</ReadMore>

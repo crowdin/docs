@@ -1,0 +1,145 @@
+---
+title: AI-Anfrageprozessor-Module
+description: Verwende AI-Anfrageprozessor-Module, um AI-Anfrage- und Antwortabläufe in verschiedenen Verarbeitungsphasen anzupassen.
+slug: developer/crowdin-apps-module-ai-request-processors
+sidebar:
+  order: 3
+  label: AI-Anfrageprozessoren
+---
+
+Mit AI-Anfrageprozessor-Modulen kannst du anpassen, wie Crowdin AI-bezogene Anfragen und Antworten in verschiedenen Verarbeitungsphasen verarbeitet. Mit diesen Modulen hast du die volle Kontrolle darüber, wie Daten vorbereitet werden, bevor sie an einen AI-Anbieter gesendet werden, und wie die Antwort nach ihrer Rückgabe verarbeitet wird.
+
+Crowdin unterstützt vier Arten von Prozessoren, die unabhängig voneinander oder kombiniert innerhalb einer App verwendet werden können:
+
+* **Pre-Compile** – wird ausgeführt, bevor der Prompt zusammengestellt wird. Wird verwendet, um Rohdaten wie Source-Strings, TM-Treffer oder Glossarbegriffe zu ändern.
+* **Post-Compile** – wird ausgeführt, nachdem der Prompt zusammengestellt wurde. Wird verwendet, um Request-Body oder Header anzupassen, bevor sie an den AI-Anbieter gesendet werden.
+* **Pre-Parse** – wird ausgeführt, nachdem die Rohantwort des AI-Anbieters empfangen wurde. Wird verwendet, um den Antworttext vor dem Parsen zu ändern.
+* **Post-Parse** – wird ausgeführt, nachdem die Antwort in strukturierte Crowdin-Daten geparst wurde. Wird verwendet, um das Endergebnis abhängig von der Aktion anzupassen, z. B. bei der Auto-Übersetzung oder bei QA-Prüfungen.
+
+Diese Module sind ausschließlich für das Backend vorgesehen und verfügen über keine Benutzeroberfläche. Du kannst deiner App jedoch mit anderen Modulen (z. B. Project Tool oder Organisationsmenü) UI-Funktionen hinzufügen.
+
+## Zugriff
+
+Du kannst den folgenden Benutzerkategorien Zugriff auf diese Module gewähren:
+
+Für Crowdin:
+
+* Alle Projektmitglieder
+
+Für Crowdin Enterprise:
+
+* Alle Benutzer in den Projekten der Organisation
+
+## Struktur
+
+```json title="manifest.json"
+{
+  "modules": {
+    "ai-request-pre-compile": [
+      {
+        "key": "liquid-templates-everywhere-ai-request-pre-compile",
+        "processorUrl": "/ai-request-processor/ai-request-pre-compile"
+      }
+    ],
+    "ai-request-post-compile": [
+      {
+        "key": "liquid-templates-everywhere-ai-request-post-compile",
+        "processorUrl": "/ai-request-processor/ai-request-post-compile"
+      }
+    ],
+    "ai-request-pre-parse": [
+      {
+        "key": "liquid-templates-everywhere-ai-request-pre-parse",
+        "processorUrl": "/ai-request-processor/ai-request-pre-parse"
+      }
+    ],
+    "ai-request-post-parse": [
+      {
+        "key": "liquid-templates-everywhere-ai-request-post-parse",
+        "processorUrl": "/ai-request-processor/ai-request-post-parse"
+      }
+    ]
+  }
+}
+
+```
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">processorUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Relativer Pfad zu dem Endpunkt in deiner App, der eingehende Anfragen für diesen Prozessor verarbeitet.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Kommunikation zwischen der AI-Anfrageprozessor-App und Crowdin
+
+Jedes AI-Anfrageprozessor-Modul wird in Crowdin in einer bestimmten Phase des Lebenszyklus einer AI-Anfrage ausgeführt. Mit diesen Modulen kannst du die Daten ändern, die an einen AI-Anbieter gesendet oder von ihm empfangen werden. Sie sind nur für das Backend vorgesehen und empfangen Daten über POST-Anfragen von Crowdin.
+
+Jede Anfrage besteht aus zwei Teilen:
+
+* `requestData` – das Datenobjekt, das geändert und zurückgegeben werden kann. Seine Struktur hängt vom Prozessortyp und der jeweiligen AI-Aktion ab. Es kann beispielsweise Source-Strings, den Prompt-Body und Header oder geparste Ergebnisse enthalten.
+* `requestContext` – ein schreibgeschütztes Objekt, das Metadaten zur Anfrage bereitstellt. Dazu gehören der AI-Anbieter, das Modell, Einschränkungen, die Projekt-ID und die ausgeführte Prompt-Aktion. Du kannst dies verwenden, um deine Verarbeitungslogik abhängig vom Kontext anzupassen.
+
+Crowdin sendet die Anfrage an die für das entsprechende Modul definierte `processorUrl`. Deine App muss die geänderten `requestData` in derselben Struktur zurückgeben, in der sie empfangen wurden. Aktualisiere nur die Teile, die gemäß deiner Logik transformiert werden müssen.
+
+In den folgenden Abschnitten wird beschrieben, wie jeder Modultyp funktioniert und wann er ausgelöst wird.
+
+### Pre-Compile-Prozessor
+
+Wird **vor** dem Zusammenstellen des Prompts ausgeführt.
+
+* **Empfängt:** Rohdaten, die zum Erstellen des Prompts verwendet werden – etwa Strings, Projektname, Glossarbegriffe und TM-Treffer.
+* **Gibt zurück:** Eine geänderte Version der Eingabedaten.
+* **Anwendungsfälle:**
+  * Zusätzliche Platzhalter vor der Zusammenstellung einfügen.
+  * Strings vor dem Erstellen eines Prompts filtern oder bereinigen (z. B. unerwünschte Muster oder Binärdaten entfernen).
+  * Prompt-Eingaben anhand von Projektmetadaten anpassen.
+
+### Post-Compile-Prozessor
+
+Wird **nach** dem Zusammenstellen des Prompts, aber **vor** dem Senden an den AI-Anbieter ausgeführt.
+
+* **Empfängt:** vollständige Anfragedetails einschließlich `action`, `provider`, `model`, `limitation` und des zusammengestellten `payload`. Der Payload enthält `body` und `headers`.
+* **Gibt zurück:** Eine geänderte Version des Payloads (außer sensiblen Daten wie API-Schlüsseln, die nicht enthalten sind).
+* **Anwendungsfälle:**
+  * Das Anfrageformat für bestimmte Anbieter anpassen.
+  * Tooldefinitionen oder Metadaten einfügen.
+  * Anfragen über einen Proxy weiterleiten oder ausgehende Inhalte protokollieren.
+
+### Pre-Parse-Prozessor
+
+Wird **nach** dem Empfang einer Antwort vom AI-Anbieter, aber **vor** dem Parsen ausgeführt.
+
+* **Empfängt:** `action` und den Roh-`body` aus der Antwort des Anbieters.
+* **Gibt zurück:** Einen geänderten `body` zum weiteren Parsen.
+* **Anwendungsfälle:**
+  * Die AI-Antwort vor dem Parsen bereinigen oder normalisieren.
+  * Antworttransformationen verarbeiten, z. B. JSON aus Markdown-Blöcken extrahieren.
+  * Unvollständige oder ungültige Chunks aus gestreamten Inhalten entfernen.
+
+### Post-Parse-Prozessor
+
+Wird **nach** dem Parsen der Antwort in strukturierte Crowdin-Daten ausgeführt.
+
+* **Empfängt:** `action` und den geparsten `payload`, der je nach Kontext unterschiedlich ist.
+* **Gibt zurück:** Einen geänderten Ergebnis-Payload.
+* **Anwendungsfälle:**
+  * An AI-generierten Strings abschließende Anpassungen vornehmen.
+  * Unerwünschte Vorschläge anhand benutzerdefinierter Regeln herausfiltern.
+  * QA-Ergebnisse oder Übersetzungseinheiten vor dem Speichern nachbearbeiten.

@@ -1,0 +1,137 @@
+---
+title: Felder
+description: Einrichten custom properties to enhance Ihre data management
+slug: enterprise/fields
+sidebar:
+  order: 4
+---
+
+import { Steps, Icon, Aside, CardGrid } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import fieldsDetails from '!/enterprise/organization-management/fields_details.png';
+import fieldsProjectLabels from '!/enterprise/organization-management/fields_project_labels.png';
+
+Felder sind benutzerdefinierte Eigenschaften, mit denen du die Arbeitsorganisation und Datenverwaltung in Crowdin Enterprise verbessern kannst, indem du zusätzlichen hilfreiche Informationen, Links oder Daten zu verschiedenen Entitäten wie Projekten, Benutzerkonten, Aufgaben und weiteren Objekten hinzufügst.
+
+Felder bieten Flexibilität und Anpassungsmöglichkeiten für verschiedene Anwendungsfälle, z. B. zum Markieren kritischer Projekte, Kategorisieren von Aufgaben oder Hinzufügen kontextbezogener Informationen zu Benutzerkonten. Dadurch erhältst du mehr Übersicht über die innerhalb einer Crowdin-Enterprise-Organisation stattfindende Arbeit. Felder können entweder über die Benutzeroberfläche oder die API erstellt und verwaltet werden.
+
+Felder werden auch häufig von Crowdin-Apps erstellt. In der Regel ist es am besten, benutzerdefinierte Eigenschaften, die von Crowdin-Apps erstellt wurden, unverändert zu lassen.
+
+## Anwendungsfälle
+
+Sie können use fields in numerous scenarios. Hier sind einige Beispiele:
+
+* **Projektpriorisierung** – kennzeichne kritische Projekte mit einem benutzerdefinierten Kontrollkästchenfeld, damit sie leicht identifiziert und priorisiert werden können.
+* **Aufgabenkategorisierung** – verwende benutzerdefinierte Labels oder Auswahllisten, um Aufgaben anhand bestimmter Kriterien oder Eigenschaften zu kategorisieren.
+* **Benutzeranpassung** – füge Benutzerkonten Felder hinzu, um zusätzliche Informationen oder Präferenzen zu speichern.
+* **Crowdin-Apps-Integration** – Felder können als Speicher für app-spezifische Informationen dienen und die Integration mit Drittanbieteranwendungen erleichtern.
+
+## Terminologie
+
+* **Feld** – ein anpassbarer Dateneingabepunkt, über den Benutzer bestimmte Informationen eingeben können.
+* **Entität** – ein Objekt, dem Felder hinzugefügt werden können (z. B. Projekt, Aufgabe, Benutzer, Datei oder Zeichenkette).
+* **Position** – der Bereich innerhalb der Benutzeroberfläche, in dem das Feld angezeigt wird.
+
+## Berechtigungen
+
+Felder können nur vom Organisationsinhaber und von Administratoren über die Benutzeroberfläche oder die API erstellt und bearbeitet werden. Nach der Erstellung können Felder von Benutzern mit den entsprechenden Rollen in der Organisation verwendet werden. Ein Benutzer, der Projekte erstellen kann, kann beispielsweise ein Feld im Dialog „Projekt erstellen“ oder an jeder anderen für die betreffende Feldentität verfügbaren Position anzeigen und verwenden.
+
+## Erstellen New Fields
+
+um zu erstellen a new field, folgen Sie diesen Schritten:
+
+<Steps>
+  1. Gehen Sie zu **Organisationseinstellungen > Fields**.
+  2. Klicken Sie **New field**.
+  3. Legen Sie die field parameters:
+     * *Name* – gib den Feldnamen an, der in der Benutzeroberfläche angezeigt wird.
+     * *Slug* – gib den eindeutigen Feldbezeichner an, der in API-Aufrufen verwendet wird.
+     * *Beschreibung* – gib zusätzliche Informationen an, die als Hilfstext unter dem Feld angezeigt werden.
+     * *Type* – Wählen Sie die [type of field](#field-types).
+     * *Entitäten* – wähle ein oder mehrere [Objekte](#entities-and-locations) aus, auf die du das Feld anwenden möchtest.
+     * *Position* – wähle die spezifischen [Seiten oder Modale](#entities-and-locations) aus, auf denen das Feld angezeigt wird.
+  4. Klicke auf **Speichern**. <Image src={fieldsDetails} alt="Field Details" class="width-xl" />
+     <Aside>
+             Positionen, die in der Spalte *Bearbeitbar* mit dem Symbol <Icon name="approve-check" class="inline-icon" /> gekennzeichnet sind, ermöglichen Benutzern, dort Feldwerte zu bearbeiten.
+     </Aside>
+</Steps>
+
+## Verwalten Fields via API
+
+Felder können mithilfe der API-Methoden aus der [Kategorie „Felder“](/developer/enterprise/api/v2/#tag/Fields) erstellt werden.
+
+Sobald ein Feld erstellt wurde, kannst du auf den vorkonfigurierten Entitäten mit seinen Werten arbeiten. Die Methoden `List` und `Edit` dienen unterschiedlichen Zwecken:
+
+* **Feldwerte abrufen** – verwende die `List`-Methoden, um die aktuell den Entitäten zugewiesenen Feldwerte zu lesen. Werte werden zur Referenz zurückgegeben und nicht zum Filtern oder Suchen nach Entitäten verwendet:
+  * [Projekte auflisten](/developer/enterprise/api/v2/#operation/api.projects.getMany)
+  * [Aufgaben auflisten](/developer/enterprise/api/v2/#operation/api.projects.tasks.getMany)
+  * [Benutzer auflisten](/developer/enterprise/api/v2/#operation/api.users.getMany)
+  * [Dateien auflisten](/developer/enterprise/api/v2/#operation/api.projects.files.getMany)
+  * [Zeichenketten auflisten](/developer/enterprise/api/v2/#operation/api.projects.strings.getMany)
+* **Feldwerte aktualisieren** – verwende die `Edit`-Methoden, um den Wert eines Feldes für eine bestimmte Entität festzulegen oder zu ändern:
+  * [Projekt bearbeiten](/developer/enterprise/api/v2/#operation/api.projects.patch)
+  * [Aufgabe bearbeiten](/developer/enterprise/api/v2/#operation/api.projects.tasks.patch)
+  * [Benutzer bearbeiten](/developer/enterprise/api/v2/#operation/api.users.patch)
+  * [Datei bearbeiten](/developer/enterprise/api/v2/#operation/api.projects.files.patch)
+  * [Zeichenkette bearbeiten](/developer/enterprise/api/v2/#operation/api.projects.strings.patch)
+
+## Feldwerte bearbeiten
+
+Du kannst Feldwerte auf zwei Arten bearbeiten: über die Benutzeroberfläche oder die API.
+
+### Feldwerte über die Benutzeroberfläche bearbeiten
+
+Nach der Erstellung können Felder bearbeitbaren Positionen innerhalb der Benutzeroberfläche hinzugefügt werden, sodass Benutzer die benötigten Daten eingeben oder ändern können.
+
+### Feldwerte über die API bearbeiten
+
+Sobald ein Feld einer Entität zugewiesen wurde, kann sein Wert über die API bearbeitet werden. Füge dazu den Parameter `fields` zu API-Aufrufen hinzu, die Felder unterstützen. Der Parameter `fields` sollte ein Objekt enthalten, in dem jeder Schlüssel dem Slug des Feldes und der entsprechende Wert dem Feldwert für die jeweilige Entität entspricht (z. B. `"fields": {"fieldSlug": 2}`).
+
+## Feldtypen
+
+Crowdin Enterprise unterstützt verschiedene Feldtypen, die jeweils unterschiedliche Anforderungen an die Dateneingabe erfüllen:
+
+* **Optionsfelder** – zeigen eine Liste von Optionen an, von denen jeweils eine ausgewählt werden kann. Bei der Erstellung muss eine Liste von Optionen konfiguriert werden. Jede Option hat einen Wert und eine Bezeichnung. Der Wert muss eindeutig sein. Im Ansichtsmodus wird die ausgewählte Option angezeigt.
+* **Kontrollkästchenfeld** – akzeptiert Wahr/Falsch-Werte und wird häufig für binäre Optionen verwendet. Im Ansichtsmodus wird ein Symbol angezeigt.
+* Sobald du zum Mehrsprachenmodus wechselst, wähle die Sprachen aus, mit denen du arbeiten möchtest, und klicke auf **Anwenden**. Im Ansichtsmodus wird das Datum als Zeichenfolge angezeigt.
+* **Datum- und Zeitauswahl** – ähnlich wie die Datumsauswahl, enthält aber zusätzlich eine Zeitauswahl. Im Ansichtsmodus werden Datum und Uhrzeit als Zeichenfolge angezeigt.
+* **Zahlenfeld** – akzeptiert numerische Eingaben innerhalb der festgelegten Bereiche. Optional kannst du Einheiten hinzufügen, die neben der numerischen Eingabe angezeigt werden.
+* **Labels** – bietet Optionen zur Mehrfachauswahl. Jede Option hat einen eindeutigen Wert und eine eindeutige Bezeichnung. Allows users um zu erstellen new options. Im Ansichtsmodus werden die ausgewählten Optionen als Chips angezeigt.
+* **Auswahlliste (Einzelauswahl)** – bietet Optionen zur Einzelauswahl aus vordefinierten Listen.
+* **Wählen Sie List (Multiple Selections)** – Similar to Labels but doesn't allow users um zu erstellen new options.
+* **Textfeld (nur Klartext)** – stellt ein einzeiliges Texteingabefeld bereit.
+* **Textarea-Feld (Markdown aktiviert)** – stellt ein mehrzeiliges Texteingabefeld bereit, das Markdown-Formatierung unterstützt.
+* **URL-Feld** – ein Textfeld zur Eingabe von URLs.
+
+Jeder Feldtyp kann entsprechend deinen Anforderungen für die jeweilige Verwendung in Crowdin Enterprise angepasst werden.
+
+## Entitäten und Positionen
+
+Unten findest du eine Liste der unterstützten Entitäten und ihrer jeweiligen Positionen, denen Felder hinzugefügt werden können.
+
+* **Projekt**:
+  * Erstellen project modal (Editable)
+  * Kopfbereich der Projekt-Startseite
+  * Tab „Projektdetails“
+  * Project Public Seite Details tab
+  * Project Einstellungen (Editable)
+* **Aufgabe**:
+  * Task Erstellen/Bearbeiten Seite (Editable)
+  * Task Details Seite
+  * Aufgabentafel-Karte
+* **Benutzer**:
+  * Benutzer-Popover
+  * User Details sidebar (Project Members Seite)
+  * User Bearbeiten modal (User management Seite) (Editable)
+* **Datei**:
+  * Seitenleiste mit Dateidetails
+  * File Einstellungen modal
+* **Zeichenkette**:
+  * String Details (Editor)
+  * String Bearbeiten modal (project Strings tab and Editor) (Editable)
+
+## Felder in der Benutzeroberfläche
+
+Sobald die Felder den benötigten Positionen in der Crowdin-Enterprise-Oberfläche (z. B. Projekt) zugewiesen wurden, können Benutzer sie sehen und, sofern möglich, mit ihnen interagieren.
+
+<Image src={fieldsProjectLabels} alt="Felder in der Benutzeroberfläche" />

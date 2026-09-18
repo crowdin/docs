@@ -1,0 +1,106 @@
+---
+title: Parser Konfiguration Settings
+description: konfigurieren importieren und exportieren behavior für unterstützte Dateiformate
+slug: enterprise/project-settings/parser-configuration
+sidebar:
+  order: 13
+  label: Parser-Konfiguration
+---
+
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import Include from '~/components/Include.astro';
+import ReadMore from '~/components/ReadMore.astro';
+
+von Standard, Crowdin Enterprise verwendet ein predefined festlegen von importieren und exportieren parameters für jedes unterstützt Datei Format.
+
+die Parser Konfiguration feature ermöglicht du ändern die Standard importieren und exportieren behavior predefined für Dateiformate unterstützt von Crowdin Enterprise. Parser Konfiguration in ein bestimmten Projekt ist applied nur zu Dateien gespeichert in dies Projekt.
+
+Du kannst festlegen die parser Konfiguration für alle Dateien von ein certain Format oder single Dateien. Sobald du speichern die parser Konfiguration für einige Datei Format, du kann hochladen Quelldateien zu dein Projekt, und Crowdin Enterprise wird apply dein Einstellungen accordingly.
+
+Die meisten unterstützten Dateiformate verfügen über konfigurierbares Import- und Exportverhalten.
+
+<Aside type="caution">
+  Einige Parser-Einstellungen sind in [stringbasierten](/enterprise/creating-project/#string-based-project) Projekten möglicherweise nicht verfügbar.
+</Aside>
+
+## Parser Konfiguration Parameters
+
+einige parameters sind common zu alle Formate, während andere sind Format-bestimmten.
+
+### Parameter nach Dateiformat
+
+in die table below, du kann see die verfügbar parser parameters und Formate sie könnte sein konfiguriert für.
+
+<Include file="parser-configuration-parameters.mdx" />
+
+### Parameter für Office-Dokumente
+
+Office-Dokumente verfügen über einen eigenen Satz von Parametern, die hier wie im Einstellungsdialog gruppiert sind.
+
+<Aside>
+  Eine Datei behält den Parser, mit dem sie hinzugefügt wurde, zusammen mit den von diesem Parser unterstützten Optionen. Um den vollständigen Satz von Optionen für ein bereits hinzugefügtes Office-Dokument zu erhalten, lade es erneut hoch.
+</Aside>
+
+#### Allgemeine Optionen
+
+<Include file="office-documents-general-options.mdx" />
+
+#### Textdokumente
+
+<Include file="office-documents-text-documents.mdx" />
+
+#### Tabellenkalkulationen
+
+<Include file="office-documents-spreadsheets.mdx" />
+
+#### Präsentationen
+
+<Include file="office-documents-slides.mdx" />
+
+## Parser Konfiguration für alle Project Files von ein bestimmten Format
+
+Um festlegen die preferred parser Konfiguration für alle Dateien von ein bestimmten Format, folgen diese Schritten:
+
+<Steps>
+  1. Öffne dein Projekt und gehe zu **Einstellungen > Parser-Konfiguration**.
+  2. Wähle die benötigt Datei Format und klicke auf Edit.
+  3. Lege die preferred Einstellungen. fest
+  4. Klicke auf **Speichern**.
+</Steps>
+
+Alternatively, für Formate mit configurable parser Einstellungen, du kann öffnen die gleich Einstellungen von die [**Erstelle bundle**](/enterprise/bundles/#configuring-bundles) oder [**Edit bundle**](/enterprise/bundles/#editing-bundles) Dialog von clicking <Icon name="mdi:cog" class="inline-icon" /> nächste zu die Ziel Format.
+
+Um ein neues Dateiformat hinzuzufügen, klicke oben rechts auf **Apps hinzufügen** und installiere das erforderliche Format.
+
+## Parser Konfiguration für ein Single File
+
+in einige cases, du könnte benötigen zu festlegen die parser Konfiguration nicht für alle Dateien von einige Datei Format aber just für ein single Datei. Um festlegen die parser Konfiguration für ein single Datei, folgen diese Schritten:
+
+<Steps>
+  1. Öffne dein Projekt und gehe zu **Quellen > Dateien**.
+  2. Double-klicken auf die benötigt Datei.
+  3. Wechsle im geöffneten Dialog zum Tab **Parser-Konfiguration**.
+  4. Lege die preferred Einstellungen. fest
+  5. Klicke auf **Speichern**.
+</Steps>
+
+Sobald du speichern die Datei parser Konfiguration, Crowdin Enterprise wird reimport dies Datei und apply dein Einstellungen.
+
+<ReadMore>
+  Mehr über [Datei management](/enterprise/file-management/) in Crowdin Enterprise.
+</ReadMore>
+
+## Post-Verarbeitung Files mit Nested Inhalt
+
+Sometimes, du könnte arbeiten mit Dateien das enthalten Strings in ein unterschiedlich Format. ein common example ist ein JSON Datei wo einige String Werte enthalten HTML Inhalt. die Standard parser Konfiguration isn't designed für diese nested oder cascading scenarios.
+
+Um properly Prozess such Dateien, du benötigen zu implement ein benutzerdefiniert Crowdin App das verwendet die File Post-importieren Verarbeitung Modul. dies Methode, sometimes referred zu as cascade Verarbeitung, ermöglicht dein App zu intercept importiert Strings und instruct Crowdin Enterprise zu re-Prozess bestimmten ones verwenden ein unterschiedlich parser. für instance, du kann tell Crowdin Enterprise zu parse ein String von ein JSON Datei as HTML, ensuring das HTML Tags sind correctly handled und nicht exposed zu Übersetzer as plain Text.
+
+Um handle Dateien mit nested Inhalt, du kann install die Cascade Importer von die Crowdin Store oder, für mehr benutzerdefiniert scenarios, build dein own.
+
+<CardGrid>
+  <LinkCard title="Cascade-Importer-App" description="automatisch detect und re-Prozess Strings mit nested Inhalt. die recommended solution für meisten Projekte." href="https://store.crowdin.com/cascade-importer" />
+  <LinkCard title="Crowdin Apps SDK" description="Framework zum Erstellen einer selbst gehosteten Crowdin-App, die Dateien verarbeitet." href="/developer/crowdin-apps-sdk/" />
+  <LinkCard title="Modul zur Verarbeitung nach dem Dateiimport" description="Technical Dokumentation auf wie zu build ein App das kann intercept und modify Strings nach die initial Datei importieren." href="/developer/crowdin-apps-module-file-post-import-processing/" />
+</CardGrid>

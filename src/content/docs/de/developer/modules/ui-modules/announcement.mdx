@@ -1,0 +1,244 @@
+---
+title: Bekanntmachungsmodul
+description: Hinweise deiner App im Crowdin-Enterprise-Header und auf Glossarseiten anzeigen
+slug: developer/crowdin-apps-module-announcement
+sidebar:
+  order: 22
+  label: Bekanntmachung
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+Mit diesem Modul kann eine App Benutzern einer Crowdin-Enterprise-Organisation Hinweise anzeigen.
+
+Positionen für Bekanntmachungen:
+
+* `header-alert`: der Hinweisstreifen unterhalb des Seiten-Headers, der auf jeder Seite der Organisation vorhanden ist
+* `glossary`: oberhalb der Begriffstabelle auf einer Glossarseite
+
+Das Modul ist nur in Crowdin Enterprise und nur in selbst gehosteten Apps verfügbar.
+
+## So funktioniert es
+
+<Steps>
+  1. Ein Organisationsadministrator installiert die App und wählt aus, wer ihre Bekanntmachungen sehen kann.
+  2. Ein Benutzer öffnet eine Seite mit der Position des Moduls. Crowdin Enterprise sendet eine Anfrage mit dem aktuellen Kontext an die `url` des Moduls.
+  3. Die App antwortet mit den Bekanntmachungen, die der Benutzer sehen soll, oder mit einer leeren Liste.
+  4. Crowdin Enterprise zeigt die Bekanntmachungen an der jeweiligen Position an. Der Benutzer kann die Bekanntmachungen schließen, die die App als schließbar markiert hat.
+</Steps>
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+* Nur Organisationsadministratoren
+* Organisationsadministratoren, Projektmanager und Entwickler
+* Alle Benutzer in den Projekten der Organisation
+* Ausgewählte Benutzer
+
+Crowdin Enterprise wählt für dieses Modul standardmäßig **Alle Benutzer in den Organisationsprojekten** aus.
+
+## Struktur
+
+```json title="manifest.json"
+{
+  "baseUrl": "https://app.example.com",
+  "modules": {
+    "announcement": [
+      {
+        "key": "header-announcements",
+        "name": "Header announcements",
+        "url": "/announcements/header",
+        "placement": "header-alert"
+      }
+    ]
+  }
+}
+```
+
+Eine App kann mehrere Bekanntmachungsmodule deklarieren, eines pro Position oder mehrere an derselben Position.
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Der für Menschen lesbare Name des Moduls.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Die relative URL, von der Crowdin Enterprise die Bekanntmachungen anfordert.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>placement</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Zulässige Werte:</strong> <code>header-alert</code>, <code>glossary</code></p>
+        <p><strong>Beschreibung:</strong> Gibt an, wo die Bekanntmachungen des Moduls angezeigt werden.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Zulässige Werte:</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>Beschreibung:</strong> Menge der Umgebungen, in denen ein Modul installiert werden kann.<br />
+        Dieser Parameter wird für produktübergreifende Anwendungen benötigt.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Kommunikation zwischen der Bekanntmachungs-App und Crowdin
+
+Crowdin Enterprise fordert die Bekanntmachungen jedes Mal an, wenn die Position des Moduls gerendert wird. Crowdin Enterprise sendet eine `POST`-Anfrage an `baseUrl` + `url` mit dem JWT der App im `Authorization`-Header. Die App hat 10 Sekunden Zeit zu antworten.
+
+### Anfrage an die App
+
+Beispiel für die Nutzlast der Anfrage:
+
+```json
+{
+  "context": {
+    "placement": "glossary",
+    "userId": 123,
+    "glossaryId": 456
+  }
+}
+```
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>context.placement</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Die Position, für die die Bekanntmachungen angefordert werden.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>context.userId</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>integer</code></p>
+        <p><strong>Beschreibung:</strong> Der Benutzer, für den die Bekanntmachungen angefordert werden.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">context.glossaryId</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>integer</code></p>
+        <p><strong>Beschreibung:</strong> Das Glossar, dessen Seite der Benutzer geöffnet hat.<br />
+        Gesendet zusammen mit der Position <code>glossary</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Die Organisation wird anhand des JWT identifiziert, daher enthält der Payload nur den Kontext.
+
+### Erwartete Antwort der App
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": "autumn-release-terms",
+        "text": "The autumn release terminology is in the glossary. Check it before you start translating.",
+        "dismissible": true,
+        "expiresAt": "2026-10-01T00:00:00+00:00",
+        "actionLabel": "Read the release notes",
+        "actionUrl": "https://example.com/releases/autumn"
+      }
+    ]
+  }
+}
+```
+
+Gib ein leeres `items`-Array zurück, wenn die App nichts anzuzeigen hat.
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung der Bekanntmachung innerhalb des Moduls, bis zu 255 Zeichen.<br />
+        Eine geschlossene Bekanntmachung bleibt geschlossen, solange sie diesen Wert behält. Gib daher einer bearbeiteten Bekanntmachung eine neue <code>id</code>, damit sie erneut angezeigt wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>text</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Die Bekanntmachung selbst, bis zu 65.535 Zeichen.<br />
+        Der Text wird als Klartext angezeigt. Darin enthaltene unveränderte <code>http</code>- und <code>https</code>-URLs werden zu Links. Im Headerstreifen wird der Text in einer Zeile angezeigt; der vollständige Text steht in einem Tooltip.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>dismissible</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>boolean</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Gibt an, ob der Benutzer die Bekanntmachung schließen kann.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>expiresAt</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Der Zeitpunkt, an dem die Bekanntmachung nicht mehr angezeigt wird, im ISO-8601-Format.<br />
+        Bekanntmachungen ohne dieses Feld werden angezeigt, bis die App sie nicht mehr zurückgibt.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>actionLabel</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Die Beschriftung des Aktionslinks der Bekanntmachung, bis zu 255 Zeichen.<br />
+        Verwende es zusammen mit <code>actionUrl</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>actionUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Die Adresse, die der Aktionslink in einem neuen Tab öffnet, bis zu 2.048 Zeichen.<br />
+        Muss mit <code>https://</code> beginnen. Verwende es zusammen mit <code>actionLabel</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Crowdin Enterprise liest eine Antwort von bis zu 512 KB mit bis zu 1.000 Elementen und zeigt daraus die ersten 10 gültigen Bekanntmachungen an. Eine Bekanntmachung, die gegen die obigen Regeln verstößt, wird übersprungen; der restliche Teil der Antwort wird weiterhin verwendet.
+
+## Anzeigeregeln
+
+Crowdin Enterprise wendet die folgenden Regeln auf die von einer App zurückgegebenen Bekanntmachungen an:
+
+* Bekanntmachungen, die der Benutzer nicht schließen kann, werden zuerst angezeigt; der Rest folgt in der Reihenfolge, in der die Apps installiert wurden.
+* Der Headerstreifen zeigt jeweils eine Bekanntmachung an. Bei mehr als einer Bekanntmachung zeigt der Streifen zusätzlich einen Zähler und Pfeile zum Wechseln zwischen den Bekanntmachungen an.
+* Wenn eine Bekanntmachung geschlossen wird, wird sie nur in diesem Browser ausgeblendet.
+* Crowdin Enterprise lädt die Header-Bekanntmachungen alle 15 Minuten neu sowie die Bekanntmachungen an beiden Positionen, wenn der Benutzer zum Tab zurückkehrt. Eine Bekanntmachung mit `expiresAt` löst bei Ablauf ebenfalls einen Reload aus.

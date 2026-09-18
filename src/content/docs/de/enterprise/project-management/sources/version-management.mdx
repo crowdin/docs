@@ -1,0 +1,331 @@
+---
+title: Versionsverwaltung
+description: Erfahre, wie du verschiedene Versionen deines Projekts verwaltest.
+slug: enterprise/version-management
+sidebar:
+  order: 4
+---
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Image } from 'astro:assets';
+import versionsBranches from '!/enterprise/project-management/sources/versions_branches.png';
+import versionsDuplicateStrings from '!/enterprise/project-management/sources/versions_duplicate_strings.png';
+import branchesWorkflow from '!/crowdin/project-management/sources/branches_workflow.png';
+import branchMerging from '!/crowdin/project-management/sources/branch_merging.png';
+import branchTranslationVerification from '!/crowdin/project-management/sources/branch_translation_verification.png';
+
+Halte einen agilen Lokalisierungsprozess aufrecht und verhindere Übersetzungsverzögerungen bei hinzugefügten Texten oder neuen Produktfunktionen. Integriere deine Projekt-Branches mit Crowdin Enterprise und ermögliche Übersetzern den sofortigen Zugriff auf alle neuen Texte.
+
+Wenn mehrere Personen an der Produktentwicklung arbeiten, helfen Branches dabei, verschiedene Inhaltsversionen zu verwalten. Wenn du ein Continuous-Localization-Projekt hast, kannst du Projekt-Branches zu Crowdin Enterprise hinzufügen und Übersetzern ermöglichen, die Texte parallel zur Entwicklung zu übersetzen, um Verzögerungen bei der Bereitstellung zu vermeiden.
+
+Branches in Crowdin Enterprise sehen wie normale Ordner aus, die mit einem bestimmten Symbol gekennzeichnet sind, und haben ein spezielles Verhalten für doppelte Zeichenketten.
+
+Beispiel für eine Branch-Struktur in Crowdin Enterprise:
+
+<Image src={versionsBranches} alt="Branch-Struktur" />
+
+## Branches verwalten
+
+Du kannst Branches in Crowdin Enterprise erstellen, klonen, zusammenführen, umbenennen, priorisieren, schützen oder löschen, um die Lokalisierung parallel zur Entwicklung zu optimieren. Verwende abhängig von deinem Workflow und Projekttyp die verfügbaren UI-Optionen, die API oder die CLI.
+
+### Branches erstellen
+
+Du kannst Branches manuell über die Weboberfläche (UI), automatisch durch die Verbindung deines Projekts mit einem Versionskontrollsystem oder über die CLI bzw. API erstellen. Die von dir gewählte Methode kann von deinem Projekttyp oder deinen Integrationseinstellungen abhängen.
+
+#### Branches über die VCS-Integration erstellen
+
+Integriere Crowdin-Projekte mit [GitLab](/enterprise/gitlab-integration/), [GitHub](/enterprise/github-integration/), [Bitbucket](/enterprise/bitbucket-integration/) oder [Azure Repos](/enterprise/azure-repos-integration/). Wenn du in deinem VCS Branches für die Lokalisierung auswählst, werden sie automatisch in Crowdin erstellt.
+
+#### Branches über die Weboberfläche erstellen
+
+Um Branches über die Weboberfläche (UI) zu erstellen, gehe wie folgt vor:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dateibasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zu **Quellen > Dateien**.
+      2. Klicke auf **Neuer Versions-Branch**.
+      3. Gib im angezeigten Dialog den Namen des Branches ein.
+      4. Wähle im Abschnitt **Doppelte Strings** aus, wie doppelte Strings behandelt werden sollen.
+      5. Klicke zum Abschluss auf **Erstellen**.
+    </Steps>
+  </TabItem>
+  <TabItem label="Zeichenfolgenbasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zum Tab **Branches**.
+      2. Klicke auf **Neuer Versions-Branch**.
+      3. Gib im angezeigten Dialog den Namen des Branches ein.
+      4. Wähle **Leeren Branch erstellen** oder **Vorhandenen Branch klonen**.
+      5. Beim Klonen wählst du den Quell-Branch aus dem angezeigten Dropdown-Menü aus.
+      6. Klicke zum Abschluss auf **Erstellen**.
+    </Steps>
+  </TabItem>
+</Tabs>
+
+<Aside type="caution">
+  Die ersten Dateien, die du in das Crowdin-Enterprise-Projekt hochlädst, müssen alle Ausgangsstrings enthalten und im entsprechenden Branch abgelegt werden. In allen Artikelbeispielen wird ein Branch mit den Ausgangstexten **Master** genannt.
+</Aside>
+
+#### Branch-Erstellung über die API
+
+Du kannst die Crowdin Enterprise API verwenden, um Branches programmgesteuert zu erstellen. Die verfügbare Methode hängt vom Projekttyp ab:
+
+* [Branch hinzufügen (dateibasiert)](https://support.crowdin.com/developer/enterprise/api/v2/#tag/Source-Files/operation/api.projects.branches.post)
+* [Branch hinzufügen (stringbasiert)](https://support.crowdin.com/developer/enterprise/api/v2/string-based/#tag/Branches/operation/api.projects.branches.post)
+
+#### Branch-Verwaltung mit der CLI
+
+Mit der Crowdin CLI kannst du Branches direkt aus deiner lokalen Umgebung mithilfe der dafür vorgesehenen Befehle verwalten. Du kannst auch beim Hochladen einer Datei automatisch einen Branch erstellen.
+
+<ReadMore>
+  Mehr über [Branch Management mit CLI](https://crowdin.github.io/crowdin-cli/commands/crowdin-branch).
+</ReadMore>
+
+### Geschützte Branches
+
+Bei stringbasierten Projekten kannst du bestimmte Branches (z. B. deinen `main` oder `production` Branch) schützen, um die Stabilität der Inhalte zu gewährleisten. Wenn die Option **Schutz aktivieren** für einen Branch aktiviert ist, sind direkte Änderungen an dessen Inhalt eingeschränkt.
+
+Die folgenden Aktionen sind in einem geschützten Branch nicht zulässig:
+
+* Hochladen neuer Ausgangsinhalte.
+* Löschen vorhandener Ausgangsinhalte.
+* Hinzufügen von Übersetzungen oder Genehmigungen direkt zu Strings in diesem Branch.
+
+#### Arbeiten mit geschützten Branches
+
+Der primäre Workflow für geschützte Branches besteht darin, alle Inhaltsaktualisierungen und Übersetzungen in einem separaten Branch (z. B. einem geklonten `dev`-Branch) vorzunehmen und diese Änderungen anschließend in den geschützten Branch zusammenzuführen.
+
+Crowdin Enterprise zeigt visuelle Hinweise an, wenn du einen geschützten Branch aufrufst:
+
+* **Tab „Hochladen“**: Wenn du einen geschützten Branch als Ziel auswählst, wird ein blauer Hinweis angezeigt: „Das Hochladen von Dateien auf geschützte Branches ist nicht zulässig.“
+* **Tab „Strings“:** Ein gelber Hinweis wird angezeigt: „Du hast derzeit einen geschützten Branch ausgewählt. Keine Aktionen mit Strings sind zulässig."
+* **Editor:** Wenn du versuchst, einen String zu bearbeiten, sind die Eingabefelder deaktiviert. Beim Bewegen des Mauszeigers über das Übersetzungsfeld wird der Hinweis „Für Strings aus geschützten Branches nicht zulässig.“ angezeigt.
+
+Um einen geschützten Branch zu aktualisieren, gehe wie folgt vor:
+
+<Steps>
+  1. [Geschützten Branch klonen](#cloning-branches) (z. B. `dev` aus `main` erstellen).
+  2. Führe die erforderlichen Aktionen im geklonten Branch durch (Quelldateien hochladen, Übersetzungen hinzufügen, Strings genehmigen).
+  3. [Zusammenführen](#merging-branches) des geklonten Branches mit dem geschützten Branch.
+</Steps>
+
+<Aside type="caution" title="Einschränkungen">
+  Geschützte Branches sind nur für [stringbasierte](/creating-project/#string-based-project) Projekte verfügbar.
+</Aside>
+
+### Branches klonen
+
+Du kannst eine Kopie eines vorhandenen Branches über den Dialog **Neuer Versions-Branch** oder die Option **Klonen** im Kontextmenü erstellen.
+
+Um einen Branch zu klonen, gehe wie folgt vor:
+
+<Steps>
+  1. Öffne dein Projekt und gehe zum Tab **Branches**.
+  2. Führe einen der folgenden Schritte aus:
+     * Klicke auf **Neuer Versions-Branch**.
+     * Bewege den Mauszeiger über den gewünschten Branch, klicke auf <Icon name="mdi:dots-vertical" class="inline-icon" /> (oder klicke mit der rechten Maustaste) und wähle **Klonen**.
+  3. Gib im angezeigten Dialog den Namen des neuen Branches ein.
+  4. Wenn du über **Neuer Versions-Branch** klonst, wähle **Vorhandenen Branch klonen** und wähle den Quell-Branch aus dem Dropdown-Menü aus.
+  5. Klicke zum Abschluss auf **Erstellen**.
+</Steps>
+
+<Aside type="caution" title="Einschränkungen">
+  Das Klonen von Branches ist nur für [stringbasierte](/enterprise/creating-project/#string-based-project) Projekte verfügbar.
+</Aside>
+
+### Branches zusammenführen
+
+Du kannst einen Branch direkt über den Tab **Branches** mithilfe des Kontextmenüs mit einem anderen Branch zusammenführen. Während des Zusammenführens zeigt Crowdin Enterprise eine Zusammenfassung der Änderungen (d. h. Aktualisierungen des Ausgangstexts und neue Übersetzungen) an und ermöglicht dir, genau auszuwählen, welche Änderungen du vor Abschluss des Zusammenführens übernehmen möchtest.
+
+<Steps>
+  1. Bewege im Tab **Branches** den Mauszeiger über den Quell-Branch, den du zusammenführen möchtest.
+  2. Klicke auf <Icon name="mdi:dots-vertical" class="inline-icon" /> (oder klicke mit der rechten Maustaste) und wähle **Zusammenführen**.
+  3. Wähle im angezeigten Dialog den Ziel-Branch aus, in den du zusammenführen möchtest.
+  4. Klicke auf **Weiter**, um zur Seite **Zusammenführungsübersicht** zu gelangen.
+</Steps>
+
+#### Zusammenführungsübersicht verstehen
+
+Die Seite **Zusammenführungsübersicht** zeigt einen zweispaltigen Vergleich aller Unterschiede zwischen dem Ziel-Branch (z. B. `main`) und dem Quell-Branch (z. B. `dev`).
+
+Oben siehst du eine Zusammenfassung: **Du hast angefordert, `{source_branch}` in `{target_branch}` zusammenzuführen. Wähle die Änderungen aus, die du vor dem Zusammenführen übernehmen möchtest:**. Die Branch-Titel in dieser Nachricht sind anklickbare Links, die alle Strings für den jeweiligen Branch im Editor öffnen.
+
+In der oberen rechten Ecke siehst du neben dem Filter außerdem eine Übersicht der Änderungen mit Zählern für:
+
+* <Icon name="mdi:minus-box-outline" class="inline-icon text-red-700" /> **Gelöschte Strings**
+* <Icon name="mdi:plus-box-outline" class="inline-icon text-emerald-700" /> **Hinzugefügte Strings**
+* <Icon name="mdi:square-edit-outline" class="inline-icon text-blue-600" /> **Geänderte Strings**
+* <Icon name="mdi:alert-outline" class="inline-icon text-yellow-700" /> **Konfliktbehaftete Strings**
+
+**Übersetzungsänderungen überprüfen**
+
+Wenn ein String keine Änderungen am Ausgangstext aufweist, aber neue Übersetzungen enthält, wird er in der Liste angezeigt. Du kannst die String-Details über das Pfeilsymbol <Icon name="mdi:chevron-down" class="inline-icon" /> erweitern, um die spezifischen Übersetzungsänderungen anzuzeigen:
+
+* **Neue Übersetzungen**: Grün hervorgehoben mit einem <Icon name="mdi:plus" class="inline-icon" /> Symbol.
+* **Gelöschte Übersetzungen**: Wenn eine Übersetzung im Quell-Branch entfernt wurde, wird sie rot hervorgehoben.
+* **Genehmigungen**: Wenn eine Übersetzung im Quell-Branch genehmigt ist, wird das Label <Icon name="mdi:check-circle-outline" class="inline-icon" /> **Genehmigt** angezeigt.
+* **Metadaten**: Du kannst die Stimmenbewertung und das **Hinzugefügt am** Datum der Übersetzung sehen.
+
+**Wichtige Funktionen dieser Seite:**
+
+* **Selektives Zusammenführen**: Du musst jede Änderung (hinzugefügter, geänderter oder entfernter String), die du auf den Ziel-Branch anwenden möchtest, manuell auswählen. Ein Zähler (z. B. **1 von 4 ausgewählt**) in der oberen linken Ecke verfolgt deine Auswahl.
+* **Keine impliziten Zusammenführungen**: Nur die Strings, die du auf der Zusammenführungsübersichtsseite manuell auswählst, werden zusammengeführt. Wenn du einen String nicht auswählst, werden keine Änderungen (weder am Ausgangstext noch an der Übersetzung) auf den Ziel-Branch angewendet.
+* **String-Details**: Jeder String in der Liste zeigt seinen Kontext und die maximale Länge (falls festgelegt); ein Zeitstempel zeigt, wann der String zuletzt geändert wurde.
+* **Im Editor öffnen**: Bewege den Mauszeiger über einen String, um den Link **Im Editor öffnen** anzuzeigen, der den String in einem neuen Tab öffnet.
+
+#### Änderungen filtern
+
+Um die Liste zu filtern und bestimmte Arten von Änderungen zu überprüfen, klicke auf <Icon name="mdi:filter-variant" class="inline-icon" /> in der oberen rechten Ecke und wähle die gewünschte Filteroption aus.
+
+verfügbar Filtere Optionen:
+
+* **Alle Änderungen**: Zeigt alle Unterschiede (Ausgangstext und Übersetzung) zwischen den Branches.
+* **Hinzugefügte Strings**: Zeigt nur Strings, die im Quell-Branch vorhanden sind, aber nicht im Ziel-Branch.
+* **Gelöschte Strings**: Zeigt nur Strings, die im Ziel-Branch vorhanden sind, aber im Quell-Branch entfernt wurden.
+* **Geänderte Strings**: Zeigt Strings, die im Quell-Branch geändert wurden (einschließlich Aktualisierungen der Übersetzungen).
+* **Konfliktbehaftete Strings**: Zeigt Strings, deren Inhalt zwischen den Branches auf eine Weise abweicht, die Aufmerksamkeit erfordert. Dazu gehören Zeichenketten, die in beiden Branches geändert wurden, oder Zeichenketten, die im Ziel-Branch neuer sind als im Quell-Branch.
+
+<Aside type="caution">
+  Achte besonders auf **konfliktbehaftete Strings**. Wenn ein String im Ziel-Branch (z. B. `main`) aktualisiert wurde, nachdem der Quell-Branch erstellt wurde, wird durch das Auswählen zum Zusammenführen die neuere Version im Ziel-Branch mit der älteren Version aus dem Quell-Branch **überschrieben**.
+</Aside>
+
+#### Zusammenführung abschließen
+
+Sobald du alle Änderungen ausgewählt hast, die du anwenden möchtest, kannst du die Zusammenführung abschließen.
+
+Am unteren Rand der Seite findest du:
+
+* \*\* \{source_branch} nach dem Zusammenführen löschen\*\* (Optional): Wähle diese Option aus, um den Quell-Branch (z. B. `dev`) nach erfolgreichem Zusammenführen seiner Änderungen automatisch zu löschen. Dies ist nützlich, um temporäre Feature-Branches aufzuräumen. Lass die Option deaktiviert, wenn du weiter am Quell-Branch arbeiten möchtest.
+* **Zusammenführen**: Klicke hier, um alle ausgewählten Änderungen auf den Ziel-Branch anzuwenden. Diese Schaltfläche bleibt deaktiviert, bis du mindestens eine Änderung (einen hinzugefügten, geänderten oder gelöschten String oder Änderungen an Übersetzungen) aus der Liste auswählst.
+
+Sobald die Zusammenführung abgeschlossen ist, werden Übersetzungen, Genehmigungen und Stimmen aus beiden Branches für die von dir ausgewählten Strings zusammengeführt.
+
+<Aside type="caution" title="Einschränkungen">
+  Branch-Zusammenführungen sind nur für [stringbasierte](/enterprise/creating-project/#string-based-project) Projekte verfügbar.
+</Aside>
+
+### Branches priorisieren
+
+Du kannst in dateibasierten Projekten Prioritäten für Branches festlegen, um Übersetzer dabei zu unterstützen, sich zuerst auf die wichtigsten Inhalte zu konzentrieren. Branches werden auf der Sprachseite und im Editor nach Priorität sortiert angezeigt.
+
+Verfügbare Prioritäten:
+
+* <Icon name="mdi:arrow-down" class="inline-icon text-emerald-700" /> – niedrig
+* <Icon name="mdi:arrow-up" class="inline-icon text-orange-700" /> – mittel
+* <Icon name="mdi:arrow-up" class="inline-icon text-red-700" /> – hoch
+
+Um eine Priorität für deine Branches festzulegen, gehe wie folgt vor:
+
+<Steps>
+  1. Öffne dein Projekt und gehe zu **Quellen > Dateien**.
+  2. Klicke auf das Pfeilsymbol neben dem gewünschten Branch, um die gewünschte Priorität festzulegen.
+</Steps>
+
+<Aside type="caution" title="Einschränkungen">
+  Die Priorisierung von Branches ist nur für [dateibasierte](/creating-project/#file-based-project) Projekte verfügbar.
+</Aside>
+
+### Weitere Aktionen im Kontextmenü
+
+Neben dem Klonen und Zusammenführen enthält das Kontextmenü für jeden Branch die folgenden Optionen:
+
+* **Umbenennen** – Ermöglicht dir, den Namen des ausgewählten Branches zu ändern.
+* **Kostenschätzung** – Öffnet den Dialog zur Kostenschätzung für den Branch.
+* **Löschen** – Löscht den Branch dauerhaft aus dem Projekt. Vorsichtig verwenden.
+
+## Dubletten
+
+Da Branches verschiedene Versionen derselben Produktfunktion darstellen, sind ihre Lokalisierungsinhalte normalerweise doppelt vorhanden. Um Übersetzern zu helfen, Versionen konsistent zu übersetzen und zusätzliche Übersetzungskosten zu vermeiden, bietet Crowdin Enterprise die Option **Innerhalb eines Versions-Branches anzeigen**, die doppelte Strings zwischen Branches ausblendet.
+
+Wenn diese Option angewendet wird, müssen nur die Master-Strings (normalerweise aus dem Master-Branch) übersetzt werden. Duplikate in anderen Branches übernehmen die Übersetzungen dieser Master-Strings.
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dateibasiertes Projekt">
+    In dateibasierten Projekten kannst du konfigurieren, wie Duplikate unter **Einstellungen > Import > Ausgangsstrings** behandelt werden. Wenn deine Quelldateien eindeutige Kennungen (Keys) enthalten, wird empfohlen, die *Strict*-Variante der Option **Innerhalb eines Versions-Branches anzeigen** zu verwenden. Andernfalls funktioniert die *Regular*-Option für die meisten Anwendungsfälle gut.
+  <Image src={versionsDuplicateStrings} alt="Dubletten" />
+  </TabItem>
+  <TabItem label="Zeichenfolgenbasiertes Projekt">
+    In stringbasierten Projekten wird das Verhalten **Innerhalb eines Versions-Branches anzeigen (reguläre Erkennung)** automatisch angewendet und kann nicht geändert werden. Dadurch wird sichergestellt, dass Übersetzungen zwischen Branches wiederverwendet werden, ohne dass zusätzliche Konfiguration erforderlich ist.
+  </TabItem>
+</Tabs>
+
+<ReadMore>
+  Mehr über [Duplikate von Zeichenketten](/enterprise/project-settings/import/#duplicate-strings) erfahren.
+</ReadMore>
+
+## Empfohlener Workflow
+
+Um eine reibungslose Zusammenarbeit zwischen Entwicklern und Übersetzern zu gewährleisten, können Versions-Branches in Crowdin Enterprise auf unterschiedliche Weise verwendet werden, abhängig davon, wie du Ausgangsinhalte verwaltest und welchen Projekttyp du verwendest.
+
+### Inhalte außerhalb von Crowdin Enterprise verwalten
+
+In dateibasierten und stringbasierten Projekten kannst du dein externes System (z. B. Dateispeicher oder Versionskontrolle) als maßgebliche Quelle verwenden. Bei diesem Setup:
+
+* Quelldateien werden außerhalb von Crowdin Enterprise verwaltet und aktualisiert.
+* Du lädst Projektinhalte über die Weboberfläche (UI), API, CLI oder Integrationen hoch.
+* Ausgewählte Branches werden entsprechend in Crowdin Enterprise erstellt.
+* Übersetzungen werden nach Abschluss an dein System zurückübertragen.
+
+Um diesen Ansatz für dein Crowdin Enterprise-Projekt umzusetzen, empfehlen wir den folgenden Workflow:
+
+<Steps>
+  1. Lade deine Projektdateien über eine der [verfügbaren Methoden](#creating-branches) in das Crowdin Enterprise-Projekt hoch.
+  2. Öffne in dateibasierten Projekten dein Projekt und gehe zu **Einstellungen > Import > Ausgangsstrings**.
+  3. Lege die Option **Duplikate** auf **Innerhalb eines Versions-Branches anzeigen** fest.
+</Steps>
+
+Der folgende Screenshot veranschaulicht, wie dieser Workflow in der Praxis funktioniert. Alle Texte aus *Master*, *Branch 1*, und *Branch 2* werden unmittelbar nach ihrem Erscheinen auf den Übersetzungsserver übertragen, obwohl die Branches noch nicht in den *Master* Branch zusammengeführt wurden.
+
+<Image src={branchesWorkflow} alt="Branch-Workflow" class="no-shadow mb-8" />
+
+### Inhalte in Crowdin Enterprise verwalten (nur stringbasierte Projekte)
+
+Für stringbasierte Projekte kannst du Branches auch direkt in Crowdin Enterprise verwalten, ohne auf ein externes System angewiesen zu sein, das die Struktur oder Inhaltsaktualisierungen vorgibt. Bei diesem Setup:
+
+* Ausgangsinhalte können über die Weboberfläche (UI), API, CLI oder Integrationen hinzugefügt werden.
+* Versions-Branches werden innerhalb von Crowdin Enterprise über die UI oder API erstellt, geklont und zusammengeführt.
+* Übersetzungen können bei Verwendung optional wieder mit jeder verbundenen Integration synchronisiert werden.
+
+Dieser Ansatz bietet Teams mehr Flexibilität, die Inhalte und Versionsabläufe vollständig innerhalb von Crowdin Enterprise organisieren und verwalten möchten.
+
+### Übersetzung herunterladen
+
+Übersetzungen aus allen Versions-Branches werden beim Herunterladen über die Weboberfläche in einem ZIP-Archiv abgelegt. Verwende die CLI oder API, um die Übersetzungen für jeden Branch einzeln herunterzuladen.
+
+#### Übersetzungen über die API herunterladen
+
+Um Übersetzungen eines bestimmten Versions-Branches über die API herunterzuladen, kannst du die folgenden API-Methoden verwenden:
+
+* Projektübersetzung erstellen](/developer/enterprise/api/v2/#operation/api.projects.translations.builds.post) – stelle sicher, dass du das Schema `EnterpriseTranslationCreateProjectBuildForm` verwendest.
+* [Projekt-Build-Status prüfen](/developer/enterprise/api/v2/#operation/api.projects.translations.builds.get).
+* [Projektübersetzungen herunterladen](/developer/enterprise/api/v2/#operation/api.projects.translations.builds.download.download).
+
+#### Übersetzungen über die CLI herunterladen
+
+Übersetzungen des bestimmten Versions-Branches herunterladen:
+
+```shell
+crowdin download -b branch_name
+```
+
+<ReadMore>
+  Mehr über den Befehl [`crowdin download`](https://crowdin.github.io/crowdin-cli/commands/crowdin-download) erfahren.
+</ReadMore>
+
+### Branches außerhalb von Crowdin Enterprise zusammenführen
+
+Der *Master* Branch enthält neue Texte aus den *Feature* Branches, sobald sie zusammengeführt wurden. Während der Synchronisierung mit Crowdin Enterprise werden die Texte im *Master* Branch mit Übersetzungen aus dem entsprechenden Branch versehen.
+
+Nach der Synchronisierung des aktualisierten *Master* Branches mit Crowdin Enterprise kannst du den *Feature*-Branch aus Crowdin Enterprise entfernen. Alle im *Master* Branch gespeicherten Übersetzungen bleiben erhalten.
+
+Dieser Ansatz wird häufig in dateibasierten Projekten verwendet, kann aber auch auf stringbasierte Projekte angewendet werden, wenn Inhalte außerhalb von Crowdin Enterprise verwaltet werden.
+
+<Image src={branchMerging} alt="Branches zusammenführen" class="no-shadow mb-8" />
+
+### Übersetzungsüberprüfung des Branches
+
+Du kannst Übersetzungen in der Produktionsumgebung ausschließlich mit dem *Feature* Branch überprüfen, bevor die Änderungen mit deinem *Master* Branch zusammengeführt werden. Mit einer solchen Testbereitstellung kannst du bei Bedarf schnell auf die ursprüngliche Version des *Master* Branches zurückwechseln.
+
+<Image src={branchTranslationVerification} alt="Übersetzungsüberprüfung des Branches" class="no-shadow" />

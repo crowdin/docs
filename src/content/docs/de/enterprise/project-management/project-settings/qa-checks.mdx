@@ -1,0 +1,206 @@
+---
+title: Qualitätssicherungseinstellungen
+description: Konfiguriere QA-Prüfungen, um die Qualität der Übersetzungen sicherzustellen.
+slug: enterprise/project-settings/qa-checks
+sidebar:
+  order: 4
+  label: Qualitätssicherung
+---
+
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+import qaChecksInEditor from '!/crowdin/project-management/settings/qa_checks_in_editor.png';
+import qaChecksSettings from '!/enterprise/project-management/settings/qa_checks_settings.png';
+import qaChecksAddToIgnoreList from '!/crowdin/project-management/settings/qa_checks_add_to_ignore_list.png';
+
+Quality assurance (QA) prüft scan Übersetzungen für Sprache-bestimmten formatting das doesn't match die Quelle String oder won't fit die UI. Typical Probleme sind missed commas, extra spaces, und typos.
+
+Crowdin Enterprise highlights die Probleme es finds auf die Proofread Workflow-Schritt, so review und resolve ihnen vor du build die Projekt und herunterladen Übersetzungen.
+
+<Image src={qaChecksInEditor} alt="QA-Prüfungen im Editor" />
+
+<Aside type="note">
+  QA Problem indicators kann vary abhängig auf die active [Editor Modus und layout](/enterprise/online-editor/#editor-modes).
+</Aside>
+
+in die **Quality Assurance** Bereich, du auswählen die Typen von QA Probleme Crowdin Enterprise highlights während Übersetzung.
+
+## QA-Prüfungen konfigurieren
+
+QA-Prüfungen sind standardmäßig aktiviert. Führe die folgenden Schritte aus, um die gewünschten QA-Prüfungen in deinem Projekt auszuwählen:
+
+<Steps>
+  1. Öffne dein Projekt und gehe zu **Einstellungen > Qualitätssicherung**.
+  2. Wähle die QA-Prüfungstypen entsprechend deinen Präferenzen aus.
+  3. für jedes ausgewählt QA prüfen Typ, auswählen whether Übersetzungen mit QA Probleme kann sein gespeichert: **Error** oder **Warning**.
+</Steps>
+
+**Warning**: Übersetzer see die QA Problem along mit Vorschläge für fixes und kann still speichern die Übersetzung mit **speichern anyway**.
+
+**Error**: Übersetzer see die QA Problem along mit Vorschläge für fixes und kann speichern die Übersetzung nur nach resolving es.
+
+<Image src={qaChecksSettings} alt="QA prüft Settings" class="width-2xl" />
+
+ein wenige prüft come mit ein fixed Einstellung:
+
+* **Duplicate**, **FTL Markup syntax prüfen**, und **MDX Markup syntax prüfen** sind immer aktiviert und immer applied as ein **Error**.
+* **ICU Markup syntax prüfen** ist immer aktiviert, und du auswählen whether es's applied as ein **Error** oder ein **Warning**.
+* **Spelling mistakes**, **AI-powered prüfen**, und **Outdated Übersetzung** sind immer applied as ein **Warning**, und du auswählen whether sie're aktiviert.
+* benutzerdefiniert und external QA prüft sind immer applied as ein **Warning**.
+
+Verwende die **Consider as fixed** Option zu define wie viele approvals ein Übersetzung muss haben vor sein QA Probleme sind automatisch treated as resolved. Wenn eine Übersetzung reaches die specified number von approvals, Crowdin Enterprise clears beliebige flagged QA Probleme für das String.
+
+Aktivierte Prüfungen laufen im Hintergrund und durchsuchen die Übersetzungen nach potenziellen QA-Problemen.
+
+<LinkCard title="benutzerdefiniert Quality Assurance prüft" description="Erfahre, wie du benutzerdefiniert QA prüft." href="/enterprise/custom-qa-checks/" />
+
+## QA-Prüfungen erneut validieren
+
+Verwende die Schaltfläche **Erneut validieren**, um aktivierte QA-Prüfungen für alle Projektübersetzungen erneut auszuführen und die Problemstatus zu aktualisieren. Verwende es nach du ändern Einstellungen, AI prompts, terminology, oder external QA prüft.
+
+<Aside>
+  die **Revalidate** Schaltfläche ist nur verfügbar wenn at least eins unterstützt QA prüfen category ist active (**konsistent terminology**, **AI-powered prüfen**, oder **external QA prüft**).
+</Aside>
+
+Sobald die erneute Validierung beginnt, wird die Schaltfläche deaktiviert und eine Schaltfläche **Abbrechen** angezeigt. Crowdin Enterprise zeigt ein notification wenn die Prozess ist complete.
+
+## QA-Prüfparameter
+
+**Omissions**: die Übersetzung ist empty während die Quelle String isn't, oder die Quelle String ist empty während die Übersetzung isn't.
+
+* Quelle ist empty aber die Übersetzung ist nicht
+* Übersetzung ist empty aber die Quelle ist nicht
+
+**Übersetzung length limit**: die Übersetzung ist longer than die character limit festlegen für die String.
+
+<Aside type="tip">
+  Um festlegen ein character limit für ein bestimmten String, go zu **Sources > Strings**, double-klicken die benötigt String, und festlegen die max. length. Übersetzer sehen dann, dass die Übersetzung dieser Zeichenfolge nicht länger als die Begrenzung sein darf. Das ist hilfreich, wenn der verfügbare Platz für den Text begrenzt ist.
+</Aside>
+
+**Tags**: die Tags in die Übersetzung don't match die ones in die Quelle String.
+
+* Inconsistent Tags in die Quelle und Übersetzung
+* Konsistenz der ID-Attribute
+* CDATA Tag consistency
+
+**Spacing**: die spaces in die Übersetzung don't match die ones in die Quelle String.
+
+* Spaces um special symbols
+* starten und end newline characters
+* starten und end spaces
+* Mehrere aufeinanderfolgende Leerzeichen
+* Geschützte Leerzeichen
+
+**Variables**: die Platzhalter in die Übersetzung don't match die ones in die Quelle String.
+
+* Allgemeine Variablen
+* Python, Java,.NET, C/C++, Ruby auf Rails, Twig, PHP, Freemaker variable Platzhalter
+* benutzerdefiniert variables (per request)
+
+**Punctuation**: die punctuation marks in die Übersetzung don't match die ones in die Quelle String.
+
+* Inconsistent punctuation in Quelle und Übersetzung
+* Spacing vor und nach punctuation marks
+
+**Character case**: die character case in die Übersetzung doesn't match die Quelle String.
+
+* Anfängliche Großschreibung
+* Unerwartete mehrere Großbuchstaben in Folge
+
+**Special characters**: die special characters in die Übersetzung don't match die ones in die Quelle String.
+
+* Klammerkonsistenz
+* Markup Sprache entities
+* Quotes und quote escapes
+
+**öffnen Übersetzung Probleme von Projekt Mitglieder**: die Übersetzung hat ein öffnen Problem das ein Projekt Mitglied reported mit die **aktuell Übersetzung ist wrong** Typ, angezeigt auf die Proofread Workflow-Schritt.
+
+**Spelling mistakes**: die Übersetzung enthält words das aren't present in die dictionaries Crowdin Enterprise unterstützt.
+
+<Aside type="caution" title="Einschränkungen">
+  Derzeit nur für bestimmte Sprachen verfügbar.
+  <details>
+    <Include file="spellcheck-supported-languages.mdx" />
+  </details>
+</Aside>
+
+**ICU Markup syntax prüfen**: die Übersetzung breaks die ICU message syntax, ist missing die `other` plural form, oder verwendet ein unterschiedlich strukturieren than die Quelle String.
+
+**Konsistente Terminologie**: Die Übersetzung verwendet für ein Quellwort nicht den Glossarbegriff oder verwendet einen im Glossar als **nicht empfohlen** oder **veraltet** markierten Begriff.
+
+<Aside type="caution" title="Einschränkungen">
+  Derzeit verfügbar für Englisch, Deutsch, Spanisch, Französisch, Italienisch, Niederländisch, Norwegisch, Norwegisch Bokmål, Polnisch, Russisch, Schwedisch, Ukrainisch, Japanisch, Koreanisch, vereinfachtes Chinesisch und Türkisch.
+</Aside>
+
+**Duplicate**: die Übersetzung duplicates ein already vorhanden Übersetzung.
+
+**FTL Markup syntax prüfen**: in FTL Dateien, die Übersetzung breaks die FTL syntax, oder es fügt hinzu oder drops die Platzhalter und Referenzen die Quelle String verwendet.
+
+**Prüfung der Android-Markup-Syntax**: Die Übersetzung enthält nicht die Platzhalter-Tags (`\<xliff:g>`), die im Ausgangsstring verwendet werden.
+
+**Zahlenabweichung**: Die Zahlen in der Übersetzung stimmen nicht mit denen in der Quellzeichenfolge überein oder fehlen.
+
+**KI-gestützte Prüfung**: Die Übersetzung erfüllt nicht die in deinem KI-Prompt definierten Bewertungskriterien. Konfiguriere den Prompt, bevor du die Prüfung aktivierst.
+
+<ReadMore>
+  Mehr über [Konfiguration AI-powered prüfen](/enterprise/crowdin-ai/#setting-up-ai-qa-check).
+</ReadMore>
+
+**Veraltete Übersetzung**: Die Übersetzung stammt aus der Zeit vor einer Änderung der Quellzeichenfolge und muss möglicherweise überarbeitet werden.
+
+**MDX Markup syntax prüfen**: in MDX Dateien, ein Linie in die Übersetzung starts mit `import` oder `export`. MDX behandelt eine solche Zeile als Code statt als Text.
+
+## Rechtschreibprüfung
+
+Die Rechtschreibprüfung unterstützt die QA-Prüfung **Rechtschreibfehler** für unterstützte Sprachen. Du kannst die Wörter verwalten, die sie pro Projekt ignoriert.
+
+### So funktioniert die Rechtschreibprüfung
+
+Neben falsch geschriebenen Wörtern erkennt die Rechtschreibprüfung für unterstützte Sprachen auch Probleme bei Grammatik, Zeichensetzung und Großschreibung, wobei der Abdeckungsgrad je nach Sprache variiert.
+
+Erklärungen der Rechtschreibprüfung werden in der Zielsprache angezeigt, in die du übersetzt, und nicht in deiner Benutzeroberflächensprache, sodass sie für Linguisten dieser Sprache natürlich wirken.
+
+Wenn für eine Sprache eine [benutzerdefinierte Rechtschreibprüfung](/enterprise/organization-settings/#spellcheckers) installiert ist, übernimmt sie stattdessen die Prüfung für diese Sprache.
+
+### Ignorierliste der Rechtschreibprüfung
+
+Wenn dein Projekt ungewöhnliche Wörter verwendet, die die Rechtschreibprüfung nicht erkennt, füge sie der Ignorierliste hinzu, um sie von der Prüfung auszunehmen.
+
+Dies eignet sich für projektspezifische Terminologie wie Markennamen oder Eigennamen (z. B. `MyApp`). Rechtschreibprüfung und Glossar sind separate Funktionen. Das Hinzufügen eines Begriffs zum Glossar fügt ihn daher nicht der Ignorierliste hinzu. Dort kannst du ihn von der Prüfung ausnehmen.
+
+<Image src={qaChecksAddToIgnoreList} alt="QA-Prüfungen zur Ignorierliste hinzufügen" />
+
+Führe die folgenden Schritte aus, um die zur Ignorierliste der Rechtschreibprüfung hinzugefügten Wörter zu überprüfen:
+
+<Steps>
+  1. Öffne dein Projekt und gehe zu **Einstellungen > Qualitätssicherung**.
+  2. Klicke auf **Ignore Liste** auf die top right side.
+</Steps>
+
+Der sich öffnende Dialog listet die ignorierten Wörter auf. Dort kannst du sie filtern oder aus der Liste entfernen.
+
+## Anzeigen für QA-Probleme
+
+Wenn QA-Prüfungen Probleme erkennen, erscheinen Anzeigen in der gesamten Projektoberfläche, damit du die Zeichenfolgen findest, die Aufmerksamkeit erfordern.
+
+### QA Probleme Summary
+
+die Projekt Dashboard und jedes Sprache Seite anzeigen ein summary Schaltfläche mit die total number von unresolved QA Probleme: **N QA Probleme für alle Sprachen** auf die Dashboard, und **N QA Probleme für [Sprache]** auf die Sprache Seite.
+
+Clicking die Schaltfläche öffnet ein Panel mit die folgend Details:
+
+* die total number von unresolved QA Probleme.
+* die ändern delta in die Format `+N/-N/+N`. Hover über es zu see die breakdown: wie viele Probleme waren erstellt, resolved, und sind in progress.
+* **öffnen in Editor**: öffnet die Editor filtered zu Strings mit QA Probleme.
+* <Icon name="mdi:cog" class="inline-icon" />: Links direkt zu [**Settings > Quality Assurance**](#configure-qa-checks).
+
+### Anzeigen pro Sprache
+
+Sprachen mit unresolved QA Probleme sind marked mit ein <Icon name="material-symbols:warning" class="inline-icon" /> indicator showing die number von Probleme auf die Projekt Dashboard, so du kann see at ein glance die Sprachen enthalten ihnen.
+
+### Anzeigen pro Datei
+
+Files mit unresolved QA Probleme sind marked mit ein <Icon name="material-symbols:warning" class="inline-icon" /> indicator showing die number von Probleme auf die Sprache Seite.

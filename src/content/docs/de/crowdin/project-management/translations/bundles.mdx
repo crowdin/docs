@@ -1,0 +1,277 @@
+---
+title: Zieldatei-Bundles
+description: Exportiere Sätze von Zeichenfolgen oder Dateien in jedem von dir ausgewählten Format.
+slug: bundles
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside, LinkCard, Tabs, TabItem, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import ReadMore from '~/components/ReadMore.astro';
+import { Image } from 'astro:assets';
+import createBundle from '!/crowdin/project-management/translations/bundles_create_bundle.png';
+import createBundleSb from '!/crowdin/project-management/translations/bundles_create_bundle_sb.png';
+import downloadBundles from '!/crowdin/project-management/translations/bundles_download.png';
+import downloadBundlesSb from '!/crowdin/project-management/translations/bundles_download_sb.png';
+import bundlesVcs from '!/crowdin/project-management/translations/bundles_vcs.png';
+
+Mit Zieldatei-Bundles (oder einfach Bundles) kannst du Sätze von Zeichenfolgen oder Dateien in den von dir ausgewählten Formaten exportieren – unabhängig vom ursprünglichen Dateiformat. Standardmäßig kannst du zwischen den folgenden drei Formaten wählen: XLIFF, Android XML und iOS Strings. Du kannst weitere Zieldateiformate hinzufügen, indem du die entsprechenden Anwendungen aus dem Crowdin [Store](https://store.crowdin.com/tags/string-exporter) installierst.
+
+Du kannst mit Bundles auf verschiedene Arten arbeiten:
+
+* Verwalte Bundles manuell über den Bereich **Downloads** des Projekts.
+* Verbinde eine VCS-Integration im **Zieldatei-Bundle-Modus**.
+* Verwalte Bundles über **CDN-Distributionen**.
+* Verwalte Bundles mit Crowdin CLI und API.
+
+## Anwendungsfälle
+
+Zu den häufigsten Anwendungsfällen gehören:
+
+* **Plattformübergreifender Export:** Lade eine einzelne Quelldatei (z. B. Android XML) hoch, übersetze sie und exportiere die Übersetzungen mit Bundles für mehrere Plattformen (z. B. iOS Strings für iOS, JSON für das Web).
+* **Einheitliche Quellenverwaltung:** Lade eine einheitliche Tabelle (z. B. XLSX oder CSV) mit Quellzeichenfolgen für alle Plattformen hoch. Verwende Bundles, um für jede Plattform separate Dateien zu exportieren, indem du Zeichenfolgen anhand von Labels oder Pfaden filterst.
+* **Integration von Designtools:** Sende Zeichenfolgen direkt aus Designtools (Figma, Sketch, Adobe XD) an Crowdin und exportiere die Übersetzungen mit Bundles in entwicklungsfertigen Formaten.
+* **Offline-Übersetzung:** Exportiere bestimmte Zeichensätze im XLIFF-Format für die Offline-Übersetzung und [lade die fertigen Übersetzungen](/offline-translation/#uploading-translations) anschließend wieder in Crowdin hoch.
+
+<CardGrid>
+  <LinkCard title="Custom Bundle Generator" description="Mit der Anwendung kannst du Ressourcendateien aus übersetzten Crowdin-Zeichenfolgen generieren." href="https://store.crowdin.com/custom-bundle-generator" target="_blank" />
+  <LinkCard title="Custom Bundle Builder" description="Erstelle dein eigenes Skript, um Dateien aus Bundles zu erstellen." href="https://store.crowdin.com/custom-export" target="_blank" />
+</CardGrid>
+
+## Bundles in der Benutzeroberfläche verwalten
+
+Um mit Bundles manuell zu arbeiten, kannst du sie im Bereich **Downloads** deines Projekts konfigurieren und herunterladen.
+
+### Bundles konfigurieren
+
+Führe die folgenden Schritte aus, um ein Bundle zu konfigurieren:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dateibasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zum Tab **Übersetzungen**.
+      2. Erweitere den Bereich **Downloads** und klicke auf **Hinzufügen**.
+      3. Gib im Dialog **Bundle erstellen** einen **Bundle-Namen** ein.
+      4. Konfiguriere den **Inhalt** (linkes Panel):
+         * **Dateien/Verzeichnisse auswählen**: Durchsuche deinen Projektbaum. Du kannst bestimmte Dateien, Ordner oder den **Stammordner** auswählen, um das gesamte Projekt einzubeziehen. Wähle **Neue Dateien einbeziehen, die zu ausgewählten Ordnern hinzugefügt wurden**, damit zukünftige Dateien automatisch einbezogen werden.
+         * **Muster verwenden (Erweitert)**: Definiere ein Muster für den **Pfad der Quelldateien** (z. B. `*.xml`), um Dateien dynamisch einzubeziehen. Du kannst auch **Dateien oder Ordner ignorieren** festlegen, um bestimmte Elemente auszuschließen.
+      5. *(Optional)* Lege **Zeichenfolgenfilter** fest:
+         * **Labels einschließen**: Exportiere nur Zeichenfolgen, die bestimmte Labels enthalten.
+         * **Labels ausschließen**: Überspringe Zeichenfolgen, die bestimmte Labels enthalten.
+         * Du kannst die Logik für mehrere Labels anpassen (z. B. *Alle ausgewählten Labels* (UND) gegenüber *Beliebiges ausgewähltes Label* (ODER)).
+      6. Konfiguriere die **Sprachen**:
+         * **Alle Zielsprachen**: Standardmäßig ausgewählt. Diese Option ist dynamisch und nimmt automatisch alle neuen Sprachen auf, die dem Projekt zukünftig hinzugefügt werden.
+         * **Quellsprache**: Wähle diese Option, um den Inhalt der Quellsprache in das Bundle aufzunehmen.
+         * **Pseudo-Sprache im Kontext**: Wähle diese Option, um deine Dateien mit den für die [In-Context](/developer/in-context-localization/) Integration erforderlichen Metadaten zu exportieren.
+         * **Bestimmte Sprachen**: Entferne das Label *Alle Zielsprachen*, um bestimmte Sprachen manuell auszuwählen.
+      7. Konfiguriere die **Zieldateien** (rechtes Panel):
+         * **Dateiformat**: Wähle das Format aus, in das du exportieren möchtest. Du kannst **Originalformat** auswählen, um Dateien unverändert zu exportieren, oder ein Zielformat wie iOS Strings, XLIFF usw. wählen.
+         * **Weitere Formate hinzufügen**: Um weitere Zielformate hinzuzufügen, installiere die entsprechenden Anwendungen aus dem [Crowdin Store](https://store.crowdin.com/tags/string-exporter).
+         * *(optional)* **Formatkonfiguration**: einige Formate (e.g., XLIFF, Android XML) support erweitert Optionen. <Icon name="mdi:cog" class="inline-icon" /> Klicke neben einem Format, um es direkt im Paketdialog zu konfigurieren. Du kannst dieselben Einstellungen auch global unter **[Einstellungen > Parser-Konfiguration](#configuring-format-settings)** verwalten.
+         * **Exportmuster**:
+           * **Für das Originalformat**: Dieses Feld ist optional. Lass es leer, um das in deinen Dateieinstellungen definierte Standard-Exportmuster zu verwenden. Gib ein Muster ein, um den Standardpfad oder -namen zu überschreiben.
+           * **Für andere Formate**: Dieses Feld ist erforderlich.
+             * *Eine Datei pro Sprache*: Verwende Sprachplatzhalter (z. B. `%two_letters_code%.xliff`), um für jede Sprache eine Übersetzungsdatei zu erstellen.
+             * *Export mit mehreren Dateien*: Verwende Platzhalter wie `%file_name%` oder `%original_path%`, um Übersetzungen getrennt nach Dateien zu exportieren und dabei die Struktur der Quelldateien beizubehalten.
+         * *(Optional)* Lege ein **Exportmuster für die Quellsprache** fest.
+      8. Prüfe im Bereich **Vorschau**, ob die Struktur korrekt aussieht.
+      9. Klicke auf **Speichern**. <Image src={createBundle} alt="Bundle erstellen" />
+    </Steps>
+  </TabItem>
+  <TabItem label="Zeichenfolgenbasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zum Tab **Download**.
+      2. Erweitere den Bereich **Downloads** und klicke auf **Hinzufügen**.
+      3. Gib im Dialog **Bundle erstellen** einen **Bundle-Namen** ein.
+      4. Konfiguriere den **Inhalt** (linkes Panel):
+         * **Branches auswählen**: Wähle bestimmte Quell-Branches aus, die einbezogen werden sollen. Wähle **Neue Branches einbeziehen**, damit zukünftige Branches automatisch einbezogen werden.
+         * **Muster verwenden (Erweitert)**: Definiere ein Muster für den **Pfad der Quell-Branches** (z. B. `main`, `feat/*`), um Branches dynamisch einzubeziehen.
+      5. *(Optional)* Lege **Zeichenfolgenfilter** fest:
+         * **Labels einschließen**: Exportiere nur Zeichenfolgen, die bestimmte Labels enthalten.
+         * **Labels ausschließen**: Überspringe Zeichenfolgen, die bestimmte Labels enthalten.
+         * Du kannst die Logik für mehrere Labels anpassen (z. B. *Alle ausgewählten Labels* (UND) gegenüber *Beliebiges ausgewähltes Label* (ODER)). <ReadMore>Weitere Informationen zu [Labels](/string-management/#labels).</ReadMore>
+      6. Konfiguriere die **Sprachen**:
+         * **Alle Zielsprachen**: Standardmäßig ausgewählt. Diese Option ist dynamisch und nimmt automatisch alle neuen Sprachen auf, die dem Projekt zukünftig hinzugefügt werden.
+         * **Quellsprache**: Wähle diese Option, um den Inhalt der Quellsprache in das Bundle aufzunehmen.
+         * **Pseudo-Sprache im Kontext**: Wähle diese Option, um deine Dateien mit den für die [In-Context](/developer/in-context-localization/) Integration erforderlichen Metadaten zu exportieren.
+         * **Bestimmte Sprachen**: Entferne das Label *Alle Zielsprachen*, um bestimmte Sprachen manuell auszuwählen.
+      7. Konfiguriere die **Zieldateien** (rechtes Panel):
+         * **Dateiformat**: Wähle das Format aus, in das du exportieren möchtest (z. B. Android XML, iOS Strings).
+         * **Weitere Formate hinzufügen**: Um weitere Zielformate hinzuzufügen, installiere die entsprechenden Anwendungen aus dem [Crowdin Store](https://store.crowdin.com/tags/string-exporter).
+         * *(optional)* **Formatkonfiguration**: einige Formate (e.g., XLIFF, Android XML) support erweitert Optionen. <Icon name="mdi:cog" class="inline-icon" /> Klicke neben einem Format, um es direkt im Paketdialog zu konfigurieren. Du kannst dieselben Einstellungen auch global unter **[Einstellungen > Parser-Konfiguration](#configuring-format-settings)** verwalten.
+         * **Exportmuster**: Definiere den resultierenden Dateinamen mithilfe von Sprachplatzhaltern (z. B. `%two_letters_code%.strings`). Dadurch wird eine Datei pro Sprache erstellt.
+         * *(Optional)* Lege ein **Exportmuster für die Quellsprache** fest.
+      8. Prüfe im Bereich **Vorschau**, ob die Struktur korrekt aussieht.
+      9. Klicke auf **Speichern**. <Image src={createBundleSb} alt="Bundle erstellen" />
+    </Steps>
+  </TabItem>
+</Tabs>
+
+<Aside type="caution" title="Einschränkungen">
+  * **Auswahl eines einzelnen Formats:** Du kannst innerhalb eines einzelnen Bundles jeweils nur ein Format auswählen.
+  * **Einschränkungen beim Originalformat:** Wenn du **Originalformat** auswählst, werden die **Zeichenfolgenfilter** (Labels ein-/ausschließen) deaktiviert. Um Inhalte nach Labels zu filtern, musst du ein bestimmtes Zielformat auswählen (z. B. Android XML, iOS Strings).
+</Aside>
+
+### Formateinstellungen konfigurieren
+
+Einige Dateiformate (z. B. XLIFF, Android XML) verfügen über zusätzliche Konfigurationsoptionen wie **Quelltext in leeres Ziel kopieren** oder **Platzhalter konvertieren**. Du kannst configure diese Einstellungen direkt in der bundle Dialog von clicking <Icon name="mdi:cog" class="inline-icon" /> next zu der Format. Alternativ, du kann manage der gleich Einstellungen global in der **Parser-Konfiguration**.
+
+Um configure diese Optionen in der bundle Dialog, folge diesen Schritten:
+
+<Steps>
+  1. in der [**Create bundle**](#configuring-bundles) oder [**Edit bundle**](#editing-bundles) Dialog, Klicke <Icon name="mdi:cog" class="inline-icon" /> next zu der Format du want zu configure.
+  2. Passe die Einstellungen des Dateiformat-Exporters an, indem du die benötigten Optionen auswählst.
+  3. Klicke auf **Speichern**.
+</Steps>
+
+wenn du prefer zu manage der gleich Einstellungen global für der Projekt, follow diese Schritte:
+
+<Steps>
+  1. Öffne dein Projekt und gehe zu **Einstellungen > Parser-Konfiguration**.
+  2. Suche das mit dem Badge **Exporter** gekennzeichnete Format (z. B. **Android XML** oder **XLIFF**). Dies sind die spezifischen Formate, die für die Bundle-Generierung verwendet werden.
+  3. Klicke auf <Icon name="mdi:dots-horizontal" class="inline-icon" /> neben dem Format, das du konfigurieren möchtest, und wähle **Bearbeiten**. Alternativ kannst du einfach auf das benötigte Format doppelklicken.
+  4. Passe die Einstellungen des Dateiformat-Exporters an, indem du die benötigten Optionen auswählst.
+  5. Klicke auf **Speichern**.
+</Steps>
+
+### Bundles suchen, filtern und sortieren
+
+Standardmäßig werden alle Bundles im Bereich **Downloads** angezeigt. Um ein bestimmtes Bundle zu finden, kannst du das Feld **Bundles suchen** verwenden.
+
+Um die Liste der Bundles zu filtern, klicke auf **Filter** <Icon name="mdi:filter-variant" class="inline-icon" /> und verwende die verfügbaren Optionen:
+
+* **Format**: Filtere nach Dateiformat (**Alle**, **Originalformat** oder bestimmten Zielformaten wie **macosx**, **xml** usw.).
+* **Zuletzt geändert**: Filtere nach Änderungsdatum (**Alle**, **Heute**, **Gestern**, **Letzte 7 Tage**, **Letzte 30 Tage**, **Dieser Monat**, **Letzter Monat**, **Benutzerdefinierter Zeitraum**).
+
+Um Bundles zu sortieren, klicke auf die Spaltenüberschrift, nach der du sortieren möchtest:
+
+* **Bundle-Name**
+* **Format**
+* **Zuletzt geändert**
+
+Klicke einmal, um aufsteigend zu sortieren, und erneut, um absteigend zu sortieren.
+
+Wenn ein Bundle in einer oder mehreren [CDN-Distributionen](#bundles-in-cdn-distributions) verwendet wird, erscheint neben seinem Namen ein **Cloud**-Symbol <Icon name="mdi:cloud" class="inline-icon" />. Klicke auf dieses Symbol, um automatisch zum Bereich **CDN-Distributionen** zu wechseln und nur die Distributionen anzuzeigen, die dieses Bundle enthalten.
+
+### Bundles herunterladen
+
+Führe die folgenden Schritte aus, um Bundles herunterzuladen:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dateibasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zum Tab **Übersetzungen**.
+      2. Erweitere den Bereich **Downloads**.
+      3. *(Optional)* Verwende die Suche oder Filter, um die benötigten Bundles zu finden.
+      4. Lade die Bundles mit einer der folgenden Methoden herunter:
+         * **Ein einzelnes Bundle**: Klicke neben dem entsprechenden Bundle auf **Herunterladen** <Icon name="mdi:download" class="inline-icon" />.
+         * **Mehrere Bundles**: Aktiviere die Kontrollkästchen neben den Bundles, die du herunterladen möchtest, und klicke anschließend oben rechts in der Liste auf **Herunterladen**. <Image src={downloadBundles} alt="Bundle herunterladen" />
+    </Steps>
+  </TabItem>
+  <TabItem label="Zeichenfolgenbasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zum Tab **Download**.
+      2. Erweitere den Bereich **Downloads**.
+      3. *(Optional)* Verwende die Suche oder Filter, um die benötigten Bundles zu finden.
+      4. Lade die Bundles mit einer der folgenden Methoden herunter:
+         * **Ein einzelnes Bundle**: Klicke neben dem entsprechenden Bundle auf **Herunterladen** <Icon name="mdi:download" class="inline-icon" />.
+         * **Mehrere Bundles**: Aktiviere die Kontrollkästchen neben den Bundles, die du herunterladen möchtest, und klicke anschließend oben rechts in der Liste auf **Herunterladen**. <Image src={downloadBundlesSb} alt="Bundle herunterladen" />
+    </Steps>
+  </TabItem>
+</Tabs>
+
+Das System erstellt ein ZIP-Archiv und lädt es herunter. Es enthält Ordner für jede ausgewählte Sprache mit den Übersetzungsdateien im von dir gewählten Format.
+
+<Aside>
+  Bundle-Downloads funktionieren unabhängig vom Download des vollständigen Projekt-Builds.
+</Aside>
+
+### Bundles bearbeiten
+
+Führe die folgenden Schritte aus, um ein Bundle zu bearbeiten:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dateibasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zum Tab **Übersetzungen**.
+      2. Erweitere den Bereich **Downloads**.
+      3. Klicke auf <Icon name="mdi:dots-horizontal" class="inline-icon" /> neben dem Bundle und wähle **Bearbeiten**. Alternativ kannst du einfach auf das benötigte Bundle doppelklicken.
+      4. Nimm deine Änderungen im Konfigurationsdialog vor und klicke auf **Speichern**.
+    </Steps>
+  </TabItem>
+  <TabItem label="Zeichenfolgenbasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zum Tab **Download**.
+      2. Erweitere den Bereich **Downloads**.
+      3. Klicke auf <Icon name="mdi:dots-horizontal" class="inline-icon" /> neben dem Bundle und wähle **Bearbeiten**. Alternativ kannst du einfach auf das benötigte Bundle doppelklicken.
+      4. Nimm deine Änderungen im Konfigurationsdialog vor und klicke auf **Speichern**.
+    </Steps>
+  </TabItem>
+</Tabs>
+
+### Bundles löschen
+
+Führe die folgenden Schritte aus, um Bundles zu löschen:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dateibasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zum Tab **Übersetzungen**.
+      2. Erweitere den Bereich **Downloads**.
+      3. Lösche die Bundles mit einer der folgenden Methoden:
+         * **Ein einzelnes Bundle**: Klicke auf <Icon name="mdi:dots-horizontal" class="inline-icon" /> neben dem Bundle und wähle **Löschen**.
+         * **Mehrere Bundles**: Aktiviere die Kontrollkästchen neben den Bundles, die du löschen möchtest, und klicke anschließend oben rechts in der Liste auf **Löschen**.
+      4. Bestätige den Löschvorgang im Bestätigungsdialog.
+    </Steps>
+  </TabItem>
+  <TabItem label="Zeichenfolgenbasiertes Projekt">
+    <Steps>
+      1. Öffne dein Projekt und gehe zum Tab **Download**.
+      2. Erweitere den Bereich **Downloads**.
+      3. Lösche die Bundles mit einer der folgenden Methoden:
+         * **Ein einzelnes Bundle**: Klicke auf <Icon name="mdi:dots-horizontal" class="inline-icon" /> neben dem Bundle und wähle **Löschen**.
+         * **Mehrere Bundles**: Aktiviere die Kontrollkästchen neben den Bundles, die du löschen möchtest, und klicke anschließend oben rechts in der Liste auf **Löschen**.
+      4. Bestätige den Löschvorgang im Bestätigungsdialog.
+    </Steps>
+  </TabItem>
+</Tabs>
+
+## Bundles in VCS-Integrationen
+
+In dateibasierten Projekten ermöglichen VCS-Integrationen die Arbeit mit Bundles im **Zieldatei-Bundle-Modus**.
+
+Führe die folgenden Schritte aus, um eine VCS-Integration im **Zieldatei-Bundle-Modus** zu konfigurieren:
+
+<Steps>
+  1. Wähle beim Einrichten deiner VCS-Integration den **Zieldatei-Bundle-Modus** aus und autorisiere die Verbindung.
+  2. Wähle das Repository und die Branches aus, in die du die Übersetzungen senden möchtest.
+  3. Klicke auf <Icon name="mdi:pencil" class="inline-icon" />, um den ausgewählten Branch zu konfigurieren.
+  4. Gib im Dialog **Branch-Konfiguration** den gewünschten Namen für deine Konfigurationsdatei ein oder behalte den Standardnamen bei. Klicke auf **Weiter**.
+  5. Wähle in der Liste die Bundles aus, die du synchronisieren möchtest. Du kannst das Feld **Bundles suchen** verwenden, um bestimmte Bundles zu finden, oder auf **Neu erstellen** klicken, um ein neues Bundle einzurichten.
+  6. Klicke im Dialog **Branch-Konfiguration** auf **Speichern**.
+  7. Klicke im Hauptdialog der Integration auf **Speichern**, um die Einrichtung der VCS-Integration abzuschließen. <Image src={bundlesVcs} alt="VCS-Zieldatei-Bundle-Modus" />
+</Steps>
+
+<Aside type="caution">
+  In zeichenfolgenbasierten Projekten arbeiten VCS-Integrationen ausschließlich im **Zieldatei-Bundle-Modus**.
+</Aside>
+
+<ReadMore>
+  Weitere Informationen zur [Konfiguration von VCS-Integrationen](/configuring-vcs-integrations-online/).
+</ReadMore>
+
+## Bundles in CDN-Distributionen
+
+In dateibasierten und zeichenfolgenbasierten Projekten ermöglichen **CDN-Distributionen**, übersetzte Inhalte über ein Content Delivery Network (CDN) an deine Anwendung auszuliefern. Distributionen verwenden Bundles, um deine Dateien zu paketieren und bereitzustellen.
+
+<LinkCard title="CDN-Distributionen konfigurieren" description="Erfahre, wie du Distributionen erstellst, Releases verwaltest und Nutzungsstatistiken prüfst." href="/cdn-distributions/" />
+
+## Bundles in CLI/API
+
+Du kannst Übersetzungen auch mit Bundles exportieren, wenn du mit Crowdin CLI und API arbeitest.
+
+<CardGrid>
+  <LinkCard title="Bundles in der CLI" href="https://crowdin.github.io/crowdin-cli/commands/crowdin-bundle/" target="_blank" />
+  <LinkCard title="Bundles in der API" href="/developer/api/v2/#tag/Bundles" />
+</CardGrid>

@@ -1,0 +1,85 @@
+---
+title: Benutzerdefinierte Segmentierung
+description: Definiere für jede Quelldatei individuelle Segmentierungsregeln.
+slug: custom-segmentation
+sidebar:
+  order: 5
+---
+
+import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import Include from '~/components/Include.astro';
+import fileContextMenuSettings from '!/crowdin/project-management/sources/files_context_menu_settings.png';
+import fileParserConfiguration from '!/crowdin/project-management/sources/files_parser_configuration.png';
+
+Jedes Mal, wenn du XML-, HTML-, MD- oder andere Quelldateien ohne Key-Value-Struktur hochlädst, werden die vordefinierten Segmentierungsregeln (SRX 2.0) zur automatischen Inhaltssegmentierung verwendet. Es kann jedoch Situationen geben, in denen die Standard-Segmentierungsregeln Quelldateien entgegen den gewünschten Erwartungen segmentieren.
+
+In diesem Fall kannst du mithilfe des [SRX-2.0-Standards](https://www.gala-global.org/srx-20-april-7-2008) eigene Segmentierungsregeln für jede Quelldatei definieren.
+
+## Segmentierung ändern
+
+Du kannst die Segmentierung unter **Quellen > Dateien** ändern.
+
+<Steps>
+  1. Öffne das Projekt, in dem du die Segmentierungsregeln anpassen möchtest, und gehe zu **Quellen > Dateien**.
+  2. Klicke auf <Icon name="mdi:dots-horizontal" class="inline-icon" /> (oder mit der rechten Maustaste) auf die gewünschte Datei und wähle **Einstellungen**. <Image src={fileContextMenuSettings} alt="Kontextmenü der Datei" />
+  3. Wechsle im geöffneten Dialog zum Tab **Parser-Konfiguration**.
+  4. Wähle **Inhaltssegmentierung aktivieren** und **Benutzerdefinierte Segmentierungsregeln verwenden**.
+  5. Füge deine SRX-Segmentierungsregeln ein und klicke auf **Speichern**. <Image src={fileParserConfiguration} alt="Datei-Segmentierungsregeln" class="width-xl crowdin-modal" />
+</Steps>
+
+Nachdem du deine neuen Segmentierungsregeln gespeichert hast, wird deine Quelldatei automatisch erneut importiert und gemäß diesen neuen Regeln segmentiert.
+
+## Segmentierungsbeispiele
+
+<Aside>
+  Die in SRX-Regeln verwendeten regulären Ausdrücke müssen mit PHP (PCRE2) und Node.js kompatibel sein.
+</Aside>
+
+Eine typische SRX-Datei sieht etwa so aus:
+
+<Include file="srx-file-example.mdx" />
+
+### Satztrenner für asiatische Sprachen ändern
+
+Normalerweise wird der Punkt als Satztrenner verwendet. Bei einigen asiatischen Sprachen ist das jedoch nicht der Fall. Im Chinesischen ist beispielsweise der ideografische Punkt (`。`) der typische Satztrenner. In solchen Fällen kannst du den folgenden Regelsatz verwenden:
+
+```xml
+<rule break="yes">
+  <beforebreak>[\x3002]+</beforebreak>
+  <afterbreak></afterbreak>
+</rule>
+```
+
+### Text in kleinere Teile aufteilen
+
+Im folgenden einfachen Satz zeigen wir einen Fall, in dem es notwendig ist, einen Textabschnitt beim Segmentieren in zwei (oder mehr) Zeichenfolgen aufzuteilen.
+
+Text mit Standard-Segmentierungsregeln:
+
+`Dies ist der erste Teil des Beispielsatzes und dies ist der zweite Teil.`
+
+Text mit neuen Segmentierungsregeln:
+
+`Dies ist der erste Teil des Beispielsatzes`
+
+<code>&#32;und dies ist der zweite Teil.</code>
+
+Für diesen speziellen Fall teilt der folgende Regelsatz den ursprünglichen Satz in zwei Teile:
+
+```xml
+<rule break="yes">
+  <beforebreak>sentence</beforebreak>
+  <afterbreak>\u0020</afterbreak>
+</rule>
+```
+
+## Segmentierungsregeln mit SRX-Editoren erstellen
+
+Die SRX-Segmentierungsregeln können mithilfe von Tools wie [Ratel](http://okapiframework.org/wiki/index.php?title=Ratel) erstellt und verwaltet werden. Ratel verfügt über eine visuelle Oberfläche, mit der du Segmentierungsregeln von Grund auf erstellen oder vorhandene Regeln bearbeiten kannst.
+
+<CardGrid>
+  <LinkCard title="Generator für Segmentierungsregeln" description="Erstelle und teste die neuen Segmentierungsregeln in deinen Crowdin-Projekten." href="https://store.crowdin.com/segmentation" target="_blank" />
+  <LinkCard title="SRX Playground" description="KI-gestützter Editor für SRX-Regeln." href="https://store.crowdin.com/srx-playground" target="_blank" />
+</CardGrid>
