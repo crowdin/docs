@@ -1,0 +1,877 @@
+---
+title: Konfigurationsdatei
+description: Entdecke die Möglichkeiten der crowdin.yml-Konfigurationsdatei
+slug: developer/configuration-file
+---
+
+import { Aside, CardGrid, LinkCard, FileTree } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import Include from '~/components/Include.astro';
+
+Die verschiedenen Crowdin-Tools verwenden eine `crowdin.yml`-Konfigurationsdatei, in der die zu verwaltenden Ressourcen festgelegt werden, darunter die Dateien, die zu Crowdin hochgeladen werden sollen, und die Speicherorte der zugehörigen Übersetzungen.
+
+<CardGrid>
+  <LinkCard title="VCS-Integrationen" description="GitHub, GitLab, Bitbucket, Azure Repos." href="/integrations/#vcs-integrations" target="_blank" />
+  <LinkCard title="Console Client (CLI)" description="Plattformübergreifendes Befehlszeilentool." href="https://crowdin.github.io/crowdin-cli/" target="_blank" />
+  <LinkCard title="Visual-Studio-Code-Plugin" href="https://marketplace.visualstudio.com/items?itemName=Crowdin.vscode-crowdin" target="_blank" />
+  <LinkCard title="Android-Studio-Plugin" href="https://github.com/crowdin/android-studio-plugin#readme" target="_blank" />
+</CardGrid>
+
+## Struktur der Konfigurationsdatei
+
+Eine gültige `crowdin.yml`-Konfigurationsdatei hat die folgende Struktur. Stelle daher sicher, dass du alle erforderlichen Informationen ausfüllst:
+
+* Kopfbereich der Datei mit Projektanmeldedaten, Einstellungen und Zugriffsinformationen.
+* Ein Element des `files`-Arrays, das einen Satz von Quell- und Übersetzungsdateien beschreibt, die du verwalten möchtest.
+* Erforderliche Felder im `files`-Array: `source`, das Filter für die Quelldateien definiert, und `translation` mit Angaben dazu, wo die übersetzten Dateien gespeichert werden sollen oder wo vorhandene Übersetzungen zu finden sind, wenn du sie bei der Einrichtung der CLI hochladen möchtest.
+
+## Eine einfache Konfigurationsdatei erstellen
+
+Eine typische Konfiguration sieht beispielsweise so aus:
+
+```yml title="crowdin.yml"
+"project_id": "projectId"
+"api_token": "personal-access-token"
+"base_path": "."
+"base_url": "https://api.crowdin.com"
+
+"preserve_hierarchy": true
+
+"files": [
+  {
+    "source": "/locale/en/folder1/[0-2].txt",
+    "translation": "/locale/%two_letters_code%/folder1/%original_file_name%"
+  },
+]
+```
+
+<table>
+  <thead>
+  <tr>
+    <th><div class="w-44" />Name</th>
+    <th>Beschreibung</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>project_id</code></td>
+    <td>Numerische ID des Crowdin-Projekts</td>
+  </tr>
+  <tr>
+    <td><code>api_token</code></td>
+    <td>Persönliches Zugriffstoken für die Crowdin-Api. Der Inhaber des Tokens sollte mindestens über Manager-Berechtigungen im Projekt verfügen</td>
+  </tr>
+  <tr>
+    <td><code>base_path</code><div class="text-gray-400">optional</div></td>
+    <td>Pfad zu deinem Projektverzeichnis auf dem lokalen Rechner, relativ zur `crowdin.yml`-Konfigurationsdatei</td>
+  </tr>
+  <tr>
+    <td><code>base_url</code><br /><div class="text-gray-400">optional</div></td>
+    <td>Crowdin-API-Basis-URL. Optional für crowdin.com. Für Crowdin Enterprise verwende `https://{organization-name}.api.crowdin.com`</td>
+  </tr>
+  <tr>
+    <td><code>preserve_hierarchy</code><div class="text-gray-400">optional</div></td> <td>Wenn <code>true</code> festgelegt ist, bleibt die Verzeichnisstruktur auf dem Server erhalten. Wenn `false` festgelegt ist, wird die Verzeichnisstruktur abgeflacht.</td>
+  </tr>
+  <tr>
+    <td><code>source</code></td>
+    <td>Filter für die Ausgangsdateien. Wildcards werden unterstützt.</td>
+  </tr>
+  <tr>
+    <td><code>translation</code></td>
+    <td>Pfad zum Speichern der übersetzten Dateien. Wildcards werden unterstützt.</td>
+  </tr>
+  </tbody>
+</table>
+
+## API-Anmeldedaten aus Umgebungsvariablen
+
+Du kannst die API-Anmeldedaten aus einer Umgebungsvariablen laden, zum Beispiel:
+
+```yml title="crowdin.yml"
+"project_id_env": "CROWDIN_PROJECT_ID"
+"api_token_env": "CROWDIN_PERSONAL_TOKEN"
+"base_path_env": "CROWDIN_BASE_PATH"
+"base_url_env": "CROWDIN_BASE_URL"
+```
+
+Wenn gemischt, haben *api_token* und *project_id* Vorrang:
+
+```yml title="crowdin.yml"
+"project_id_env": "CROWDIN_PROJECT_ID"     # Low priority
+"api_token_env": "CROWDIN_PERSONAL_TOKEN"  # Low priority
+"base_path_env": "CROWDIN_BASE_PATH"       # Low priority
+"base_url_env": "CROWDIN_BASE_PATH"        # Low priority
+"project_id": "projectId"                  # High priority
+"api_token": "personal-access-token"       # High priority
+"base_path": "."                           # High priority
+"base_url": "https://api.crowdin.com"      # High priority
+```
+
+## Allgemeine Konfiguration
+
+Das oben angegebene Beispiel enthält bei den Attributen `source` und `translation` standardmäßige Platzhalter (auch Glob-Muster genannt), damit du einfacher mit mehreren Dateien arbeiten kannst.
+
+Hier sind Muster, die du verwenden kannst:
+
+---
+
+**\*** (Sternchen)
+
+Passt zu jedem Zeichen im Datei- oder Verzeichnisnamen. Wenn du `*.json` angibst, werden alle Dateien wie `messages.json`, `about_us.json` und alle Dateien mit der Endung `.json` einbezogen.
+
+---
+
+**\*\*** (doppeltes Sternchen)
+
+Passt rekursiv zu jeder Zeichenfolge (einschließlich Unterverzeichnissen). Beachte, dass du `**` sowohl in den Quell- als auch in den Übersetzungsmustern verwenden kannst. Wenn du `**` im Übersetzungsmuster verwendest, enthält es für eine bestimmte Datei immer einen Teilpfad aus der Quelle. Du kannst beispielsweise `source: /en/**/*.po` verwenden, um rekursiv alle `*.po`-Dateien zu Crowdin hochzuladen. Das Übersetzungsmuster lautet `/%two_letters_code%/**/%original_file_name%`.
+
+---
+
+**?** (Fragezeichen)
+
+Passt zu genau einem Zeichen.
+
+---
+
+**[set]**
+
+Passt zu genau einem Zeichen aus einer Menge. Verhält sich genau wie Zeichensätze in regulären Ausdrücken, einschließlich der Verneinung (`[^a-z]`).
+
+---
+
+\**\** (Backslash)
+
+Maskiert das nächste Metazeichen.
+
+## Variablen
+
+Crowdin CLI ermöglicht die Verwendung der folgenden Platzhalter, um passende Variablen in den resultierenden Dateinamen einzusetzen:
+
+<Include file="placeholders.mdx" />
+
+Du kannst auch den Pfad für Dateien im resultierenden Archiv festlegen, indem du am Anfang des Musters einen Schrägstrich (`/`) setzt.
+
+## Verwendung von Platzhaltern
+
+Struktur der Dateien und Verzeichnisse auf dem lokalen Rechner:
+
+<FileTree>
+* base_path
+  * folder
+    * 1.xml
+    * 1.txt
+    * 123.txt
+    * 123_test.txt
+    * a.txt
+    * a1.txt
+    * crowdin?test.txt
+    * crowdin_test.txt
+  * 1.xml
+  * 1.txt
+  * 123.txt
+  * 123_test.txt
+  * a.txt
+  * a1.txt
+  * crowdin?test.txt
+  * crowdin_test.txt
+  * 3.txt
+</FileTree>
+
+Beispiel 1. Verwendung von Platzhaltern im Quellpfad:
+
+```yml title="crowdin.yml" wrap
+"files": [
+  {
+      "source": "/**/?[0-9].txt", # upload a1.txt, folder/a1.txt
+      "translation": "/**/%two_letters_code%_%original_file_name%"
+  },
+  {
+      "source": "/**/*\?*.txt", # upload crowdin?test.txt, folder/crowdin?test.txt
+      "translation": "/**/%two_letters_code%_%original_file_name%"
+  },
+  {
+      "source": "/**/[^0-2].txt", # upload 3.txt, folder/3.txt, a.txt, folder/a.txt (ignore 1.txt, folder/1.txt)
+      "translation": "/**/%two_letters_code%_%original_file_name%"
+  }
+]
+```
+
+Beispiel 2. Verwendung von Platzhaltern zum Ignorieren von Dateien:
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/**/*.*", #upload all files that  the base_path contains
+    "translation": "/**/%two_letters_code%_%original_file_name%",
+    "ignore": [
+      "/**/%two_letters_code%_%original_file_name%", #ignore the translated files
+      "/**/?.txt",                 #ignore 1.txt, a.txt, folder/1.txt, folder/a.txt
+      "/**/[0-9].txt",             #ignore 1.txt, folder/1.txt
+      "/**/*\?*.txt",             #ignore crowdin?test.txt, folder/crowdin?test.txt
+      "/**/[0-9][0-9][0-9].txt",   #ignore 123.txt , folder/123.txt
+      "/**/[0-9]*_*.txt"           #ignore 123_test.txt, folder/123_test.txt
+    ]
+  }
+]
+```
+
+## Übersetzungsdatei umbenennen
+
+Wenn du eine Datei mit Übersetzungen umbenennen oder Teile des Pfads nach dem Export ersetzen musst, kannst du den Parameter `translation_replace` verwenden.
+
+Wenn die Datei beispielsweise `strings_en.po` heißt, kann sie in `strings.po` umbenannt werden. Alternativ kannst du Ordnernamen im Übersetzungspfad ersetzen:
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/locale/**/*_en.po",
+    "translation": "/locale/**/%original_file_name%_%two_letters_code%",
+    "translation_replace": {
+      "_en": "",
+      "de/locale": "de/lokalisierung",
+      "fr/locale": "fr/paramètres"
+    }
+  }
+]
+```
+
+In diesem Fall wird `_en` aus dem Dateinamen entfernt und die Ordnernamen `de/locale` und `fr/locale` werden durch `de/lokalisierung` bzw. `fr/paramètres` ersetzt.
+
+## Dateien und Verzeichnisse ignorieren
+
+Von Zeit zu Zeit gibt es Dateien und Verzeichnisse, die du in Crowdin nicht übersetzen musst. In solchen Fällen kannst du lokale Regeln pro Datei zur Konfigurationsdatei in deinem Projekt hinzufügen.
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/**/*.properties",
+    "translation": "/**/%file_name%_%two_letters_code%.%file_extension%",
+    "ignore": [
+      "/test/file.properties",
+      "/example.properties"
+    ]
+  },
+  {
+    "source": "/locale/en/**/*.po",
+    "translation": "/locale/%two_letters_code%/**/%original_file_name%",
+    "ignore": [
+      "/locale/en/templates",
+      "/locale/en/workflow"
+    ]
+  }
+]
+```
+
+Du kannst auch [Platzhalter](#usage-of-wildcards) verwenden, um Dateien zu ignorieren.
+
+## Zielsprachen für Quelldateien ausschließen
+
+Standardmäßig stehen Quelldateien zur Übersetzung in alle Zielsprachen des Projekts zur Verfügung. Wenn einige Quelldateien nicht in bestimmte Zielsprachen übersetzt werden sollen, kannst du sie mithilfe des Parameters `excluded_target_languages` ausschließen.
+
+Beispiel für eine Konfigurationsdatei:
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/resources/en/*.json",
+    "translation": "/resources/%two_letters_code%/%original_file_name%",
+    "excluded_target_languages": [
+      "uk",
+      "fr"
+    ]
+  }
+]
+```
+
+## Exportsprachen
+
+Standardmäßig werden alle Sprachen exportiert. Wenn du bestimmte Sprachen exportieren möchtest, gib sie mit dem Parameter `export_languages` an.
+
+```yml title="crowdin.yml"
+"export_languages": [
+  "uk",
+  "ja"
+]
+```
+
+## Mehrsprachige Tabelle
+
+Wenn eine CSV- oder XLS/XLSX-Datei die Übersetzungen für alle Zielsprachen enthält, solltest du die passenden Sprachcodes im Schema angeben.
+
+Beispiel für eine CSV-Datei:
+
+```csv
+identifier,source_phrase,context,Ukrainian,Spanish (Mexico),French
+ident1,Source 1,Context 1,,,
+ident2,Source 2,Context 2,,,
+ident3,Source 3,Context 3,,,
+```
+
+Beispiel für eine Konfigurationsdatei:
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "multicolumn.csv",
+    "translation": "multicolumn.csv",
+    "first_line_contains_header": true,
+    "scheme": "identifier,source_phrase,context,uk,es-MX,fr"
+  }
+]
+```
+
+Wenn deine CSV- oder XLS/XLSX-Datei Spalten enthält, die beim Import übersprungen werden sollen, verwende `none` für diese Spalten im Schema, zum Beispiel:
+
+```yml title="crowdin.yml"
+"scheme" : "identifier,source_phrase,context,uk,none,es-MX,none,fr"
+```
+
+##### Schema-Konstanten
+
+Um das Schema für deine CSV- oder XLS/XLSX-Datei zu erstellen, verwende die folgenden Konstanten:
+
+* `identifier` &ndash; Spalte enthält Zeichenfolgen-IDs.
+* `source_phrase` &ndash; Spalte enthält Quellzeichenfolgen.
+* `source_or_translation` &ndash; Spalte enthält Quellzeichenfolgen, wird beim Export jedoch in derselben Spalte mit Übersetzungen gefüllt. Beim Hochladen vorhandener Übersetzungen werden die Werte aus dieser Spalte als Übersetzungen verwendet.
+* `translation` &ndash; Spalte enthält Übersetzungen.
+* `context` &ndash; Spalte enthält Kommentare oder Kontextinformationen zu den Quellzeichenfolgen.
+* `max_length` &ndash; Spalte enthält Werte für die maximale Länge der Übersetzungen der Zeichenfolgen.
+* `labels` &ndash; Spalte enthält Labels für die Quellzeichenfolgen.
+* `none` &ndash; Spalte, die beim Import übersprungen wird.
+
+## Verzeichnisstruktur auf dem Server beibehalten
+
+Mit der Option `preserve_hierarchy` kannst du die Verzeichnisstruktur deiner Quelldateien im Crowdin-Projekt beibehalten oder abflachen.
+
+Beispiel für die Konfigurationsdatei mit der Option `preserve_hierarchy`:
+
+```yml title="crowdin.yml"
+"preserve_hierarchy": true
+
+"files": [
+  {
+    "source": "/locale/en/**/*.po",
+    "translation": "/locale/%two_letters_code%/**/%original_file_name%"
+  }
+]
+```
+
+Nehmen wir an, die Datei-/Ordnerstruktur auf deinem Rechner sieht so aus:
+
+<FileTree>
+* locale
+  * en
+    * emails/
+    * app
+      * foo.po
+      * bar.po
+</FileTree>
+
+Wenn du die Option `"preserve_hierarchy": true` in deiner Konfigurationsdatei überhaupt nicht verwendest oder den Wert `false` setzt, werden alle gemeinsamen Verzeichnisse übersprungen und die Dateistruktur in Crowdin wird wie folgt dargestellt:
+
+<FileTree>
+* (root)/
+  * foo.po
+  * bar.po
+</FileTree>
+
+<Aside>
+  Für VCS-Integrationen ist der Standardwert der Option zum Beibehalten der Hierarchie `true`. Der Wert `false` funktioniert nur, wenn deine Quelldateien ein gemeinsames Stammverzeichnis haben.
+</Aside>
+
+Bei Verwendung der Option `"preserve_hierarchy": true` wird die Dateistruktur in Crowdin wie folgt dargestellt:
+
+<FileTree>
+* locale
+  * en
+    * app
+      * foo.po
+      * bar.po
+</FileTree>
+
+Verzeichnisse, die keine zu übersetzenden Dateien enthalten, werden in Crowdin nicht erstellt (z. B. das Verzeichnis `emails` im obigen Beispiel).
+
+## Dateien mit angegebenem Pfad und angegebenem Typ hochladen
+
+Diese Funktion fügt im Abschnitt der YML-Datei zwei optionale Parameter hinzu: `dest` und `type`. Sie wird typischerweise für Projekte verwendet, bei denen der hochgeladene Name anders sein muss, damit Crowdin den Typ korrekt erkennen kann.
+
+Mit dem Parameter `dest` kannst du einen Dateinamen in Crowdin angeben. Er funktioniert für mehrere Dateien gleichzeitig und unterstützt die folgenden Platzhalter: `%original_file_name%`, `%original_path%`, `%file_extension%`, `%file_name%`.
+
+<Aside type="caution">
+  Wenn du den Parameter `dest` verwendest, sollte die Konfigurationsdatei den Parameter `preserve_hierarchy` mit dem Wert `true` enthalten.
+</Aside>
+
+Beispiel für die Konfigurationsdatei mit beiden Parametern:
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/conf/**/*.txt",
+    "dest": "/conf/**/%file_name%.properties",
+    "translation": "/conf/**/%two_letters_code%/%file_name%.properties",
+    "type": "properties"
+  },
+  {
+    "source": "/app/*.txt",
+    "dest": "/app/%file_name%.xml",
+    "translation": "/res/values-%android_code%/%original_file_name%",
+    "type": "android"
+  }
+]
+```
+
+## Änderungen an Zeichenfolgen aktualisieren
+
+Mit dem Parameter `update_option` kannst du Übersetzungen für geänderte Zeichenfolgen bei der Aktualisierung der Datei beibehalten. Wenn er nicht gesetzt ist, gehen die Übersetzungen geänderter Zeichenfolgen verloren. Nützlich für Tippfehlerkorrekturen und kleinere Änderungen an Quellzeichenfolgen.
+
+Je nach Wert wird `update_option` verwendet, um Übersetzungen beizubehalten und Validierungen geänderter Zeichenfolgen während der Dateiaktualisierung beizubehalten oder zu entfernen.
+
+Zulässige Werte:
+
+* `update_as_unapproved` – Übersetzungen geänderter Zeichenfolgen beibehalten und vorhandene Validierungen dieser Übersetzungen entfernen
+* `update_without_changes` – Übersetzungen und Validierungen geänderter Zeichenfolgen beibehalten
+
+Beispiel für eine Konfiguration mit dem Parameter `update_option`:
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/*.csv",
+    "translation": "/%three_letters_code%/%file_name%.csv",
+    "first_line_contains_header": true,
+    "scheme": "identifier,source_phrase,translation,context",
+    "update_option": "update_as_unapproved"
+  },
+  {
+    "source": "/**/*.xlsx",
+    "translation": "/%three_letters_code%/folder/%file_name%.xlsx",
+    "update_option": "update_without_changes"
+  }
+]
+```
+
+## Benutzerdefinierte Segmentierung
+
+Lade deine XML-, HTML-, MD- oder andere Quelldateien ohne Schlüssel-Wert-Struktur mit eigenen Segmentierungsregeln hoch.
+Wenn nichts angegeben ist, werden die vordefinierten Segmentierungsregeln (SRX 2.0) für die automatische Inhaltssegmentierung verwendet.
+
+Beispiel für die Konfiguration einer benutzerdefinierten Segmentierung:
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/emails/sample1.html",
+    "translation": "/emails/%locale%/%original_file_name%",
+    "custom_segmentation": "/rules/sample.srx.xml"
+  }
+]
+```
+
+## Importoptionen
+
+Du kannst zusätzliche Parameter verwenden, um den Importprozess für bestimmte Dateitypen anzupassen.
+
+### Importoptionen für XML-Dateien
+
+<table>
+  <thead>
+    <tr>
+      <th>Option</th>
+      <th>Typ</th>
+      <th>Beschreibung</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">translate_content</code><br /><div class="text-gray-400">optional</div></td>
+    <td>bool</td>
+    <td>Legt fest, ob Texte innerhalb der Tags übersetzt werden.<br />Akzeptierte Werte sind 0 oder 1. Standardmäßig ist der Wert 1.</td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">translate_attributes</code><div class="text-gray-400">optional</div></td>
+    <td>bool</td>
+    <td>Legt fest, ob die Attribute von Tags übersetzt werden.<br />Akzeptierte Werte sind 0 oder 1. Standardmäßig ist der Wert 1.</td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">content_segmentation</code><div class="text-gray-400">optional</div></td>
+    <td>bool</td>
+    <td>
+      <div>
+        Legt fest, ob lange Texte in kleinere Textsegmente aufgeteilt werden.<br />Akzeptierte Werte sind 0 oder 1. Standardwert ist 1.<br /><br />
+        <b>Hinweis!</b> Wenn die Inhaltssegmentierung aktiviert ist, wird der Upload der Übersetzungen mithilfe einer experimentellen Technologie für maschinelles Lernen durchgeführt.
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">translatable_elements</code><br /><div class="text-gray-400">optional</div></td>
+    <td>array</td>
+    <td>
+      <div>
+        Dies ist ein Array von Zeichenfolgen, wobei jedes Element ein XPath zu einem DOM-Element ist, das importiert werden soll.<br />
+        Beispielpfad: <code>/path/to/node</code> oder <code>/path/to/attribute[@attr]</code><br /><br />
+        <b>Hinweis!</b> Wenn dieser Parameter definiert ist, werden die Parameter <code>translate_content</code> und <code>translate_attributes</code> beim Import nicht berücksichtigt.
+      </div>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+Beispiel für die Konfiguration mit zusätzlichen Parametern:
+
+```yml title="crowdin.yml" wrap
+"files": [
+  {
+    "source": "/app/sample1.xml",
+    "translation": "/app/%locale%/%original_file_name%",
+    "translate_attributes": 1,
+    "translate_content": 0
+  },
+  {
+    "source": "/app/sample2.xml",
+    "translation": "/app/%locale%/%original_file_name%",
+    "translatable_elements": [
+      "/content/text",        # translatable texts are stored in 'text' nodes of parent node 'content'
+      "/content/text[@value]" # translatable texts are stored in 'value' attribute of 'text' nodes
+    ]
+  }
+]
+```
+
+### Weitere Importoptionen für Dateien
+
+<table>
+  <thead>
+    <tr>
+      <th>Option</th>
+      <th>Typ</th>
+      <th>Beschreibung</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">content_segmentation</code><br /><div class="text-gray-400">optional</div></td>
+    <td>bool</td>
+    <td>
+      <div>
+        Legt fest, ob lange Texte in kleinere Textsegmente aufgeteilt werden. Nur für TXT, DOCX, DITA, IDML, MEDIAWIKI, HTML, Front Matter HTML, Markdown, Front Matter Markdown, XML, XLIFF und XLIFF 2.0<br />
+        Zulässige Werte sind 0 oder 1. Standardwert ist 1.<br /><br />
+        <b>Hinweis:</b> Wenn die Inhaltssegmentierung aktiviert ist, wird der Upload der Übersetzungen von einer experimentellen Technologie für maschinelles Lernen verarbeitet.
+      </div>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+Beispiel für die Konfiguration mit zusätzlichen Parametern:
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/emails/sample1.html",
+    "translation": "/emails/%locale%/%original_file_name%",
+    "content_segmentation": 1
+  }
+]
+```
+
+## Exportoptionen
+
+Du kannst zusätzliche Parameter verwenden, um den Exportprozess für bestimmte Dateitypen anzupassen.
+
+### Java-.properties-Dateiformat
+
+##### Anführungszeichen maskieren
+
+Legt fest, ob ein einfaches Anführungszeichen in exportierten Übersetzungen durch ein weiteres einfaches Anführungszeichen oder einen Backslash maskiert werden soll. Du kannst die dateispezifische Option `escape_quotes` hinzufügen.
+
+Zulässige Werte:
+
+* `0` – einfaches Anführungszeichen nicht maskieren
+* `1` – einfaches Anführungszeichen mit einem weiteren einfachen Anführungszeichen maskieren
+* `2` – einfaches Anführungszeichen mit einem Backslash maskieren
+* `3` – einfaches Anführungszeichen nur in Zeichenfolgen mit Variablen durch ein weiteres einfaches Anführungszeichen maskieren (Standard)
+
+##### Sonderzeichen maskieren
+
+Legt fest, ob Sonderzeichen (`=`, `:`, `!` und `#`) in exportierten Übersetzungen mit einem Backslash maskiert werden sollen.
+Du kannst die dateispezifische Option `escape_special_characters` hinzufügen.
+
+Zulässige Werte:
+
+* `0` – Sonderzeichen nicht maskieren
+* `1` – Sonderzeichen mit einem Backslash maskieren (Standard)
+
+Beispiel für die Konfiguration:
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "/en/strings.properties",
+    "translation": "/%two_letters_code%/%original_file_name%",
+    "escape_quotes": 1,
+    "escape_special_characters": 0
+  }
+]
+```
+
+## Konfigurationsdatei für VCS-Integrationen
+
+VCS-Integrationen erfordern dieselbe Konfigurationsdatei wie das CLI-Tool, d. h. dieselbe Struktur wird unterstützt. Der einzige Unterschied besteht darin, dass du aus Sicherheitsgründen die Projektanmeldedaten nicht im Kopfbereich der Datei speichern solltest. Außerdem kannst du einige zusätzliche Parameter verwenden.
+
+### Titel und Labels von Pull Requests
+
+Der Standardtitel eines Pull Requests lautet `New Crowdin updates`. Um einen eigenen Pull-Request-Titel festzulegen und Labels zum Pull Request hinzuzufügen, kannst du die folgenden Parameter in der Konfigurationsdatei verwenden: `pull_request_title`, `pull_request_labels`.
+
+```yml title="crowdin.yml"
+"pull_request_title": "Custom PR title"
+
+"pull_request_labels": [
+  "crowdin",
+  "l10n"
+]
+```
+
+<Aside type="caution" title="Einschränkungen">
+  Pull-Request-Labels werden von der Bitbucket-Integration nicht unterstützt.
+</Aside>
+
+### Commit-Nachricht
+
+Jedes Mal, wenn die Integration Übersetzungen committet, verwendet sie die folgende Standard-Commit-Nachricht:
+
+```
+Neue Übersetzungen {fileName} ({languageName})
+[ci skip]
+```
+
+Das Tag `[ci skip]` wird standardmäßig hinzugefügt, damit beim Synchronisieren vieler Dateien auf einmal nicht für jede Datei ein separater CI-Build ausgelöst wird. Deine CI läuft weiterhin wie erwartet, sobald diese Änderungen über einen Pull Request in deinen Hauptbranch übernommen wurden.
+
+Um der Commit-Nachricht eigenen Text hinzuzufügen, verwende den Parameter `commit_message`. Standardmäßig wird dein Text unterhalb der Standardnachricht angefügt (entspricht der Einstellung `append_commit_message` auf `true`):
+
+```yml title="crowdin.yml"
+"commit_message": "Fix: New translations from Crowdin"
+```
+
+Die resultierende Commit-Nachricht sieht so aus:
+
+```
+New translations {fileName} ({languageName})
+[ci skip]
+Fix: New translations from Crowdin
+```
+
+Um anstelle der Standardnachricht nur deine eigene Nachricht zu verwenden, setze `append_commit_message` auf `false`:
+
+```yml title="crowdin.yml"
+"commit_message": "Fix: New translations %original_file_name% from Crowdin"
+"append_commit_message": false
+```
+
+Du kannst die Platzhalter `%original_file_name%` und `%language%` in deiner Commit-Nachricht verwenden, um den Dateinamen und die Sprache einzufügen.
+
+<Aside type="caution">
+  Wenn du die Standardnachricht ersetzt (`append_commit_message: false`), wird das Tag `[ci skip]` nicht mehr automatisch hinzugefügt. Füge es deiner benutzerdefinierten Nachricht hinzu, wenn du weiterhin Zwischen-Builds der CI überspringen möchtest.
+</Aside>
+
+### Zuständiger für Pull Requests
+
+Wenn du einen Pull Request bestimmten Benutzern zuweisen musst, verwende den Parameter `pull_request_assignees`, um sie anzugeben.
+
+**GitHub/GitHub Server:**
+
+```yml title="crowdin.yml"
+"pull_request_assignees": [
+  "login1",
+  "login2"
+]
+```
+
+**GitLab/GitLab Self-Managed:**
+
+```yml title="crowdin.yml"
+"base_path": "."
+"pull_request_assignees": [
+  "user_id1", # numeric ID
+  "user_id2"  # numeric ID
+]
+```
+
+<Aside type="caution" title="Einschränkungen">
+  Der Parameter für den Pull-Request-Zuständigen wird von den Integrationen Bitbucket, Bitbucket Server und Azure Repos nicht unterstützt.
+</Aside>
+
+### Pull-Request-Reviewer
+
+Wenn du eine Pull-Request-Prüfung von bestimmten Benutzern anfordern musst, verwende den Parameter `pull_request_reviewers`, um sie anzugeben.
+
+**GitHub/GitHub Server:**
+
+```yml title="crowdin.yml"
+"pull_request_reviewers": [
+  "login1",
+  "login2"
+]
+```
+
+**GitLab/GitLab Self-Managed:**
+
+```yml title="crowdin.yml"
+"pull_request_reviewers": [
+  "user_id1", # numeric ID
+  "user_id2"  # numeric ID
+]
+```
+
+**Bitbucket:**
+
+```yml title="crowdin.yml"
+"pull_request_reviewers": [
+  "uuid1", # user uuid
+  "uuid2"  # user uuid
+]
+```
+
+**Bitbucket Server:**
+
+```yml title="crowdin.yml"
+"pull_request_reviewers": [
+  "username1",
+  "username2"
+]
+```
+
+**Azure Repos:**
+
+```yml title="crowdin.yml"
+"pull_request_reviewers": [
+  "guid1", # user ID
+  "guid2"  # user ID
+]
+```
+
+## Labels zu Quellzeichenfolgen hinzufügen
+
+Um vorhandene oder neue Labels zu den Quellzeichenfolgen hinzuzufügen, verwende den Parameter `labels`.
+Labels werden den Quellzeichenfolgen nur beim ersten Upload in das Crowdin-Projekt hinzugefügt.
+
+Zeichenfolgen, die vor der Verwendung des Parameters `labels` in das Crowdin-Projekt hochgeladen wurden, erhalten keine Labels.
+Wenn du das beim ersten Upload hinzugefügte Label direkt in Crowdin entfernst, wird es bei den nächsten Synchronisierungen nicht erneut hinzugefügt.
+
+Example:
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source" : "/resources/en/*.json",
+    "translation" : "/resources/%two_letters_code%/%original_file_name%",
+    "labels" : [
+      "android",
+      "emails"
+    ]
+  }
+]
+```
+
+<Aside type="caution" title="Einschränkungen">
+  Labelnamen können jedes Sonderzeichen außer `,` enthalten.
+</Aside>
+
+<ReadMore>
+  Mehr über [Labels](/project-settings/labels/) erfahren.
+</ReadMore>
+
+## Sprachzuordnung
+
+Oft haben Softwareprojekte eigene Namen für Locales-Verzeichnisse. Crowdin ermöglicht es dir, deine eigenen Sprachen so zuzuordnen, dass sie in deinen Projekten erkannt werden.
+
+Nehmen wir an, deine Locale-Verzeichnisse heißen `en`, `uk`, `fr`, `de`. Alle diese Verzeichnisse können durch den Platzhalter `%two_letters_code%` dargestellt werden. Du hast jedoch ein Verzeichnis namens `zh_CH`. Du kannst auch Sprachcodes für andere Platzhalter wie `%android_code%`, `%locale%` usw. überschreiben.
+
+<ReadMore>
+  Mehr über die [Konfiguration der Sprachzuordnung für die CLI](https://crowdin.github.io/crowdin-cli/advanced#languages-mapping-configuration) erfahren.
+</ReadMore>
+
+Damit es mit Crowdin ohne Änderungen an deinem Projekt funktioniert, kannst du die Sprachzuordnung über die Benutzeroberfläche einrichten.
+
+* [Sprachzuordnung in Crowdin](/project-settings/languages/#adding-custom-language-codes)
+* [Sprachzuordnung in Crowdin Enterprise](/enterprise/project-settings/languages/#language-mapping)
+
+## Eine Konfigurationsdatei für VCS-Integrationen und CLI verwenden
+
+Es gibt Fälle, in denen es notwendig ist, VCS-Integration und CLI für ein Projekt zu verwenden. In solchen Situationen benötigst du meistens zwei separate Konfigurationsdateien: eine für die VCS-Integration und eine für die CLI. Du kannst jedoch eine einzige Konfigurationsdatei für beide Fälle verwenden.
+
+Da die Konfigurationsdatei der VCS-Integration die für die CLI erforderlichen Anmeldedaten `project_id` und `api_token` nicht enthält, kannst du sie direkt im Befehl mit den folgenden Parametern übergeben: `-i/--project-id`, `-T/--token`.
+
+Dein Befehl zum Herunterladen der Übersetzungen über die CLI sieht dann wie folgt aus:
+
+```shell
+crowdin download -i {your-project-id} -T {your-token}
+```
+
+<ReadMore>
+  Alternativ kannst du [Umgebungsvariablen](#api-credentials-from-environment-variables) oder [Projektkonfiguration und API-Anmeldedaten aufteilen](https://crowdin.github.io/crowdin-cli/configuration#split-project-configuration-and-api-credentials).
+</ReadMore>
+
+## Beispielkonfigurationen
+
+##### CSV-Dateien hochladen
+
+```yml title="crowdin.yml"
+"project_id": "projectId"
+"api_token": "personal-access-token"
+"base_path": "."
+"base_url": "https://api.crowdin.com"
+
+"files": [
+  {
+    "source": "/*.csv",
+    "translation": "/%two_letters_code%/%original_file_name%",
+     # Specifies whether first line should be imported or it contains columns headers
+    "first_line_contains_header": true,
+     # Used only when uploading CSV file to define data columns mapping
+    "scheme": "identifier,source_phrase,translation,context,max_length"
+  }
+]
+```
+
+##### GetText-Projekt
+
+```yml title="crowdin.yml"
+"project_id": "projectId"
+"api_token": "personal-access-token"
+"base_path": "."
+"base_url": "https://api.crowdin.com"
+
+"files" : [
+  {
+    "source" : "/locale/en/**/*.po",
+    "translation" : "/locale/%two_letters_code%/LC_MESSAGES/%original_file_name%",
+    "languages_mapping" : {
+      "two_letters_code" : {
+        "zh-CN" : "zh_CH",
+        "fr-QC": "fr"
+      }
+    }
+  }
+]
+```
+
+##### Android-Projekt
+
+```yml title="crowdin.yml"
+"project_id": "projectId"
+"api_token": "personal-access-token"
+"base_path": "."
+"base_url": "https://api.crowdin.com"
+
+"files" : [
+  {
+    "source" : "/res/values/*.xml",
+    "translation" : "/res/values-%android_code%/%original_file_name%",
+    "languages_mapping" : {
+      "android_code" : {
+      "de" : "de"
+      }
+    }
+  }
+]
+```
