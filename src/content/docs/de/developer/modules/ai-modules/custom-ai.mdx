@@ -1,0 +1,272 @@
+---
+title: Benutzerdefiniertes AI-Modul
+description: Verbinde noch nicht von Crowdin unterstützte AI-Anbieter
+slug: developer/crowdin-apps-module-custom-ai
+sidebar:
+  order: 1
+  label: Benutzerdefinierte AI
+---
+
+Mit diesem Modul kannst du AI-Anbieter verbinden, die von Crowdin noch nicht unterstützt werden. Nachdem du eine solche App erstellt hast, kannst du deine Inhalte mit dem verbundenen AI-Anbieter automatisch übersetzen und den AI-Anbieter als Assistenten im Editor verwenden.
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+Für Crowdin:
+
+* Nur ich (also der Projektinhaber)
+* Alle Projektmitglieder
+* Ausgewählte Benutzer
+
+Für Crowdin Enterprise:
+
+* Nur Organisationsadministratoren
+* Alle Benutzer in den Projekten der Organisation
+* Ausgewählte Benutzer
+
+## Struktur
+
+```json title="manifest.json"
+{
+  "modules": {
+    "ai-provider": [
+      {
+        "key": "custom-ai",
+        "name": "Custom Open AI",
+        "logo": "/logo.png",
+        "url": "/ai-settings",
+        "chatCompletionsUrl": "/chat/completions",
+        "modelsUrl": "/models"
+      }
+    ]
+  }
+}
+```
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Der für Menschen lesbare Name des Moduls.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>logo</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The relative URL to the custom AI's logo that will be displayed in the Crowdin UI.<br />
+        Die empfohlene Auflösung beträgt 48×48 Pixel.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>String</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Beschreibung:</strong> Die relative URL zur Seite mit den Moduleinstellungen (z. B. Einstellungen für die Zugangsdaten des KI-Anbieters usw.). </p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">chatCompletionsUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Die relative URL zum Abrufen von Chat-Vervollständigungen.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>modelsUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Die relative URL zum Abrufen der Liste der vom AI-Anbieter unterstützten Modelle.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Zulässige Werte:</strong> <code>crowdin</code>, <code>crowdin-enterprise</code></p>
+        <p><strong>Beschreibung:</strong> Menge der Umgebungen, in denen ein Modul installiert werden kann.<br />
+        Dieser Parameter wird für produktübergreifende Anwendungen benötigt.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">restrictAiToSameApp</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>boolean</code></p>
+        <p><strong>Beschreibung:</strong> Wenn deine Anwendung sowohl die Module AI Provider als auch AI Prompt Provider implementiert und du sie auf die Verwendung als Paar beschränken musst, kannst du diese Eigenschaft aktivieren, um dieses Verhalten sicherzustellen. Wenn diese Eigenschaft aktiviert ist, können Prompts, die den KI-Anbieter der Anwendung verwenden, nur gespeichert werden, wenn sie denselben KI-Prompt-Anbieter der Anwendung verwenden, und umgekehrt.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Kommunikation zwischen der benutzerdefinierten AI-App und Crowdin
+
+Crowdin sendet Prompts über `chatCompletionsUrl` an die App. Die App verarbeitet diese Prompts anschließend und antwortet Crowdin.
+
+Für eine bessere Erfahrung bei der Verwendung deiner benutzerdefinierten AI als Assistent im Crowdin Editor wird empfohlen, den Parameter `stream` mithilfe von [Server-Sent Events](https://developer.mozilla.org/docs/Web/API/Server-sent_events) zu implementieren.
+
+Wenn Streaming unterstützt wird, können AI-generierte Inhalte schrittweise bereitgestellt werden und Nutzern Echtzeit-Feedback geben. Dadurch wird der Workflow verbessert, da sofortige Vorschläge oder Korrekturen angeboten werden, ohne auf eine vollständige Antwort warten zu müssen. So entsteht eine reibungslose, interaktive Erfahrung bei Aufgaben wie der Bestätigung von Terminologie und der Überprüfung der Konsistenz.
+
+Crowdin fügt Anfragen an die App für `chatCompletions` den Parameter `stream` mit dem Wert `true` hinzu und erwartet eine Antwort [im entsprechenden Format](#expected-response-from-the-app-streaming).
+
+Beim Konfigurieren eines benutzerdefinierten AI-Anbieters auf der Seite **AI > Providers** sendet Crowdin mithilfe von `modelsUrl` eine Anfrage an die App, um verfügbare Modelle im entsprechenden Eingabefeld des Anbieters für benutzerdefinierte AI anzuzeigen. Du kannst die benötigten Modelle auswählen und speichern. Sie werden anschließend für die automatische Übersetzung von Inhalten und die Kommunikation mit dem Assistenten über `chatCompletionsUrl` verwendet.
+
+### Anfrage von Crowdin an die App für `chatCompletions`
+
+**HTTP-Anfrage:**
+
+```shell
+https://{AppBaseUrl}/chat/completions/
+```
+
+**Anfrage-Header**
+
+Die Anfrage an `chatCompletionsUrl` enthält Autorisierungs-Header (z. B. `Authorization: Bearer \<App JWT token>`).
+
+Beispiel für die Nutzlast der Anfrage:
+
+```json {"Optional; used to enable streaming responses if set to true":3-4}
+{
+  "model": "gpt-3.5-turbo",
+
+  "stream": false,
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Prompt"
+        },
+        {
+          "type": "image",
+          "mimeType": "image/png",
+          "url": "https://picsum.photos/200/300"
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": "Reply"
+    },
+    {
+      "role": "user",
+      "content": "New prompt"
+    }
+  ]
+}
+```
+
+### Erwartete Antwort der App
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+{
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "New reply"
+      }
+    }
+  ]
+}
+```
+
+### Erwartete Antwort der App (Streaming)
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+data: {"choices":[{"delta":{"role":"assistant","content":"Your"}}]}
+
+data: {"choices":[{"delta":{"role":"assistant","content":" rephrased"}}]}
+
+....
+
+data: {"choices":[{"delta":{"role":"assistant","content":" translation"}}]}
+
+[DONE]
+```
+
+### Antwort der App an Crowdin für `modelsUrl`
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+{
+  "data": [
+    {
+      "id": "gpt-3.5-turbo",
+      "supportsJsonMode": true,
+      "supportsFunctionCalling": true,
+      "supportsVision": false,
+      "contextWindowLimit": 16385,
+      "outputLimit": 4096
+    },
+    {
+      "id": "gpt-4-turbo",
+      "supportsJsonMode": true,
+      "supportsFunctionCalling": true,
+      "supportsVision": true,
+      "contextWindowLimit": 128000,
+      "outputLimit": 4096
+    },
+    {
+      "id": "gpt-5-power",
+      "supportsJsonMode": true,
+      "supportsFunctionCalling": true,
+      "supportsVision": true,
+      "contextWindowLimit": 1000000,
+      "outputLimit": 8192
+    },
+    {
+      "id": "gpt-6-devil",
+      "supportsJsonMode": true,
+      "supportsFunctionCalling": true,
+      "supportsStreaming": true,
+      "supportsVision": true,
+      "contextWindowLimit": 1000000,
+      "outputLimit": 8192
+    },
+    {
+      "id": "gpt-7-magic",
+      "supportsJsonMode": true,
+      "supportsFunctionCalling": true,
+      "supportsStreaming": true,
+      "supportsVision": true,
+      "contextWindowLimit": 1000000,
+      "outputLimit": 8192
+    }
+  ]
+}
+```
+
+Standardwerte:
+
+* **supportsJsonMode**: `false`
+* **supportsFunctionCalling**: `false`
+* **supportsStreaming**: `false`
+* **supportsVision**: `false`
+* **contextWindowLimit**: `4096`
+* **outputLimit**: `4096`
+
+Die Struktur der Antworten der App muss den dargestellten Beispielen entsprechen. Andernfalls betrachtet Crowdin sie als ungültig.

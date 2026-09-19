@@ -1,0 +1,404 @@
+---
+title: Projektaufgaben
+description: Aufgaben zum Übersetzen oder Korrekturlesen von Inhalten erstellen und zuweisen
+slug: enterprise/tasks
+sidebar:
+  order: 0
+---
+
+import { Steps, Aside, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import QuestionAnswer from '~/components/QuestionAnswer.astro';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import split from '!/enterprise/tasks/tasks_split_words.png';
+import newTemplate from '!/enterprise/tasks/tasks_new_template.png';
+import managingTemplates from '!/enterprise/tasks/tasks_managing_templates.png';
+import board from '!/enterprise/tasks/tasks_board.png';
+import edit from '!/enterprise/tasks/tasks_edit.png';
+
+Erstellen und weisen Sie bestimmten Projektmitgliedern oder Übersetzungsdienstleistern Aufgaben zum Übersetzen oder Korrekturlesen von Inhalten zu. Sie können Fälligkeitsdaten festlegen, Wörter auf Bearbeiter aufteilen, Benachrichtigungen über Aufgabenänderungen und Aktualisierungen erhalten und Aufgaben mit anderen Projektmitgliedern in den Kommentaren besprechen.
+
+## Neue Aufgabe erstellen
+
+Gehen Sie zum Erstellen einer neuen Aufgabe wie folgt vor:
+
+<Tabs syncKey="projectType">
+  <TabItem label="Dateibasiertes Projekt">
+    <Steps>
+      1. Öffnen Sie Ihr Projekt und wählen Sie in der linken Seitenleiste **Aufgaben** aus.
+      2. Klicken Sie oben rechts auf <Icon name="mdi:plus" class="inline-icon" />**Neue Aufgabe**.
+      3. Lege die Aufgabenparameter fest:
+         * *Typ* &ndash; wählen Sie zwischen *Mit eigenen Übersetzern übersetzen*, *Mit eigenen Korrekturlesern Korrektur lesen*, *Mit Übersetzungsdienstleister übersetzen* und *Mit Übersetzungsdienstleister Korrektur lesen*.
+         * *Workflow-Schritt* &ndash; wählen Sie den erforderlichen Schritt aus dem Projekt-Workflow aus.
+         * *[Ausstehende Korrekturleseaufgabe erstellen](#sequential-tasks)* (nur für Übersetzungsaufgaben) &ndash; erstellt eine separate Korrekturleseaufgabe, die nach Abschluss der Übersetzung beginnt.
+           * Typ &ndash; wählen Sie *Mit eigenen Korrekturlesern Korrektur lesen* oder *Mit Übersetzungsdienstleister Korrektur lesen*.
+           * *Workflow-Schritt* &ndash; wählen Sie den Workflow-Schritt für eine ausstehende Korrekturleseaufgabe aus.
+         * *[Vorherige Aufgabe](#sequential-tasks)* (nur für Korrekturleseaufgaben) &ndash; verknüpfen Sie die Aufgabe mit einer zuvor erstellten Übersetzungsaufgabe, damit deren Umfang und Spracheinstellungen übernommen werden.
+         * *Bereits in anderen Aufgaben enthaltene Zeichenketten überspringen* &ndash; überspringe Zeichenketten, die bereits anderen Aufgaben zugewiesen sind. Diese Option ist standardmäßig aktiviert.
+         * *Tarifvorlage* (optional) – wählen Sie die [Vorlage](/enterprise/project-reports/#rate-templates) aus, die zur Berechnung der Aufgabenkosten verwendet werden soll. Diese Vorlage wird standardmäßig zum Erstellen von Aufgabenberichten verwendet und aus Gründen der Transparenz in den Aufgabendetails angezeigt, wo sie für den Projektinhaber und die Manager sichtbar ist. Klicken Sie auf <Icon name="mdi:plus" class="inline-icon" /> , um eine neue Vorlage hinzuzufügen, oder auf <Icon name="mdi:pencil" class="inline-icon" />, um die ausgewählte Vorlage zu ändern.
+         * *[Kostenübersichtsbericht erstellen](#task-cost-overview)* – erstellt automatisch einen Kostenübersichtsbericht, nachdem die Aufgabe erstellt oder bearbeitet wurde.
+         * *[Übersetzungs-Kostenbericht erstellen](#task-cost-overview)* – erstellt automatisch einen Übersetzungs-Kostenbericht, wenn der Aufgabenstatus auf **Erledigt** oder **Geschlossen** geändert wird.
+         * *Stringfilter* &ndash; Lege fest, welche Strings in die Aufgabe aufgenommen werden sollen:
+           * *Zeichenfolgen* &ndash; wählen Sie aus, ob *Alle Zu erledigen-Zeichenfolgen im ausgewählten Schritt*, nur die innerhalb eines bestimmten Zeitraums geänderten oder nur die mit innerhalb eines bestimmten Zeitraums aktualisierten Übersetzungen einbezogen werden sollen (nur für Korrekturleseaufgaben).
+           * *Nach Labels filtern* (optional) &ndash; Wähle ein oder mehrere Labels aus, um nur Strings mit den angegebenen Labels einzubeziehen. Wähle anschließend die Übereinstimmungsregel aus:
+             * *Alle ausgewählten Labels* &ndash; Bezieht nur Strings ein, die alle ausgewählten Labels haben (UND-Logik).
+             * *Mindestens ein ausgewähltes Label* &ndash; Bezieht nur Strings ein, die mindestens eines der ausgewählten Labels haben (ODER-Logik).
+           * *Nach Labels ausschließen* (optional) &ndash; Wähle ein oder mehrere Labels aus, um Strings mit den angegebenen Labels auszuschließen. Wähle anschließend die Übereinstimmungsregel aus:
+             * *Alle ausgewählten Labels* &ndash; Schließt nur Strings aus, die alle ausgewählten Labels haben (UND-Logik).
+             * *Mindestens ein ausgewähltes Label* &ndash; Schließt Strings aus, die mindestens eines der ausgewählten Labels haben (ODER-Logik).
+           * *Nur automatisch übersetzte Zeichenfolgen einbeziehen* (nur für Korrekturleseaufgaben) &ndash; schließt nur Zeichenfolgen ein, die zuvor automatisch übersetzt wurden.
+         * *Fälligkeitsdatum* (optional) &ndash; legen Sie eine Frist fest.
+         * *Dateien* &ndash; wählen Sie die in die Aufgabe einzubeziehenden Dateien aus.
+         * *Sprachen* &ndash; Wähle die Zielsprachen aus (für jede ausgewählte Sprache wird eine separate Aufgabe erstellt). Die Spalte *Zu erledigende Wörter* zeigt die Gesamtzahl der zur Aufgabe hinzugefügten Wörter an.
+           * Klicken Sie auf **Zuweisen**, um Benutzern für jede Sprache separat Aufgaben zuzuweisen.
+           * *(Optional)* Verwenden Sie eine gespeicherte [Vorlage](#task-templates), um Sprach- und Mitgliederzuweisungseinstellungen anzuwenden, oder speichern Sie die aktuelle Konfiguration zur späteren Verwendung.
+         * *Titel* &ndash; geben Sie den Namen der Aufgabe an, der Übersetzern oder Korrekturlesern angezeigt wird.
+         * *Beschreibung* (optional) &ndash; fügen Sie zusätzliche Details hinzu, die hilfreich sein können.
+      4. Klicke auf **Erstellen**.
+    </Steps>
+  </TabItem>
+  <TabItem label="Zeichenfolgenbasiertes Projekt">
+    <Steps>
+      1. Öffnen Sie Ihr Projekt und wählen Sie in der linken Seitenleiste **Aufgaben** aus.
+      2. Klicken Sie oben rechts auf <Icon name="mdi:plus" class="inline-icon" />**Neue Aufgabe**.
+      3. Lege die Aufgabenparameter fest:
+         * *Typ* &ndash; wählen Sie zwischen *Mit eigenen Übersetzern übersetzen*, *Mit eigenen Korrekturlesern Korrektur lesen*, *Mit Übersetzungsdienstleister übersetzen* und *Mit Übersetzungsdienstleister Korrektur lesen*.
+         * *Workflow-Schritt* &ndash; wählen Sie den erforderlichen Schritt aus dem Projekt-Workflow aus.
+         * *[Ausstehende Korrekturleseaufgabe erstellen](#sequential-tasks)* (nur für Übersetzungsaufgaben) &ndash; erstellt eine separate Korrekturleseaufgabe, die nach Abschluss der Übersetzung beginnt.
+           * Typ &ndash; wählen Sie *Mit eigenen Korrekturlesern Korrektur lesen* oder *Mit Übersetzungsdienstleister Korrektur lesen*.
+           * *Workflow-Schritt* &ndash; wählen Sie den Workflow-Schritt für eine ausstehende Korrekturleseaufgabe aus.
+         * *[Vorherige Aufgabe](#sequential-tasks)* (nur für Korrekturleseaufgaben) &ndash; verknüpfen Sie die Aufgabe mit einer zuvor erstellten Übersetzungsaufgabe, damit deren Umfang und Spracheinstellungen übernommen werden.
+         * *Bereits in anderen Aufgaben enthaltene Zeichenketten überspringen* &ndash; überspringe Zeichenketten, die bereits anderen Aufgaben zugewiesen sind. Diese Option ist standardmäßig aktiviert.
+         * *Tarifvorlage* (optional) – wählen Sie die [Vorlage](/enterprise/project-reports/#rate-templates) aus, die zur Berechnung der Aufgabenkosten verwendet werden soll. Diese Vorlage wird standardmäßig zum Erstellen von Aufgabenberichten verwendet und aus Gründen der Transparenz in den Aufgabendetails angezeigt, wo sie für den Projektinhaber und die Manager sichtbar ist. Klicken Sie auf <Icon name="mdi:plus" class="inline-icon" /> , um eine neue Vorlage hinzuzufügen, oder auf <Icon name="mdi:pencil" class="inline-icon" />, um die ausgewählte Vorlage zu ändern.
+         * *[Kostenübersichtsbericht erstellen](#task-cost-overview)* – erstellt automatisch einen Kostenübersichtsbericht, nachdem die Aufgabe erstellt oder bearbeitet wurde.
+         * *[Übersetzungs-Kostenbericht erstellen](#task-cost-overview)* – erstellt automatisch einen Übersetzungs-Kostenbericht, wenn der Aufgabenstatus auf **Erledigt** oder **Geschlossen** geändert wird.
+         * *Stringfilter* &ndash; Lege fest, welche Strings in die Aufgabe aufgenommen werden sollen:
+           * *Zeichenfolgen* &ndash; wählen Sie aus, ob *Alle Zu erledigen-Zeichenfolgen im ausgewählten Schritt*, nur die innerhalb eines bestimmten Zeitraums geänderten oder nur die mit innerhalb eines bestimmten Zeitraums aktualisierten Übersetzungen einbezogen werden sollen (nur für Korrekturleseaufgaben).
+           * *Nach Labels filtern* (optional) &ndash; Wähle ein oder mehrere Labels aus, um nur Strings mit den angegebenen Labels einzubeziehen. Wähle anschließend die Übereinstimmungsregel aus:
+             * *Alle ausgewählten Labels* &ndash; Bezieht nur Strings ein, die alle ausgewählten Labels haben (UND-Logik).
+             * *Mindestens ein ausgewähltes Label* &ndash; Bezieht nur Strings ein, die mindestens eines der ausgewählten Labels haben (ODER-Logik).
+           * *Nach Labels ausschließen* (optional) &ndash; Wähle ein oder mehrere Labels aus, um Strings mit den angegebenen Labels auszuschließen. Wähle anschließend die Übereinstimmungsregel aus:
+             * *Alle ausgewählten Labels* &ndash; Schließt nur Strings aus, die alle ausgewählten Labels haben (UND-Logik).
+             * *Mindestens ein ausgewähltes Label* &ndash; Schließt Strings aus, die mindestens eines der ausgewählten Labels haben (ODER-Logik).
+           * *Nur automatisch übersetzte Zeichenfolgen einbeziehen* (nur für Korrekturleseaufgaben) &ndash; schließt nur Zeichenfolgen ein, die zuvor automatisch übersetzt wurden.
+         * *Fälligkeitsdatum* (optional) &ndash; legen Sie eine Frist fest.
+         * *Branches* &ndash; wählen Sie die in die Aufgabe einzubeziehenden Branches aus.
+         * *Sprachen* &ndash; Wähle die Zielsprachen aus (für jede ausgewählte Sprache wird eine separate Aufgabe erstellt). Die Spalte *Zu erledigende Wörter* zeigt die Gesamtzahl der zur Aufgabe hinzugefügten Wörter an.
+           * Klicken Sie auf **Zuweisen**, um Benutzern für jede Sprache separat Aufgaben zuzuweisen.
+           * *(Optional)* Verwenden Sie eine gespeicherte [Vorlage](#task-templates), um Sprach- und Mitgliederzuweisungseinstellungen anzuwenden, oder speichern Sie die aktuelle Konfiguration zur späteren Verwendung.
+         * *Titel* &ndash; geben Sie den Namen der Aufgabe an, der Übersetzern oder Korrekturlesern angezeigt wird.
+         * *Beschreibung* (optional) &ndash; fügen Sie zusätzliche Details hinzu, die hilfreich sein können.
+      4. Klicke auf **Erstellen**.
+    </Steps>
+  </TabItem>
+</Tabs>
+
+<Aside type="tip" title="Wissenswertes">
+  * Der Parameter Workflow-Schritt gilt nur beim Erstellen einer Aufgabe für [Projekte mit einem Workflow](/enterprise/creating-project/#projects-with-a-workflow).
+  * Bei Aufgaben vom Typ Korrekturlesen werden alle Zeichenfolgen mit Ausnahme der genehmigten zur Aufgabe hinzugefügt.
+  * Eine Aufgabe kann nur einem Projekt zugewiesen werden.
+</Aside>
+
+<ReadMore>
+  Mehr über [Projekttypen](/enterprise/creating-project/#project-types) erfahren.
+</ReadMore>
+
+### Inhalte aufteilen
+
+Durch das Aufteilen von Inhalten auf mehrere Mitglieder können Sie den Übersetzungs- oder Korrekturleseprozess beschleunigen.
+
+In stringbasierten und dateibasierten Projekten heißt diese Option unterschiedlich (d. h. **Zeichenfolgen aufteilen** und **Dateien aufteilen**), das grundlegende Funktionsprinzip bleibt jedoch gleich.
+
+Um Inhalte auf mehrere Mitglieder aufzuteilen, wählen Sie im Dialog **Benutzer zuweisen** bei einem dateibasierten Projekt **Dateien aufteilen** oder bei einem stringbasierten Projekt **Zeichenfolgen aufteilen** aus. Sie können die ungefähre Wortanzahl für jeden Bearbeiter festlegen. Der Dialog zeigt außerdem an, wie viele Wörter noch nicht zugewiesen sind.
+
+Um bestimmte Mitglieder schnell zu finden, geben Sie im Mitgliederfeld den Namen, Benutzernamen oder die E-Mail-Adresse ein und wählen Sie sie aus der Liste aus.
+
+<Image src={split} alt="Dateien aufteilen" class="width-xl" />
+
+### Aufgabenkosten schätzen und verfolgen
+
+Wenn bei der Aufgabenerstellung eine [**Tarifvorlage**](/enterprise/project-reports/#rate-templates) ausgewählt wird, enthält die Aufgabenansicht kostenbezogene Informationen, z. B. das ausgewählte Tarifschema und alle generierten Kostenberichte.
+
+<Aside title="Berechtigungen">
+  Projektmitglieder mit Managerberechtigungen (oder höher) können die generierten Berichte und die exakt berechneten Kosten einsehen. Für alle anderen Projektrollen wird nur der Name der ausgewählten **Tarifvorlage** angezeigt.
+</Aside>
+
+#### Aufgabenkostenübersicht
+
+Nach der Erstellung eines Berichts ist dieser im Bereich [Archiv](/enterprise/project-reports/#archive) verfügbar. Die Kosten werden auch direkt auf der Aufgabenkachel im Bereich **Board** angezeigt. Bewegen Sie den Mauszeiger über <Icon name="material-symbols:payments" class="inline-icon" /> auf einer Aufgabenkachel, um sowohl die **Geschätzten Kosten** als auch die **Tatsächlichen Kosten** anzuzeigen.
+
+Öffnen Sie die Aufgabe, um die folgenden kostenbezogenen Informationen anzuzeigen:
+
+* **Tarifvorlage**: Zeigt den Namen der angewendeten Vorlage an. Projektmanager können auf den Vorlagennamen klicken, um den Dialog **Tarifvorlage bearbeiten** zu öffnen und dessen Parameter anzuzeigen oder zu ändern (z. B. Basistarife, benutzerdefinierte Tarife, Nettotarifschemata).
+* **Geschätzte Kosten**: Wenn die Option **Kostenübersichtsbericht erstellen** ausgewählt wurde, wird dieser Bericht automatisch erstellt, nachdem die Aufgabe erstellt oder aktualisiert wurde. Wenn sich der Aufgabenbereich ändert (z. B. wenn Dateien oder Zeichenfolgen geändert werden), wird automatisch ein neuer Kostenübersichtsbericht erstellt, um die aktualisierte Schätzung widerzuspiegeln.
+* **Tatsächliche Kosten**: Wenn die Option **Übersetzungs-Kostenbericht erstellen** ausgewählt wurde, wird dieser Bericht automatisch erstellt, sobald die Aufgabe auf den Status **Erledigt** oder **Geschlossen** gesetzt wird.
+
+Nach der Erstellung zeigen sowohl der Bereich für geschätzte als auch für tatsächliche Kosten die berechneten Kosten basierend auf der ausgewählten Tarifvorlage, einen anklickbaren Berichtsnamen (z. B. Report #123), der zum vollständigen Bericht im Bereich Archiv führt, sowie das Datum der Berichtserstellung an. Wenn noch kein Bericht erstellt wurde, wird stattdessen die Meldung **Noch nicht erstellt** zusammen mit der Option **Erstellen** angezeigt.
+
+#### Berichte erstellen und anzeigen
+
+Sie können Berichte für eine vorhandene Aufgabe jederzeit manuell erstellen oder neu erstellen. Klicken Sie oben rechts in der Aufgabenansicht auf <Icon name="mdi:dots-horizontal" class="inline-icon" /> und wählen Sie **Kostenübersicht** oder **Übersetzungskosten** aus.
+
+Um eine detaillierte Aufschlüsselung anzuzeigen, klicken Sie unter den geschätzten oder tatsächlichen Kosten auf den Berichtsnamen (z. B. Report #123). Der vollständige Bericht wird in einem neuen Browser-Tab geöffnet. Klicken Sie im geöffneten Bericht auf **Tarifschema**, um die bei seiner Erstellung angewendeten Tarife zu überprüfen.
+
+#### Abweichung bei Tarifen beheben
+
+Wenn die zugrunde liegenden Tarife oder die zugewiesene Tarifvorlage geändert wurden, nachdem ein Bericht erstellt wurde, wird neben den geschätzten oder tatsächlichen Kosten das Label **Tarifabweichung** angezeigt. Dieses Label weist darauf hin, dass sich die aktuelle Vorlagenkonfiguration von der für die Berichtserstellung verwendeten unterscheidet, sodass die angezeigten Kosten möglicherweise veraltet sind.
+
+Um die Abweichung zu beheben und die Kosten zu aktualisieren, klicken Sie auf den Berichtsnamen und erstellen Sie den Bericht neu. Das System verwendet die neuesten Tarife, und das Label **Tarifabweichung** wird ausgeblendet.
+
+### Aufgabenvorlagen
+
+Verwenden Sie Aufgabenvorlagen, um die Konfiguration des Bereichs **Sprachen**, einschließlich Zielsprachen und Mitgliederzuweisungen, zu speichern. Vorlagen helfen Ihnen, diese Konfigurationen beim Erstellen neuer Aufgaben schnell anzuwenden, sparen Zeit und sorgen für Konsistenz.
+
+<Aside>
+  Das [Aufteilen von Inhalten](#splitting-content) zwischen Mitgliedern wird separat konfiguriert und **nicht** in Vorlagen gespeichert.
+</Aside>
+
+#### Vorlagen speichern
+
+Gehen Sie zum Speichern der Sprach- und Mitgliederzuweisungseinstellungen als Vorlage wie folgt vor:
+
+<Steps>
+  1. Klicken Sie im Bereich **Sprachen** auf **Speichern als**.
+  2. Wählen Sie im Dropdown-Menü **Neue Vorlage** aus.
+  3. Geben Sie im angezeigten Dialog einen Namen für Ihre Vorlage ein.
+  4. Klicke auf **Speichern**.
+</Steps>
+
+Ihre Vorlage ist nun gespeichert und für zukünftige Aufgaben verfügbar.
+
+<Image src={newTemplate} alt="Aufgabenvorlage speichern" />
+
+#### Vorlagen anwenden
+
+Gehen Sie zum Anwenden einer gespeicherten Vorlage auf eine neue Aufgabe wie folgt vor:
+
+<Steps>
+  1. Klicken Sie im Bereich **Sprachen** auf den Vorlagennamen, um sie sofort anzuwenden.
+  2. Alternativ klicken Sie neben dem Vorlagennamen auf <Icon name="mdi:dots-vertical" class="inline-icon" /> und wählen Sie **Anwenden** aus.
+</Steps>
+
+#### Vorlagen verwalten
+
+Gehen Sie zum Umbenennen oder Löschen einer gespeicherten Vorlage wie folgt vor:
+
+<Steps>
+  1. Klicken Sie im Bereich **Sprachen** neben dem Vorlagennamen auf <Icon name="mdi:dots-vertical" class="inline-icon" />.
+  2. Wählen Sie eine der folgenden Optionen aus:
+     * **Umbenennen** – Geben Sie einen neuen Namen für Ihre Vorlage ein.
+     * **Löschen** – Entfernt die Vorlage dauerhaft.
+</Steps>
+
+<Image src={managingTemplates} alt="Aufgabenvorlagen verwalten" />
+
+## Projektaufgaben
+
+Im Bereich **Aufgaben** können Sie alle Projektaufgaben in den folgenden zwei Abschnitten anzeigen: **Board**, **Alle Aufgaben**.
+
+### Board
+
+Im Bereich **Board** sind Aufgaben in drei Spalten organisiert: Zu erledigen, In Bearbeitung und Erledigt. Dieses Layout bietet eine klare Übersicht und Visualisierung des aktuellen Status aller Aufgaben. Um Aufgaben innerhalb jeder Spalte nach Zielsprache zu gruppieren, aktivieren Sie das Kontrollkästchen **Nach Sprache gruppieren**. Jede Zielsprachengruppe kann dann eingeklappt werden, um Aufgabenkarten auszublenden, oder ausgeklappt werden, um sie anzuzeigen. Dies ist besonders nützlich, um die Ansicht aufzuräumen und sich auf bestimmte Sprachen zu konzentrieren.
+
+Verwenden Sie das Feld **Suchen**, um Aufgaben nach Namen zu suchen oder sie mithilfe verschiedener Filteroptionen zu [filtern](#filtering-tasks). Um die Aufgabendetails anzuzeigen, öffnen Sie die Aufgabe, indem Sie auf den Aufgabennamen klicken.
+
+Um einen direkten Link zu einer Aufgabe zu teilen, klicken Sie auf <Icon name="mdi:dots-vertical" class="inline-icon" /> auf der Aufgabenkachel und wählen Sie **Aufgaben-URL kopieren**.
+
+<Image src={board} alt="Board" />
+
+### Alle Aufgaben
+
+Der Bereich **Alle Aufgaben** bietet eine Listenansicht aller Projektaufgaben. Er ist besonders nützlich für die effiziente Verwaltung großer Aufgabenmengen. In dieser Ansicht können Sie mehrere Aufgaben auswählen, um Massenaktionen wie das Ändern von Bearbeitern, Aktualisieren von Status oder Löschen von Aufgaben durchzuführen.
+
+Wie im Bereich **Board** können Sie auch in der Ansicht **Alle Aufgaben** das Feld **Suchen** verwenden und [filtern](#filtering-tasks). Außerdem können Sie die Aufgabenliste mithilfe der verfügbaren Sortieroptionen (ID, Erstellt, Startdatum, Auflösungsdatum, Fälligkeitsdatum) auf- oder absteigend sortieren.
+
+Sie können außerdem auswählen, welche Spalten angezeigt werden. Klicken Sie auf <Icon name="material-symbols:table-chart" class="inline-icon" /> **Spalten auswählen**, um optionale Spalten ein- oder auszublenden &ndash; **Workflow-Schritt**, **Erstellt**, **Startdatum** und **Auflösungsdatum** sind standardmäßig ausgeblendet. Die Spalten **ID**, **Typ** und **Titel** sind immer sichtbar und können nicht ausgeblendet werden.
+
+#### Berichte für mehrere Aufgaben erstellen
+
+In der Ansicht **Alle Aufgaben** können Sie für eine oder mehrere bestimmte Aufgaben einen Bericht **Kostenübersicht** oder **Übersetzungskosten** erstellen. So können Sie Kosten schnell einschätzen, ohne Aufgaben auf der Seite zur Berichtserstellung manuell auswählen zu müssen.
+
+Gehen Sie zum Erstellen eines Berichts für ausgewählte Aufgaben wie folgt vor:
+
+<Steps>
+  1. Wählen Sie in der Ansicht **Alle Aufgaben** die gewünschten Aufgaben mithilfe der Kontrollkästchen aus. Sie können vor der Auswahl Filter verwenden, um die Liste einzugrenzen.
+  2. Klicke oben rechts auf <Icon name="mdi:dots-vertical" class="inline-icon" />.
+  3. Wählen Sie **Kostenübersicht** oder **Übersetzungskosten** aus dem Dropdown-Menü aus.
+</Steps>
+
+Sie werden anschließend zur entsprechenden Seite für die Berichtserstellung weitergeleitet. Die ausgewählten Aufgaben sind dort bereits eingetragen und Sie können den Bericht konfigurieren und erstellen.
+
+### Aufgabe bearbeiten
+
+Gehen Sie zum Ändern der Aufgabendetails wie folgt vor:
+
+<Steps>
+  1. Öffnen Sie Ihr Projekt und wählen Sie in der linken Seitenleiste **Aufgaben** aus.
+  2. Klicken Sie im Bereich **Board** oder **Alle Aufgaben** auf <Icon name="mdi:dots-vertical" class="inline-icon" /> (oder klicken Sie mit der rechten Maustaste) auf die zu ändernde Aufgabe und wählen Sie **Bearbeiten**. Alternativ können Sie die Aufgabe öffnen und im Menü <Icon name="mdi:dots-vertical" class="inline-icon" /> oben rechts in der Ansicht der Aufgabendetails **Bearbeiten** auswählen. <Image src={edit} alt="Aufgabe bearbeiten" />
+  3. Nehmen Sie die erforderlichen Änderungen vor und klicken Sie auf **Speichern**.
+</Steps>
+
+<QuestionAnswer title="Wie wirken sich Aktualisierungen der Quelldatei auf vorhandene Übersetzungs- und Korrekturleseaufgaben aus?">
+  Nach der Aktualisierung der Quelldatei wird die Liste der in der Aufgabe enthaltenen Ausgangszeichenfolgen wie folgt aktualisiert:
+
+  * Zeichenfolgen, die während der Aktualisierung aus der Quelldatei entfernt wurden, werden aus der Aufgabe entfernt.
+  * Geänderte Zeichenfolgen, die mit der Option *Übersetzungen beibehalten* markiert sind, werden mit dem neuen geänderten Text in der Aufgabe angezeigt.
+  * Neu hinzugefügte Zeichenfolgen wirken sich in keiner Weise auf die vorhandene Aufgabe aus.
+
+  Wenn die Quelldatei auf die Revision mit den entfernten Zeichenfolgen zurückgesetzt wird, erscheinen diese wieder in der Aufgabe.
+</QuestionAnswer>
+
+### Inhalte von Übersetzungsaufgaben automatisch übersetzen
+
+Du kannst die automatische Übersetzung auf die in einer Übersetzungsaufgabe enthaltenen Zeichenfolgen anwenden. Öffne die Aufgabe, klicke oben rechts auf <Icon name="mdi:dots-vertical" class="inline-icon" /> und wähle **Automatisch übersetzen**. Die Aufgabe legt sowohl die zu verarbeitenden Zeichenfolgen als auch die Zielsprache fest.
+
+<ReadMore>
+  Lies mehr über die [automatische Übersetzung](/enterprise/auto-translation/#auto-translating-task-content).
+</ReadMore>
+
+### Aufgabenbereich
+
+Wenn Sie eine Aufgabe öffnen, wird in ihren Details der Wortumfang angezeigt:
+
+* **Ursprünglicher Umfang** &ndash; die Anzahl der Wörter, die beim Erstellen der Aufgabe enthalten waren.
+* **Aktueller Umfang** &ndash; die Anzahl der Wörter, die derzeit enthalten sind.
+
+Nach dem Erstellen einer Aufgabe kann sich ihr Umfang ändern, wenn die in der Aufgabe enthaltenen Ausgangszeichenfolgen im Projekt bearbeitet oder entfernt werden. Wenn der aktuelle Umfang vom ursprünglichen abweicht, erscheint neben dem Wert **Aktueller Umfang** ein <Icon name="mdi:help-circle-outline" class="inline-icon" />-Symbol. Bewegen Sie den Mauszeiger darüber, um zu sehen, wie stark sich der Umfang geändert hat (z. B. *Umfang um 30 Wörter reduziert*).
+
+Bei einer [mit einem Übersetzungsdienstleister geteilten Aufgabe](#shared-tasks) wächst der aktuelle Umfang auf der Seite des Dienstleisters ebenfalls, wenn Inhalte vom Kunden eintreffen.
+
+### Aufgaben anzeigen, die gemeinsam erstellt wurden
+
+Wenn Sie gleichzeitig Aufgaben für mehrere Sprachen erstellen, werden sie als einzelner Stapel generiert. Um alle Aufgaben aus demselben Stapel einfach zu finden und zwischen ihnen zu navigieren, können Sie die Option **Gemeinsam erstellte Aufgaben** verwenden.
+
+Gehen Sie zum Anzeigen gemeinsam erstellter Aufgaben wie folgt vor:
+
+<Steps>
+  1. Öffnen Sie eine beliebige Aufgabe aus dem Stapel.
+  2. Klicke oben rechts auf <Icon name="mdi:dots-vertical" class="inline-icon" />.
+  3. Wählen Sie **Gemeinsam erstellte Aufgaben** aus.
+</Steps>
+
+Sie werden zum Bereich **Alle Aufgaben** weitergeleitet. Dort wird automatisch ein `batchId`-Filter (z. B. `batchId:123456`) im Suchfeld angewendet. In dieser Ansicht werden nur die Aufgaben angezeigt, die während dieses bestimmten Erstellungsvorgangs generiert wurden.
+
+### Aufgaben filtern
+
+Standardmäßig werden alle Projektaufgaben im Bereich **Aufgaben** entweder im Bereich **Board** oder **Alle Aufgaben** angezeigt. Bei Bedarf können Sie Aufgaben mithilfe der verfügbaren Filteroptionen filtern:
+
+* Typ: Alle Typen, Mit eigenen Übersetzern übersetzen, Mit eigenen Korrekturlesern Korrektur lesen, Mit Übersetzungsdienstleister übersetzen, Mit Übersetzungsdienstleister Korrektur lesen.
+* Zielsprache: Alle Sprachen oder eine bestimmte Sprache.
+* Bearbeiter: Alle Benutzer oder ein bestimmter Benutzer.
+* Erstellt von: Alle Benutzer oder ein bestimmter Benutzer.
+* Fälligkeitsdatum: Alle, Jetzt überfällig, Benutzerdefinierter Zeitraum.
+* Erstellt: Alle, Heute, Gestern, Letzte 7 Tage, Letzte 30 Tage, Letzter Monat, Benutzerdefinierter Zeitraum.
+* Startdatum: dieselben Datumsoptionen wie bei Erstellt.
+* Auflösungsdatum: dieselben Datumsoptionen wie bei Erstellt.
+* Workflow-Schritt: Alle, Kein Workflow-Schritt oder ein bestimmter Workflow-Schritt.
+* Datei: Alle Dateien oder eine bestimmte Datei bzw. einen bestimmten Ordner.
+* Status: Alle Status, Zu erledigen, In Bearbeitung, Erledigt, Geschlossen, Ausstehend, Zur Genehmigung.
+
+Die Filter **Startdatum**, **Auflösungsdatum** und **Status** sind nur in der Ansicht **Alle Aufgaben** verfügbar. Im **Board** können Sie zusätzlich nach beliebigen [Aufgabenfeldern](/enterprise/fields/) filtern, die für Ihre Organisation konfiguriert wurden.
+
+### Aufgabenstatus ändern
+
+Um den Aufgabenstatus im Bereich **Board** zu ändern, wählen Sie die Ihnen zugewiesene Aufgabe aus und ziehen Sie sie in die Spalte mit dem gewünschten Status.
+
+<Aside>
+  Nur Administratoren können den Aufgabenstatus für alle Projektaufgaben ändern.
+</Aside>
+
+Um den Aufgabenstatus im Bereich **Alle Aufgaben** zu ändern, wählen Sie die gewünschte Aufgabe aus, klicken Sie auf **Status ändern** und wählen Sie den neuen Status aus.
+
+Alternativ können Sie den Aufgabenstatus in beiden Bereichen direkt in der Aufgabe über das Dropdown-Menü **Status** ändern und den gewünschten Status auswählen.
+
+### Aufgabe schließen
+
+Um eine fertige Aufgabe zu schließen, verschieben Sie sie in die Spalte **Erledigt** und klicken Sie unten auf der Aufgabenkachel auf **Aufgabe schließen**.
+
+Um die Liste geschlossener Aufgaben anzuzeigen, öffnen Sie den Bereich **Alle Aufgaben** und verwenden Sie den Filter **Status: Geschlossen**.
+
+## Sequenzielle Aufgaben
+
+Sequenzielle Aufgaben vereinfachen die Verwaltung von Übersetzungs- und Korrekturleseprozessen auf strukturierte und schrittweise Weise. Diese Funktion ist besonders nützlich für Inhalte, die eine Übersetzung gefolgt von einem Korrekturlesen erfordern, und sorgt für einen reibungslosen Workflow.
+
+Nach ihrer Erstellung werden sequenzielle Aufgaben im Aufgaben-Board dargestellt, wobei sowohl die Übersetzungsaufgabe als auch die verknüpfte ausstehende Korrekturleseaufgabe angezeigt werden.
+
+### Zentrale Ansätze
+
+Das Konzept sequenzieller Aufgaben basiert auf zwei grundlegenden Ansätzen:
+
+* **Erstellen einer Übersetzungsaufgabe mit der zugehörigen ausstehenden Korrekturleseaufgabe:**
+  * Beginnen Sie mit dem Erstellen einer Übersetzungsaufgabe und geben Sie die Zielsprachen und den Arbeitsumfang an.
+  * Wählen Sie **Ausstehende Korrekturleseaufgabe erstellen**, um die zugehörige Korrekturleseaufgabe zu erstellen. Sie können bei Bedarf separate Fälligkeitsdaten für die Übersetzungs- und Korrekturleseaufgaben festlegen.
+  * Während Übersetzer an der Übersetzungsaufgabe arbeiten, bleibt die verknüpfte Korrekturleseaufgabe ausstehend und zeigt auf ihrer Karte den Hinweis *Warten auf Abschluss der Übersetzungsaufgabe* an.
+  * Wenn die Übersetzungsaufgabe abgeschlossen ist, ändert sich der Status der zugehörigen Korrekturleseaufgabe von Ausstehend zu Zu erledigen. Korrekturleser erhalten anschließend eine Benachrichtigung, dass die Aufgabe zur Überprüfung bereit ist.
+* **Erstellen einer Korrekturleseaufgabe und Verknüpfen mit einer Übersetzungsaufgabe:**
+  * Erstellen Sie eine Korrekturleseaufgabe und wählen Sie im Dropdown-Menü **Vorherige Aufgabe** die Übersetzungsaufgabe aus, mit der Sie sie verknüpfen möchten. Sie können sie entweder mit einer abgeschlossenen oder einer aktiven Übersetzungsaufgabe verknüpfen.
+  * Die Sprachen und der Arbeitsumfang werden automatisch von der verknüpften Übersetzungsaufgabe übernommen.
+  * Die Korrekturleseaufgabe bleibt ausstehend, bis die verknüpfte Übersetzungsaufgabe abgeschlossen ist.
+  * Wie beim ersten Ansatz erhalten Korrekturleser eine Benachrichtigung, wenn die Korrekturleseaufgabe zur Überprüfung bereit ist.
+
+### Unterstützte Aufgabentypen
+
+Sequenzielle Aufgaben sind für folgende Aufgabentypen verfügbar:
+
+* Mit eigenen Übersetzern übersetzen
+* Mit eigenen Übersetzern Korrektur lesen
+* Mit Übersetzungsdienstleister übersetzen
+* Mit Übersetzungsdienstleister Korrektur lesen
+
+### Verwaltung sequenzieller Aufgaben
+
+* Beim Bearbeiten einer ausstehenden Korrekturleseaufgabe sind Änderungen auf Felder beschränkt, die den Umfang der Aufgabe nicht beeinflussen.
+* Ausstehende Korrekturleseaufgaben können bei Bedarf gelöscht werden. In diesem Fall bleiben die verknüpften Übersetzungsaufgaben erhalten.
+* Durch das Löschen einer Übersetzungsaufgabe mit einer zugehörigen sequenziellen Korrekturleseaufgabe werden beide Aufgaben gleichzeitig gelöscht.
+
+## Aufgabenbasierte Zugriffskontrolle
+
+Wenn die [aufgabenbasierte Zugriffskontrolle](/enterprise/project-settings/privacy/#translations) aktiviert ist, haben Übersetzer und Korrekturleser schreibgeschützten Zugriff auf den Editor und können mit Zeichenketten nur über ihnen zugewiesene Aufgaben arbeiten. Auf den Sprachseiten sehen Benutzer einen Hinweis, dass aktiver Zugriff auf Zeichenfolgen nur über zugewiesene Aufgaben verfügbar ist. Wenn sie versuchen, Inhalte außerhalb dieser Aufgaben im Editor zu öffnen, sind diese im schreibgeschützten Modus verfügbar.
+
+Im Bereich **Aufgaben** können Benutzer weiterhin Aufgabenkarten anzeigen, aber aktive Aktionen (Übersetzen oder Korrekturlesen) nur innerhalb der ihnen zugewiesenen Aufgaben durchführen. Normale Sprachberechtigungen werden nicht verwendet, um Übersetzungs- oder Genehmigungszugriff zu gewähren, solange diese Option aktiviert ist.
+
+Diese Einschränkung gilt für Übersetzer und Korrekturleser. Projektmitglieder mit Berechtigungen eines Sprachkoordinators oder höher behalten entsprechend ihrer Rolle den Zugriff. Beispielsweise kann ein Übersetzer mit der Berechtigung, an Französisch zu arbeiten, der einer Aufgabe für Deutsch zugewiesen ist, im Editor nur innerhalb der zugewiesenen deutschen Aufgabe arbeiten und hat gleichzeitig schreibgeschützten Zugriff auf französische Zeichenfolgen.
+
+## Aufgaben-Kreuzprüfung
+
+Die Funktion **Aufgaben-Gegenprüfung** sorgt für eine ordnungsgemäße Überwachung von Aufgaben-Workflows, indem sie eine Genehmigung verlangt, bevor Mitwirkende mit der Arbeit beginnen können. Sie ist besonders für Teams mit internen Genehmigungsprozessen wie Budgetgenehmigungen hilfreich, bei denen Aufgaben von dafür bestimmten Managern oder dem Besitzer geprüft und genehmigt werden müssen. Durch eine zusätzliche Ebene der Verantwortlichkeit stellt diese Funktion sicher, dass Aufgaben nicht ohne ordnungsgemäße Prüfung fortgesetzt werden.
+
+### So funktioniert die Aufgaben-Gegenprüfung
+
+Wenn **Aufgaben-Gegenprüfung** aktiviert ist:
+
+* Beim Erstellen einer Aufgabe informiert eine Benachrichtigung den Benutzer darüber, dass die Aufgabe die Genehmigung berechtigter Projektmitglieder (ausgewählter Manager oder des Besitzers) erfordert, bevor zugewiesene Mitglieder mit der Arbeit beginnen können.
+
+* Im **Board** wird bei Aufgaben, die auf eine Genehmigung warten, der Hinweis *Ausstehend: Genehmigung durch ausgewählte Manager oder den Besitzer erforderlich* angezeigt, sodass sie leicht erkennbar sind.
+
+* In der Ansicht der Aufgabendetails wird der Hinweis *Die Aufgabe wartet derzeit auf die Prüfung durch ausgewählte Manager oder den Besitzer* angezeigt, und die Aufgabe erhält den Status **Zur Genehmigung**.
+
+Nur ausgewählte Manager oder der Besitzer können die Aufgabe genehmigen. Der Manager, der die Aufgabe erstellt hat, kann sie nicht genehmigen, der Besitzer kann jedoch seine eigenen Aufgaben immer genehmigen. Klicken Sie nach der Prüfung der Aufgabe auf der Aufgabenkachel im **Board** oder in der Ansicht der Aufgabendetails auf **Genehmigen**. Nach der Genehmigung ändert sich der Aufgabenstatus in **<span style={{ whiteSpace: 'nowrap' }}>Zu erledigen</span>**, wodurch angezeigt wird, dass Mitwirkende mit der Arbeit beginnen können.
+
+<ReadMore>
+  Mehr über die [Konfiguration der Aufgaben-Gegenprüfung](/enterprise/project-settings/privacy/#configuring-task-cross-review) erfahren.
+</ReadMore>
+
+## Geteilte Aufgaben
+
+Aufgaben der Typen **Mit Übersetzungsdienstleister übersetzen** und **Mit Übersetzungsdienstleister Korrektur lesen** werden mit dem Übersetzungsdienstleister geteilt, der dem entsprechenden Workflow-Schritt zugewiesen ist. In den Details wird in Ihrem Projekt und im eingehenden Projekt des Dienstleisters das Label **Geteilt** angezeigt.
+
+Die Aufgabe erscheint im Projekt des Dienstleisters und in der [Liste der zugewiesenen Aufgaben](/enterprise/user-tasks/) der Bearbeiter, sobald sie dort erstellt wurde, ohne auf die Synchronisierung aller Inhalte zu warten.
+
+Während der Synchronisierung wird neben dem Label **Geteilt** ein <Icon name="mdi:timelapse" class="inline-icon" />-Symbol angezeigt. Bewegen Sie den Mauszeiger darüber, um zu sehen, wie viele Inhalte bereits übertragen wurden:
+
+* In Ihrem Projekt zeigt **An Dienstleister gesendet**, wie viele der erwarteten Wörter den Dienstleister bereits erreicht haben.
+* Im Projekt des Dienstleisters zeigt **Vom Kunden empfangen** denselben Wert aus Sicht des Dienstleisters.
+
+Auf der Seite des Dienstleisters zählt der [aktuelle Umfang](#task-scope) die bisher eingegangenen Wörter, und die Gesamtzahl in der Zeile **Zu erledigende Wörter** wird bis zum Abschluss der Synchronisierung mit einer gepunkteten Unterstreichung angezeigt. Bewegen Sie den Mauszeiger darüber, um einen Hinweis zu sehen, dass der Wert noch nicht endgültig ist.
+
+<ReadMore>
+  Lesen Sie mehr über [Übersetzung und Korrekturlesen durch Dienstleister](/enterprise/translation-proofreading-by-vendor/).
+</ReadMore>
+
+## Siehe auch
+
+<LinkCard title="Aufgaben des Benutzers" description="Erfahren Sie, wie Sie Ihnen zugewiesene Aufgaben anzeigen, filtern und verwalten." href="/enterprise/user-tasks/" />
