@@ -1,0 +1,475 @@
+---
+title: Modul für benutzerdefinierte Dateiformate
+description: Unterstützung für neue benutzerdefinierte Dateiformate in Crowdin hinzufügen
+slug: developer/crowdin-apps-module-custom-file-format
+sidebar:
+  order: 1
+  label: Benutzerdefiniertes Dateiformat
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Verwende dieses Modul, um Unterstützung für neue benutzerdefinierte Dateiformate hinzuzufügen. Crowdin überträgt das Parsen von Source-Dateien an eine App, die über ein Modul für benutzerdefinierte Dateiformate verfügt. Wenn die Übersetzungen abgeschlossen sind, übergibt Crowdin eine Source-Datei und ein String-Array mit Übersetzungen an die App für benutzerdefinierte Dateiformate, damit diese Übersetzungsdateien generiert.
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+Für Crowdin:
+
+* Nur ich (also der Projektinhaber)
+* Alle Projektmitglieder
+* Ausgewählte Benutzer
+
+Für Crowdin Enterprise:
+
+* Nur Organisationsadministratoren
+* Alle Benutzer in den Projekten der Organisation
+* Ausgewählte Benutzer
+
+## Struktur
+
+```json title="manifest.json"
+{
+  "modules": {
+    "custom-file-format": [
+      {
+        "key": "your-module-key-type-xyz",
+        "type": "type-xyz",
+        "url": "/process",
+        "multilingual": true,
+        "customSrxSupported": true,
+        "signaturePatterns": {
+          "fileName": "^.+\.xyz$",
+          "fileContent": "<properties>\s*<property\s+name=.*value=.*/>"
+        }
+      }
+    ]
+  }
+}
+```
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code id="custom-file-format-type-example">type</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des benutzerdefinierten Dateiformats. Kann in der API verwendet werden, um die Verarbeitung von Dateien durch die App für benutzerdefinierte Dateiformate zu erzwingen. Wenn der Parameter <code>type</code> in der API verwendet wird, wird <code>signaturePatterns</code> ignoriert. Über diese Eigenschaft definierte Werte können auch von anderen Modulen referenziert werden, beispielsweise über <code>attributes.crowdinType</code> im [Modul zur Verarbeitung nach dem Dateiimport](/developer/crowdin-apps-module-file-post-import-processing).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Die relative URL, die beim Dateiimport, bei Aktualisierungen, beim Hochladen von Übersetzungen und beim Export aufgerufen wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>multilingual</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>bool</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Zulässige Werte:</strong> <code>true</code>, <code>false</code>. Standardwert ist <code>false</code></p>
+        <p><strong>Beschreibung:</strong> Dieser Parameter wird verwendet, um den Inhalt mehrerer Sprachen in einer Anfrage zusammenzufassen, wenn Übersetzungen in deinem Crowdin-Projekt hoch- oder heruntergeladen werden.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">customSrxSupported</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>bool</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Zulässige Werte:</strong> <code>true</code>, <code>false</code>. Standardwert ist <code>false</code></p>
+        <p><strong>Beschreibung:</strong> Gibt an, ob die App benutzerdefinierte Segmentierungsregeln (SRX 2.0) für ihr Dateiformat unterstützt. Wenn aktiviert, können Segmentierungsregeln für die von diesem Modul verarbeiteten Dateien definiert werden und Crowdin übergibt sie im Parameter <code>customSrxContents</code> an die App. Siehe <a href="/developer/crowdin-apps-module-custom-file-format/#content-segmentation">Inhaltssegmentierung</a>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>Objekt</code></p>
+        <p><strong>Beschreibung:</strong> Enthält reguläre Ausdrücke für <code>fileName</code> und/oder <code>fileContent</code>, die zur Erkennung des Dateityps beim Hochladen einer neuen Ausgangsdatei über die Benutzeroberfläche (oder über die API ohne angegebenen <code>type</code>-Parameter) verwendet werden. Wenn die Datei den regulären Ausdrücken entspricht, wird sie als Datei im benutzerdefinierten Format gekennzeichnet.</p>
+        <p><Aside>Der reguläre Ausdruck für <code>fileContent</code> prüft nur die ersten 64 KB des Dateiinhalts.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Kommunikation zwischen der App für benutzerdefinierte Dateiformate und Crowdin
+
+Beim ersten Dateiimport erkennt Crowdin anhand der Parameter `signaturePatterns` oder `type` ein benutzerdefiniertes Dateiformat und sendet eine HTTP-Anfrage an die URL der App (`$baseUrl`. $url\`), damit die Datei weiterverarbeitet werden kann. Die App verarbeitet anschließend die Datei und antwortet Crowdin. Für Anfragen und Antworten von und zu Apps für benutzerdefinierte Dateiformate gilt ein Timeout von zwei Minuten. Die maximale Größe von Request- und Response-Payloads ist auf 5 MB begrenzt.
+
+### Anfrage an die App
+
+Beispiel für die Nutzlast der Anfrage:
+
+```json
+// max request payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "jobType": "parse-file | build-file",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name"
+  },
+  "file": {
+    "id": 1,
+    "name": "file.xml",
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // base64 encoded source file content
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // source file public URL
+  },
+  "sourceLanguage": {
+    "id": "es",
+    "name": "Spanish",
+    "editorCode": "es",
+    "twoLettersCode": "es",
+    "threeLettersCode": "spa",
+    "locale": "es-ES",
+    "androidCode": "es-rES",
+    "osxCode": "es.lproj",
+    "osxLocale": "es",
+    "pluralCategoryNames": ["one"],
+    "pluralRules": "(n != 1)"
+  },
+  "targetLanguages": [
+    {
+      // same structure as for sourceLanguage, empty when uploading a new source file, one element for import_translations & export, can be more for multilingual files
+    }
+  ],
+  "strings": [...], // for the build-file jobs, array of segments
+  "stringsUrl": "https://tmp.downloads.crowdin.com/strings.ndjson", // for the build-file jobs, file with segments, in new-line delimited json format
+  "customSrxContents": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>..." // segmentation rules defined for the file, null if there are none
+}
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>jobType</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Mögliche Werte:</strong> <code>parse-file</code>, <code>build-file</code></p>
+        <p><strong>Beschreibung:</strong> Gibt die Aktion an, die von der App ausgeführt werden soll.<br />
+        Der Auftrag <code>parse-file</code> wird für den erstmaligen Upload von Source-Dateien, die Aktualisierung von Source-Dateien und den Upload von Übersetzungen verwendet. Für <code>parse-file</code>-Aufträge übergibt Crowdin der App eine Source-Datei und erwartet im Antwortkörper ein geparstes Source-String-Array.<br />
+        Der Auftrag <code>build-file</code> wird für den Übersetzungsdownload verwendet. Für <code>build-file</code>-Aufträge übergibt Crowdin der App eine Source-Datei und ein String-Array mit Übersetzungen und erwartet im Antwortkörper eine generierte Übersetzungsdatei.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.content</code>, <code class="whitespace-nowrap">file.contentUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Parameter zur Übergabe des base64-codierten Inhalts der Source-Datei (<code>file.content</code>) oder einer öffentlichen URL zur Source-Datei (<code>file.contentUrl</code>).<br />
+        Beide Parameter können verwendet werden.<Aside title="Einschränkungen">Das maximale Limit für die Nutzlast der Anfrage beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>strings</code>, <code>stringsUrl</code></td>
+      <td>
+        <p><strong>Typ(strings):</strong> <code>array</code></p>
+        <p><strong>Typ(stringsUrl):</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Parameter für den Übersetzungsdownload (nur für den Auftragstyp <code>build-file</code>). <code>strings</code> – Array mit Übersetzungsstrings. <code>stringsUrl</code> – öffentliche URL zu einem <a href="https://github.com/ndjson/ndjson-spec" target="_blank">Newline-delimited-JSON</a> mit Übersetzungsstrings.<br />
+        Beide Parameter können verwendet werden.<Aside title="Einschränkungen">Das maximale Limit für die Nutzlast der Anfrage beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">customSrxContents</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Inhalt der für die Source-Datei definierten SRX-2.0-Segmentierungsregeldatei. Wird sowohl für <code>parse-file</code>- als auch <code>build-file</code>-Aufträge übergeben, wenn im Modul die Eigenschaft <code>customSrxSupported</code> aktiviert ist. Wenn keine Segmentierungsregeln für die Datei definiert sind, lautet der Parameter <code>null</code>. Siehe <a href="/developer/crowdin-apps-module-custom-file-format/#content-segmentation">Inhaltssegmentierung</a>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Erwartete Antwort der App für den Auftragstyp `parse-file`
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+// max response payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "data": {
+    "strings": [...], // segments array
+    "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // new-line delimited json file with parsed strings
+    "preview": "VGhpbmdzIGFyZSBvbmx5IGltcG9zc2libGUgdW50aWwgdGhleSdyZSBub3Qu", // optional, base64 encoded content of preview html file, not supported if there are plural strings
+    "previewUrl": "https://app.example.com/LN3km2K6M-preview.html", // optional, URL of preview html file, not supported if there are plural strings
+  },
+  "error": {
+    "message": "Your error message"
+  }
+}
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>data.strings</code>, <code class="whitespace-nowrap">data.stringsUrl</code></td>
+      <td>
+        <p><strong>Typ(data.strings):</strong> <code>array</code></p>
+        <p><strong>Typ(data.stringsUrl):</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Parameter zur Übergabe des Inhalts der geparsten Strings.<br />
+        <code>data.strings</code> – Array mit geparsten Strings.<br />
+        <code>data.stringsUrl</code> – öffentliche URL zu einem <a href="https://github.com/ndjson/ndjson-spec" target="_blank">Newline-delimited-JSON</a> mit geparsten Strings.<br />
+        Beide Parameter können verwendet werden.<Aside title="Einschränkungen">Das maximale Limit für die Nutzlast der Antwort beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>data.preview</code>, <code>data.previewUrl</code></td>
+      <td>
+        <p><strong>Typ(data.preview):</strong> <code>string</code></p>
+        <p><strong>Typ(data.previewUrl):</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Parameter zur Übergabe der optionalen HTML-Vorschau des geparsten String-Inhalts, die von der App generiert werden kann. Die generierte HTML-Vorschau wird im Editor angezeigt. Siehe das <a href="/developer/crowdin-apps-module-custom-file-format/#html-preview-of-the-file">Beispiel für eine HTML-Vorschau der Datei.</a></p> <p><Aside type="caution">Die HTML-Vorschau wird im Crowdin Editor nicht angezeigt, wenn die App Strings mit Pluralformen übergibt.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Eine Fehlermeldung, die von der App an Crowdin übergeben wird und für einen Benutzer in der Benutzeroberfläche sichtbar ist.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Erwartete Antwort der App für den Auftragstyp `build-file`
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+// max response payload - 5 MB
+// wait timeout - 2 minutes
+{
+  "data": {
+    "content": "TWF5IHRoZSBGb3JjZSBiZSB3aXRoIHlvdS4=", // base64 encoded translation file content
+    "contentUrl": "https://app.example.com/p5uLEpq8p-result.xml", // translation file public URL
+  },
+  "error": {
+    "message": "Your error message"
+  }
+}
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>data.content</code>, <code>data.contentUrl</code></td>
+      <td>
+        <p><strong>Typ(data.content):</strong> <code>String</code></p>
+        <p><strong>Typ(data.contentUrl):</strong> <code>String</code></p>
+        <p><strong>Beschreibung:</strong> Parameter, die zum Übergeben des Base64-codierten Inhalts der Übersetzungsdatei (<code>data.content</code>) oder einer öffentlichen URL der Übersetzungsdatei (<code>data.contentUrl</code>) verwendet werden.<br />
+        Beide Parameter können verwendet werden.<Aside title="Einschränkungen">Das maximale Limit für die Nutzlast der Antwort beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Eine Fehlermeldung, die von der App an Crowdin übergeben wird und für einen Benutzer in der Benutzeroberfläche sichtbar ist.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Struktur des String-Arrays
+
+Unten siehst du ein Beispiel für die erwartete Struktur der Strings für den Auftragstyp `parse-file`, die bei einem Auftragstyp `build-file` an die App übergeben wird.
+
+Payload Beispiel:
+
+```json
+// strings should be in "new-line delimited json" format if they passed by URL
+[
+  { // non plural string
+    "previewId": 1, // only for "parse-file" jobType, required when the HTML preview of the file is generated
+    "id": 1, // only for "build-file" jobType
+    "identifier": "string-key-1", // required
+    "context": "Some context", // optional
+    "customData": "max 4 KB of custom data", // optional
+    "maxLength": 10, // optional, default null
+    "isHidden": false, // optional, default null
+    "hasPlurals": false, // optional, default false
+    "labels": ["label-one", "label-two"], // optional, default []
+    "attributes": { // optional
+      "crowdinType": "html" // the string content is re-parsed with the HTML parser
+    },
+    "text": "String source text", // required
+    "translations": { // optional
+      "uk": { // targetLanguage.id
+        "text": "Переклад стрічки", // required
+        "status": "untranslated | translated | approved" // optional, default "translated"
+      },
+      // can be other languages for multilingual, check "targetLanguages" in the request payload
+    }
+  },
+  { // plural string
+    "previewId": 2,
+    "id": 2,
+    "identifier": "string-key-2",
+    "context": "Some optional context",
+    "customData": "max 4 KB of custom data",
+    "maxLength": 15,
+    "isHidden": false,
+    "hasPlurals": true,
+    "labels": [],
+    "text": { // keys from sourceLanguage.pluralCategoryNames
+      "one": "One file",
+      "other": "%d files",
+    },
+    "translations": {
+      "uk": {
+        "text": { // keys from targetLanguage.pluralCategoryNames
+          "one": "One file",
+          "few": "%d файла",
+          "many": "%d файлів",
+        },
+        "status": {
+          "one": "untranslated",
+          "few": "translated",
+          "many": "approved",
+        }
+      }
+    }
+  }
+]
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>previewId</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code> oder <code>number</code></p>
+        <p><strong>Erforderlich:</strong> ja (nur für den Auftrag <code>parse-file</code>, wenn die HTML-Vorschau der Datei generiert wird)</p>
+        <p><strong>Beschreibung:</strong> Eindeutige Kennung, die den String mit seinem Element in der HTML-Vorschau verknüpft. Ihr Wert muss exakt dem Token <code>\{previewId}</code> entsprechen, das im entsprechenden Element in <code>id="string_preview_id_\{previewId}"</code> verwendet wird (siehe <a href="/developer/crowdin-apps-module-custom-file-format/#html-preview-of-the-file">HTML-Vorschau der Datei</a>). Wird nur für den Auftragstyp <code>parse-file</code> verwendet.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>id</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>integer</code></p>
+        <p><strong>Beschreibung:</strong> Numerische ID des Strings in deinem Crowdin-Projekt. Wird nur für den Auftragstyp <code>build-file</code> verwendet.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">identifier</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Eindeutiger String-Schlüssel innerhalb der Datei.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>customData</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Beliebige benutzerdefinierte Daten, die mit dem String verknüpft werden müssen. Hinzugefügte benutzerdefinierte Daten werden zusammen mit den entsprechenden Strings beim Übersetzungsexport exportiert.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">attributes.crowdinType</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>String</code></p>
+        <p><strong>Zulässige Werte:</strong> Entsprechen größtenteils den für die <a href="/developer/api/v2/#operation/api.projects.files.post">Add File API-Methode</a> akzeptierten <code>type</code>-Werten, mit Ausnahme der folgenden: <code>auto</code>, <code>xml</code>, <code>csv</code>, <code>docx</code>, <code>xlsx</code>, <code>dita</code>, <code>idml</code>, <code>mif</code>, <code>svg</code>. Zusätzlich werden benutzerdefinierte Werte unterstützt, die über die <a href="/developer/crowdin-apps-module-custom-file-format/#custom-file-format-type-example"><code>type</code>-Eigenschaft</a> dieses Moduls definiert wurden.</p>
+        <p><strong>Beschreibung:</strong> Wird verwendet, um bei erforderlicher Nachbearbeitung den Dateiformattyp eines Strings anzugeben. Wenn ein von der App zurückgegebener String beispielsweise eingebettetes HTML enthält, kannst du durch Setzen von <code>crowdinType</code> auf <code>html</code> den String mithilfe des HTML-Parsers erneut parsen. Crowdin parst und segmentiert solche Inhalte genauso wie eine Datei dieses Formats und führt die Übersetzungen beim Erstellen der Übersetzungsdatei wieder mit dem ursprünglichen String zusammen. Wird nur für den Auftragstyp <code>parse-file</code> verwendet. Siehe <a href="/developer/crowdin-apps-module-custom-file-format/#content-segmentation">Inhaltssegmentierung</a>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Inhaltssegmentierung
+
+Der Inhalt eines benutzerdefinierten Dateiformats kann auf zwei Arten in kleinere Segmente aufgeteilt werden: Deine App segmentiert den Inhalt selbst mit den von Crowdin übergebenen Regeln oder Crowdin segmentiert den Inhalt mit einem seiner eigenen Parser. Segmentiere ihn in der App, wenn nur deine App den Inhalt parsen kann, und überlasse die Segmentierung einem Crowdin-Parser, wenn ein String Inhalt in einem Format enthält, das Crowdin bereits unterstützt, z. B. HTML oder Markdown.
+
+### Inhalte in deiner App segmentieren
+
+Setze die Eigenschaft `customSrxSupported` in der Modulkonfiguration auf `true`. [Segmentierungsregeln (SRX 2.0)](/custom-segmentation/) können anschließend für die von diesem Modul verarbeiteten Dateien festgelegt werden, beispielsweise über den Parameter `importOptions.srxStorageId` der APIs [Add File](/developer/api/v2/#operation/api.projects.files.post) und [Update File](/developer/api/v2/#operation/api.projects.files.patch).
+
+Crowdin übergibt den Inhalt der für eine Datei definierten Regeln im Parameter `customSrxContents` sowohl bei `parse-file`- als auch bei `build-file`-Anfragen. Die App führt die Segmentierung selbst durch:
+
+* Beim Auftrag `parse-file` teilt die App den Text anhand dieser Regeln auf und gibt jedes Segment als separaten String mit eigener `identifier` (und eigener `previewId`, wenn die App die HTML-Vorschau der Datei generiert) zurück.
+* Beim Auftrag `build-file` empfängt die App diese Segmente mit ihren Übersetzungen und setzt sie beim Generieren der Übersetzungsdatei wieder zusammen.
+
+Wenn für eine Datei keine Regeln definiert sind, ist `customSrxContents` gleich `null`.
+
+Auch beim Übersetzungsexport wird der Auftrag `parse-file` verwendet. Gib daher beim Parsen einer Übersetzungsdatei dieselben IDs pro Segment zurück. Andernfalls stimmen die hochgeladenen Übersetzungen nicht mit den vorhandenen Segmenten überein.
+
+### Inhalte mit einem Crowdin-Parser segmentieren
+
+Setze das Attribut [`attributes.crowdinType`](#strings-array-structure) eines Strings auf das Format seines Inhalts. Crowdin parst einen solchen String anschließend genauso wie eine Datei dieses Formats. Dadurch wird der Inhalt anhand der Projekteinstellungen für dieses Format oder anhand der Standardssegmentierung dieses Formats segmentiert.
+
+Jedes Segment wird zu einem separaten String im Projekt. Beim Auftrag `build-file` führt Crowdin die Übersetzungen wieder mit dem ursprünglichen String zusammen, sodass die App denselben String erhält, den sie beim Parsen der Datei zurückgegeben hat.
+
+Strings mit Pluralformen werden nicht erneut geparst; in stringbasierten Projekten hat das Attribut keine Auswirkung.
+
+<Aside title="Einschränkungen">
+  Jedes Segment zählt als separater String, sodass segmentierte Dateien die Payload-Limits von 5 MB für Anfragen und Antworten schneller erreichen.
+</Aside>
+
+## HTML-Vorschau der Datei
+
+Die HTML-Vorschau rendert im Editor eine [WYSIWYG-Ansicht der Datei](/online-editor/#wysiwyg-file-preview). Umschließe jeden übersetzbaren String mit einem Element, das beide folgenden Attribute enthält:
+
+* `id="string_preview_id_{previewId}"`, wobei `{previewId}` mit der `previewId` des entsprechenden Strings aus der `parse-file`-Antwort übereinstimmt. Verwende doppelte Anführungszeichen und stelle sicher, dass der Wert exakt übereinstimmt.
+* `class="crowdin_phrase"`, damit der Editor den String in der Vorschau hervorheben und direkt darin bearbeiten kann. Ohne diese Klasse wird der String nur hervorgehoben, wenn er aus der String-Liste ausgewählt wird, und die direkte Bearbeitung in der Vorschau funktioniert nicht.
+
+Wenn die App einen String in mehrere Segmente aufteilt, gib jedem Segment eine eigene `previewId` und ein eigenes Element in der Vorschau. Wenn mehrere Segmente dieselbe `previewId` verwenden, wird nur das letzte mit dem Element verknüpft.
+
+Die HTML-Vorschau wird nur beim Import der Source-Datei generiert. Sie wird beim Hochladen von Übersetzungen (einschließlich mehrsprachiger Uploads) nicht erzeugt und nicht angezeigt, wenn die App Strings mit Pluralformen übergibt.
+
+Beispiel für die HTML-Vorschau der Datei:
+
+```html
+<html lang="en">
+  <head>
+    <title>Optional Title</title>
+    <style>
+      table, th, td {
+        border: 1px solid #aaa;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 style="text-align: center">HTML preview of the file</h1>
+    <table style="width: 100%">
+      <tr>
+        <th>Key:</th>
+        <th>Text:</th>
+      </tr>
+      <tr>
+        <td>Key 1</td>
+        <td><span id="string_preview_id_1" class="crowdin_phrase">Source Text 1</span></td> <!-- 1 is previewId in strings json -->
+      </tr>
+      <tr>
+        <td>Key 2</td>
+        <td><span id="string_preview_id_2" class="crowdin_phrase">Source Text 2</span></td> <!-- 2 is previewId in strings json -->
+      </tr>
+    </table>
+  </body>
+</html>
+```
