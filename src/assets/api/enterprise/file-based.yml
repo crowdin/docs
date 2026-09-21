@@ -2698,6 +2698,105 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  /ai/usage/members:
+    get:
+      tags:
+        - AI
+      summary: 'List AI Usage Members'
+      description: '**Required scopes:** `ai` (Read only).'
+      operationId: api.ai.usage.members.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+        -
+          $ref: '#/components/parameters/EnterpriseAiUsageMemberCollectionUserIds'
+        -
+          $ref: '#/components/parameters/AiUsageMemberCollectionOrderBy'
+      responses:
+        '200':
+          description: 'AI usage members list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiUsageMemberCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/ai/usage/members/{memberId}':
+    get:
+      tags:
+        - AI
+      summary: 'Get AI Usage Member'
+      description: '**Required scopes:** `ai` (Read only).'
+      operationId: api.ai.usage.members.get
+      parameters:
+        -
+          name: memberId
+          in: path
+          description: 'ID of the organization member. Get via [List Users](#operation/api.users.getMany) or via [Get Authenticated User](#operation/api.user.get) for own usage'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'AI usage member data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiUsageMemberResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
   '/applications/installations/{identifier}/bundles':
     post:
       tags:
@@ -4867,7 +4966,7 @@ paths:
       tags:
         - Glossaries
       summary: 'List Concepts'
-      description: '**Required scopes:** `glossary` (Read only).'
+      description: "**Required scopes:** `glossary` (Read only).\n\nReturns a list of concepts in the glossary. A concept groups the terms that mean the same thing in different languages."
       operationId: api.glossaries.concepts.getMany
       parameters:
         -
@@ -4897,7 +4996,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConceptCollectionResource'
+                $ref: '#/components/schemas/EnterpriseConceptCollectionResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -4938,8 +5037,8 @@ paths:
     get:
       tags:
         - Glossaries
-      summary: 'Get concept'
-      description: '**Required scopes:** `glossary` (Read only).'
+      summary: 'Get Concept'
+      description: "**Required scopes:** `glossary` (Read only).\n\nReturns a single concept of the glossary, with the definition and note stored for each of its languages."
       operationId: api.glossaries.concepts.get
       parameters:
         -
@@ -4952,7 +5051,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConceptResource'
+                $ref: '#/components/schemas/EnterpriseConceptResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -4992,8 +5091,8 @@ paths:
     put:
       tags:
         - Glossaries
-      summary: 'Update concept'
-      description: "**Required scopes:** `glossary` (Read and Write).\n\n__Note:__ There is no separate method for concept creation. Concepts are automatically created when adding a term without specifying a `conceptId`."
+      summary: 'Update Concept'
+      description: "**Required scopes:** `glossary` (Read and Write).\n\nUpdates the concept and the definition and note stored for each of its languages. `fields` writes the whole set of custom field values: a field the request omits, or whose value is empty, is cleared.\n\n__Note:__ There is no separate method for concept creation. Concepts are automatically created when adding a term without specifying a `conceptId`."
       operationId: api.glossaries.concepts.put
       parameters:
         -
@@ -5011,7 +5110,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConceptResource'
+                $ref: '#/components/schemas/EnterpriseConceptResource'
         '400':
           description: 'Invalid Request Body'
           content:
@@ -5052,7 +5151,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Delete Concept'
-      description: '**Required scopes:** `glossary` (Read and Write).'
+      description: "**Required scopes:** `glossary` (Read and Write).\n\nDeletes the concept together with every term that belongs to it."
       operationId: api.glossaries.concepts.delete
       parameters:
         -
@@ -6230,6 +6329,8 @@ paths:
               - file
               - translation
               - string
+              - term
+              - concept
         -
           name: type
           in: query
@@ -19500,7 +19601,7 @@ paths:
       tags:
         - Glossaries
       summary: 'List Terms'
-      description: '**Required scopes:** `glossary` (Read only).'
+      description: "**Required scopes:** `glossary` (Read only).\n\nReturns a list of terms in the glossary, ordered by `id` unless `orderBy` says otherwise. Without a filter the terms of every language are returned."
       operationId: api.glossaries.terms.getMany
       parameters:
         -
@@ -19562,7 +19663,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TermCollectionResource'
+                $ref: '#/components/schemas/EnterpriseTermCollectionResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -19613,7 +19714,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TermResource'
+                $ref: '#/components/schemas/EnterpriseTermResource'
         '400':
           description: 'Invalid Request Parameters'
           content:
@@ -19660,7 +19761,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Clear Glossary'
-      description: '**Required scopes:** `glossary` (Read and Write).'
+      description: "**Required scopes:** `glossary` (Read and Write).\n\nDeletes the terms of the glossary. Without a filter every term is deleted; the query parameters narrow it to one language, one concept, or one term and its translations."
       operationId: api.glossaries.terms.deleteMany
       parameters:
         -
@@ -19728,7 +19829,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Get Term'
-      description: '**Required scopes:** `glossary` (Read only).'
+      description: "**Required scopes:** `glossary` (Read only).\n\nReturns a single term of the glossary."
       operationId: api.glossaries.terms.get
       parameters:
         -
@@ -19741,7 +19842,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TermResource'
+                $ref: '#/components/schemas/EnterpriseTermResource'
         '401':
           description: Unauthorized
           content:
@@ -19770,7 +19871,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Delete Term'
-      description: '**Required scopes:** `glossary` (Read and Write).'
+      description: "**Required scopes:** `glossary` (Read and Write).\n\nDeletes the term. When it was the last term of its concept, the concept is deleted as well."
       operationId: api.glossaries.terms.delete
       parameters:
         -
@@ -19814,7 +19915,7 @@ paths:
       tags:
         - Glossaries
       summary: 'Edit Term'
-      description: '**Required scopes:** `glossary` (Read and Write).'
+      description: "**Required scopes:** `glossary` (Read and Write).\n\nUpdates the term with a JSON Patch document. Only the paths listed in the request schema can be replaced.\n\n__Note:__ A `replace` on `/fields` writes the whole set of custom field values — a field the value omits, or whose value is empty, is cleared"
       operationId: api.glossaries.terms.patch
       parameters:
         -
@@ -19822,7 +19923,7 @@ paths:
         -
           $ref: '#/components/parameters/TermId'
       requestBody:
-        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+        description: 'A JSON Patch document as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-3)'
         content:
           application/json:
             schema:
@@ -19833,7 +19934,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TermResource'
+                $ref: '#/components/schemas/EnterpriseTermResource'
         '400':
           description: 'Invalid Request Body'
           content:
@@ -26634,6 +26735,86 @@ components:
             - 'Перекладений текст 1'
             - 'Перекладений текст 2'
       type: object
+    AiUsageMemberCollectionResource:
+      description: 'AI Usage Member Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/AiUsageMemberResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    AiUsageMemberResource:
+      description: 'AI Usage Member Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AiUsageMember'
+    AiUsageMember:
+      title: 'AI Usage Member'
+      properties:
+        user:
+          description: 'Organization member the usage and limits below belong to'
+          properties:
+            id:
+              description: 'User ID'
+              type: integer
+              example: 12
+            username:
+              description: 'User username'
+              type: string
+              example: john_smith
+            fullName:
+              description: 'User full name'
+              type: string
+              example: 'John Smith'
+            avatarUrl:
+              description: 'User avatar URL'
+              type: string
+              example: ''
+          type: object
+        dailyCostLimit:
+          description: 'Effective daily AI cost limit in USD. `null` means no limit, `0` means AI usage is blocked for the user. When the organization-wide limit is the lower one, it is shared by all members'
+          type: number
+          format: float
+          example: 2
+          nullable: true
+        dailyCostSpent:
+          description: 'AI cost spent in the current day, in USD'
+          type: number
+          format: float
+          example: 0.26
+        dailyResetAt:
+          description: 'Date and time when the daily cost limit resets'
+          type: string
+          format: date-time
+          example: '2026-09-12T00:00:00+00:00'
+        monthlyCostLimit:
+          description: 'Effective monthly AI cost limit in USD. `null` means no limit, `0` means AI usage is blocked for the user. When the organization-wide limit is the lower one, it is shared by all members'
+          type: number
+          format: float
+          example: null
+          nullable: true
+        monthlyCostSpent:
+          description: 'AI cost spent in the current month, in USD'
+          type: number
+          format: float
+          example: 6.93
+        monthlyResetAt:
+          description: 'Date and time when the monthly cost limit resets'
+          type: string
+          format: date-time
+          example: '2026-10-01T00:00:00+00:00'
+      type: object
     ApplicationConsentPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -30186,8 +30367,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ConceptUpdateLanguagesDetails'
+        fields:
+          oneOf:
+            -
+              $ref: '#/components/schemas/EnterpriseAdditionalFields'
+          nullable: true
       type: object
-    ConceptCollectionResource:
+    EnterpriseConceptCollectionResource:
       description: 'Concept Collection Resource'
       type: object
       allOf:
@@ -30200,10 +30386,10 @@ components:
             data:
               type: array
               items:
-                $ref: '#/components/schemas/ConceptResource'
+                $ref: '#/components/schemas/EnterpriseConceptResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
-    ConceptResource:
+    EnterpriseConceptResource:
       description: 'Concept Resource'
       type: object
       allOf:
@@ -30287,6 +30473,11 @@ components:
           type: string
           format: date-time
           example: '2019-09-23T07:19:47+00:00'
+        fields:
+          oneOf:
+            -
+              $ref: '#/components/schemas/EnterpriseAdditionalFields'
+          nullable: true
       type: object
     JsonPatchDocument:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
@@ -31907,6 +32098,10 @@ components:
                   - stringEditModal
                   - stringDetails
                   - translationUnderContent
+                  - termDetails
+                  - termEditModal
+                  - conceptDetails
+                  - conceptEditModal
             type: object
       type: object
     NumberFieldConfig:
@@ -31944,6 +32139,10 @@ components:
                   - stringEditModal
                   - stringDetails
                   - translationUnderContent
+                  - termDetails
+                  - termEditModal
+                  - conceptDetails
+                  - conceptEditModal
             type: object
       type: object
     OtherTypesFieldConfig:
@@ -31972,6 +32171,10 @@ components:
                   - stringEditModal
                   - stringDetails
                   - translationUnderContent
+                  - termDetails
+                  - termEditModal
+                  - conceptDetails
+                  - conceptEditModal
             type: object
       type: object
     FieldConfig:
@@ -32032,6 +32235,8 @@ components:
               - file
               - translation
               - string
+              - term
+              - concept
             example: task
         config:
           $ref: '#/components/schemas/FieldConfig'
@@ -32095,6 +32300,8 @@ components:
               - file
               - translation
               - string
+              - term
+              - concept
             example: task
         createdAt:
           description: 'in UTC'
@@ -34707,6 +34914,41 @@ components:
           example: 2
       type: object
     GlossaryExportForm:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/GlossaryExportFormBase'
+        -
+          properties:
+            exportFields:
+              description: "Array fields for export. A custom field is selected by its slug — `field_{%fieldSlug%}` for a term field, exported as one column per language, and `conceptField_{%fieldSlug%}` for a concept field, exported as a single column.\n\n__Note:__ Used for export CSV or XLSX format only"
+              type: array
+              items:
+                oneOf:
+                  - { type: string, enum: [term, description, partOfSpeech, type, status, gender, note, url, conceptDefinition, conceptSubject, conceptNote, conceptUrl, conceptFigure] }
+                  - { type: string, pattern: '^(field|conceptField)_[0-9a-zA-Z_-]{3,255}$' }
+              default:
+                - term
+                - description
+                - partOfSpeech
+              example:
+                - term
+                - description
+                - partOfSpeech
+    GlossaryImportForm:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/GlossaryImportFormBase'
+        -
+          properties:
+            scheme:
+              description: "Defines data columns mapping. Acceptable value is combination of following constants:\n * `term_{%language_code%}` – column with terms\n * `description_{%language_code%}` – column with terms description\n * `partOfSpeech_{%language_code%}` – column with terms part of speech\n * `status_{%language_code%}` – column with terms status\n * `type_{%language_code%}` – column with terms type\n * `gender_{%language_code%}` – column with terms gender\n * `url_{%language_code%}` – column with terms url\n * `note_{%language_code%}` – column with terms note where `%language_code%` – placeholder for your language code\n * `conceptDefinition` – column with concepts definition\n * `conceptSubject` – column with concepts subject\n * `conceptNote` – column with concepts note\n * `conceptUrl` – column with concepts url\n * `conceptFigure` – column with concepts figure\n * `field_{%fieldSlug%}_{%language_code%}` – column with a term custom field value\n * `conceptField_{%fieldSlug%}` – column with a concept custom field value\n\n__Note:__ Only the custom fields whose columns are mapped here are written — a field this scheme omits keeps its stored value, and a mapped but empty cell clears it\n\n__Note:__ Used for upload of CSV or XLS/XLSX files only"
+              type: object
+              example:
+                term_en: 0
+                description_en: 1
+    GlossaryExportFormBase:
       properties:
         format:
           description: "Supported formats:\n * 'tbx'\n * 'tbx_v3'\n * 'csv'\n * 'xlsx'"
@@ -34718,33 +34960,6 @@ components:
             - csv
             - xlsx
           example: csv
-        exportFields:
-          description: "Array fields for export.\n\n__Note:__ Used for export CSV or XLSX format only"
-          type: array
-          items:
-            type: string
-            enum:
-              - term
-              - description
-              - partOfSpeech
-              - type
-              - status
-              - gender
-              - note
-              - url
-              - conceptDefinition
-              - conceptSubject
-              - conceptNote
-              - conceptUrl
-              - conceptFigure
-          default:
-            - term
-            - description
-            - partOfSpeech
-          example:
-            - term
-            - description
-            - partOfSpeech
         exportType:
           description: "Determines whether the export keeps every term of a matching concept (`concepts`, default)\n * or only the terms that match the active filters (`terms`)."
           type: string
@@ -34927,7 +35142,7 @@ components:
           format: date-time
           example: '2024-09-27T07:00:14+00:00'
       type: object
-    GlossaryImportForm:
+    GlossaryImportFormBase:
       required:
         - storageId
       properties:
@@ -34935,12 +35150,6 @@ components:
           description: "Storage Identifier. Get via [List Storages](#operation/api.storages.getMany)\n\n Supported file formats:\n * TBX\n * CSV\n * XLS/XLSX"
           type: integer
           format: int64
-        scheme:
-          description: "Defines data columns mapping. Acceptable value is combination of following constants:\n * `term_{%language_code%}` – column with terms\n * `description_{%language_code%}` – column with terms description\n * `partOfSpeech_{%language_code%}` – column with terms part of speech\n * `status_{%language_code%}` – column with terms status\n * `type_{%language_code%}` – column with terms type\n * `gender_{%language_code%}` – column with terms gender\n * `url_{%language_code%}` – column with terms url\n * `note_{%language_code%}` – column with terms note where `%language_code%` – placeholder for your language code\n * `conceptDefinition` – column with concepts definition\n * `conceptSubject` – column with concepts subject\n * `conceptNote` – column with concepts note\n * `conceptUrl` – column with concepts url\n * `conceptFigure` – column with concepts figure\n\n__Note:__ Used for upload of CSV or XLS/XLSX files only"
-          type: object
-          example:
-            term_en: 0
-            description_en: 1
         firstLineContainsHeader:
           description: "Defines whether file includes first row header that should not be imported\n\n__Note:__  Used for upload of CSV or XLS/XLSX files only"
           type: boolean
@@ -53172,7 +53381,7 @@ components:
           nullable: true
       type: object
     TermPatch:
-      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      description: 'A JSON Patch document as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-3)'
       type: array
       items:
         $ref: '#/components/schemas/TermOperation'
@@ -53189,7 +53398,7 @@ components:
             - replace
             - test
         path:
-          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          description: 'A JSON Pointer as defined by [RFC 6901](https://tools.ietf.org/html/rfc6901)'
           type: string
           format: json-pointer
           enum:
@@ -53201,6 +53410,7 @@ components:
             - /gender
             - /url
             - /note
+            - /fields
       type: object
       discriminator:
         propertyName: op
@@ -53315,8 +53525,13 @@ components:
           description: 'Defines whether to add translation to the existing term. Get `id` via [List Terms](#operation/api.glossaries.terms.getMany)'
           type: integer
           deprecated: true
+        fields:
+          oneOf:
+            -
+              $ref: '#/components/schemas/EnterpriseAdditionalFields'
+          nullable: true
       type: object
-    TermCollectionResource:
+    EnterpriseTermCollectionResource:
       description: 'Term Collection Resource'
       type: object
       allOf:
@@ -53329,10 +53544,10 @@ components:
             data:
               type: array
               items:
-                $ref: '#/components/schemas/TermResource'
+                $ref: '#/components/schemas/EnterpriseTermResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
-    TermResource:
+    EnterpriseTermResource:
       description: 'Term Resource'
       type: object
       allOf:
@@ -53397,6 +53612,11 @@ components:
           type: string
           format: date-time
           example: '2019-09-23T07:19:47+00:00'
+        fields:
+          oneOf:
+            -
+              $ref: '#/components/schemas/EnterpriseAdditionalFields'
+          nullable: true
       type: object
     TmPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
@@ -57464,6 +57684,46 @@ components:
         type: string
         format: date-time
       example: '2026-07-31T23:59:59+00:00'
+    CrowdinAiUsageMemberCollectionUserIds:
+      name: userIds
+      in: query
+      description: 'Filter by user identifier, comma-separated. Get via [List Project Members](#operation/api.projects.members.getMany)'
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: integer
+        maxItems: 500
+      example: '2,3'
+    EnterpriseAiUsageMemberCollectionUserIds:
+      name: userIds
+      in: query
+      description: 'Filter by user identifier, comma-separated. Get via [List Users](#operation/api.users.getMany)'
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: integer
+        maxItems: 500
+      example: '2,3'
+    AiUsageMemberCollectionOrderBy:
+      name: orderBy
+      in: query
+      description: 'Read more about [sorting rules](#section/Introduction/Sorting)'
+      required: false
+      schema:
+        type: string
+        enum:
+          - username
+          - dailyCostLimit
+          - dailyCostSpent
+          - monthlyCostLimit
+          - monthlyCostSpent
+      example: 'dailyCostSpent desc'
     ApplicationKvPrefix:
       name: prefix
       in: query
