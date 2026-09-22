@@ -42,7 +42,6 @@ import translationProgressIndicators from '!/crowdin/online-editor/translation_p
 import searchTmTab from '!/crowdin/online-editor/search_tm_tab.png';
 import replaceInSuggestionsResults from '!/crowdin/online-editor/replace_in_suggestions_results.png';
 import replaceInSourcesResults from '!/crowdin/online-editor/replace_in_sources_results.png';
-import advancedFilter from '!/crowdin/online-editor/advanced_filter.png';
 import taskName from '!/crowdin/online-editor/task_name.png';
 
 The Editor is the main place in Crowdin where project members can work on translations. It allows users to suggest, vote on, review, and approve translations online.
@@ -181,7 +180,8 @@ Define the scope of your search by selecting one of the following criteria:
 
 * *Everything* – search through source texts, translations, context, and identifiers.
 * *Strings* – search through source texts only.
-* *Translations* – search through translations only.
+* *All translations* – search through every translation of a string.
+* *Final translations* – search only the translation shown at the top of the translation list and used on download.
 * *Context* – search through string context only.
 * *Identifier (Key)* – search through string identifiers only.
 
@@ -193,12 +193,12 @@ Refine your search further with these options:
 * *Match whole phrase* – finds strings that contain the search phrase in the exact order. For example, a search for `Machine Translation` will find `Machine Translation` or `machine translation`, but not `Translation Machine`.
 * *Exact match* – finds only strings that are identical to the search phrase. For example, a search for `Work` will find `Work` or `work`, but not `Works` or `Working`.
 
-You can combine *Match case* with either *Match whole phrase* or *Exact match*. Note that *Match whole phrase* and *Exact match* are mutually exclusive.
+You can combine *Match case* with either *Match whole phrase* or *Exact match*. Note that *Match whole phrase* and *Exact match* are mutually exclusive. Enclosing the search phrase in quotation marks enables *Match whole phrase* automatically, unless *Exact match* is selected.
 
 The search phrase is limited to 128 characters. If you use a search phrase longer than 128 characters, it will be automatically truncated to the maximum allowed length.
 
-You can also find a specific string by its internal numeric identifier (a number automatically assigned by Crowdin). To do so, type the numeric ID (e.g., `34354`) into the search field without quotation marks to get an exact match.
-To search for the occurrences of the number in the text or context, enclose it in quotation marks (e.g., `"34354"`).
+You can also find a specific string by its internal numeric identifier (a number automatically assigned by Crowdin). To do so, type the numeric ID (for example, `34354`) into the search field without quotation marks to get an exact match. A string ID search ignores the filters and the search options.
+To search for the occurrences of the number in the text or context, enclose it in quotation marks (for example, `"34354"`) or select **Search as text**.
 
 #### Filtering Strings
 
@@ -599,7 +599,7 @@ The proofreading process works mainly the same way as in side-by-side mode, exce
 
 #### Using Filter in Multilingual Mode
 
-When using filter options in multilingual mode, the system will show strings that meet the selected criteria for at least one of the selected languages.
+When using filter options in multilingual mode, the system will show strings that meet the selected criteria for at least one of the selected languages. Filters that depend on translations become available once you select at least one target language.
 
 This behavior applies to the following filter options:
 
@@ -608,10 +608,10 @@ This behavior applies to the following filter options:
 * Approved
 * QA issues
 * Machine Translations
-* Advanced Filter > Translations updated
-* Advanced Filter > Translations > Partially translated (plurals)
-* Advanced Filter > Translations > Same as source string
-* Advanced Filter > Votes
+* Advanced Filter > Translations > Translations Updated
+* Advanced Filter > Strings > Translation Status > Partially Translated (Plurals)
+* Advanced Filter > Translations > Conditions > Translation Equals Source String
+* Advanced Filter > Translations > Votes
 
 ## Translating RTL Languages
 
@@ -914,45 +914,57 @@ Use the **Queue** button in the bottom-left corner of the **Auto-Translate strin
 
 ### Advanced Filter
 
-You can create a custom filter for strings by clicking the **Filter strings** <Icon name="mdi:filter-variant" class="inline-icon" /> icon and choosing **Advanced Filter**. This feature helps you locate specific strings faster by allowing you to combine multiple filter parameters and define a custom sort order.
-
-<Image src={advancedFilter} alt="Advanced Filter" />
+You can create a custom filter for strings by clicking the **Filter strings** <Icon name="mdi:filter-variant" class="inline-icon" /> icon next to the search field and choosing **Advanced Filter**. Combine multiple filter parameters and define a custom sort order to locate specific strings faster.
 
 #### Filter Parameters
 
-The filter dialog contains the following parameters, which you can combine to narrow down your search:
+The filter dialog groups its parameters into the following sections, and you can combine parameters from any of them to narrow down your search:
 
-* **Strings Added** – Filter strings that were imported into the project within a specific date range.
-* **Strings Updated** – Filter source strings that were updated within a specific date range.
-* **Translations Updated** – Filter strings where translations were added or updated (including new suggestions, approvals, or votes) within a specific date range.
-* [**Verbal Expression**](#verbal-expressions) – Filter strings using complex structural patterns.
-* **Scope** – Define where the Verbal Expression is applied. Options include *Strings*, *Context*, *Translations*, *Identifier (Key)*, or *Everything*.
-* [**Labels: Include**](#filtering-by-labels) – Include strings that have *all* or *any* of the selected labels.
-* [**Labels: Exclude**](#filtering-by-labels) – Exclude strings that have *all* or *any* of the selected labels. <Aside>Both the **Labels: Include** and **Labels: Exclude** options only appear if your project uses labels.</Aside>
-* **Translations** – Filter by translation status. Options include *Untranslated*, *Partially Translated (Plurals)*, *Translated*, *Same as Source String*, and *Modified Source Strings*.
-* **Duplicates** – Filter strings based on their duplicate status. Options include *Master Strings*, *Duplicates Only*, *Duplicates with Shared Translations*, and *Duplicates with Own Translations*. <Aside>This option only appears if [**Duplicate Strings**](/project-settings/import/#duplicate-strings) is configured to auto-translate duplicates. Shared translations come from the master string, while own translations are entered directly on the duplicate.</Aside>
-* **Approvals** – Filter strings by their approval status. Options include *Translated, Not Approved*, *Partially Approved (Plurals)*, *Approved*, and *Have Translations After Approval*.
-* **Engine** – Filter strings based on their translation origin. Options include *Machine Translation (MT)*, *Translation Memory (TM)*, *AI*, or *Any Engine*.
-* **Translation Method** – Filter strings based on whether auto-translation was applied. Options include *Auto-Translation* or *Manual*.
-* **Comments** – Filter strings by comments or issues. Options include *Do Not Have Comments*, *Have Comments*, *Unresolved Issues*, *General Question Issues*, *Current Translation Is Wrong Issues*, *Lack of Contextual Information Issues*, or *Mistake in Source String Issues*.
-* **Screenshots** – Filter strings that are *With Screenshots* or *Without Screenshots*.
-* **Visibility** – Filter strings by their visibility to translators: *Visible* or *Hidden*. <Aside>This option only appears if you have access to hidden strings.</Aside>
-* **QA Issues** – Filter strings based on quality assurance issues. Options include *Without QA Checks*, *QA check in progress*, *All* issues, or a specific check (e.g. *Tags mismatch*, *Spelling mistakes*, *Punctuation mismatch*). <Aside>The available checks depend on the QA checks enabled for the project.</Aside>
-* **String Type** – Filter by string format. Options include *Simple String*, *Plurals*, or *ICU*.
-* **Votes** – Filter strings by the net number of votes. Options are *Greater Than* or *Less Than* a specified number.
-* **Translated By** – Filter for strings *Translated By* or *Not Translated By* a specific project member.
-* **Approved By** – Filter for strings *Approved By* or *Not Approved By* a specific project member.
+##### Search
+
+Set where the search applies and what it looks for:
+
+* **Search in**: Choose which part of the strings the search covers. Options include *Everything*, *Strings*, *Context*, *All translations*, *Final translations*, or *Identifier (Key)*.
+* **Text**: Search for the text as typed.
+* [**Verbal Expression**](#verbal-expressions): Search for a structural pattern instead of exact text. <Aside>**Text** and **Verbal Expression** are mutually exclusive, so the dialog holds one query at a time and shows which one **Filter** will replace.</Aside>
+
+##### Strings
+
+Filter by the properties of the source strings:
+
+* **Strings Added**: Filter strings that were imported into the project within a specific date range.
+* **Strings Updated**: Filter source strings that were updated within a specific date range.
+* [**Labels: Include All / Labels: Include Any**](#filtering-by-labels): Include strings that have all or any of the selected labels.
+* [**Labels: Exclude All / Labels: Exclude Any**](#filtering-by-labels): Exclude strings that have all or any of the selected labels. <Aside>These options only appear if your project uses labels.</Aside>
+* **Duplicates**: Filter strings based on their duplicate status. Options include *Master Strings*, *Duplicates Only*, *Duplicates with Shared Translations*, and *Duplicates with Own Translations*. <Aside>This option only appears if [**Duplicate Strings**](/project-settings/import/#duplicate-strings) is configured to auto-translate duplicates. Shared translations come from the master string, while own translations are entered directly on the duplicate.</Aside>
+* **String Type**: Filter by string format. Options include *Simple String*, *Plurals*, or *ICU*.
+* **Translation Status**: Filter by translation status. Options include *Untranslated*, *Partially Translated (Plurals)*, and *Translated*.
+* **Approval Status**: Filter strings by their approval status. Options include *Translated, Not Approved*, *Partially Approved (Plurals)*, and *Approved*.
+* **QA Issues**: Filter strings based on quality assurance issues. Options include *Without QA Checks*, *QA check in progress*, *All* issues, or a specific check (for example, *Tags mismatch*, *Spelling mistakes*, *Punctuation mismatch*). <Aside>The available checks depend on the QA checks enabled for the project.</Aside>
+* **Comments**: Filter strings by comments or issues. Options include *Do Not Have Comments*, *Have Comments*, *Unresolved Issues*, *General Question Issues*, *Current Translation Is Wrong Issues*, *Lack of Contextual Information Issues*, or *Mistake in Source String Issues*.
+* **Screenshots**: Filter strings that are *With Screenshots* or *Without Screenshots*.
+* **Visibility**: Filter strings by whether translators can see them. Options are *Visible* or *Hidden*. <Aside>This option only appears if you have access to hidden strings.</Aside>
+
+##### Translations
+
+Filter by the translations a string already has:
+
+* **Scope**: Define whether a filter matches any translation of a string or only the final one (the translation shown at the top of the translation list and used on download). Options are *All translations* and *Final translations*. The scope applies to **Engine**, **Translation Method**, **Votes**, **Translated By**, **Approved By**, **Translation Equals Source String**, and **Source Changed After Translation**. It becomes available once you set one of them.
+* **Translations Updated**: Filter strings where translations were added or updated (including new suggestions, approvals, or votes) within a specific date range.
+* **Engine**: Filter strings based on their translation origin. Options include *Machine Translation (MT)*, *Translation Memory (TM)*, *AI*, or *Any Engine*.
+* **Translation Method**: Filter strings based on whether auto-translation was applied. Options include *Auto-Translation* or *Manual*.
+* **Votes**: Filter strings by the net number of votes. Options are *Greater Than* or *Less Than* a specified number.
+* **Translated By**: Filter for strings *Translated By* or *Not Translated By* a specific project member.
+* **Approved By**: Filter for strings *Approved By* or *Not Approved By* a specific project member.
+* **Conditions**: Filter strings by conditions that you can combine with each other and with the status filters. Options include *Translation Equals Source String*, *Source Changed After Translation*, and *Translation Added After Approval*.
 
 #### Verbal Expressions
 
-The Advanced Filter also supports Verbal Expressions, which allow you to find strings that match specific structural patterns, such as the placement of variables, formatting, or punctuation, rather than matching exact text.
+The Advanced Filter also supports Verbal Expressions, which match strings by structural patterns, such as the placement of variables, formatting, or punctuation, rather than by exact text.
 
-* **Verbal Expression** – Enter the pattern you want to search for.
-* **Scope** – Define where to search for the pattern. Options include *Strings*, *Context*, *Translations*, *Identifier (Key)*, or *Everything*.
+In the **Search** group, select **Verbal Expression**, enter the pattern, and set **Search in** to define where to look for it.
 
-<Aside type="caution">
-  When you use a verbal expression, the regular text search field is disabled.
-</Aside>
+The search field in the Editor toolbar keeps working while a verbal expression is active, but searching there replaces the expression.
 
 <LinkCard
   title="Expression Syntax Elements"
@@ -966,14 +978,14 @@ For a quick way to filter by a single label, you can click on any label tag disp
 
 For more complex queries involving multiple labels, you can set rules to include or exclude strings:
 
-* **Labels: Include All / Labels: Include Any** – use this drop-down menu to choose the logic for including labels. Then, add the desired labels in the corresponding field.
+* **Labels: Include All / Labels: Include Any**: Choose the logic for including labels, then add the labels in the corresponding field.
     * **Include All**: includes only strings that have **all** of the selected labels (AND logic).
     * **Include Any**: includes strings that have **at least one** of the selected labels (OR logic).
-* **Labels: Exclude All / Labels: Exclude Any** – use this drop-down menu to choose the logic for excluding labels. Then, add the desired labels in the corresponding field.
+* **Labels: Exclude All / Labels: Exclude Any**: Choose the logic for excluding labels, then add the labels in the corresponding field.
     * **Exclude All**: excludes only strings that have **all** of the selected labels (AND logic).
     * **Exclude Any**: excludes strings that have **at least one** of the selected labels (OR logic).
 
-This allows you to narrow or expand the filtered results depending on your needs.
+Combine these rules to narrow or expand the filtered results.
 
 Here are a couple of examples of how this logic works in practice:
 
@@ -982,7 +994,9 @@ Here are a couple of examples of how this logic works in practice:
 
 #### Sorting Options
 
-* **Sort By** – Organize the filtered strings based on a selected criterion. The available options are:
+Set the order of the filtered strings:
+
+* **Sort By**: Organize the filtered strings based on a selected criterion. The available options are:
     * *Original Sort Order*
     * *Strings Added*
     * *Translations Updated*
