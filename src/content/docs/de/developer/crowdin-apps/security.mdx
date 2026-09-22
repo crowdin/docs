@@ -1,0 +1,115 @@
+---
+title: Sicherheit für Crowdin-Apps
+description: Gewährleiste ein hohes Maß an Sicherheit für Crowdin-Apps
+slug: developer/crowdin-apps-security
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Wenn du eine selbst gehostete App erstellst, die mit Daten von Crowdin arbeitet, authentifiziert sie sich mit [`crowdin_app`](/developer/crowdin-apps-app-descriptor/#authentication) und erhält bei jeder von Crowdin gesendeten Anfrage ein signiertes JWT-Token. Durch die Überprüfung dieses Tokens kann die App erkennen, ob eine Anfrage tatsächlich von der erwarteten Quelle stammt.
+
+Beide SDKs übernehmen das für dich: Das [Crowdin Apps SDK](/developer/crowdin-apps-sdk/) validiert das Token und extrahiert den Kontext, während eine [serverlose App](/developer/crowdin-apps-serverless/) überhaupt kein Token erhält. Der folgende Abschnitt richtet sich an Apps, die Anfragen selbst überprüfen, beispielsweise eine App, die in einer anderen Sprache geschrieben wurde.
+
+<Aside>
+  Apps mit dem Modul [Workflow-Schritttyp](/developer/crowdin-apps-module-workflow-step-type/#authentication) verwenden statt `crowdin_app` den Authentifizierungstyp `crowdin_agent`.
+</Aside>
+
+## Was Crowdin sendet
+
+Crowdin öffnet eine Modulseite mit dem Token und seinem Kontext in der Query-Zeichenfolge:
+
+```shell wrap
+https://example.com/app-module?jwtToken=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJCcjRhMmhwUW……MX0.yt-lbv3Z8JyIGX4jG405mjZvX8lwc1q0EfWdTtm9GCc&origin=https://{domain}.crowdin.com&clientId=your-client-id
+```
+
+Query-Parameter:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>jwtToken</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> JWT-Token, das zur Autorisierung verwendet wird.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>origin</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string (url)</code></p>
+      <p><strong>Beschreibung:</strong> Host, der zum Öffnen einer Modulseite verwendet wird.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>clientId</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Die ID des für die Autorisierung verwendeten OAuth-Clients.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+Das Token ist mit dem OAuth-Client-Secret signiert, das nur Crowdin und deine App kennen. Eine gültige Signatur ist daher ein Nachweis dafür, woher die Anfrage stammt. Überprüfe die Signatur und den Ablaufzeitpunkt jedes Tokens, das deine App erhält, beispielsweise in einer Middleware, die vor dem restlichen Code ausgeführt wird. Jede der [vorhandenen Bibliotheken](https://jwt.io/) übernimmt das für dich.
+
+## Token-Payload
+
+```json
+{
+  "aud": "Br4a2hpQiNW96anuuO4a",
+  "sub": "1",
+  "domain": null,
+  "context": {},
+  "iat": 1600000000,
+  "exp": 1600000900
+}
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+  <tr>
+    <td><code>aud</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> ID des OAuth-Clients, der das Token ausgestellt hat.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>sub</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string</code></p>
+      <p><strong>Beschreibung:</strong> Kennung des Benutzers, der eine Anfrage an die Crowdin-App stellt.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>domain</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>string|null</code></p>
+      <p><strong>Beschreibung:</strong> Die Organisation, über die auf die App zugegriffen wird. Immer vorhanden und in Crowdin immer <code>null</code>.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">context</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>object</code></p>
+      <p><strong>Beschreibung:</strong> Die Umgebung, in der das Modul geöffnet wird, z. B. das Projekt, das Gebietsschema und die Zeitzone des Benutzers.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>iat</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Gibt den Ausstellungszeitpunkt des Tokens an.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>exp</code></td>
+    <td>
+      <p><strong>Typ:</strong> <code>integer</code></p>
+      <p><strong>Beschreibung:</strong> Gibt den Ablaufzeitpunkt des Tokens an.</p>
+    </td>
+  </tr>
+  </tbody>
+</table>

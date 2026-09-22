@@ -1,0 +1,218 @@
+---
+title: Modul zur Verarbeitung nach dem Export von Dateien
+description: Bearbeite deine Dateien, nachdem du sie aus Crowdin exportiert hast
+slug: developer/crowdin-apps-module-file-post-export-processing
+sidebar:
+  order: 6
+  label: Verarbeitung von Dateien nach dem Export
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Mit dem Modul zur Verarbeitung nach dem Export kannst du deine Dateien bearbeiten, nachdem du sie aus Crowdin exportiert hast. Mit dem Modul zur Verarbeitung nach dem Export kannst du automatische Änderungen auf ausgewählte Dateien anwenden. Dieses Modul kann mit einer Vielzahl von Dateiformaten wie TXT, XML, JSON und vielen weiteren arbeiten, um deren Inhalte anzupassen.
+
+Mit dem Modul zur Verarbeitung nach dem Export in deiner Crowdin-App kannst du Dateiformat, Struktur und Inhalt anpassen. Da das Modul ausgeführt wird, nachdem Crowdin die Datei exportiert hat, kannst du den Inhalt noch anpassen, nachdem die Datei vom System verarbeitet wurde.
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+Für Crowdin:
+
+* Nur ich (also der Projektinhaber)
+* Alle Projektmitglieder
+* Ausgewählte Benutzer
+
+Für Crowdin Enterprise:
+
+* Nur Organisationsadministratoren
+* Alle Benutzer in den Projekten der Organisation
+* Ausgewählte Benutzer
+
+## Struktur
+
+```json title="manifest.json"
+{
+  "modules": {
+    "file-post-export": [
+      {
+        "key": "your-post-export-module-key",
+        "url": "/export-file",
+        "signaturePatterns": {
+          "fileName": "^.+\.xml$",
+          "fileContent": "<properties>\s*<property\s+name=.*value=.*/>"
+        }
+      }
+    ]
+  }
+}
+```
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Die relative URL, die beim Export einer Datei aufgerufen wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">signaturePatterns</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>Objekt</code></p>
+        <p><strong>Beschreibung:</strong> Enthält reguläre Ausdrücke für <code>fileName</code> und/oder <code>fileContent</code>, die zur Erkennung des Dateityps beim Exportieren einer Übersetzungsdatei verwendet werden.</p>
+        <p><Aside>Der reguläre Ausdruck für <code>fileContent</code> prüft nur die ersten 64 KB des Dateiinhalts.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Kommunikation zwischen der File-Processing-App und Crowdin
+
+Beim Export einer Datei erkennt Crowdin anhand des Parameters `signaturePatterns` das passende Modul und sendet eine HTTP-Anfrage an die URL der App (`$baseUrl . $url`), damit die Datei weiterverarbeitet werden kann.
+
+Zusätzlich überprüft Crowdin während des Datei-Exports den Dateinamen und den Inhalt, um sicherzustellen, dass sie zu den passenden Modulen der File-Processing-App passen. Dieser Prozess kann das Modul zur Verarbeitung vor dem Export umfassen, um die Zeichenfolgen vor dem Export zu ändern, sowie das Modul zur Verarbeitung nach dem Export, um den Dateiinhalt nach dem Export zu ändern.
+
+Um den Dateiinhalt zu ändern, ermittelt das System zuerst das passende Modul zur Verarbeitung nach dem Export und sendet ihm den Dateiinhalt. Das Modul führt anschließend die zuvor festgelegten Änderungen durch, die Änderungen am Dateiformat, an der Struktur und am Inhalt umfassen können.
+
+Sobald das Post-Export-Modul die Änderungen an der Datei abgeschlossen hat, gibt Crowdin den geänderten Dateiinhalt sowie – sofern zutreffend – einen neuen Dateinamen oder eine neue Dateierweiterung zurück.
+
+### Anfrage an die Dateiverarbeitungs-App
+
+Beispiel für die Nutzlast der Anfrage:
+
+```json
+// maximales Request-Payload - 5 MB
+// Timeout - 2 Minuten
+{
+  "jobType": "file-post-export",
+  "organization": {
+    "id": 1,
+    "domain": "{domain}",
+    "baseUrl": "https://{domain}.crowdin.com",
+    "apiBaseUrl": "https://{domain}.api.crowdin.com"
+  },
+  "project": {
+    "id": 1,
+    "identifier": "your-project-identifier",
+    "name": "Your Project Name"
+  },
+  "file": {
+    "id": 1,
+    "name": "file.xml",
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // Base64-kodierter Inhalt der exportierten Datei
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=...", // Öffentliche URL der exportierten Datei
+    "rawContent": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // Base64-kodierter Inhalt der Quelldatei
+    "rawContentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=..." // Öffentliche URL der Quelldatei
+  },
+  "sourceLanguage": {
+    "id": "es",
+    "name": "Spanish",
+    "editorCode": "es",
+    "twoLettersCode": "es",
+    "threeLettersCode": "spa",
+    "locale": "es-ES",
+    "androidCode": "es-rES",
+    "osxCode": "es.lproj",
+    "osxLocale": "es",
+    "pluralCategoryNames": ["one"],
+    "pluralRules": "(n != 1)"
+  },
+  "targetLanguages": [
+    {
+      // dieselbe Struktur wie bei sourceLanguage; ein Element pro Export, bei mehrsprachigen Dateien können es mehrere sein
+    }
+  ]
+}
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>jobType</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Wert:</strong> <code>file-post-export</code></p>
+        <p><strong>Beschreibung:</strong> Gibt die Aktion des Moduls zur Nachbearbeitung von Dateien an.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.content</code>, <code>file.contentUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>String</code></p>
+        <p><strong>Beschreibung:</strong> Parameter, die zum Übergeben des Base64-codierten Inhalts der exportierten Datei (<code>file.content</code>) oder einer öffentlichen URL der exportierten Datei (<code>file.contentUrl</code>) verwendet werden.<br />
+        Beide Parameter können verwendet werden.<Aside title="Einschränkungen">Das maximale Limit für die Nutzlast der Anfrage beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>file.rawContent</code>, <code>file.rawContentUrl</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p> <p><strong>Beschreibung:</strong> Parameter, die zum Übergeben des Base64-codierten Inhalts der Ausgangsdatei (<code>file.rawContent</code>) oder einer öffentlichen URL der Ausgangsdatei (<code>file.rawContentUrl</code>) verwendet werden.<br />
+        Beide Parameter können verwendet werden.<Aside title="Einschränkungen">Das maximale Limit für die Nutzlast der Anfrage beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Erwartete Antwort der App
+
+Beispiel für die Nutzlast der Antwort:
+
+```json
+// maximales Response-Payload - 5 MB
+// Timeout - 2 Minuten
+{
+  "data": {
+    "content": "VGhpcyBpcyBmaWxlIGNvbnRlbnQ=", // Base64-kodierter Inhalt der geänderten Datei
+    "contentUrl": "https://crowdin-tmp.downloads.crowdin.com/1/file.xml?aws-signature=...", // Öffentliche URL der geänderten Datei
+    "exportPattern": "file.html" // optionales, neues Exportmuster für die resultierende Datei
+  },
+  "error": {
+    "message": "Your error message"
+  }
+}
+```
+
+Eigenschaften:
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>data.content</code>, <code>data.contentUrl</code></td>
+      <td>
+        <p><strong>Typ(data.content):</strong> <code>String</code></p>
+        <p><strong>Typ(data.contentUrl):</strong> <code>String</code></p>
+        <p><strong>Beschreibung:</strong> Parameter, die zum Übergeben des Base64-codierten Inhalts der geänderten Datei (<code>data.content</code>) oder einer öffentlichen URL der geänderten Datei (<code>data.contentUrl</code>) verwendet werden.<br />
+        Beide Parameter können verwendet werden.<Aside title="Einschränkungen">Das maximale Limit für die Nutzlast der Antwort beträgt 5 MB.</Aside></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>exportPattern</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Optionaler Parameter zum Überschreiben des Exportmusters für eine resultierende Datei.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>error.message</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Eine Fehlermeldung, die von der App an Crowdin übergeben wird und für einen Benutzer in der Benutzeroberfläche sichtbar ist.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>

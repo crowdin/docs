@@ -1,21 +1,17 @@
 ---
-title: Modul zur Verarbeitung vor dem Dateiexport
-description: Ändere die Strings vor dem Dateiexport
-slug: developer/crowdin-apps-module-file-pre-export-processing
+title: Modul zur Verarbeitung nach dem Dateiimport
+description: Ändere die aus deinen Dateien geparsten Strings nach dem Dateiimport
+slug: developer/crowdin-apps-module-file-post-import-processing
 sidebar:
-  order: 5
-  label: Verarbeitung vor dem Dateiexport
+  order: 4
+  label: Verarbeitung nach dem Dateiimport
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
-Mit dem Modul zur Verarbeitung vor dem Export kannst du die Strings vor dem Dateiexport ändern. Dieses Modul arbeitet sowohl mit den Source-Strings als auch mit den dazugehörigen Übersetzungen. Das Modul zur Verarbeitung vor dem Export ist besonders nützlich, wenn du die ursprüngliche Dateistruktur beibehalten und die Datei unverändert exportieren möchtest, aber Änderungen an übersetzten Strings vornehmen willst.
+Mit dem Modul zur Verarbeitung nach dem Import kannst du die aus deinen Dateien geparsten Strings nach dem Dateiimport ändern. Dieses Modul arbeitet sowohl mit den Source-Strings als auch mit den dazugehörigen Übersetzungen. Das Modul zur Verarbeitung vor dem Import ist besonders nützlich, wenn du die ursprüngliche Dateistruktur beibehalten und die Datei unverändert parsen möchtest, aber Änderungen an Source-Strings, Kontext, String-Übersetzungen oder z. B. Labels und maximalen Längen für Übersetzungen vornehmen möchtest.
 
-Mit dem Modul zur Verarbeitung vor dem Export erhältst du einen Payload mit dem Dateiinhalt und den zu exportierenden Strings. Mit dem Modul zur Verarbeitung vor dem Export kannst du übersetzte Strings ändern und sie anschließend für den Export zurückgeben. So kannst du die Strings anpassen, ohne den Dateiinhalt direkt zu verändern.
-
-<Aside>
-  Wenn deine Dateiverarbeitungs-App mithilfe des Moduls zur Verarbeitung nach dem Import die Anzahl der Strings geändert hat, muss das Modul zur Verarbeitung vor dem Export die ursprüngliche Anzahl der Strings zusammen mit ihrer `uniqId` zurückgeben.
-</Aside>
+Mit dem Modul zur Verarbeitung nach dem Import erhältst du einen Payload mit dem Dateiinhalt und den daraus geparsten Strings. Mit dem Modul zur Verarbeitung nach dem Import kannst du die geparsten Strings auf verschiedene Arten ändern (z. B. aufteilen, zusammenführen oder neue Strings hinzufügen) und die geänderten Strings zurückgeben. So kannst du die Strings anpassen, ohne den Dateiinhalt direkt zu verändern.
 
 ## Zugriff
 
@@ -38,10 +34,10 @@ Für Crowdin Enterprise:
 ```json title="manifest.json"
 {
   "modules": {
-    "file-pre-export": [
+    "file-post-import": [
       {
-        "key": "your-pre-export-module-key",
-        "url": "/export-strings",
+        "key": "your-post-import-module-key",
+        "url": "/import-strings",
         "signaturePatterns": {
           "fileName": "^.+\.xml$",
           "fileContent": "<properties>\s*<property\s+name=.*value=.*/>"
@@ -69,14 +65,14 @@ Für Crowdin Enterprise:
       <td>
         <p><strong>Typ:</strong> <code>string</code></p>
         <p><strong>Erforderlich:</strong> ja</p>
-        <p><strong>Beschreibung:</strong> Die relative URL, die beim Export einer Datei aufgerufen wird.</p>
+        <p><strong>Beschreibung:</strong> Die relative URL, die beim Dateiimport, bei Aktualisierungen und beim Hochladen von Übersetzungen aufgerufen wird.</p>
       </td>
     </tr>
     <tr>
       <td><code class="whitespace-nowrap">signaturePatterns</code></td>
       <td>
-        <p><strong>Typ:</strong> <code>Objekt</code></p>
-        <p><strong>Beschreibung:</strong> Enthält reguläre Ausdrücke für <code>fileName</code> und/oder <code>fileContent</code>, die zur Erkennung des Dateityps beim Exportieren einer Übersetzungsdatei verwendet werden.</p>
+        <p><strong>Typ:</strong> <code>object</code></p>
+        <p><strong>Beschreibung:</strong> Enthält reguläre Ausdrücke für <code>fileName</code> und/oder <code>fileContent</code>, die zum Erkennen des Dateityps beim Hochladen einer neuen Source-Datei über die UI (oder über die API ohne angegebenen <code>type</code>-Parameter) verwendet werden.</p>
         <p><Aside>Der reguläre Ausdruck für <code>fileContent</code> prüft nur die ersten 64 KB des Dateiinhalts.</Aside></p>
       </td>
     </tr>
@@ -85,9 +81,9 @@ Für Crowdin Enterprise:
 
 ## Kommunikation zwischen der File-Processing-App und Crowdin
 
-Beim Export einer Datei erkennt das System anhand des Parameters `signaturePatterns` ein geeignetes Modul zur Verarbeitung vor dem Export und sendet eine HTTP-Anfrage an die URL der App (`$baseUrl`. `$url`) zur weiteren Verarbeitung mit den Source-Strings und den dazugehörigen Übersetzungen.
+Beim Import einer Datei erkennt das System anhand des Parameters `signaturePatterns` ein geeignetes Modul zur Verarbeitung nach dem Import und sendet zur weiteren Verarbeitung eine HTTP-Anfrage an die URL der App (`$baseUrl`. `$url`) mit den extrahierten Strings.
 
-Die Dateiverarbeitungs-App ändert die String-Übersetzungen entsprechend deinen Anforderungen. Stelle sicher, dass das Modul zur Verarbeitung vor dem Export die ursprüngliche Anzahl der Strings zusammen mit ihrer `uniqId` zurückgibt, damit der Übersetzungsexport erfolgreich abgeschlossen werden kann. Nachdem die geänderten Strings vom Modul zur Verarbeitung vor dem Export zurückgegeben wurden, werden sie zum Erstellen einer Übersetzungsdatei verwendet.
+Die App zur Dateiverarbeitung ändert die empfangenen Strings entsprechend deinen Anforderungen. Mit dem Modul zur Verarbeitung nach dem Import kannst du neue Strings aufteilen, zusammenführen oder hinzufügen bzw. die Attribute vorhandener Strings bearbeiten. Nachdem die geänderten Strings vom Modul zur Verarbeitung nach dem Import zurückgegeben wurden, werden sie dem Crowdin-Projekt hinzugefügt und stehen zur Übersetzung zur Verfügung.
 
 ### Anfrage an die Dateiverarbeitungs-App
 
@@ -97,7 +93,7 @@ Beispiel für die Nutzlast der Anfrage:
 // max request payload - 5 MB
 // wait timeout - 2 minutes
 {
-  "jobType": "file-pre-export",
+  "jobType": "file-post-import",
   "organization": {
     "id": 1,
     "domain": "{domain}",
@@ -130,7 +126,7 @@ Beispiel für die Nutzlast der Anfrage:
   },
   "targetLanguages": [
     {
-      // same structure as for sourceLanguage, one element for export, can be more for multilingual files
+      // same structure as for sourceLanguage, empty when uploading a new source file, one element for import_translations, can be more for multilingual files
     }
   ],
   "strings": [...],
@@ -146,8 +142,8 @@ Eigenschaften:
       <td><code>jobType</code></td>
       <td>
         <p><strong>Typ:</strong> <code>string</code></p>
-        <p><strong>Wert:</strong> <code>file-pre-export</code></p>
-        <p><strong>Beschreibung:</strong> Gibt die Aktion des Moduls zur Verarbeitung vor dem Dateiexport an.</p>
+        <p><strong>Wert:</strong> <code>file-post-import</code></p>
+        <p><strong>Beschreibung:</strong> Gibt die Aktion des Moduls zur Verarbeitung nach dem Dateiimport an.</p>
       </td>
     </tr>
     <tr>
@@ -163,8 +159,8 @@ Eigenschaften:
       <td>
         <p><strong>Typ(strings):</strong> <code>array</code></p>
         <p><strong>Typ(stringsUrl):</strong> <code>string</code></p>
-        <p><strong>Beschreibung:</strong> Parameter für die Source-Strings und ihre jeweiligen Übersetzungen vor dem Dateiexport. <code>strings</code> – String-Array. <code>stringsUrl</code> – öffentliche URL zu einem <a href="https://github.com/ndjson/ndjson-spec" target="_blank">Newline-delimited-JSON</a> mit Strings.<br />
-        Beide Parameter können verwendet werden.<Aside title="Einschränkungen">Das maximale Limit für die Nutzlast der Anfrage beträgt 5 MB.</Aside></p>
+        <p><strong>Beschreibung:</strong> Parameter für die nach dem Dateiimport extrahierten Strings. <code>strings</code> – String-Array. <code>stringsUrl</code> – öffentliche URL zu einem <a href="https://github.com/ndjson/ndjson-spec" target="_blank">Newline-delimited-JSON</a> mit Strings.<br />
+        Diese beiden Parameter können verwendet werden<Aside title="Einschränkungen">Das maximale Request-Payload-Limit beträgt 5 MB.</Aside></p>
       </td>
     </tr>
   </tbody>
@@ -181,6 +177,8 @@ Beispiel für die Nutzlast der Antwort:
   "data": {
     "strings": [...], // modified strings array
     "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // new-line delimited json file with modified strings
+    "preview": "VGhpbmdzIGFyZSBvbmx5IGltcG9zc2libGUgdW50aWwgdGhleSdyZSBub3Qu", // optional, base64 encoded content of preview html file, not supported if there are plural strings
+    "previewUrl": "https://app.example.com/LN3km2K6M-preview.html", // optional, URL of preview html file, not supported if there are plural strings
   },
   "error": {
     "message": "Your error message"
@@ -204,6 +202,14 @@ Eigenschaften:
       </td>
     </tr>
     <tr>
+      <td><code>data.preview</code>, <code class="whitespace-nowrap">data.previewUrl</code></td>
+      <td>
+        <p><strong>Typ(data.preview):</strong> <code>string</code></p>
+        <p><strong>Typ(data.previewUrl):</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Parameter zur Übergabe der optionalen HTML-Vorschau des geparsten String-Inhalts, die von der App generiert werden kann. Die generierte HTML-Vorschau wird im Editor angezeigt. Siehe das <a href="/developer/crowdin-apps-module-custom-file-format/#html-preview-of-the-file">Beispiel für eine HTML-Vorschau der Datei.</a></p> <p><Aside type="caution">Die HTML-Vorschau wird im Crowdin Editor nicht angezeigt, wenn die App Strings mit Pluralformen übergibt.</Aside></p>
+      </td>
+    </tr>
+    <tr>
       <td><code>error.message</code></td>
       <td>
         <p><strong>Typ:</strong> <code>string</code></p>
@@ -215,7 +221,7 @@ Eigenschaften:
 
 ### Struktur des String-Arrays
 
-Unten siehst du ein Beispiel für die Strings, die die App vor dem Export erhält. Dieselbe Struktur wird für die geänderten Strings in der Antwort der App verwendet.
+Unten siehst du ein Beispiel für die Strings, die die App nach dem Import erhält. Dieselbe Struktur wird für die geänderten Strings in der Antwort der App verwendet.
 
 Payload Beispiel:
 
@@ -230,6 +236,9 @@ Payload Beispiel:
     "isHidden": false, // optional, default null
     "hasPlurals": false, // optional, default false
     "labels": ["label-one", "label-two"], // optional, default []
+    "attributes": {
+      "crowdinType": "json"
+    },
     "text": "String source text", // required
     "translations": { // optional
       "uk": { // targetLanguage.id
@@ -285,6 +294,14 @@ Eigenschaften:
       <td>
         <p><strong>Typ:</strong> <code>string</code></p>
         <p><strong>Beschreibung:</strong> Sichtbarer String-Schlüssel.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">attributes.crowdinType</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>String</code></p>
+        <p><strong>Zulässige Werte:</strong> Entsprechen größtenteils den für die <a href="/developer/api/v2/#operation/api.projects.files.post">Add File API-Methode</a> akzeptierten <code>type</code>-Werten, mit Ausnahme der folgenden: <code>auto</code>, <code>xml</code>, <code>csv</code>, <code>docx</code>, <code>xlsx</code>, <code>dita</code>, <code>idml</code>, <code>mif</code>, <code>svg</code>. Zusätzlich werden benutzerdefinierte Werte unterstützt, die über die <a href="/developer/crowdin-apps-module-custom-file-format/#custom-file-format-type-example"><code>type</code>-Eigenschaft</a> im Modul für benutzerdefinierte Dateiformate definiert wurden.</p>
+        <p><strong>Beschreibung:</strong> Wird verwendet, um bei erforderlicher Nachbearbeitung den Dateiformattyp eines Strings anzugeben. Wenn eine JSON-Datei beispielsweise Strings mit eingebettetem HTML enthält, kannst du durch Setzen von <code>crowdinType</code> auf <code>html</code> den String mithilfe des HTML-Parsers erneut parsen. Dies trägt dazu bei, eine korrekte Darstellung sicherzustellen und zu verhindern, dass unerwünschte Tags angezeigt werden. Crowdin parst und segmentiert solche Inhalte genauso wie eine Datei dieses Formats und führt die Übersetzungen beim Erstellen der Übersetzungsdatei wieder mit dem ursprünglichen String zusammen. Der Wert muss einem unterstützten Crowdin-Dateityp oder einer benutzerdefinierten Dateiformat-ID entsprechen.</p>
       </td>
     </tr>
   </tbody>
