@@ -2728,6 +2728,144 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/users/{userId}/ai/request-logs/exports':
+    post:
+      tags:
+        - AI
+      summary: 'Export AI Request Logs'
+      description: "**Required scopes:** `ai.request-log` (Read only).\n\nStarts an [asynchronous operation](#section/Introduction/Asynchronous-Operations) that builds a file with the AI request logs matching the filters, and returns its `identifier`. Poll [Check AI Request Logs Export Status](#operation/api.ai.requestLogs.exports.get) until `status` is `finished`, then call [Download AI Request Logs Export](#operation/api.ai.requestLogs.exports.download) for a link to the file.\n\nPassing no filters exports every log entry of the organization, newest first. Columns and value formatting are identical to [List AI Request Logs](#operation/api.ai.requestLogs.getMany)."
+      operationId: api.ai.requestLogs.exports.post
+      parameters:
+        -
+          $ref: '#/components/parameters/UserId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiRequestLogExportForm'
+      responses:
+        '201':
+          description: 'Export was queued'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiRequestLogExportResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'User with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/users/{userId}/ai/request-logs/exports/{exportId}':
+    get:
+      tags:
+        - AI
+      summary: 'Check AI Request Logs Export Status'
+      description: "**Required scopes:** `ai.request-log` (Read only).\n\nReturns the status of an export started by [Export AI Request Logs](#operation/api.ai.requestLogs.exports.post). The file can be downloaded once `status` is `finished`."
+      operationId: api.ai.requestLogs.exports.get
+      parameters:
+        -
+          $ref: '#/components/parameters/UserId'
+        -
+          $ref: '#/components/parameters/AiRequestLogExportId'
+      responses:
+        '200':
+          description: 'Export status'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiRequestLogExportResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'User with specified id was not found, or the export does not exist'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/users/{userId}/ai/request-logs/exports/{exportId}/download':
+    get:
+      tags:
+        - AI
+      summary: 'Download AI Request Logs Export'
+      description: "**Required scopes:** `ai.request-log` (Read only).\n\nReturns a link to the exported file, which expires one hour after this call. The export has to be `finished`; until it is, this operation answers 404."
+      operationId: api.ai.requestLogs.exports.download
+      parameters:
+        -
+          $ref: '#/components/parameters/UserId'
+        -
+          $ref: '#/components/parameters/AiRequestLogExportId'
+      responses:
+        '200':
+          description: 'Link to the exported file'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadLinkResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'User with specified id was not found, or the export does not exist or has not finished yet'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
   '/users/{userId}/ai/settings':
     get:
       tags:
@@ -20724,7 +20862,7 @@ components:
           $ref: '#/components/schemas/ai.report.base'
     CostsByUsers:
       title: 'Costs By Users'
-      description: 'AI spend per user for a period, already summed up: for billing AI usage back to a team, watching who nears an AI cost limit, or pulling the AI Limits page figures into your own dashboard. Use `tokens-usage-raw-data` instead when you need every individual AI call rather than per-user totals'
+      description: 'AI spend per user for a period, already summed up: for billing AI usage back to a team, watching who nears an AI cost limit, or pulling the AI Usage page figures into your own dashboard. Use `tokens-usage-raw-data` instead when you need every individual AI call rather than per-user totals'
       required:
         - type
         - schema
@@ -20735,7 +20873,7 @@ components:
             - costs-by-users
           example: costs-by-users
         schema:
-          description: 'The generated file holds one row per user: `userId`, `userFullName` and `totalCost`, their AI spend for the period in USD; users who made no AI calls in it are omitted. Pass a calendar day or month with no filters to get exactly the figures the AI Limits page shows'
+          description: 'The generated file holds one row per user: `userId`, `userFullName` and `totalCost`, their AI spend for the period in USD; users who made no AI calls in it are omitted. Pass a calendar day or month with no filters to get exactly the figures the AI Usage page shows'
           type: object
           oneOf:
             -
@@ -20801,6 +20939,93 @@ components:
           type: string
           example: '1 second'
       type: object
+    AiRequestLogExportForm:
+      title: 'AI Request Log Export'
+      properties:
+        format:
+          description: 'Format of the exported file. One of: `csv`. Default is `csv`'
+          type: string
+          default: csv
+          enum:
+            - csv
+        requestId:
+          description: 'Filter results to the log entry with this request identifier'
+          type: string
+          example: 9d3b1c4e-2f3a-4b5c-8d6e-7f8a9b0c1d2e
+        projectId:
+          description: 'Filter results to requests made in this project. Get via [List Projects](#operation/api.projects.getMany)'
+          type: integer
+          example: 8
+        userId:
+          description: 'Filter results to requests attributed to this user. Get via [List Users](#operation/api.users.getMany)'
+          type: integer
+          example: 42
+        aiProviderId:
+          description: 'Filter results to requests served by this AI provider. Get via [List AI Providers](#operation/api.ai.providers.getMany)'
+          type: integer
+          example: 3
+        model:
+          description: 'Filter results to requests made with this AI model'
+          type: string
+          example: gpt-5.6-sol
+        sourceAction:
+          description: 'Filter results to requests produced by this feature or channel'
+          type: string
+          enum:
+            - ai_proxy
+            - ai_gateway
+            - ai_translate_strings
+            - ai_file_translate
+            - ai_prompt_completion
+            - 'pre_translate:manual'
+            - 'pre_translate:workflow'
+            - ai_alignment
+            - qa_check
+            - ai_suggestion
+            - advisor
+          example: ai_gateway
+        promptAction:
+          description: 'Filter results to requests made for this prompt action, e.g. `pre_translate`, `qa_check`, `advisor_context_review`, or a `custom:`-prefixed value'
+          type: string
+          example: qa_check
+        statuses:
+          description: 'Filter results to requests in any of these statuses'
+          type: array
+          items:
+            type: string
+            enum:
+              - pending
+              - success
+              - error
+              - timeout
+          example:
+            - success
+            - error
+        tokenName:
+          description: 'Filter results to requests authenticated with a personal access token of this name'
+          type: string
+          example: 'Token name'
+        oauthClientId:
+          description: 'Filter results to requests authenticated by the OAuth application with this `client_id`'
+          type: string
+          example: gpbccUFxAKZDrLm5Nq8t
+        systemCredentials:
+          description: 'If `true`, only requests that used system-provided credentials are exported'
+          type: boolean
+        isAutoTriggered:
+          description: 'If `true`, only requests triggered automatically rather than by an interactive user action are exported'
+          type: boolean
+        createdAfter:
+          description: 'Filter results to requests logged after this date, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-07-01T10:41:33+00:00'
+        createdBefore:
+          description: 'Filter results to requests logged before this date, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-07-31T23:59:59+00:00'
+      type: object
     AiRequestLogCollectionResource:
       description: 'AI Request Log Collection Resource'
       type: object
@@ -20815,6 +21040,16 @@ components:
                 $ref: '#/components/schemas/AiRequestLogResource'
             pagination:
               $ref: '#/components/schemas/Pagination'
+    AiRequestLogExportResource:
+      description: 'AI Request Logs Export Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/AiRequestLogExport'
     AiRequestLogResource:
       description: 'AI Request Log Resource'
       type: object
@@ -20825,6 +21060,68 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/AiRequestLog'
+    AiRequestLogExport:
+      description: 'AI Request Logs Export'
+      properties:
+        identifier:
+          description: 'ID of the export, to be passed to the status and download operations'
+          type: string
+          example: 50fb3506-4127-4ba8-8296-f97dc7e3e0c3
+        status:
+          description: 'Export status. The file is ready only once it is `finished`'
+          type: string
+          enum:
+            - created
+            - in_progress
+            - canceled
+            - failed
+            - finished
+          example: finished
+        progress:
+          description: 'Share of the matching log entries already written, in percent. Capped at `99` while the file is being built, so `100` is reached only together with `status` `finished`'
+          type: integer
+          example: 100
+        attributes:
+          description: 'The export request as it was accepted'
+          properties:
+            format:
+              description: 'Format of the exported file'
+              type: string
+              enum:
+                - csv
+              example: csv
+            filters:
+              description: 'The filters the export was requested with. Empty when the export covers every log entry of the organization'
+              type: object
+          type: object
+        createdAt:
+          description: 'Date the export was requested, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-01-23T11:26:54+00:00'
+        updatedAt:
+          description: 'Date the export last changed, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-01-23T11:27:10+00:00'
+        startedAt:
+          description: 'Date the export started building the file, in ISO 8601 format. `null` while the export is still queued'
+          type: string
+          format: date-time
+          example: '2026-01-23T11:26:56+00:00'
+          nullable: true
+        finishedAt:
+          description: 'Date the export reached a final status, in ISO 8601 format. `null` until then'
+          type: string
+          format: date-time
+          example: '2026-01-23T11:27:10+00:00'
+          nullable: true
+        eta:
+          description: 'Human-readable time the export has been running, measured to `finishedAt` once it is set and to the current time before that. `null` until the export starts'
+          type: string
+          example: '14 seconds'
+          nullable: true
+      type: object
     AiRequestLog:
       title: 'AI Request Log'
       properties:
@@ -47697,6 +47994,13 @@ components:
       name: aiReportId
       in: path
       description: 'AI Report Identifier, consists of 36 characters'
+      required: true
+      schema:
+        type: string
+    AiRequestLogExportId:
+      name: exportId
+      in: path
+      description: 'ID of the AI request logs export, 36 characters. Get via [Export AI Request Logs](#operation/api.ai.requestLogs.exports.post)'
       required: true
       schema:
         type: string
