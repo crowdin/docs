@@ -5,6 +5,7 @@
         - Add some custom styles (these styles will be applied before the default styles)
         - Set custom site title for the Enterprise and Developer portals
         - Hide the header if the `hideHeader` frontmatter property is set to `true`
+        - Skip the CookieYes consent banner on pages embedded in an iframe (`hideHeader`)
 */
 import Default from '@astrojs/starlight/components/Head.astro';
 import { getCurrentProduct, isStarlightHomepage } from '~/utils/starlightRoute';
@@ -29,6 +30,12 @@ if (isEnterprise) {
 
 if (isDeveloper) {
     Astro.locals.starlightRoute.siteTitle = "Developer Portal";
+}
+
+if (hideHeader) {
+    Astro.locals.starlightRoute.head = Astro.locals.starlightRoute.head.filter(
+        (entry) => entry.attrs?.id !== 'cookieyes',
+    );
 }
 ---
 
