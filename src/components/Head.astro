@@ -4,8 +4,7 @@
         - Add the `og:image` and `twitter:image` meta tags containing the URL of the generated image for all documentation pages.
         - Add some custom styles (these styles will be applied before the default styles)
         - Set custom site title for the Enterprise and Developer portals
-        - Hide the header if the `hideHeader` frontmatter property is set to `true`
-        - Skip the CookieYes consent banner on pages embedded in an iframe (`hideHeader`)
+        - Skip the CookieYes consent banner and HelpScout beacon on pages embedded in the application iframe (`embedded`)
 */
 import Default from '@astrojs/starlight/components/Head.astro';
 import { getCurrentProduct, isStarlightHomepage } from '~/utils/starlightRoute';
@@ -16,7 +15,7 @@ const isHomepage = isStarlightHomepage(Astro.locals.starlightRoute);
 
 const isEnterprise = currentProduct === 'enterprise';
 const isDeveloper = currentProduct === 'developer';
-const hideHeader = Astro.locals.starlightRoute.entry?.data?.hideHeader || false;
+const embedded = Astro.locals.starlightRoute.entry?.data?.embedded || false;
 const metaRobots = Astro.locals.starlightRoute.entry?.data?.metaRobots || undefined;
 
 const ogImageUrl = new URL(
@@ -32,7 +31,7 @@ if (isDeveloper) {
     Astro.locals.starlightRoute.siteTitle = "Developer Portal";
 }
 
-if (hideHeader) {
+if (embedded) {
     Astro.locals.starlightRoute.head = Astro.locals.starlightRoute.head.filter(
         (entry) => entry.attrs?.id !== 'cookieyes',
     );
@@ -48,7 +47,7 @@ if (hideHeader) {
         <meta name="robots" content={metaRobots} />
 }
 
-{!isHomepage && !hideHeader && <script src="/src/scripts/helpscout.js" is:inline defer></script>}
+{!isHomepage && !embedded && <script src="/src/scripts/helpscout.js" is:inline defer></script>}
 
 <style>
     :root {
@@ -75,18 +74,6 @@ if (hideHeader) {
     <style>
         .header .right-group .social-icons {
             display: none;
-        }
-    </style>
-)}
-
-{hideHeader && (
-    <style>
-        header {
-            display: none;
-        }
-
-        .main-frame {
-            padding-top: 0 !important;
         }
     </style>
 )}

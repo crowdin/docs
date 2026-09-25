@@ -9,7 +9,8 @@ export const collections = {
     loader: customDocsLoader(),
     schema: docsSchema({
       extend: z.object({
-        hideHeader: z.boolean().optional(),
+        /** Page is embedded in the application iframe: no header, footer, widgets or cookie banner. */
+        embedded: z.boolean().optional(),
         metaRobots: z.string().optional(),
       }),
     }),
