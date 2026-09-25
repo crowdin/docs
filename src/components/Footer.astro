@@ -6,11 +6,11 @@ import { getRelativeLocaleUrl } from 'astro:i18n';
 import { isStarlightHomepage } from '~/utils/starlightRoute';
 
 const isHomepage = isStarlightHomepage(Astro.locals.starlightRoute);
+const embedded = Astro.locals.starlightRoute.entry?.data?.embedded || false;
 const locale = Astro.locals.starlightRoute.lang;
 const year = new Date().getFullYear();
 
-const showFeedback = !isHomepage &&
-    !['404', 'iframe/privacy-policy', 'iframe/terms'].includes(Astro.locals.starlightRoute.id);
+const showFeedback = !isHomepage && !embedded && Astro.locals.starlightRoute.id !== '404';
 ---
 
 <style>
@@ -65,7 +65,7 @@ const showFeedback = !isHomepage &&
 )}
 
 {/* Social links on documentation pages; the header shows them only on the homepage (see Head.astro). */}
-{!isHomepage && (
+{!isHomepage && !embedded && (
     <div class="footer-social flex justify-center items-center gap-5 mt-8 pt-6 border-t print:hidden">
         <SocialIcons />
     </div>

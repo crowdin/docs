@@ -1,0 +1,35 @@
+---
+/**
+    Override the default Header component to:
+        - Render nothing on pages embedded in the application iframe (`embedded`) and remove the space
+          reserved for the header. Hiding the header with CSS is not enough: the theme picker inside it
+          would still initialize and reset the theme applied below.
+        - Apply the theme passed by the application via the `?theme=light|dark` query parameter on
+          embedded pages, so they match the application theme. Nothing is persisted.
+*/
+import Default from '@astrojs/starlight/components/Header.astro';
+
+const embedded = Astro.locals.starlightRoute.entry?.data?.embedded || false;
+---
+
+{embedded ? (
+    <style is:global>
+        header {
+            display: none;
+        }
+
+        .main-frame {
+            padding-top: 0 !important;
+        }
+    </style>
+    <script is:inline>
+        (() => {
+            const theme = new URLSearchParams(location.search).get('theme');
+            if (theme === 'light' || theme === 'dark') {
+                document.documentElement.dataset.theme = theme;
+            }
+        })();
+    </script>
+) : (
+    <Default><slot /></Default>
+)}

@@ -106,6 +106,7 @@ const config = defineConfig({
       },
       components: {
         Head: './src/components/Head.astro',
+        Header: './src/components/Header.astro',
         Footer: './src/components/Footer.astro',
         Hero: './src/components/Hero.astro',
         Search: './src/components/Search.astro',
