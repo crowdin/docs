@@ -6,7 +6,18 @@ sidebar:
   label: External QA Check
 ---
 
+import { Aside } from '@astrojs/starlight/components';
+
 This module allows for the integration of advanced, AI-powered, and other specialized QA checks, enabling verification of translations for nuanced issues that cannot be detected by [default QA checks](/enterprise/project-settings/qa-checks/) or JavaScript-based [Custom QA checks](/enterprise/custom-qa-checks/).
+
+Crowdin Enterprise sends translations to the app in batches over HTTP, and the app answers whether each translation passes the check. A check can run in one of two modes:
+
+* **Asynchronous** (default) &ndash; the app is called in the background after a translation is saved. The result appears in the Editor a few seconds or minutes later, and it never prevents a translation from being saved.
+* **Synchronous** &ndash; the app is also called while a translation is being saved, so translators see the result right away. A project can set a synchronous check to [block](#blocking-checks) translations that fail it.
+
+<Aside>
+  The External QA Check module is available in Crowdin Enterprise only.
+</Aside>
 
 ## Access
 
@@ -28,12 +39,15 @@ You can grant access to this module to one of the following user categories:
         "description": "Description",
         "runQaCheckUrl": "/validate",
         "getBatchSizeUrl": "/batch-size",
+        "supportsSynchronousRun": true,
         "url": "/settings/index.html"
       }
     ]
   }
 }
 ```
+
+An app can declare several `external-qa-check` modules. Each module becomes a separate QA check.
 
 ## Properties
 
@@ -52,7 +66,8 @@ You can grant access to this module to one of the following user categories:
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Required:</strong> yes</p>
-        <p><strong>Description:</strong> The human-readable name of the module.</p>
+        <p><strong>Description:</strong> The human-readable name of the module.<br/>
+        The name is shown in the project QA settings, in QA issues in the Editor, and in import reports.</p>
       </td>
     </tr>
     <tr>
@@ -68,7 +83,7 @@ You can grant access to this module to one of the following user categories:
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Required:</strong> yes</p>
-        <p><strong>Description:</strong> The relative URL triggered when sending texts for QA validation.</p>
+        <p><strong>Description:</strong> The relative URL triggered when sending texts for QA validation. Crowdin sends a <code>POST</code> request to this URL.</p>
       </td>
     </tr>
     <tr>
@@ -76,7 +91,18 @@ You can grant access to this module to one of the following user categories:
       <td>
         <p><strong>Type:</strong> <code>string</code></p>
         <p><strong>Required:</strong> no</p>
-        <p><strong>Description:</strong> The relative URL triggered when retrieving the batch size supported by the module.</p>
+        <p><strong>Description:</strong> The relative URL triggered when retrieving the batch size supported by the module.<br/>
+        If not set, Crowdin uses a batch size of 500. See [Batching](#batching).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">supportsSynchronousRun</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>boolean</code></p>
+        <p><strong>Required:</strong> no</p>
+        <p><strong>Default:</strong> <code>false</code></p>
+        <p><strong>Description:</strong> Set to <code>true</code> if the app can answer while a translation is being saved.<br/>
+        Only a synchronous check can be set to block translations. See [Synchronous Checks](#synchronous-checks).</p>
       </td>
     </tr>
     <tr>
@@ -99,15 +125,95 @@ You can grant access to this module to one of the following user categories:
   </tbody>
 </table>
 
+<Aside>
+  All URLs are relative to the app's `baseUrl`. Start each path with `/`, and don't end `baseUrl` with `/`.
+</Aside>
+
+## Enabling a Check in a Project
+
+When the app is installed, each `external-qa-check` module appears as a separate check in the project QA settings. A project manager enables it in **Settings > Quality assurance**. The check runs only when QA checks are enabled in the project.
+
+For each enabled external check, a project manager chooses its severity:
+
+* **Warning** &ndash; translators see the QA issue and can still save the translation with **Save anyway**. Asynchronous checks always use this severity.
+* **Error** &ndash; a translation that fails the check isn't saved. Available only for checks with `supportsSynchronousRun: true`. When a synchronous check is enabled in the project settings, it is set to **Error** by default. When you update a project using the [Edit Project](/developer/enterprise/api/v2/#operation/api.projects.patch) API method, add the check ID to both `externalQaCheckIds` and `blockingExternalQaCheckIds` to make it blocking.
+
+If an app update removes `supportsSynchronousRun`, the check stops blocking translations in all projects and works as an asynchronous check.
+
+<Aside type="caution">
+  Enabling a check in a project re-checks the top translation of **every** string in that project, in all languages. For a large project, this sends many requests to the app at once. See [Call Volume and Rate Limits](#call-volume-and-rate-limits).
+</Aside>
+
+Changes to the module in an app update (for example, new URLs or a new `supportsSynchronousRun` value) take effect within about a minute. An app update doesn't re-check existing translations. To re-check them, use [revalidation](#revalidation).
+
+## When the Check Runs
+
+### Asynchronous Checks
+
+Every enabled external check, synchronous or not, is called in the background when:
+
+* A translation becomes the top translation of a string (for example, after a new translation, an approval, a vote, or when the previous top translation is deleted).
+* An existing translation is edited.
+* The source text or the maximum length of a string changes.
+* A source file is updated or restored.
+
+Background checks cover only the top translation of each string. Changes are collected for up to about 30 seconds before they are sent, so one request often contains translations from several saves.
+
+The results from background checks are always shown with the **Warning** severity, even for a blocking check, because the translation is already saved.
+
+### Synchronous Checks
+
+If the module has `supportsSynchronousRun: true`, the app is also called while translations are being saved, before they are stored. This happens when translations are added:
+
+* In the Editor, including **Find & Replace** and bulk saving.
+* Using the API ([Add Translation](/developer/enterprise/api/v2/#operation/api.projects.translations.post), [Translation Batch Operations](/developer/enterprise/api/v2/#operation/api.projects.translations.patch)).
+* By uploading files with translations.
+* By pre-translation via MT, TM, or AI, including pre-translation in workflow steps.
+* By vendor orders.
+
+A synchronous check is called for every translation that is being saved, not only for the top translation. Other operations, such as approvals or translations copied between projects by a workflow, don't call the check during the operation. They are checked in the background instead and can't be blocked.
+
+After a synchronous call, the background check still runs, but it calls the app only for checks that didn't answer during the save. If the app answered during the save, it isn't called a second time for the same translations.
+
+### Blocking Checks
+
+When a translation fails a check with the **Error** severity, the app's `error.message` is shown, and the translation isn't saved:
+
+| Where the translation is added | What happens |
+|--------------------------------|--------------|
+| Editor, single translation | The translation isn't saved. There is no **Save anyway** option. |
+| API, Add Translation | The API responds with HTTP 400 and the app's message. |
+| API, Translation Batch Operations | The whole request is rejected, and nothing is saved. |
+| Editor, Find & Replace and bulk saving | Only the translations that failed the check aren't saved. |
+| File upload, pre-translation | The translations that failed the check are skipped. The report shows them as skipped by the QA check. |
+
+<Aside>
+  A blocking check never blocks translations because the app is unavailable. If the app doesn't answer in time, the translation is saved. See [Error Handling](#error-handling).
+</Aside>
+
+### Revalidation
+
+To re-check existing translations, use the **Revalidate** button in the [project QA settings](/enterprise/project-settings/qa-checks/#revalidate-qa-checks) or the [Revalidate QA Checks](/developer/enterprise/api/v2/#operation/api.projects.qa-checks.revalidate.post) API method. To re-check your app's check, always pass its ID in `externalQaCheckIds`. You can get the ID using the [List External QA Checks](/developer/enterprise/api/v2/#operation/api.external-qa-checks.getMany) API method.
+
+Only one revalidation can run in a project at a time. Revalidation checks top translations only and doesn't retry failed requests.
+
+### Validating Translations without Saving
+
+The [Validate text by QA Checks](/developer/enterprise/api/v2/#operation/api.projects.translations.validate-qa-checks.post) API method checks translations without saving them. It calls all enabled external checks, synchronous or not, with the [synchronous timeouts](#timeouts). If a check doesn't answer, the response contains the issue `Unable to complete check {name}.`.
+
 ## Communication between External QA Check App and Crowdin
 
-The system sends texts for QA validation using `runQaCheckUrl` either from the Editor after saving translation or when QA Checks are performed. The app then processes the texts and responds back to the system with one of the two possible types of responses: [without QA issues](#expected-response-from-the-app-without-qa-issues) or [with QA issues](#expected-response-from-the-app-with-qa-issues). When the app needs to determine the maximum batch size for the QA check, it sets the `getBatchSizeUrl` key in the `manifest.json` with the URL to an endpoint that provides the optimal batch size.
+Crowdin sends translations for QA validation to `runQaCheckUrl` as a `POST` request with a JSON body. The app checks the translations and answers in the same HTTP response, either [without QA issues](#expected-response-from-the-app-without-qa-issues) or [with QA issues](#expected-response-from-the-app-with-qa-issues).
+
+* Each request contains translations for one check, one target language, and one file (or no file in string-based projects).
+* The request contains the `Authorization: Bearer <JWT>` header. The token identifies the organization and the app. It doesn't identify the project or the user; these are in the request body. Verify the token with the app's client secret. Read more about [Crowdin Apps security](/developer/crowdin-apps-security/).
+* The batch size is requested with a `GET` request to `getBatchSizeUrl` with the same header. See [Batching](#batching).
 
 ### Request to the App from Crowdin for runQaCheckUrl
 
 Request payload example:
 
-```json collapse={26-82}
+```json collapse={27-83}
 {
   "data": {
     "translations": [
@@ -119,8 +225,7 @@ Request payload example:
         "text": "La mise à jour est installé avec succès.",
         "provider": null,
         "pluralCategoryName": null,
-        "isPreTranslated": false,
-        "rating": 0
+        "isPreTranslated": false
       }
     ],
     "strings": [
@@ -129,6 +234,8 @@ Request payload example:
         "key": "update_success",
         "context": "Confirmation of successful software update",
         "maxLength": null,
+        "createdAt": "2026-09-01T10:00:00+00:00",
+        "updatedAt": null,
         "text": "The update was successfully installed.",
         "fields": []
       }
@@ -203,6 +310,18 @@ Request payload example:
 }
 ```
 
+Notes on the request payload:
+
+* `translations[].provider` is the name of the MT, TM, or AI engine that produced the translation, or `null` for a manual translation or an upload.
+* For a plural string, `strings[].text` is an object with one text per plural form, and `translations` contains one item per plural form, each with its `pluralCategoryName`.
+* The `file` object is sent only in file-based projects.
+* Some fields, such as `strings[].originalText`, are sent only when they have a value. Treat fields that aren't shown in the example as optional.
+* Empty translations aren't sent.
+
+<Aside type="caution" title="Translation IDs">
+  Don't store or cache anything by `translations[].id`. In a synchronous call, the translation isn't saved yet, so `id` is only the position of the translation in the request (`0`, `1`, `2`, and so on). Return this value as `translationId` in the response. To cache results, use the source text, the translation text, and the target language instead.
+</Aside>
+
 ### Expected Response from the App (Without QA issues)
 
 Response payload example:
@@ -232,13 +351,40 @@ Response payload example:
         "translationId": 456,
         "passed": false,
         "error": {
-          "message": "Example error message"
+          "message": "Example error message",
+          "details": {
+            "rule": "brand-names"
+          },
+          "suggestedFixes": [
+            {
+              "indexStart": 0,
+              "indexEnd": 6,
+              "replacement": "Crowdin"
+            }
+          ]
         }
       }
     ]
   }
 }
 ```
+
+* `error.message` (required) &ndash; the text shown to the translator in the Editor. Use plain text, because HTML isn't rendered. For a blocking check, the message is also returned in the API error.
+* `error.details` (optional) &ndash; an object with any additional data. It is stored with the QA issue.
+* `error.suggestedFixes` (optional) &ndash; fixes offered to the translator in the Editor. `indexStart` and `indexEnd` are positions in the translation text, and `replacement` is the text to put there.
+
+### Response Format Rules
+
+Crowdin rejects the whole response as invalid if:
+
+* The body isn't JSON, or it isn't exactly `{"data": {"validations": [...]}}`.
+* Any object contains a key that isn't shown in the examples above. For example, don't add `"error": null` to a passed translation, and don't add a top-level `error` next to `data`.
+* `translationId` isn't an integer, or `passed` isn't a boolean.
+* A translation with `"passed": false` has no `error` object.
+
+Return exactly one validation for every translation in the request. Validations with IDs that weren't in the request are ignored.
+
+An invalid response is handled the same way as an unavailable app. See [Error Handling](#error-handling).
 
 ### Response from the App to Crowdin for getBatchSizeUrl
 
@@ -253,3 +399,98 @@ Response payload example:
 ```
 
 The structure of the responses from the app should correspond to the presented examples; otherwise, Crowdin will consider them invalid.
+
+## Batching
+
+Crowdin Enterprise groups the translations of one operation by target language and file, and splits each group into batches of the size the app returns from `getBatchSizeUrl`.
+
+* The default batch size is 500. It is also used if `getBatchSizeUrl` isn't set, if the request to it fails, or if it returns `0` or less.
+* The batch size is cached, so a new value takes effect within 10 minutes.
+* The request to `getBatchSizeUrl` has a short time limit (2 seconds during a save and 10 seconds in the background). If the app doesn't answer in time, the default of 500 is used. Return the batch size from a static value instead of computing it.
+* Up to 10 requests are sent at the same time for one set of translations. Different checks and languages of the same set are sent in parallel. Large operations, such as file uploads and pre-translation, are processed in chunks, one chunk after another.
+* Many operations can run at the same time in an organization (Editor saves, file uploads, pre-translations, background checks). Each of them sends its own requests. There is no limit on the total number of requests to one app.
+
+For example, when a file with 2,000 strings is uploaded with translations into 3 languages and the batch size is 500, the app receives 12 requests.
+
+## Timeouts
+
+The time limit applies to each request, not to the whole operation.
+
+| Call | Time limit for one request |
+|------|----------------------------|
+| Synchronous check, one translation | 10 seconds |
+| Synchronous check, several translations | 60 seconds |
+| Validate text by QA Checks API method | 10 seconds for one translation, 60 seconds for several translations |
+| Background check and revalidation | 15 minutes |
+
+Failed requests aren't retried right away. Retries happen only for background checks, as described below.
+
+## Error Handling
+
+A request fails when the app times out, the connection fails, the app responds with an HTTP error status, or the response is [invalid](#response-format-rules). Several requests of one check are often sent together (for example, for one file upload). If one of them fails, the results of the other requests sent with it are also discarded, and all their translations are treated as not checked.
+
+What happens next depends on how the check was called:
+
+| Call | What happens on failure |
+|------|-------------------------|
+| Synchronous check | The translation is saved with the QA issue `Unable to complete check {name}.` (severity **Warning**). The background check calls the app again later. |
+| Background check | The check is retried after about 15 minutes and then after about 2 hours. If the third attempt also fails, the translations get the `Unable to complete check {name}.` issue. |
+| Revalidation | The translations get the `Unable to complete check {name}.` issue right away, without retries. |
+| Validate text by QA Checks API method | The response contains the `Unable to complete check {name}.` issue. Nothing is saved. |
+
+The `Unable to complete check {name}.` issue never blocks a translation. It counts as a QA issue in filters and statistics, and it stays until the next successful check of that translation (for example, after the next save, a source text change, or revalidation).
+
+### Circuit Breaker
+
+To protect an app that is down, Crowdin Enterprise stops calling it for a short time after repeated failures:
+
+* After 5 failed requests within 60 seconds, calls to the check are paused for 60 seconds.
+* The pause applies to the whole organization: all projects and all types of calls.
+* While calls are paused, synchronous checks get `Unable to complete check {name}.` right away, so blocking checks don't block translations during the pause. Background checks wait for their next retry.
+* Timeouts, connection errors, HTTP `5xx` and `429` responses, and invalid responses count as failures. Other HTTP `4xx` responses don't count, because they usually mean a problem with the request rather than an unavailable app.
+* The `Retry-After` header is ignored.
+
+## Returning Results Later
+
+There is no callback for sending results later. The result must be in the HTTP response to the same request. If the check needs more time, choose one of these options:
+
+* **Keep the request open** (background calls only). Background checks wait up to 15 minutes for one request. Use this for occasional long checks, not as the normal response time.
+* **Return an error and let Crowdin retry.** An HTTP `5xx` or `429` response makes the background check retry after about 15 minutes and about 2 hours. Repeated errors pause the check for the whole organization, as described in [Circuit Breaker](#circuit-breaker).
+* **Answer now and request a revalidation later.** Respond right away, finish the work in the background, and then call the [Revalidate QA Checks](/developer/enterprise/api/v2/#operation/api.projects.qa-checks.revalidate.post) API method with your check ID in `externalQaCheckIds`. This requires project manager permissions and re-checks the check for the whole project, so use it for rare, large updates.
+
+If a synchronous check doesn't answer within the time limit, the translation is saved, and the background check asks again with the 15-minute limit. So a synchronous check that is sometimes slow still gets its result, but later and without blocking.
+
+## Call Volume and Rate Limits
+
+Crowdin Enterprise doesn't limit how often it calls an app. The only limits are the 10 parallel requests for one set of translations and the [circuit breaker](#circuit-breaker). Plan the capacity of your app, and of any service behind it, for these sources of load:
+
+* **Everyday work.** Each save in the Editor or via the API sends a request. File uploads and pre-translations send one request per batch.
+* **Repeated texts.** Results aren't cached, and identical texts in different projects are checked separately. The same text is sent again after **Save anyway**, an approval, a vote, a source text change, a retry, or a revalidation. AI pre-translation with retries on QA issues sends each text twice: once for the first AI output and once for the final text.
+* **Full re-checks.** When a project manager enables the check in a project or starts a revalidation, the top translation of every string in the project is checked, in all languages. Your app doesn't control when this happens.
+* **Parallel work.** Operations in all projects of the organization run at the same time, and each of them sends its own requests.
+
+For example, a project with 10,000 strings and 5 target languages has 50,000 top translations. Enabling the check in this project sends all of them, which is 100 requests with the default batch size. In an organization with 500 such projects, enabling the check everywhere sends 25 million translations.
+
+If your app depends on a service with strict rate limits, follow these recommendations:
+
+1. **Limit the rate in your app.** Put a queue and a rate limiter in front of the service. Crowdin Enterprise doesn't reduce the request rate when the service is busy.
+2. **Cache results** by source text, translation text, target language, and the version of your check. Never cache by `translationId`.
+3. **Remove duplicates in a batch.** Plural forms and repeated strings often share the same text.
+4. **Send the batch to the service in one call** if the service supports it, instead of one call per translation.
+5. **Use a large batch size.** Fewer, larger requests are easier to rate-limit. A batch size of up to 500 works well.
+6. **Answer fast.** Synchronous checks must answer well within 10 seconds for one translation and 60 seconds for a batch.
+7. **Don't use HTTP `4xx` to say "busy".** Background checks still retry these requests, and the [circuit breaker](#circuit-breaker) doesn't protect your service from them.
+8. **Avoid returning `"passed": true` when the check didn't run.** Translators won't know that the translation wasn't checked.
+9. **Return consistent results.** A result stays until the next check of the translation, so different results for the same text confuse translators.
+10. **Prepare for full re-checks.** A re-check of a large project can start at any time. Size the app and the service for this peak, and let the rate limiter from step 1 spread it over time. In your app description or settings page, you can advise users to enable the check one project at a time.
+11. **Declare synchronous runs with care.** Set `supportsSynchronousRun: true` only if the check answers reliably within the time limit. Otherwise, translators get `Unable to complete check {name}.` issues, and blocking doesn't work when it's needed.
+
+## Troubleshooting
+
+| Problem | Likely cause | How to fix |
+|---------|--------------|------------|
+| Translations show `Unable to complete check {name}.` | The app timed out, returned an HTTP error, or returned an invalid response. | Check that the response matches the [format rules](#response-format-rules) exactly and that the app answers within the [time limits](#timeouts). |
+| The check fails in all projects for about a minute | The [circuit breaker](#circuit-breaker) paused the check after repeated failures. | Fix the cause of the failures. Calls resume automatically after 60 seconds. |
+| The **Error** severity can't be selected | The module doesn't have `supportsSynchronousRun: true`. | Add `"supportsSynchronousRun": true` to the module in the manifest and update the app. |
+| A blocking check doesn't block some translations | The translation was added by an operation that doesn't call synchronous checks, or the app didn't answer in time. | See [Synchronous Checks](#synchronous-checks) and [Error Handling](#error-handling). |
+| Results are mixed up between translations | The app stores or caches results by `translationId`. | Return `translationId` exactly as received and cache by text instead. |
