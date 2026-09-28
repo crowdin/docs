@@ -33,6 +33,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Astro (node_modules/.astro) and astro-og-canvas (node_modules/.astro-og-canvas)
+      # keep content-hashed image caches on disk. Restoring them lets the build skip
+      # re-optimizing unchanged screenshots and re-rendering unchanged OG images.
+      # PRs only restore; pushes to main save a fresh entry (see the last step).
+      - name: Restore Astro image caches
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            node_modules/.astro
+            node_modules/.astro-og-canvas
+          key: astro-images-v1-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            astro-images-v1-${{ runner.os }}-
+
       - name: Build
         id: build
         run: pnpm run build
@@ -63,8 +77,14 @@ jobs:
           header: starlight-links-validator
           delete: true
 
-      - name: Build API Docs styles
-        run: pnpm run build:api
-
       - name: Find unused images
         run: pnpm run find-unused-images
+
+      - name: Save Astro image caches
+        if: always() && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            node_modules/.astro
+            node_modules/.astro-og-canvas
+          key: astro-images-v1-${{ runner.os }}-${{ github.sha }}
