@@ -26622,12 +26622,16 @@ components:
             identifier:
               type: string
               example: example-application
-            batchSizeUrl:
+            getBatchSizeUrl:
               type: string
               example: /qa-check/batch-size
             runQaCheckUrl:
               type: string
               example: /qa-check
+            supportsSynchronousRun:
+              description: 'If `true`, the app is called while a translation is being saved and can refuse the save. If `false`, the app is called after the translation is saved and can only report an issue.'
+              type: boolean
+              example: false
             scopes:
               type: object
               nullable: true
@@ -36676,7 +36680,7 @@ components:
             - remove
             - test
         path:
-          description: 'Where `languageId` is one of project''s languages and `mappingKey` is one of language-based export pattern fields. <p>Also `vendorId` and `mtEngineId` can''t be used with `steps` in same request</p> <p>A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a></p>'
+          description: 'Where `languageId` is one of project''s languages and `mappingKey` is one of language-based export pattern fields. <p>Also `vendorId` and `mtEngineId` can''t be used with `steps` in same request</p> <p>Use `add` to set `/externalQaChecksIgnorable/{checkId}` for a check that has no entry yet</p> <p>A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a></p>'
           type: string
           format: json-pointer
           enum:
@@ -36705,6 +36709,8 @@ components:
             - /inContextPseudoLanguageId
             - /qaCheckIsActive
             - /qaApprovalsCount
+            - /externalQaChecksIgnorable
+            - '/externalQaChecksIgnorable/{checkId}'
             - /qaCheckCategories
             - '/qaCheckCategories/{category}'
             - /qaChecksIgnorableCategories
@@ -37422,6 +37428,13 @@ components:
           items:
             type: integer
             example: 1
+        externalQaChecksIgnorable:
+          description: 'External QA check IDs mapped to whether a failure of the check can be ignored. `false` blocks saving a translation when the check fails, and only a synchronous check can be `false`. A check without an entry can be ignored. The entry is kept while the check is not enabled in `externalQaCheckIds`'
+          type: object
+          example:
+            '1': false
+          additionalProperties:
+            type: boolean
         languageMapping:
           description: 'Language Mapping'
           properties:
@@ -39114,6 +39127,13 @@ components:
               items:
                 type: integer
                 example: 1
+            externalQaChecksIgnorable:
+              description: 'External QA check IDs mapped to whether a failure of the check can be ignored. `false` blocks saving a translation when the check fails, and only a synchronous check can be `false`. A check without an entry can be ignored. The entry is kept while the check is not enabled in `externalQaCheckIds`'
+              type: object
+              example:
+                '1': false
+              additionalProperties:
+                type: boolean
             languageMapping:
               properties:
                 uk:
