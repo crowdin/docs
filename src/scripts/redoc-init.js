@@ -1,4 +1,4 @@
-// Marks that JavaScript runs so the crawler fallback inside #redoc-container is hidden before first paint.
+// Marks that JavaScript runs so the crawler fallback next to #redoc-container is hidden before first paint.
 document.documentElement.classList.add('js');
 
 function initRedoc(apiSpecUrl) {
@@ -98,5 +98,16 @@ function initRedoc(apiSpecUrl) {
         backgroundColor: '#212b31',
       },
     }
-  }, document.getElementById('redoc-container'));
+  }, document.getElementById('redoc-container'), onRedocLoaded);
+}
+
+// Redoc calls this with an Error when the spec cannot be fetched or parsed. Its own error screen
+// (with a stack trace) would otherwise replace the reference, and crawlers would index that text,
+// so the page falls back to the static content with a short notice instead.
+function onRedocLoaded(error) {
+  if (!error) return;
+  console.error('Failed to load the API reference:', error);
+  document.querySelector('.redoc-load-error').hidden = false;
+  document.documentElement.classList.remove('js');
+  document.documentElement.classList.add('redoc-failed');
 }
