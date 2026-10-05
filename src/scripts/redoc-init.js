@@ -1,3 +1,6 @@
+// Marks that JavaScript runs so the crawler fallback inside #redoc-container is hidden before first paint.
+document.documentElement.classList.add('js');
+
 function initRedoc(apiSpecUrl) {
   Redoc.init(apiSpecUrl, {
     menuToggle: true,
