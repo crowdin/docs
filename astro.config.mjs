@@ -253,7 +253,8 @@ const config = defineConfig({
           'square-outline-rounded',
           'undo',
           'split-scene-left-outline',
-          'download'
+          'download',
+          'done-all'
         ],
         garden: [
           'puzzle-piece-fill-12'
