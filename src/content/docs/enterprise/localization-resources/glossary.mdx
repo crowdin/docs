@@ -21,7 +21,7 @@ Each glossary term is displayed as an underlined word in the Editor. Hover over 
 
 * **Translations**: Every translation of the term for the current target language.
 * **Source**: The term as it appears in the string.
-* **Concept**: The subject, definition, and note shared by all variants of the term.
+* **Concept**: The subject, definition, note, and any custom [fields](/enterprise/fields/) shared by all variants of the term.
 
 Each term also shows its language, status, part of speech, type, and gender, along with any description, note, and reference link.
 
@@ -88,8 +88,8 @@ Term details:
 
 The concept dialog opens as a full-screen view with two panes:
 
-* The left pane contains concept-level details: the **Primary term** (filled in automatically from the source-language term), **Subject**, **Definition**, and the **Translatable** toggle. The expandable **Concept details** section holds the concept **Note**, **URL**, and **Figure**.
-* The right pane lists all terms across languages, grouped by language. The source language is pinned at the top and marked with a <Badge text="SOURCE" variant="success" /> badge. Each term row shows its **Part of speech**, **Gender**, **Type**, and **Status**. The **D**, **U**, and **N** indicators appear when the term has a **Description (context)**, **URL**, or **Note**. Click an indicator to expand that field.
+* The left pane contains concept-level details: the **Primary term** (filled in automatically from the source-language term), **Subject**, **Definition**, and the **Translatable** toggle. The expandable **Concept details** section holds the concept **Note**, **URL**, and **Figure**. The expandable **Fields** section holds the custom [fields](/enterprise/fields/) set up for the Concept Edit modal.
+* The right pane lists all terms across languages, grouped by language. The source language is pinned at the top and marked with a <Badge text="SOURCE" variant="success" /> badge. Each term row shows its **Part of speech**, **Gender**, **Type**, and **Status**. The **D**, **U**, and **N** indicators appear when the term has a **Description (context)**, **URL**, or **Note**. Click an indicator to expand that field. An expanded term row also shows the custom fields set up for the Term Edit modal.
 
 <Aside type="tip">
   To create glossary terms with AI, use the [Crowdin Copilot app](https://store.crowdin.com/crowdin-copilot).
@@ -264,6 +264,8 @@ To upload or download the glossary, follow these steps:
 
 The owner, admins, and managers can upload and download the glossary in the following file formats: TBX (v2), TBX (v3), CSV, XLSX.
 
+Glossary files also carry custom [field](/enterprise/fields/) values when you download or upload them. TBX (v3) holds the field values of terms and concepts, and TBX (v2) holds those of terms. For CSV and XLSX, select the fields to download under **Export term fields** and **Export concept fields**.
+
 <Aside type="caution" title="Limitations">
   The maximum file size is 100 MB. If your file exceeds this limit, it is recommended to split it into several smaller files and upload them one at a time.
 </Aside>
@@ -273,7 +275,9 @@ If you upload a glossary in CSV or XLS/XLSX file formats, select the language fo
 <Image src={configureImport} alt="Configure Glossary Import" class="crowdin-modal" />
 
 <Aside>
-  Parts of speech are supported in the following format (case-insensitive): adjective, adposition, adverb, auxiliary, coordinating conjunction, determiner, interjection, noun, numeral, particle, pronoun, proper noun, subordinating conjunction, verb, other.
+  When you upload a glossary, values are read as follows:
+  * **Parts of speech** (case-insensitive): adjective, adposition, adverb, auxiliary, coordinating conjunction, determiner, interjection, noun, numeral, particle, pronoun, proper noun, subordinating conjunction, verb, other.
+  * **Custom fields**: Values use the same format as in a downloaded glossary: select lists, radio buttons, and labels take option values, several values are separated by a semicolon and a space (`; `), and checkboxes take `yes` or `no`. Values that don't match the field settings are skipped. In CSV and XLSX, an empty cell in a column mapped to a custom field clears that field's value.
 </Aside>
 
 When downloading a glossary from Crowdin Enterprise, some browsers may add an XML extension to the downloaded file so that the file may be named *sample.tbx.xml*. To import such a file back to Crowdin Enterprise, rename it to *sample.tbx*.
@@ -284,8 +288,10 @@ Once you upload your glossary file in CSV or XLSX formats, the system automatica
 
 To get the most out of the automatic column detection, we recommend that you name the columns in your CSV or XLSX glossary files using the patterns described below:
 
-* Term details &ndash; `{column-type} [{crowdin-language-code}]` (e.g., `Term [en]`, `Description [en]`, `Part of Speech [en]`, etc.).
-* Concept details &ndash; `Concept {concept-details-type}` (e.g., `Concept Definition`, `Concept Subject`, `Concept Note`, etc.).
+* Term details &ndash; `{column-type} [{crowdin-language-code}]` (for example, `Term [en]`, `Description [en]`, `Part of Speech [en]`).
+* Concept details &ndash; `Concept {concept-details-type}` (for example, `Concept Definition`, `Concept Subject`, `Concept Note`).
+* Term custom fields &ndash; `Field: {field-name} [{crowdin-language-code}]` (for example, `Field: Priority [en]`).
+* Concept custom fields &ndash; `Concept Field: {field-name}` (for example, `Concept Field: Domain`).
 
 To redetect the glossary file scheme, click **Detect Configuration**.
 
