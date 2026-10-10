@@ -6,7 +6,18 @@ sidebar:
   label: Externe QA-Prüfung
 ---
 
+import { Aside } from '@astrojs/starlight/components';
+
 Mit diesem Modul kannst du erweiterte, KI-gestützte und andere spezialisierte QA-Prüfungen integrieren und so Übersetzungen auf differenzierte Probleme überprüfen, die von den [standardmäßigen QA-Prüfungen](/enterprise/project-settings/qa-checks/) oder JavaScript-basierten [benutzerdefinierten QA-Prüfungen](/enterprise/custom-qa-checks/) nicht erkannt werden können.
+
+Crowdin Enterprise sendet Übersetzungen stapelweise über HTTP an die App, und die App gibt zurück, ob die jeweilige Übersetzung die Prüfung bestanden hat. Eine Prüfung kann in einem von zwei Modi ausgeführt werden:
+
+* **Asynchron** (Standard): Die App wird im Hintergrund aufgerufen, nachdem eine Übersetzung gespeichert wurde. Das Ergebnis wird einige Sekunden oder Minuten später im Editor angezeigt, und es verhindert niemals, dass eine Übersetzung gespeichert wird.
+* **Synchron**: Die App wird auch während des Speicherns einer Übersetzung aufgerufen, sodass Übersetzer das Ergebnis sofort sehen können. Ein Projekt kann eine synchrone Prüfung so einstellen, dass Übersetzungen, die diese Prüfung nicht bestehen, [blockiert](#blocking-checks) werden.
+
+<Aside>
+  Das Modul „Externe QA-Prüfung“ ist nur in Crowdin Enterprise verfügbar.
+</Aside>
 
 ## Zugriff
 
@@ -24,16 +35,19 @@ Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien ge
     "external-qa-check": [
       {
         "key": "custom-check-qa",
-        "name": "QA Check",
-        "description": "Description",
+        "name": "QA-Prüfung",
+        "description": "Beschreibung",
         "runQaCheckUrl": "/validate",
         "getBatchSizeUrl": "/batch-size",
+        "supportsSynchronousRun": true,
         "url": "/settings/index.html"
       }
     ]
   }
 }
 ```
+
+Eine App kann mehrere `external-qa-check`-Module deklarieren. Jedes Modul wird zu einer eigenständigen Qualitätssicherungsprüfung.
 
 ## Eigenschaften
 
@@ -50,9 +64,10 @@ Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien ge
     <tr>
       <td><code>name</code></td>
       <td>
-        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Typ:</strong> <code>Zeichenkette</code></p>
         <p><strong>Erforderlich:</strong> ja</p>
-        <p><strong>Beschreibung:</strong> Der für Menschen lesbare Name des Moduls.</p>
+        <p><strong>Beschreibung:</strong> Der für Menschen lesbare Name des Moduls.<br />
+        Der Name wird in den QA-Einstellungen des Projekts, in den QA-Issues im Editor und in Importberichten angezeigt.</p>
       </td>
     </tr>
     <tr>
@@ -66,13 +81,28 @@ Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien ge
     <tr>
       <td><code>runQaCheckUrl</code></td>
       <td>
-        <p><strong>Typ:</strong> <code>string</code></p> <p><strong>Erforderlich:</strong> ja</p> <p><strong>Beschreibung:</strong> Die relative URL, die ausgelöst wird, wenn Texte zur QA-Validierung gesendet werden.</p>
+        <p><strong>Typ:</strong> <code>Zeichenkette</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Die relative URL, die beim Versenden von Texten zur QA-Validierung aufgerufen wird. Crowdin sendet eine <code>POST</code>-Anfrage an diese URL.</p>
       </td>
     </tr>
     <tr>
       <td><code class="whitespace-nowrap">getBatchSizeUrl</code></td>
       <td>
-        <p><strong>Typ:</strong> <code>string</code></p> <p><strong>Erforderlich:</strong> nein</p> <p><strong>Beschreibung:</strong> Die relative URL, die beim Abrufen der vom Modul unterstützten Batchgröße ausgelöst wird.</p>
+        <p><strong>Typ:</strong> <code>Zeichenkette</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Beschreibung:</strong> Die relative URL, die beim Abrufen der vom Modul unterstützten Batch-Größe aufgerufen wird.<br />
+        Wenn dieser Wert nicht festgelegt ist, verwendet Crowdin eine Stapelgröße von 500. Siehe [Batching](#batching).</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">supportsSynchronousRun</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>boolean</code></p>
+        <p><strong>Erforderlich:</strong> nein</p>
+        <p><strong>Standardwert:</strong> <code>false</code></p>
+        <p><strong>Beschreibung:</strong> Setze diesen Wert auf <code>true</code>, wenn die App antworten kann, während eine Übersetzung gespeichert wird.<br />
+        Nur eine synchrone Prüfung kann so eingestellt werden, dass Übersetzungen blockiert werden. Siehe [Synchrone Prüfungen](#synchronous-checks).</p>
       </td>
     </tr>
     <tr>
@@ -95,13 +125,17 @@ Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien ge
 
 ## Kommunikation zwischen der App für externe QA-Prüfungen und Crowdin
 
-Das System sendet Texte zur QA-Validierung über `runQaCheckUrl`, entweder aus dem Editor nach dem Speichern der Übersetzung oder wenn QA-Prüfungen durchgeführt werden. Die App verarbeitet die Texte und antwortet dem System mit einer von zwei möglichen Antwortarten: [ohne QA-Probleme](#expected-response-from-the-app-without-qa-issues) oder [mit QA-Problemen](#expected-response-from-the-app-with-qa-issues). Wenn die App die maximale Batchgröße für die QA-Prüfung bestimmen muss, setzt sie den Schlüssel `getBatchSizeUrl` in der `manifest.json` auf die URL zu einem Endpunkt, der die optimale Batchgröße bereitstellt.
+Crowdin sendet Übersetzungen zur Qualitätssicherung als `POST`-Anfrage mit einem JSON-Body an `runQaCheckUrl`. Die App überprüft die Übersetzungen und gibt in derselben HTTP-Antwort entweder [ohne QA-Probleme](#erwartete-Antwort-der-App-ohne-QA-Probleme) oder [mit QA-Problemen](#erwartete-Antwort-der-App-mit-QA-Problemen) eine Antwort zurück.
+
+* Jede Anfrage enthält Übersetzungen für eine Prüfung, eine Zielsprache und eine Datei (bzw. keine Datei bei stringbasierten Projekten).
+* Die Anfrage enthält den Header `Authorization: Bearer \<JWT>`. Das Token identifiziert die Organisation und die App. Es gibt weder das Projekt noch den Benutzer an; diese Angaben befinden sich im Request-Body. Überprüfe das Token anhand des Client-Secrets der App. Erfahre mehr über [die Sicherheit von Crowdin Apps](/developer/crowdin-apps-security/).
+* Die Stapelgröße wird mit einer `GET`-Anfrage an `getBatchSizeUrl` mit demselben Header abgefragt. Siehe [Stapelverarbeitung](#batching).
 
 ### Anfrage von Crowdin an die App für runQaCheckUrl
 
 Beispiel für die Nutzlast der Anfrage:
 
-```json collapse={26-82}
+```json collapse={27-83}
 {
   "data": {
     "translations": [
@@ -113,23 +147,24 @@ Beispiel für die Nutzlast der Anfrage:
         "text": "La mise à jour est installé avec succès.",
         "provider": null,
         "pluralCategoryName": null,
-        "isPreTranslated": false,
-        "rating": 0
+        "isPreTranslated": false
       }
     ],
     "strings": [
       {
         "id": 1234567,
         "key": "update_success",
-        "context": "Confirmation of successful software update",
+        "context": "Bestätigung einer erfolgreichen Softwareaktualisierung",
         "maxLength": null,
-        "text": "The update was successfully installed.",
+        "createdAt": "2026-09-01T10:00:00+00:00",
+        "updatedAt": null,
+        "text": "Das Update wurde erfolgreich installiert.",
         "fields": []
       }
     ],
     "sourceLanguage": {
       "id": "en",
-      "name": "English",
+      "name": "Englisch",
       "twoLettersCode": "en",
       "threeLettersCode": "eng",
       "locale": "en-US",
@@ -141,7 +176,7 @@ Beispiel für die Nutzlast der Anfrage:
     },
     "targetLanguage": {
       "id": "fr",
-      "name": "French",
+      "name": "Französisch",
       "twoLettersCode": "fr",
       "threeLettersCode": "fra",
       "locale": "fr-FR",
@@ -156,7 +191,7 @@ Beispiel für die Nutzlast der Anfrage:
       "type": 0,
       "sourceLanguage": {
         "id": "en",
-        "name": "English",
+        "name": "Englisch",
         "twoLettersCode": "en",
         "threeLettersCode": "eng",
         "locale": "en-US",
@@ -169,7 +204,7 @@ Beispiel für die Nutzlast der Anfrage:
       "targetLanguages": [
         {
           "id": "fr",
-          "name": "French",
+          "name": "Französisch",
           "twoLettersCode": "fr",
           "threeLettersCode": "fra",
           "locale": "fr-FR",
@@ -180,8 +215,8 @@ Beispiel für die Nutzlast der Anfrage:
           "dialectOf": null
         }
       ],
-      "name": "Project Name",
-      "description": "Project Description",
+      "name": "Projektname",
+      "description": "Projektbeschreibung",
       "fields": []
     },
     "file": {
@@ -196,6 +231,18 @@ Beispiel für die Nutzlast der Anfrage:
   }
 }
 ```
+
+Hinweise zur Payload der Anfrage:
+
+* `translations[].provider` ist der Name der MT-, TM- oder KI-Engine, die die Übersetzung erstellt hat, oder `null` bei einer manuellen Übersetzung oder einem Upload.
+* Bei einem pluralischen String ist `strings[].text` ein Objekt mit einem Text pro Pluralform, und `translations` enthält jeweils ein Element pro Pluralform mit dem jeweiligen `pluralCategoryName`.
+* Das Objekt `file` wird nur in dateibasierten Projekten gesendet.
+* Einige Felder wie `strings[].originalText` werden nur gesendet, wenn sie einen Wert enthalten. Behandle Felder, die im Beispiel nicht aufgeführt sind, als optional.
+* Leere Übersetzungen werden nicht gesendet.
+
+<Aside type="caution" title="Übersetzungs-IDs">
+  Speichere oder cache nichts anhand von `translations[].id`. Bei einem synchronen Aufruf ist die Übersetzung noch nicht gespeichert, daher ist `id` eine temporäre Zahl, die die Übersetzung nur während dieses Speichervorgangs identifiziert. Sie muss nicht bei `0` beginnen. Gib diesen Wert in der Antwort als `translationId` zurück. Um Ergebnisse zu cachen, verwende stattdessen den Ausgangstext, den Übersetzungstext und die Zielsprache.
+</Aside>
 
 ### Erwartete Antwort der App (ohne QA-Probleme)
 
@@ -226,13 +273,41 @@ Beispiel für die Nutzlast der Antwort:
         "translationId": 456,
         "passed": false,
         "error": {
-          "message": "Example error message"
+          "message": "Beispiel für eine Fehlermeldung",
+          "details": {
+            "rule": "brand-names"
+          },
+          "suggestedFixes": [
+            {
+              "indexStart": 0,
+              "indexEnd": 6,
+              "replacement": "Crowdin"
+            }
+          ]
         }
       }
     ]
   }
 }
 ```
+
+* `error.message` (erforderlich): Der Text, der dem Übersetzer im Editor angezeigt wird. Verwende reinen Text, da HTML nicht gerendert wird. Bei einer blockierenden Prüfung wird die Nachricht auch im API-Fehler zurückgegeben.
+* `error.details` (optional): Ein Objekt mit zusätzlichen Daten beliebiger Art. Es wird zusammen mit dem QA-Problem gespeichert.
+* `error.suggestedFixes` (optional): Korrekturen, die dem Übersetzer im Editor angeboten werden. `indexStart` und `indexEnd` sind Positionen im Übersetzungstext, und `replacement` ist der Text, der dort eingefügt werden soll.
+
+### Regeln für das Antwortformat
+
+Crowdin lehnt die gesamte Antwort als ungültig ab, wenn:
+
+* Der Body kein JSON ist oder nicht exakt `{"data": {"validations": [...]}}` entspricht.
+* Ein Objekt einen Schlüssel enthält, der in den obigen Beispielen nicht aufgeführt ist. Füge beispielsweise bei einer bestandenen Übersetzung nicht `"error": null` hinzu und füge neben `data` kein `error` auf oberster Ebene hinzu.
+* `translationId` keine Ganzzahl ist oder `passed` kein Boolescher Wert ist.
+* Eine Übersetzung mit `"passed": false` enthält kein `error`-Objekt.
+* Eine Übersetzung aus der Anfrage keine Validierung enthält.
+
+Validierungen mit IDs, die nicht in der Anfrage enthalten waren, werden ignoriert.
+
+Eine ungültige Antwort wird genauso behandelt wie eine nicht verfügbare App. Siehe [Fehlerbehandlung](#error-handling).
 
 ### Antwort der App an Crowdin für getBatchSizeUrl
 
@@ -246,4 +321,167 @@ Beispiel für die Nutzlast der Antwort:
 }
 ```
 
-Die Struktur der Antworten der App muss den dargestellten Beispielen entsprechen. Andernfalls betrachtet Crowdin sie als ungültig.
+Wenn die Antwort nicht diesem Beispiel entspricht, verwendet Crowdin die Standard-Stapelgröße von 500.
+
+## Prüfung in einem Projekt aktivieren
+
+Wenn die App installiert ist, wird jedes `external-qa-check`-Modul als separate Prüfung in den QA-Einstellungen des Projekts angezeigt. Ein Projektmanager aktiviert sie unter **Einstellungen > Qualitätssicherung**. Die Prüfung wird nur ausgeführt, wenn QA-Prüfungen im Projekt aktiviert sind.
+
+Für jede aktivierte externe Prüfung wählt ein Projektmanager deren Schweregrad aus:
+
+* **Warnung**: Übersetzer sehen das QA-Problem und können die Übersetzung trotzdem mit **Trotzdem speichern** speichern. Asynchrone Prüfungen verwenden immer diesen Schweregrad.
+* **Fehler**: Eine Übersetzung, die die Prüfung nicht besteht, wird nicht gespeichert. Nur für Prüfungen mit `supportsSynchronousRun: true` verfügbar. Wenn du ein Projekt mithilfe der API-Methode [Edit Project](/developer/enterprise/api/v2/#operation/api.projects.patch) aktualisierst, füge die Prüfungs-ID zu `externalQaCheckIds` hinzu und setze ihren Wert in `externalQaChecksIgnorable` auf `false`, um die Prüfung blockierend zu machen.
+
+Wenn ein App-Update `supportsSynchronousRun` entfernt, blockiert die Prüfung in allen Projekten keine Übersetzungen mehr und funktioniert als asynchrone Prüfung.
+
+Änderungen am Modul durch ein App-Update (z. B. neue URLs oder ein neuer Wert für `supportsSynchronousRun`) werden innerhalb von etwa einer Minute wirksam. Ein App-Update führt keine erneute Prüfung vorhandener Übersetzungen durch. Um sie erneut zu prüfen, siehe [Erneute Prüfung](#revalidation).
+
+## Wann die Prüfung ausgeführt wird
+
+### Hintergrundprüfungen
+
+Jede aktivierte externe Prüfung wird unabhängig davon, ob sie synchron ist oder nicht, im Hintergrund aufgerufen, wenn:
+
+* Eine Übersetzung zur obersten Übersetzung eines Strings wird (z. B. nach einer neuen Übersetzung, einer Genehmigung, einer Abstimmung oder wenn die vorherige oberste Übersetzung gelöscht wird).
+* Eine vorhandene Übersetzung bearbeitet wird.
+* Der Ausgangstext oder die maximale Länge eines Strings geändert wird.
+* Eine Quelldatei aktualisiert oder wiederhergestellt wird.
+
+Hintergrundprüfungen berücksichtigen nur die oberste Übersetzung jedes Strings. Eine Anfrage kann Übersetzungen aus mehreren Speichervorgängen enthalten.
+
+Die Ergebnisse von Hintergrundprüfungen werden immer mit dem Schweregrad **Warnung** angezeigt, auch bei einer blockierenden Prüfung, da die Übersetzung bereits gespeichert wurde.
+
+### Synchrone Prüfungen
+
+Wenn das Modul `supportsSynchronousRun: true` enthält, wird die App auch während des Speicherns von Übersetzungen aufgerufen, bevor diese gespeichert werden. Dies geschieht, wenn Übersetzungen hinzugefügt werden:
+
+* Im Editor, einschließlich **Suchen und Ersetzen** und dem Speichern mehrerer Übersetzungen.
+* Über die API ([Add Translation](/developer/enterprise/api/v2/#operation/api.projects.translations.post), [Translation Batch Operations](/developer/enterprise/api/v2/#operation/api.projects.translations.patch)).
+* Durch das Hochladen von Dateien mit Übersetzungen.
+* Durch die automatische Übersetzung per MT, TM oder KI, einschließlich der automatischen Übersetzung in Workflow-Schritten.
+* Durch Bestellungen beim Dienstleister.
+
+Eine synchrone Prüfung wird für jede Übersetzung aufgerufen, die gespeichert wird, nicht nur für die oberste Übersetzung. Andere Vorgänge, beispielsweise Genehmigungen oder Übersetzungen, die durch einen Workflow zwischen Projekten kopiert werden, rufen die Prüfung während des Vorgangs nicht auf. Sie werden stattdessen im Hintergrund geprüft und können nicht blockiert werden.
+
+Nach einem synchronen Aufruf wird die Hintergrundprüfung weiterhin ausgeführt, aber sie ruft die App nur für Prüfungen auf, die während des Speicherns nicht geantwortet haben. Wenn die App während des Speicherns geantwortet hat, wird sie für dieselben Übersetzungen nicht ein zweites Mal aufgerufen.
+
+### Blockierende Prüfungen
+
+Wenn eine Übersetzung eine Prüfung mit dem Schweregrad **Fehler** nicht besteht, wird `error.message` der App angezeigt und die Übersetzung nicht gespeichert:
+
+| Wo die Übersetzung hinzugefügt wird                                   | Was passiert                                                                                                                                        |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Editor, einzelne Übersetzung                                          | Die Übersetzung wird nicht gespeichert. Es gibt keine Option **Trotzdem speichern**.                                                                |
+| API, Add Translation                                                  | Die API antwortet mit HTTP 400 und der Nachricht der App.                                                                                           |
+| API, Translation Batch Operations                                     | Die gesamte Anfrage wird abgelehnt und nichts wird gespeichert.                                                                                     |
+| Editor, **Suchen und Ersetzen** oder Speichern mehrerer Übersetzungen | Nur die Übersetzungen, die die Prüfung nicht bestanden haben, werden nicht gespeichert.                                                             |
+| Datei-Upload, automatische Übersetzung                                | Die Übersetzungen, die die Prüfung nicht bestanden haben, werden übersprungen. Im Bericht werden sie als von der QA-Prüfung übersprungen angezeigt. |
+
+<Aside>
+  Eine blockierende Prüfung blockiert niemals Übersetzungen, weil die App nicht verfügbar ist. Wenn die App nicht rechtzeitig antwortet, wird die Übersetzung gespeichert. Siehe [Fehlerbehandlung](#error-handling).
+</Aside>
+
+### Erneute Prüfung
+
+Um vorhandene Übersetzungen erneut mit der Prüfung deiner App zu prüfen, rufe die API-Methode [Revalidate QA Checks](/developer/enterprise/api/v2/#operation/api.projects.qa-checks.revalidate.post) auf und übergib die Prüfungs-ID in `externalQaCheckIds`. Du kannst die ID mithilfe der API-Methode [List External QA Checks](/developer/enterprise/api/v2/#operation/api.external-qa-checks.getMany) abrufen. Die Schaltfläche **Erneut validieren** in den [QA-Einstellungen des Projekts](/enterprise/project-settings/qa-checks/#revalidate-qa-checks) führt die Prüfung nur für **Konsistente Terminologie** und **KI-gestützte Prüfung** erneut aus.
+
+Pro Projekt kann immer nur eine erneute Prüfung gleichzeitig ausgeführt werden. Bei der erneuten Prüfung werden nur die obersten Übersetzungen geprüft und fehlgeschlagene Anfragen nicht erneut versucht.
+
+### Übersetzungen ohne Speichern validieren
+
+Die API-Methode [Validate text by QA Checks](/developer/enterprise/api/v2/#operation/api.projects.translations.validate-qa-checks.post) prüft Übersetzungen, ohne sie zu speichern. Sie ruft alle aktivierten externen Prüfungen auf, unabhängig davon, ob sie synchron sind oder nicht, und verwendet dabei die [synchronen Zeitlimits](#timeouts). Wenn eine Prüfung nicht antwortet, enthält die Antwort das Problem `Unable to complete check {name}.`.
+
+## Stapelverarbeitung
+
+Crowdin Enterprise gruppiert die Übersetzungen eines Vorgangs nach Zielsprache und Datei und teilt jede Gruppe in Stapel mit der Größe auf, die die App über `getBatchSizeUrl` zurückgibt.
+
+* Die Standard-Stapelgröße beträgt 500. Sie wird auch verwendet, wenn `getBatchSizeUrl` nicht festgelegt ist, die Anfrage daran fehlschlägt oder der zurückgegebene Wert `0` oder kleiner ist.
+* Die Stapelgröße wird zwischengespeichert, daher wird ein neuer Wert innerhalb von 10 Minuten wirksam.
+* Die Anfrage an `getBatchSizeUrl` hat ein kurzes Zeitlimit (2 Sekunden während eines Speichervorgangs und 10 Sekunden im Hintergrund). Wenn die App nicht rechtzeitig antwortet, wird der Standardwert 500 verwendet. Gib die Stapelgröße als statischen Wert zurück, anstatt sie zu berechnen.
+* Für eine Gruppe von Übersetzungen werden bis zu 10 Anfragen gleichzeitig gesendet. Verschiedene Prüfungen und Sprachen derselben Gruppe werden parallel gesendet. Große Vorgänge wie Datei-Uploads und automatische Übersetzungen werden in Abschnitten verarbeitet, einer nach dem anderen.
+* In einer Organisation können viele Vorgänge gleichzeitig ausgeführt werden (Editor-Speichervorgänge, Datei-Uploads, automatische Übersetzungen, Hintergrundprüfungen). Jeder davon sendet eigene Anfragen.
+
+Wenn beispielsweise eine Datei mit 2.000 Strings und Übersetzungen in 3 Sprachen hochgeladen wird und die Stapelgröße 500 beträgt, erhält die App 12 Anfragen.
+
+## Zeitlimits
+
+Das Zeitlimit gilt für jede Anfrage, nicht für den gesamten Vorgang.
+
+| Aufruf                                                | Zeitlimit für eine Anfrage                                              |
+| ----------------------------------------------------- | ----------------------------------------------------------------------- |
+| Synchrone Prüfung, eine Übersetzung                   | 10 Sekunden                                                             |
+| Synchrone Prüfung, mehrere Übersetzungen              | 60 Sekunden                                                             |
+| API-Methode „Text anhand von QA-Prüfungen validieren“ | 10 Sekunden für eine Übersetzung, 60 Sekunden für mehrere Übersetzungen |
+| Hintergrundprüfung und erneute Prüfung                | 15 Minuten                                                              |
+
+Fehlgeschlagene Anfragen werden nicht sofort erneut versucht. Erneute Versuche erfolgen nur bei Hintergrundprüfungen, wie unten beschrieben.
+
+## Fehlerbehandlung
+
+Eine Anfrage schlägt fehl, wenn das Zeitlimit der App überschritten wird, die Verbindung fehlschlägt, die App mit einem HTTP-Fehlerstatus antwortet oder die Antwort [ungültig](#response-format-rules) ist. Mehrere Anfragen für eine Prüfung werden häufig gemeinsam gesendet (z. B. bei einem Datei-Upload). Wenn eine davon fehlschlägt, werden auch die Ergebnisse der anderen damit gesendeten Anfragen verworfen und alle zugehörigen Übersetzungen als nicht geprüft behandelt.
+
+Was als Nächstes passiert, hängt davon ab, wie die Prüfung aufgerufen wurde:
+
+| Aufruf                                                | Was bei einem Fehler passiert                                                                                                                                            |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Synchrone Prüfung                                     | Die Übersetzung wird mit dem QA-Problem `Unable to complete check {name}.` (Schweregrad **Warnung**) gespeichert. Die Hintergrundprüfung ruft die App später erneut auf. |
+| Hintergrundprüfung                                    | Die Prüfung wird später einige Male erneut versucht. Wenn auch der letzte Versuch fehlschlägt, erhalten die Übersetzungen dasselbe Problem.                              |
+| Erneute Prüfung                                       | Die Übersetzungen erhalten sofort dasselbe Problem, ohne erneute Versuche.                                                                                               |
+| API-Methode „Text anhand von QA-Prüfungen validieren“ | Die Antwort enthält dasselbe Problem. Nichts wird gespeichert.                                                                                                           |
+
+Das Problem `Unable to complete check {name}.` blockiert niemals eine Übersetzung. Es zählt in Filtern und Statistiken als QA-Problem und bleibt bestehen, bis die Übersetzung das nächste Mal erfolgreich geprüft wird (z. B. nach dem nächsten Speichern, einer Änderung des Ausgangstexts oder einer erneuten Prüfung).
+
+### Leistungsschutzschalter
+
+Um eine ausgefallene App zu schützen, beendet Crowdin Enterprise ihre Aufrufe nach wiederholten Fehlern für kurze Zeit:
+
+* Nach wiederholt fehlgeschlagenen Anfragen werden Aufrufe der Prüfung für etwa eine Minute pausiert.
+* Die Pause gilt für die gesamte Organisation: alle Projekte und alle Arten von Aufrufen.
+* Während der Pause erhalten synchrone Prüfungen sofort `Unable to complete check {name}.`, sodass blockierende Prüfungen während der Pause keine Übersetzungen blockieren. Hintergrundprüfungen warten auf ihren nächsten erneuten Versuch.
+* Zeitüberschreitungen, Verbindungsfehler, HTTP-Antworten `5xx` und `429` sowie ungültige Antworten gelten als Fehler. Andere HTTP-`4xx`-Antworten zählen nicht, da sie normalerweise auf ein Problem mit der Anfrage und nicht auf eine nicht verfügbare App hindeuten.
+* Der Header `Retry-After` wird ignoriert.
+
+## Ergebnisse später zurückgeben
+
+Die App gibt das Ergebnis nur in der HTTP-Antwort auf dieselbe Anfrage zurück. Wenn die Prüfung mehr Zeit benötigt, wähle eine dieser Optionen:
+
+* **Anfrage offen halten** (nur für Hintergrundaufrufe). Hintergrundprüfungen warten bis zu 15 Minuten auf eine Anfrage. Verwende dies für gelegentlich lange Prüfungen, nicht als normale Antwortzeit.
+* **Einen Fehler zurückgeben und Crowdin erneut versuchen lassen.** Eine HTTP-Antwort `5xx` oder `429` führt dazu, dass die Hintergrundprüfung später einige Male erneut versucht wird. Wiederholte Fehler pausieren die Prüfung für die gesamte Organisation, wie unter [Leistungsschutzschalter](#circuit-breaker) beschrieben.
+* **Jetzt antworten und später eine erneute Prüfung anfordern.** Antworte sofort, schließe die Verarbeitung im Hintergrund ab und rufe anschließend die API-Methode [Revalidate QA Checks](/developer/enterprise/api/v2/#operation/api.projects.qa-checks.revalidate.post) mit deiner Prüfungs-ID in `externalQaCheckIds` auf. Dafür sind Berechtigungen eines Projektmanagers erforderlich, und die Prüfung wird für das gesamte Projekt erneut ausgeführt. Verwende dies daher für seltene, umfangreiche Aktualisierungen.
+
+Wenn eine synchrone Prüfung nicht innerhalb des Zeitlimits antwortet, wird die Übersetzung gespeichert und die Hintergrundprüfung fragt mit dem 15-Minuten-Zeitlimit erneut an. Eine synchrone Prüfung, die manchmal langsam ist, erhält ihr Ergebnis also trotzdem, allerdings später und ohne zu blockieren.
+
+## Aufrufvolumen und Ratenlimits
+
+Crowdin Enterprise begrenzt nicht, wie oft es eine App aufruft. Die einzigen Limits sind die 10 parallelen Anfragen für eine Gruppe von Übersetzungen und der [Leistungsschutzschalter](#circuit-breaker). Plane die Kapazität deiner App und aller dahinterliegenden Dienste für diese Lastquellen ein:
+
+* **Täglicher Betrieb**: Jedes Speichern im Editor oder über die API sendet eine Anfrage. Datei-Uploads und automatische Übersetzungen senden eine Anfrage pro Stapel.
+* **Wiederholte Texte**: Ergebnisse werden nicht zwischengespeichert, und identische Texte in verschiedenen Projekten werden separat geprüft. Derselbe Text wird nach **Trotzdem speichern**, einer Genehmigung, einer Abstimmung, einer Änderung des Ausgangstexts, einem erneuten Versuch oder einer erneuten Prüfung erneut gesendet. Die automatische Übersetzung per KI mit erneuten Versuchen bei QA-Problemen sendet jeden Text zweimal: einmal für die erste KI-Ausgabe und einmal für den endgültigen Text.
+* **Vollständige erneute Prüfungen**: Wenn ein Projektmanager die Prüfung in einem Projekt aktiviert oder die API-Methode Revalidate QA Checks mit ihrer ID aufgerufen wird, wird die oberste Übersetzung jedes Strings im Projekt in allen Sprachen geprüft. Deine App hat keine Kontrolle darüber, wann dies geschieht.
+* **Parallele Verarbeitung**: Vorgänge in allen Projekten der Organisation werden gleichzeitig ausgeführt, und jeder Vorgang sendet eigene Anfragen.
+
+Ein Projekt mit 10.000 Strings und 5 Zielsprachen hat beispielsweise 50.000 oberste Übersetzungen. Wenn die Prüfung in diesem Projekt aktiviert wird, werden alle diese Übersetzungen gesendet, also 100 Anfragen bei der Standard-Stapelgröße.
+
+Wenn deine App von einem Dienst mit strengen Ratenlimits abhängt, befolge diese Empfehlungen:
+
+* **Ratenbegrenzung**: Setze vor den Dienst eine Warteschlange und einen Ratenbegrenzer. Crowdin Enterprise reduziert die Anfragerate nicht, wenn der Dienst ausgelastet ist.
+* **Caching**: Caches Ergebnisse anhand von Ausgangstext, Übersetzungstext, Zielsprache und Version deiner Prüfung.
+* **Duplikate**: Entferne Duplikate innerhalb eines Stapels. Pluralformen und wiederholte Strings haben häufig denselben Text.
+* **Stapelaufrufe**: Wenn der Dienst dies unterstützt, sende den gesamten Stapel in einem Aufruf an den Dienst, anstatt einen Aufruf pro Übersetzung zu senden.
+* **Stapelgröße**: Verwende eine große Stapelgröße. Weniger, größere Anfragen lassen sich leichter über Ratenlimits steuern. Eine Stapelgröße von bis zu 500 funktioniert gut.
+* **Antwortzeit**: Synchrone Prüfungen müssen deutlich innerhalb der [Zeitlimits](#timeouts) antworten.
+* **Antworten bei Auslastung**: Verwende HTTP `4xx` nicht, um „ausgelastet“ zu signalisieren. Hintergrundprüfungen versuchen diese Anfragen weiterhin erneut, und der [Leistungsschutzschalter](#circuit-breaker) schützt deinen Dienst nicht davor.
+* **Nicht geprüfte Übersetzungen**: Gib nicht `"passed": true` zurück, wenn die Prüfung nicht ausgeführt wurde. Übersetzer wissen sonst nicht, dass die Übersetzung nicht geprüft wurde.
+* **Konsistente Ergebnisse**: Gib für denselben Text dasselbe Ergebnis zurück. Ein Ergebnis bleibt bis zur nächsten Prüfung der Übersetzung bestehen. Unterschiedliche Ergebnisse für denselben Text verwirren daher Übersetzer.
+* **Spitzen bei erneuten Prüfungen**: Dimensioniere die App und den Dienst für eine vollständige erneute Prüfung eines großen Projekts und lass den Ratenbegrenzer die Last über die Zeit verteilen.
+* **Synchrone Ausführungen**: Setze `supportsSynchronousRun: true` nur dann, wenn die Prüfung zuverlässig innerhalb des Zeitlimits antwortet. Andernfalls erhalten Übersetzer QA-Probleme mit `Unable to complete check {name}.`, und das Blockieren funktioniert nicht, wenn es benötigt wird.
+
+## Fehlerbehebung
+
+| Problem                                                              | Wahrscheinliche Ursache                                                                                                                        | Lösung                                                                                                                                                           |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bei Übersetzungen wird `Unable to complete check {name}.` angezeigt. | Die App hat das Zeitlimit überschritten, einen HTTP-Fehler zurückgegeben oder eine ungültige Antwort geliefert.                                | Prüfe, dass die Antwort exakt den [Regeln für das Antwortformat](#response-format-rules) entspricht und die App innerhalb der [Zeitlimits](#timeouts) antwortet. |
+| Die Prüfung schlägt in allen Projekten etwa eine Minute lang fehl    | Der [Leistungsschutzschalter](#circuit-breaker) hat die Prüfung nach wiederholten Fehlern pausiert.                                            | Behebe die Ursache der Fehler. Aufrufe werden nach etwa einer Minute automatisch fortgesetzt.                                                                    |
+| Der Schweregrad **Fehler** kann nicht ausgewählt werden              | Das Modul enthält nicht `supportsSynchronousRun: true`.                                                                                        | Füge dem Modul im Manifest `"supportsSynchronousRun": true` hinzu und aktualisiere die App.                                                                      |
+| Eine blockierende Prüfung blockiert einige Übersetzungen nicht       | Die Übersetzung wurde durch einen Vorgang hinzugefügt, der keine synchronen Prüfungen aufruft, oder die App hat nicht rechtzeitig geantwortet. | Siehe [Synchrone Prüfungen](#synchronous-checks) und [Fehlerbehandlung](#error-handling).                                                                        |
+| Ergebnisse werden zwischen Übersetzungen vertauscht                  | Die App speichert oder cached Ergebnisse anhand von `translationId`.                                                                           | Gib `translationId` exakt so zurück, wie es empfangen wurde, und cache stattdessen anhand des Textes.                                                            |
