@@ -17990,6 +17990,61 @@ paths:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
   '/projects/{projectId}/teams':
+    get:
+      tags:
+        - Teams
+      summary: 'List Project Teams'
+      description: "**Required scopes:** `project.member` (Read only).\n\nReturns a list of teams that have access to the project, along with the permissions each of them holds in it. Teams are sorted by `id`."
+      operationId: api.projects.teams.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          name: orderBy
+          in: query
+          description: 'Read more about [sorting rules](#section/Introduction/Sorting)'
+          schema:
+            type: string
+            default: id
+            enum:
+              - id
+              - name
+          example: 'name desc,id'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Project Teams list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTeamCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project with specified identifier was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
     post:
       tags:
         - Teams
@@ -24647,6 +24702,14 @@ components:
       allOf:
         -
           $ref: '#/components/schemas/ai.report.base'
+        -
+          properties:
+            languageIds:
+              description: 'Count only usage targeting these languages, ids via [List Supported Languages](#operation/api.languages.getMany). Usage without a target language drops out once this filter is set'
+              type: array
+              items:
+                type: string
+                example: uk
     CostsByUsers:
       title: 'Costs By Users'
       description: 'AI spend per user for a period, already summed up: for billing AI usage back to a team, watching who nears an AI cost limit, or pulling the AI Usage page figures into your own dashboard. Use `tokens-usage-raw-data` instead when you need every individual AI call rather than per-user totals'
@@ -25725,7 +25788,7 @@ components:
           type: boolean
           default: false
         modules:
-          description: 'UI module definitions: an object whose keys are UI module types and whose values are arrays of module definitions.<br><br>`url` is not allowed (these apps have no `baseUrl`).<br><br>Allowed module types: `editor-right-panel`, `editor-translations-panel`, `editor-asset-panel`, `editor-background-worker`, `editor-button`, `project-tools`, `project-menu`, `project-menu-crowdsource`, `project-reports`, `project-integrations`, `profile-resources-menu`, `profile-settings-menu`, `organization-menu`, `organization-settings-menu`, `organization-menu-crowdsource`, `modal`, `chat`, `context-menu`, `navbar-extension`.<br><br>For `context-menu` modules only the `modal` and `redirect` option types are supported (`new_tab` needs a page outside the app bundle, which serverless apps cannot serve).<br><br>An `editor-button` must point (`options.module`) at an existing module of the type its `options.type` opens: `panel` opens `editor-right-panel`, `modal` opens `modal`, `event` opens `editor-right-panel` or `editor-background-worker`. Its key must not reuse a key of those module types, and it must share at least one `environments` entry with its target.'
+          description: 'UI module definitions: an object whose keys are UI module types and whose values are arrays of module definitions.<br><br>`url` is not allowed (these apps have no `baseUrl`).<br><br>Allowed module types: `editor-right-panel`, `editor-translations-panel`, `editor-asset-panel`, `editor-background-worker`, `editor-button`, `project-tools`, `project-menu`, `project-menu-crowdsource`, `project-reports`, `group-reports`, `project-integrations`, `profile-resources-menu`, `profile-settings-menu`, `organization-menu`, `organization-settings-menu`, `organization-menu-crowdsource`, `modal`, `chat`, `context-menu`, `navbar-extension`.<br><br>For `context-menu` modules only the `modal` and `redirect` option types are supported (`new_tab` needs a page outside the app bundle, which serverless apps cannot serve).<br><br>An `editor-button` must point (`options.module`) at an existing module of the type its `options.type` opens: `panel` opens `editor-right-panel`, `modal` opens `modal`, `event` opens `editor-right-panel` or `editor-background-worker`. Its key must not reuse a key of those module types, and it must share at least one `environments` entry with its target.'
           type: object
           additionalProperties:
             type: array
@@ -51224,6 +51287,30 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/TeamProjectPermissionsResponseModel'
+    ProjectTeamCollectionResource:
+      description: 'Project Teams List'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProjectTeamPermissionsResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    ProjectTeamPermissionsResource:
+      description: 'Project Team Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/ProjectTeam'
     ProjectTeamResourceSkipped:
       description: 'Project Team Resource'
       type: object
@@ -51356,6 +51443,10 @@ components:
           description: 'Team Identifier'
           type: integer
           example: 1
+        name:
+          description: 'Team Name'
+          type: string
+          example: 'Translators Team'
         hasManagerAccess:
           type: boolean
           example: false
