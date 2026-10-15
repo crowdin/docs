@@ -1,0 +1,102 @@
+---
+title: Organization Reports Module
+description: Add a report from your app to the organization and group Reports in Crowdin Enterprise
+slug: developer/crowdin-apps-module-group-reports
+sidebar:
+  order: 13
+  label: Organization Reports
+---
+
+The module adds a report from your app to the **Reports** of a Crowdin Enterprise organization. In [Permission granularity mode](/enterprise/permissions-granularity-mode/), the report also appears in the **Reports** of each group.
+
+The module is available only in Crowdin Enterprise. To add a report to a project, use the [Reports module](/developer/crowdin-apps-module-project-reports/).
+
+## Access
+
+You can grant access to this module to one of the following user categories:
+
+* Only admins
+* Admins, managers and developers / translation requestors
+* Custom Access
+
+Within the chosen category, organization admins see the report in the organization and in every group, and group managers see it in the groups they manage.
+
+## Structure
+
+```json title="manifest.json"
+{
+  "modules": {
+    "group-reports": [
+      {
+        "key": "your-module-key",
+        "name": "Module name",
+        "description": "Module description",
+        "logo": "/logo.png",
+        "url": "/reports-page"
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> Module identifier within the Crowdin app.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes</p>
+        <p><strong>Description:</strong> The human-readable name of the module.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The human-readable description of what the module does.<br/>
+         The description will be visible in the Crowdin Enterprise UI.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>logo</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Description:</strong> The relative URL to the report's logo that will be displayed in the Crowdin Enterprise UI. If not set, the app's logo is used.<br/>
+         The recommended resolution is 48x48 pixels.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> yes (self-hosted apps only)</p>
+        <p><strong>Description:</strong> The relative URL to the content page of the module that will be integrated into the Crowdin Enterprise UI.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">environments</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Allowed values:</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>Description:</strong> Set of environments where a module could be installed.<br/>
+        This parameter is needed for cross-product applications.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Organization and Group Levels
+
+Crowdin Enterprise opens the same module `url` for the organization and for its groups. When the report is opened in a group, the context includes `group_id` (the ID of that group) in both the [JWT token payload](/developer/crowdin-apps-security/#token-payload) and the [AP.getContext()](/developer/crowdin-apps-js/#get-context) response. Without `group_id`, the report is opened in the organization's **Reports**.
+
+Crowdin Enterprise adds `group_id` to the token after it checks the user's access to that group, so use the token value to decide which data the report shows.
