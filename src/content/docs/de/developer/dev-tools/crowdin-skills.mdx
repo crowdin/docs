@@ -12,7 +12,7 @@ import ReadMore from '~/components/ReadMore.astro';
 
 Crowdin Skills sind Anleitungspakete, die einem KI-Coding-Agenten beibringen, mit Crowdin zu arbeiten. Nach der Installation kennt der Agent die Crowdin-CLI-Befehle, das Format der Konfigurationsdatei, den API-Client und die Abfragesprachen. Dadurch kannst du eine Lokalisierungsaufgabe in natürlicher Sprache beschreiben, statt die Syntax selbst nachzuschlagen.
 
-Skills verbinden den Agenten nicht mit deinem Crowdin-Konto. Sie arbeiten innerhalb deiner Entwicklungsumgebung neben deinem Quellcode, im Gegensatz zum [Crowdin MCP Server](/developer/crowdin-mcp-server/).
+Die Skills verbinden den Agenten nicht von selbst mit deinem Crowdin-Konto. Sie arbeiten innerhalb deiner Entwicklungsumgebung neben deinem Quellcode, im Gegensatz zum [Crowdin MCP Server](/developer/crowdin-mcp-server/). Einige Skills benötigen den MCP-Server, um Projektdaten auszulesen und zu ändern. Das Crowdin-Plugin enthält ihn bereits.
 
 ## Verfügbare Skills
 
@@ -22,18 +22,23 @@ Skills verbinden den Agenten nicht mit deinem Crowdin-Konto. Sie arbeiten innerh
 
 **Lokalisierung einrichten**
 
-* **`i18n-setup`** &ndash; Überführt ein Projekt von fest im Code hinterlegten Zeichenfolgen zu kontinuierlicher Übersetzung oder verbindet ein bereits internationalisiertes Projekt.
+* **`i18n-setup`** &ndash; Überführt ein Projekt von fest im Code hinterlegten Zeichenfolgen zu kontinuierlicher Übersetzung oder verbindet ein bereits internationalisiertes Projekt. Außerdem bereitet es den Kontext für Übersetzende, ein erstes Glossar und Screenshots vor und übergibt die kontinuierliche Synchronisierung an den Skill `github-action`.
 
 **Inhalte synchronisieren**
 
-* **`crowdin-cli`** &ndash; Synchronisiert Quelldateien und Übersetzungen zwischen deinem Projekt und Crowdin mit Crowdin CLI v5.
+* **`crowdin-cli`** &ndash; Synchronisiert Quelldateien und Übersetzungen zwischen deinem Projekt und Crowdin mithilfe der Crowdin CLI. Dazu gehören die Konfiguration mit `crowdin.yml`, automatische Übersetzungen, Integrationen über installierte Crowdin-Apps und die Migration von CLI v4.
 * **`github-action`** &ndash; Richtet den Schritt `crowdin/github-action` in einem GitHub-Workflow ein und unterstützt beim Debuggen.
 
 **Inhalte für Übersetzer vorbereiten**
 
-* **`context-extraction`** &ndash; Erstellt Kontext für die Quellzeichenfolgen, die ihn benötigen.
-* **`crowdin-context-cli`** &ndash; Arbeitet mit den `crowdin context`-Befehlen und dem dafür verwendeten JSONL-Format.
-* **`glossary-generation`** &ndash; Erstellt einen ersten Glossarentwurf aus deinen Quellzeichenfolgen und lädt ihn nach deiner Freigabe in das Projekt hoch.
+* **`context-extraction`** &ndash; Erstellen von Kontext für die Quellzeichenfolgen, die diesen benötigen; dieser wird mit den Befehlen `crowdin context` heruntergeladen und wieder hochgeladen.
+* **`glossary-terms-extraction`** &ndash; Erstellt oder erweitert ein Glossar auf Grundlage deiner Ausgangszeichenfolgen und weiterer von dir bereitgestellter Inhalte, z. B. Dokumentationen oder Websites. Begriffe werden erst hinzugefügt, nachdem du sie überprüft hast. Markennamen werden als nicht übersetzbar gekennzeichnet.
+* **`glossary-term-translations`** &ndash; Ergänzt Übersetzungen für Glossarbegriffe auf Grundlage dessen, wie sie in deinem Projekt bereits übersetzt wurden. Übersetzungen werden als Entwürfe hinzugefügt, die du überprüfen kannst. Bei Sprachen ohne eindeutige Entsprechung bleibt das Feld leer. Erfordert den Crowdin-MCP-Server.
+* **`generate-screenshots`** &ndash; Nimmt Screenshots deiner laufenden Web-, Mobil- oder Desktop-App auf und lädt sie zu Crowdin hoch. Dabei werden sie den darauf sichtbaren Zeichenfolgen zugeordnet, damit Übersetzende sehen, wo die einzelnen Zeichenfolgen erscheinen. Zuerst werden Zeichenfolgen ohne Screenshot ermittelt. Die Definition für die Screenshot-Erfassung bleibt für das nächste Release in deinem Repository.
+
+**Inhalte übersetzen**
+
+* **`translate`** &ndash; Entwürfe für Übersetzungen der Strings deiner App in den Ressourcendateien deines Projekts erstellen und sie als Vorschläge zur Überprüfung in Crowdin hochladen.
 
 **Mit Projektdaten arbeiten**
 
@@ -45,19 +50,31 @@ Skills verbinden den Agenten nicht mit deinem Crowdin-Konto. Sie arbeiten innerh
 
 * **`create-app`** &ndash; Erstellt das Grundgerüst, entwickelt und veröffentlicht eine Crowdin-App.
 
+**Feedback senden**
+
+* **`feedback`** &ndash; Feedback zu Crowdin oder den Entwicklertools von Crowdin erstellen und nach deiner Genehmigung als öffentliches GitHub-Issue an das Crowdin-Team senden.
+
 ## Installation
 
-Skills funktionieren mit Claude Code, Cursor, OpenAI Codex, Gemini CLI, GitHub Copilot, OpenCode, Cline, Windsurf und anderen KI-Coding-Agenten. Jeder Client bindet sie auf eigene Weise ein. Befolge daher die Installationsanweisungen im Repository.
+Die Skills funktionieren mit Claude Code, Claude Cowork, Cursor, OpenAI Codex, Gemini CLI, GitHub Copilot, OpenCode, Cline, Windsurf und anderen KI-Coding-Agenten. Jeder Client bindet sie auf eigene Weise ein. Befolge daher die Installationsanweisungen im Repository.
 
 <LinkButton href="https://github.com/crowdin/skills#installation" icon="external" target="_blank">Crowdin Skills installieren</LinkButton>
 
 Nach der Installation stehen die Skills automatisch zur Verfügung, wenn du in einem Projekt arbeitest, das Crowdin verwendet, oder etwas erwähnst, das sie abdecken. Du kannst deinen Agenten auch direkt in einer Anfrage auf sie verweisen.
 
-## Schnelle Demo
+## Fähigkeiten in der Praxis
+
+### Lokalisierung einrichten
 
 Sieh dir an, wie der Skill `i18n-setup` ein Projekt von fest im Code hinterlegten Zeichenfolgen zu einem Crowdin-Projekt mit kontinuierlicher Übersetzung macht:
 
 <YouTube id="Hc6StVCp7U0" />
+
+### Eine App erstellen
+
+Sehe an, wie die `create-app`-Skill eine Crowdin-App erstellt und veröffentlicht, die die Konsistenz zwischen Quelltext und Übersetzung überprüft:
+
+<YouTube id="kA6zhnJdiAk" />
 
 ## Skills und der MCP Server
 
@@ -66,7 +83,7 @@ Skills und der Crowdin MCP Server unterstützen einen KI-Agenten dabei, mit Crow
 * **Crowdin Skills** bringen dem Agenten bei, wie die Entwicklertools von Crowdin funktionieren. Der Agent wendet dieses Wissen in deinem Repository auf deinen Quellcode und deine `crowdin.yml` an.
 * **Crowdin MCP Server** verbindet den Agenten mit deinem Crowdin-Konto, sodass er Projektdaten direkt lesen und ändern kann.
 
-Du kannst beides verwenden: Skills, um den richtigen Befehl in deinem Repository auszuführen, und den MCP Server, um das Ergebnis in deinem Projekt zu prüfen. Der Skill `how-to-crowdin` basiert auf dieser Kombination &ndash; er beschreibt jeden Schritt als Aktion auf deinen Zeichenfolgen, Dateien oder Berichten, die der Agent anschließend über den MCP Server ausführen kann.
+Du kannst beides verwenden: Skills, um den richtigen Befehl in deinem Repository auszuführen, und den MCP Server, um das Ergebnis in deinem Projekt zu prüfen. Wenn du Crowdin Skills als Plugin installierst, ist der MCP-Server darin enthalten. Der Skill `how-to-crowdin` basiert auf dieser Kombination &ndash; er beschreibt jeden Schritt als Aktion auf deinen Zeichenfolgen, Dateien oder Berichten, die der Agent anschließend über den MCP Server ausführen kann.
 
 <ReadMore>
   Mehr über den [Crowdin MCP Server](/developer/crowdin-mcp-server/) erfahren.
