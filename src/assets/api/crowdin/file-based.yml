@@ -1390,11 +1390,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
         '404':
-          description: 'AI provider with specified id was not found'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundExceptionResource'
+          $ref: '#/components/responses/AiGatewayProviderNotFoundResponse'
         default:
           $ref: '#/components/responses/AiGatewayProviderPassthroughResponse'
     put:
@@ -1428,11 +1424,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
         '404':
-          description: 'AI provider with specified id was not found'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundExceptionResource'
+          $ref: '#/components/responses/AiGatewayProviderNotFoundResponse'
         default:
           $ref: '#/components/responses/AiGatewayProviderPassthroughResponse'
     post:
@@ -1466,11 +1458,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
         '404':
-          description: 'AI provider with specified id was not found'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundExceptionResource'
+          $ref: '#/components/responses/AiGatewayProviderNotFoundResponse'
         default:
           $ref: '#/components/responses/AiGatewayProviderPassthroughResponse'
     delete:
@@ -1502,11 +1490,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
         '404':
-          description: 'AI provider with specified id was not found'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundExceptionResource'
+          $ref: '#/components/responses/AiGatewayProviderNotFoundResponse'
         default:
           $ref: '#/components/responses/AiGatewayProviderPassthroughResponse'
     patch:
@@ -1540,11 +1524,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
         '404':
-          description: 'AI provider with specified id was not found'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundExceptionResource'
+          $ref: '#/components/responses/AiGatewayProviderNotFoundResponse'
         default:
           $ref: '#/components/responses/AiGatewayProviderPassthroughResponse'
   '/users/{userId}/ai/prompts/{aiPromptId}/clones':
@@ -2447,7 +2427,7 @@ paths:
       tags:
         - AI
       summary: 'Create AI Proxy Chat Completion'
-      description: "**Required scopes:** `ai.proxy` (Read only).\n\nThis API method serves as an intermediary, forwarding your requests directly to the selected provider.\n\nPlease refer to the documentation for the specific provider you use to determine the required payload format."
+      description: "**Required scopes:** `ai.proxy` (Read only).\n\nDeprecated. Use [AI Gateway](#operation/api.ai.providers.gateway.crowdin.post) instead.\n\nThis API method serves as an intermediary, forwarding your requests directly to the selected provider.\n\nPlease refer to the documentation for the specific provider you use to determine the required payload format.\n\n__Note:__ The AI Gateway supports every provider type, all HTTP methods, and native SSE streaming. This endpoint is kept for compatibility and does not receive new capabilities"
       operationId: api.users.ai.providers.chat.completions.post
       parameters:
         -
@@ -2496,6 +2476,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+      deprecated: true
   '/users/{userId}/ai/reports':
     post:
       tags:
@@ -22835,6 +22816,14 @@ components:
           description: 'Human-readable model name'
           type: string
           example: GPT-5.2
+        dialect:
+          description: 'API dialect the model is served with. Set where the dialect does not follow from the provider type'
+          type: string
+          enum:
+            - open_ai
+            - anthropic
+          example: anthropic
+          nullable: true
         supportReasoning:
           description: 'Indicates if the model supports reasoning (thinking)'
           type: boolean
@@ -50131,7 +50120,55 @@ components:
             type: string
             format: binary
     AiGatewayProviderPassthroughResponse:
-      description: 'Any other status and body are passed through from the AI provider. Format and meaning depend on the provider and the requested path.'
+      description: "Statuses and bodies not listed here are passed through from the AI provider unchanged. Errors generated by Crowdin itself (400 invalid request, 402 payment or quota, 404, 502 upstream failure) carry the `X-Crowdin-Gateway-Error` header and use the error format of the AI provider's API, as does a provider failure that reaches Crowdin as an exception rather than a response (Bedrock), which keeps its own status under `X-Crowdin-Gateway-Error: upstreamRateLimited` for a 429, `upstreamRejected` for any other 4xx and `upstreamUnavailable` for a 5xx or an unreachable provider."
+      headers:
+        X-Crowdin-Gateway-Error:
+          description: 'Machine-readable cause of an error Crowdin itself produced. Absent when the response comes from the AI provider.'
+          schema:
+            type: string
+            enum:
+              - invalidRequest
+              - invalidPath
+              - providerDisabled
+              - providerUnsupported
+              - pathNotAllowed
+              - modelRequired
+              - modelNotSupported
+              - toolNotAllowed
+              - quotaBlocked
+              - quotaExceeded
+              - paymentRequired
+              - providerNotFound
+              - upstreamRateLimited
+              - upstreamRejected
+              - upstreamUnavailable
+    AiGatewayProviderNotFoundResponse:
+      description: "AI provider with specified id was not found. The error body follows the error format of the AI provider's API, inferred from the request path when the provider is unknown; the `X-Crowdin-Gateway-Error` response header is `providerNotFound`."
+      headers:
+        X-Crowdin-Gateway-Error:
+          description: 'Machine-readable cause of an error Crowdin itself produced. Absent when the response comes from the AI provider.'
+          schema:
+            type: string
+            enum:
+              - invalidRequest
+              - invalidPath
+              - providerDisabled
+              - providerUnsupported
+              - pathNotAllowed
+              - modelRequired
+              - modelNotSupported
+              - toolNotAllowed
+              - quotaBlocked
+              - quotaExceeded
+              - paymentRequired
+              - providerNotFound
+              - upstreamRateLimited
+              - upstreamRejected
+              - upstreamUnavailable
+      content:
+        application/json:
+          schema:
+            type: object
   parameters:
     AiFineTuningJobCollectionStatuses:
       name: statuses
@@ -51419,7 +51456,7 @@ tags:
     description: "\nAI features help you translate content and perform other localization tasks using the configured AI providers.\n\nUse API to manage AI providers, prompts, settings, and custom placeholders, to run AI-powered translations, and to generate AI reports.\n"
   -
     name: 'AI Gateway'
-    description: "The AI Gateway acts as a transparent reverse proxy to the configured AI provider.\n\nSet this endpoint's base URL as the `base_url` in your AI SDK client (OpenAI, Anthropic, Google Gemini, etc.), and use your Crowdin API token as the API key.\n\nThe request body and response format depend entirely on the target AI provider.\n\nPlease refer to the respective provider's API documentation for payload structure.\n\n**Supported providers:** OpenAI, Anthropic, Google Gemini AI Studio\n\n**Authentication:** The gateway accepts credentials in the format native to each provider's SDK:\n- `Authorization: Bearer <token>` (OpenAI and compatible)\n- `x-api-key: <token>` (Anthropic)\n- `x-goog-api-key: <token>` (Google Gemini)\n\nAll of these are interpreted as Crowdin API tokens. The actual provider API key is managed server-side via AI Provider configuration.\n"
+    description: "The AI Gateway acts as a transparent reverse proxy to the configured AI provider. It is the recommended way to call AI providers through Crowdin.\n\nSet this endpoint's base URL as the `base_url` in your AI SDK client (OpenAI, Anthropic, Google Gemini, etc.), and use your Crowdin API token as the API key.\n\nThe request body and response format depend entirely on the target AI provider.\n\nPlease refer to the respective provider's API documentation for payload structure.\n\n**Supported providers:** OpenAI, Azure OpenAI, Anthropic, Crowdin AI (AWS Bedrock), Google Gemini (AI Studio and Vertex AI), Microsoft Foundry, Mistral AI, DeepSeek, xAI, and Custom AI providers.\n\nGoogle Gemini (Vertex AI) providers are consumed with the same Google Gen AI SDK client and model names as AI Studio ones; no Google Cloud project or location is required.\n\nCustom AI providers are consumed with the OpenAI SDK and support only chat completions and the models list.\n\nMicrosoft Foundry providers accept both the OpenAI SDK and the Anthropic SDK; use the one that matches the deployed model.\n\n**Authentication:** The gateway accepts credentials in the format native to each provider's SDK:\n- `Authorization: Bearer <token>` (OpenAI and compatible)\n- `x-api-key: <token>` (Anthropic)\n- `x-goog-api-key: <token>` (Google Gemini)\n- `api-key: <token>` (Azure OpenAI)\n- `X-Amz-Security-Token: <token>` (AWS SDK)\n\nAll of these are interpreted as Crowdin API tokens. The actual provider API key is managed server-side via AI Provider configuration.\n\n**Errors:** When Crowdin itself rejects a request (validation, AI quota, payment required, provider unreachable), the error body is rendered in the error format native to the target provider's API, so AI SDK clients surface it like a provider error. The `X-Crowdin-Gateway-Error` response header carries a machine-readable cause, one of `invalidRequest`, `invalidPath`, `providerDisabled`, `providerUnsupported`, `pathNotAllowed`, `modelRequired`, `modelNotSupported`, `toolNotAllowed`, `quotaBlocked`, `quotaExceeded`, `paymentRequired`, `providerNotFound`, `upstreamRateLimited`, `upstreamRejected`, `upstreamUnavailable`.\n"
   -
     name: Languages
     description: "\nCrowdin supports more than 300 world languages and custom languages created in the system.\n\nUse API to get the list of all supported languages and retrieve additional details (e.g. text direction, internal code) on specific language.\n"
