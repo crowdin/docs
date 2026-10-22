@@ -1,0 +1,102 @@
+---
+title: Modul Organisationsberichte
+description: Füge einen Bericht aus Ihrer App zur Organisation hinzu und ordne ihn der Gruppe Berichte in Crowdin Enterprise zu
+slug: developer/crowdin-apps-module-group-reports
+sidebar:
+  order: 13
+  label: Organisationsberichte
+---
+
+Das Modul fügt einen Bericht aus Ihrer App zu den **Berichten** einer Crowdin Enterprise-Organisation hinzu. Im [Modus „Berechtigungsgranularität“](/enterprise/permissions-granularity-mode/) wird der Bericht auch unter **Berichte** der jeweiligen Gruppe angezeigt.
+
+Das Modul ist ausschließlich in Crowdin Enterprise verfügbar. Um einem Projekt einen Bericht hinzuzufügen, verwende das [Modul Berichte](/developer/crowdin-apps-module-project-reports/).
+
+## Zugriff
+
+Du kannst Zugriff auf dieses Modul für eine der folgenden Benutzerkategorien gewähren:
+
+* Nur admins
+* Admins, managers und Entwickler / translation Anfrageoders
+* Individueller Zugriff
+
+Innerhalb der ausgewählten Kategorie siehst du als Organisationsadministrator den Bericht in der Organisation und in jeder Gruppe. Als Gruppenmanager siehst du ihn in den Gruppen, die du verwaltest.
+
+## Struktur
+
+```json title="manifest.json"
+{
+  "modules": {
+    "group-reports": [
+      {
+        "key": "your-module-key",
+        "name": "Modulname",
+        "description": "Modulbeschreibung",
+        "logo": "/logo.png",
+        "url": "/reports-page"
+      }
+    ]
+  }
+}
+```
+
+## Eigenschaften
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Kennung des Moduls innerhalb der Crowdin-App.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja</p>
+        <p><strong>Beschreibung:</strong> Der für Menschen lesbare Name des Moduls.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Beschreibung:</strong> Die für Menschen lesbare Beschreibung der Funktion des Moduls.<br />
+        Die Beschreibung wird in der Crowdin-Enterprise-Benutzeroberfläche angezeigt.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>logo</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>Zeichenkette</code></p>
+        <p><strong>Beschreibung:</strong> Die relative URL zum Logo des Berichts, das in der Benutzeroberfläche von Crowdin Enterprise angezeigt wird. Wenn keine Angabe erfolgt, wird das Logo der App verwendet.<br />
+        Die empfohlene Auflösung beträgt 48×48 Pixel.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Erforderlich:</strong> ja (nur für selbst gehostete Apps)</p>
+        <p><strong>Beschreibung:</strong> Die relative URL zur Inhaltsseite des Moduls, das in die Crowdin-Enterprise-Oberfläche integriert wird.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">environments</code></td>
+      <td>
+        <p><strong>Typ:</strong> <code>string</code></p>
+        <p><strong>Zulässige Werte:</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>Beschreibung:</strong> Menge der Umgebungen, in denen ein Modul installiert werden kann.<br />
+        Dieser Parameter wird für produktübergreifende Anwendungen benötigt.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Organisations- und Gruppenebenen
+
+Crowdin Enterprise öffnet für die Organisation und deren Gruppen jeweils dasselbe Modul `url`. Wenn der Bericht in einer Gruppe geöffnet wird, enthält der Kontext sowohl in der [JWT-Token-Nutzlast](/developer/crowdin-apps-security/#token-payload) als auch in der Antwort von [AP.getContext()](/developer/crowdin-apps-js/#get-context) die `group_id` (die ID dieser Gruppe). Ohne `group_id` wird der Bericht in den **Berichten** der Organisation geöffnet.
+
+Crowdin Enterprise fügt dem Token die `group_id` hinzu, nachdem es die Zugriffsrechte des Benutzers für diese Gruppe überprüft hat. Verwende daher den Wert des Tokens, um zu bestimmen, welche Daten im Bericht angezeigt werden sollen.
