@@ -22822,6 +22822,7 @@ components:
           enum:
             - open_ai
             - anthropic
+            - null
           example: anthropic
           nullable: true
         supportReasoning:
@@ -25534,6 +25535,509 @@ components:
             iframe:
               type: object
               nullable: true
+    ApplicationCreditSettingsPatch:
+      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      type: array
+      items:
+        $ref: '#/components/schemas/ApplicationCreditSettingsOperation'
+    ApplicationCreditSettingsOperation:
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+      properties:
+        op:
+          description: '`replace` for the limit paths. For a per-user override: `replace` or `remove` on its field paths, `remove` on `/perUserOverrides/{userId}` to delete the whole override'
+          type: string
+          enum:
+            - replace
+            - remove
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>. `{userId}` is a positive integer. Creating a new override requires the user to be a member; editing or removing an existing one does not. Removing a field of an override re-validates the override'
+          type: string
+          format: json-pointer
+          enum:
+            - /dailyCostLimit
+            - /monthlyCostLimit
+            - /userDailyCostLimit
+            - /userMonthlyCostLimit
+            - '/perUserOverrides/{userId}'
+            - '/perUserOverrides/{userId}/costLimitMode'
+            - '/perUserOverrides/{userId}/dailyCostLimit'
+            - '/perUserOverrides/{userId}/monthlyCostLimit'
+        value:
+          description: 'Required for `replace`. A limit in USD up to 99999999.99, where `null` removes the limit and `0` blocks spending (a per-user override limit must be above `0`), or a `costLimitMode`: `custom`, `blocked` or `unlimited`'
+          nullable: true
+          oneOf:
+            -
+              type: number
+              format: float
+            -
+              type: string
+              enum:
+                - custom
+                - blocked
+                - unlimited
+      type: object
+    ApplicationCreditTransactionCreateForm:
+      required:
+        - applicationIdentifier
+        - amount
+        - userId
+        - description
+      properties:
+        applicationIdentifier:
+          description: 'Identifier of the calling application. Several applications can share one OAuth client, so the token alone does not tell which one calls. It must be an application installed with the OAuth client and by the user of the token'
+          type: string
+          maxLength: 255
+          minLength: 2
+          example: crowdin-copilot
+        amount:
+          description: 'Amount to withdraw in USD. Greater than 0, at most 999999.999999, up to 6 decimal places'
+          type: number
+          format: float
+          maximum: 999999.999999
+          example: 0.1
+        userId:
+          description: 'Identifier of the user the paid action is performed for. The user must be a member of the organization'
+          type: integer
+          minimum: 1
+          example: 7
+        description:
+          description: 'What the credits are spent on. Shown to the organization in the billing transactions'
+          type: string
+          maxLength: 1000
+          minLength: 1
+          example: 'Automation run: Weekly German pre-translate'
+        metadata:
+          description: 'Any JSON object the application wants to keep with the transaction, up to 8192 bytes when serialized'
+          type: object
+          example:
+            automationId: a1b2c3
+          nullable: true
+      type: object
+    ApplicationCreditTransactionExportForm:
+      title: 'Application Credit Transactions Export'
+      properties:
+        format:
+          description: 'Format of the exported file. Default is `csv`'
+          type: string
+          default: csv
+          enum:
+            - csv
+            - json
+        applicationIdentifier:
+          description: 'Only transactions of this application. Required with an access token of an installed application, where it must name the calling application'
+          type: string
+          example: crowdin-copilot
+        userId:
+          description: 'Only transactions charged for this user'
+          type: integer
+          example: 7
+        createdAfter:
+          description: 'Only transactions created at or after this date, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-01T00:00:00+00:00'
+        createdBefore:
+          description: 'Only transactions created at or before this date, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-30T23:59:59+00:00'
+      type: object
+    ApplicationCreditSettingsResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/ApplicationCreditSettings'
+    ApplicationCreditTransactionCollectionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ApplicationCreditTransactionResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    ApplicationCreditTransactionExportResource:
+      description: 'Application Credit Transactions Export Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/ApplicationCreditTransactionExport'
+    ApplicationCreditTransactionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/ApplicationCreditTransaction'
+    ApplicationCreditUsageMemberCollectionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ApplicationCreditUsageMemberResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    ApplicationCreditUsageMemberResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/ApplicationCreditUsageMember'
+    ApplicationCreditUsageResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/ApplicationCreditUsage'
+    ApplicationCreditSettings:
+      title: 'Application Credit Settings'
+      description: 'Spending limits for paid actions of installed applications, in USD. `null` means no limit, `0` blocks spending'
+      properties:
+        dailyCostLimit:
+          description: 'Daily limit of the whole account or organization. `0` until an admin sets it'
+          type: number
+          format: float
+          example: 20
+          nullable: true
+        monthlyCostLimit:
+          description: 'Monthly limit of the whole account or organization. `0` until an admin sets it'
+          type: number
+          format: float
+          example: null
+          nullable: true
+        userDailyCostLimit:
+          description: 'Default daily limit of each user'
+          type: number
+          format: float
+          example: 2
+          nullable: true
+        userMonthlyCostLimit:
+          description: 'Default monthly limit of each user'
+          type: number
+          format: float
+          example: null
+          nullable: true
+        perUserOverrides:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationCreditUserOverride'
+      type: object
+    ApplicationCreditUserOverride:
+      title: 'Application Credit User Override'
+      properties:
+        userId:
+          type: integer
+          example: 7
+        costLimitMode:
+          description: '`custom` - the user has own limits, `blocked` - the user cannot spend at all, `unlimited` - only the account or organization limits apply'
+          type: string
+          enum:
+            - custom
+            - blocked
+            - unlimited
+          example: custom
+        dailyCostLimit:
+          type: number
+          format: float
+          example: 5
+          nullable: true
+        monthlyCostLimit:
+          type: number
+          format: float
+          example: null
+          nullable: true
+      type: object
+    ApplicationCreditTransactionExport:
+      description: 'Application Credit Transactions Export'
+      properties:
+        identifier:
+          description: 'ID of the export, to be passed to the status and download operations'
+          type: string
+          example: 50fb3506-4127-4ba8-8296-f97dc7e3e0c3
+        status:
+          description: 'Export status. The file is ready only once it is `finished`'
+          type: string
+          enum:
+            - created
+            - in_progress
+            - canceled
+            - failed
+            - finished
+          example: finished
+        progress:
+          description: 'Share of the matching transactions already written, in percent. Capped at `99` while the file is being built, so `100` is reached only together with `status` `finished`'
+          type: integer
+          example: 100
+        attributes:
+          description: 'The export request as it was accepted'
+          properties:
+            format:
+              description: 'Format of the exported file'
+              type: string
+              enum:
+                - csv
+                - json
+              example: csv
+            filters:
+              description: 'The filters the export was requested with. Empty when the export covers every transaction'
+              type: object
+          type: object
+        createdAt:
+          description: 'Date the export was requested, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-01-23T11:26:54+00:00'
+        updatedAt:
+          description: 'Date the export last changed, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-01-23T11:27:10+00:00'
+        startedAt:
+          description: 'Date the export started building the file, in ISO 8601 format. `null` while the export is still queued'
+          type: string
+          format: date-time
+          example: '2026-01-23T11:26:56+00:00'
+          nullable: true
+        finishedAt:
+          description: 'Date the export reached a final status, in ISO 8601 format. `null` until then'
+          type: string
+          format: date-time
+          example: '2026-01-23T11:27:10+00:00'
+          nullable: true
+        eta:
+          description: 'Human-readable time the export has been running, measured to `finishedAt` once it is set and to the current time before that. `null` until the export starts'
+          type: string
+          example: '14 seconds'
+          nullable: true
+      type: object
+    ApplicationCreditTransaction:
+      title: 'Application Credit Transaction'
+      description: 'Crowdin Credits withdrawn for a paid action of an installed application'
+      properties:
+        id:
+          description: 'Transaction Identifier'
+          type: integer
+          example: 90017
+        applicationIdentifier:
+          type: string
+          example: crowdin-copilot
+        applicationName:
+          description: 'Application name at the time of the transaction'
+          type: string
+          example: 'Crowdin Copilot'
+        user:
+          description: 'The user the paid action was performed for. A removed user has `username` `REMOVED_USER`, and `fullName` and `avatarUrl` may be empty'
+          properties:
+            id:
+              type: integer
+              example: 7
+            username:
+              type: string
+              example: anna.koval
+            fullName:
+              type: string
+              example: 'Anna Koval'
+            avatarUrl:
+              type: string
+              example: 'https://crowdin-static.downloads.crowdin.com/avatar/7/small/a1b2c3.png'
+          type: object
+        amount:
+          description: 'Withdrawn amount in USD'
+          type: number
+          format: float
+          example: 0.1
+        description:
+          type: string
+          example: 'Automation run: Weekly German pre-translate'
+        metadata:
+          description: 'Data the application sent with the transaction'
+          type: object
+          example:
+            automationId: a1b2c3
+          nullable: true
+        createdAt:
+          description: 'Date the transaction was created, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-10-07T09:04:12+00:00'
+      type: object
+    ApplicationCreditUsageMember:
+      title: 'Application Credit Usage Member'
+      description: 'Limits that apply to a member and what installed applications spent for them in the current calendar day and month, in USD'
+      properties:
+        user:
+          description: 'The member the usage and limits below belong to'
+          properties:
+            id:
+              type: integer
+              example: 7
+            username:
+              type: string
+              example: anna.koval
+            fullName:
+              type: string
+              example: 'Anna Koval'
+              nullable: true
+            avatarUrl:
+              type: string
+              example: 'https://crowdin-static.downloads.crowdin.com/avatar/7/medium/a1b2c3.png'
+          type: object
+        dailyCostLimit:
+          description: 'Effective daily limit. `null` means no limit, `0` means spending is blocked. When the organization limit is the lower one, it is shared by all members'
+          type: number
+          format: float
+          example: 5
+          nullable: true
+        dailyCostSpent:
+          description: 'Spent in the current day'
+          type: number
+          format: float
+          example: 0.35
+        dailyResetAt:
+          description: 'When the daily limit resets, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-10-15T00:00:00+00:00'
+        monthlyCostLimit:
+          description: 'Effective monthly limit. `null` means no limit, `0` means spending is blocked. When the organization limit is the lower one, it is shared by all members'
+          type: number
+          format: float
+          example: null
+          nullable: true
+        monthlyCostSpent:
+          description: 'Spent in the current month'
+          type: number
+          format: float
+          example: 4.1
+        monthlyResetAt:
+          description: 'When the monthly limit resets, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-11-01T00:00:00+00:00'
+      type: object
+    ApplicationCreditUsage:
+      title: 'Application Credit Usage'
+      description: 'Spending of installed applications in the current calendar day and month against the limits, in USD. `null` limit means no limit'
+      properties:
+        organization:
+          description: 'Limits and spending of the whole account or organization'
+          properties:
+            dailyCostLimit:
+              type: number
+              format: float
+              example: 20
+              nullable: true
+            dailyCostSpent:
+              type: number
+              format: float
+              example: 0.35
+            monthlyCostLimit:
+              type: number
+              format: float
+              example: null
+              nullable: true
+            monthlyCostSpent:
+              type: number
+              format: float
+              example: 4.1
+          type: object
+        user:
+          description: 'Default limits of each user'
+          properties:
+            dailyCostLimit:
+              type: number
+              format: float
+              example: 2
+              nullable: true
+            monthlyCostLimit:
+              type: number
+              format: float
+              example: null
+              nullable: true
+          type: object
+        perUserOverrides:
+          description: 'Users with an override or with spending in the current month. Removed users are not listed'
+          type: array
+          items:
+            properties:
+              userId:
+                type: integer
+                example: 7
+              costLimitMode:
+                description: '`null` if the user has no override'
+                type: string
+                enum:
+                  - custom
+                  - blocked
+                  - unlimited
+                example: custom
+                nullable: true
+              dailyCostLimit:
+                description: 'Daily limit of the override'
+                type: number
+                format: float
+                example: 5
+                nullable: true
+              effectiveDailyCostLimit:
+                description: 'Daily limit that applies to the user: 0 when blocked, the account or organization limit when unlimited, otherwise the lower of the user limit and the account or organization limit'
+                type: number
+                format: float
+                example: 5
+                nullable: true
+              dailyCostSpent:
+                type: number
+                format: float
+                example: 0.35
+              monthlyCostLimit:
+                description: 'Monthly limit of the override'
+                type: number
+                format: float
+                example: null
+                nullable: true
+              effectiveMonthlyCostLimit:
+                description: 'Monthly limit that applies to the user, worked out like `effectiveDailyCostLimit`'
+                type: number
+                format: float
+                example: null
+                nullable: true
+              monthlyCostSpent:
+                type: number
+                format: float
+                example: 4.1
+            type: object
+      type: object
     AutomationRulePatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -25631,7 +26135,7 @@ components:
           type: object
           example:
             prompt: 'Create a translate and pending proofreading task for all project target languages. Use strings from the context. Set deadline one week from now.'
-            aiModel: o4-mini
+            aiModel: gpt-5.6-terra
             contextScope: '{% $states %}'
             crowdinMcp:
               - tasks
@@ -25842,7 +26346,7 @@ components:
                 FunctionName: 'ai-automation-action::ai-automation-action-ai-action'
                 Payload:
                   prompt: 'Create a translate and pending proofreading task for all project target languages. Use strings from the context. Set deadline one week from now.'
-                  aiModel: o4-mini
+                  aiModel: gpt-5.6-terra
                   crowdinMcp: [tasks]
                   contextScope: '{% $states %}'
                   structuredOutputType: json-schema
@@ -50357,6 +50861,58 @@ components:
       description: 'Filter results to keys that start with the given prefix'
       schema:
         type: string
+    ApplicationCreditCallerIdentifier:
+      name: applicationIdentifier
+      in: query
+      description: 'Identifier of the calling application. Required with an access token of an installed application, where it must name the calling application'
+      schema:
+        type: string
+        maxLength: 255
+        minLength: 2
+      example: crowdin-copilot
+    ApplicationCreditCreatedAfter:
+      name: createdAfter
+      in: query
+      description: 'Only transactions created at or after this date, in ISO 8601 format'
+      schema:
+        type: string
+        format: date-time
+      example: '2026-09-01T00:00:00+00:00'
+    ApplicationCreditCreatedBefore:
+      name: createdBefore
+      in: query
+      description: 'Only transactions created at or before this date, in ISO 8601 format'
+      schema:
+        type: string
+        format: date-time
+      example: '2026-09-30T23:59:59+00:00'
+    ApplicationCreditUsageMemberCollectionUserIds:
+      name: userIds
+      in: query
+      description: 'Filter by user identifier, comma-separated'
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: integer
+        maxItems: 500
+      example: '2,3'
+    ApplicationCreditUsageMemberCollectionOrderBy:
+      name: orderBy
+      in: query
+      description: 'Read more about [sorting rules](#section/Introduction/Sorting)'
+      required: false
+      schema:
+        type: string
+        enum:
+          - username
+          - dailyCostLimit
+          - dailyCostSpent
+          - monthlyCostLimit
+          - monthlyCostSpent
+      example: 'dailyCostSpent desc'
     PaginationLimit:
       name: limit
       in: query
