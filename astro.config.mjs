@@ -254,7 +254,8 @@ const config = defineConfig({
           'undo',
           'split-scene-left-outline',
           'download',
-          'done-all'
+          'done-all',
+          'select-window-2-outline'
         ],
         garden: [
           'puzzle-piece-fill-12'
