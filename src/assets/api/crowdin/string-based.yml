@@ -20,6 +20,266 @@ servers:
       host:
         default: api.crowdin.com
 paths:
+  /managers:
+    get:
+      tags:
+        - Users
+      summary: 'List Managers'
+      description: "**Required scopes:** `manager` (Read only).\n\nReturns the managers of your account: users you let manage your projects, TMs, glossaries, and style guides (`active`), and people invited by email who have not accepted the invitation yet (`pending`). Each manager lists only the resources you own or manage. Default order is by `id`.\n\n__Note:__ Managers you added to a project with `managerAccess` in [Add Project Member](#operation/api.projects.members.post) are listed too"
+      operationId: api.managers.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/AccountManagerCollectionStatus'
+        -
+          $ref: '#/components/parameters/AccountManagerCollectionEmail'
+        -
+          $ref: '#/components/parameters/AccountManagerCollectionSearch'
+        -
+          $ref: '#/components/parameters/AccountManagerCollectionProjectIds'
+        -
+          $ref: '#/components/parameters/AccountManagerCollectionOrderBy'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Managers list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrowdinAccountManagerCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+    post:
+      tags:
+        - Users
+      summary: 'Add Manager'
+      description: "**Required scopes:** `manager` (Read and Write).\n\nAdds a manager to your account and grants them access to the listed projects, TMs, glossaries, and style guides. Default TMs and glossaries of the listed projects are granted too. A user added by `username`, or by an `email` that belongs to a Crowdin account, becomes `active` at once and gets a notification. Anyone else gets an invitation email and stays `pending` until they accept it. If an invitation email went to the address in the last 24 hours, from any account, no new email is sent, but the invitation is saved. An invitation can't be sent again: adding a person who already has your pending invitation returns `409` and sends no email.\n\n__Note:__ Available only if your email is verified. Up to 50 manager emails a day; each manager takes a seat in your plan's managers limit"
+      operationId: api.managers.post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrowdinAccountManagerCreateForm'
+      responses:
+        '201':
+          description: 'Manager was successfully added or invited'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrowdinAccountManagerResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '409':
+          description: 'The person is already your manager or has your pending invitation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
+        '429':
+          description: 'The daily limit of manager emails is reached, or managers of your account are being updated by another request'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
+  '/managers/{managerId}':
+    get:
+      tags:
+        - Users
+      summary: 'Get Manager'
+      description: "**Required scopes:** `manager` (Read only).\n\nReturns a manager or a pending invitation of your account, with the resources you own or manage that they have access to."
+      operationId: api.managers.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ManagerId'
+      responses:
+        '200':
+          description: Manager
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrowdinAccountManagerResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Manager with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+    delete:
+      tags:
+        - Users
+      summary: 'Delete Manager'
+      description: "**Required scopes:** `manager` (Read and Write).\n\nRemoves a manager from your account, or cancels a pending invitation. An active manager stops managing all projects in `projectIds`, with all roles and tasks there, and loses access to your TMs, glossaries, and style guides. Canceling an invitation withdraws the offers on resources you own or manage; offers from other accounts on other resources stay.\n\n__Note:__ Needs a token that isn't restricted to specific projects or resources. Crowdin app agents can't be removed here; uninstall the app instead"
+      operationId: api.managers.delete
+      parameters:
+        -
+          $ref: '#/components/parameters/ManagerId'
+      responses:
+        '204':
+          description: 'Manager was successfully removed'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Manager with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '409':
+          description: 'The manager is a Crowdin app agent'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
+        '429':
+          description: 'Managers of your account are being updated by another request'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
+    patch:
+      tags:
+        - Users
+      summary: 'Edit Manager'
+      description: "**Required scopes:** `manager` (Read and Write).\n\nChanges the access of an active manager to your projects, TMs, glossaries, and style guides, or changes a pending invitation. `replace` sets a whole list, `add` grants one resource, and `remove` revokes one. Operations apply in order. Default TMs and glossaries of an added project are granted too; removing a project removes the manager from it with all roles and tasks. An active manager gets a notification about new access only; a pending manager gets no email.\n\n__Note:__ A default TM or glossary of a project the manager keeps can't be removed on its own. A patch that leaves the manager without any access is rejected; use [Delete Manager](#operation/api.managers.delete) to remove all access"
+      operationId: api.managers.patch
+      parameters:
+        -
+          $ref: '#/components/parameters/ManagerId'
+      requestBody:
+        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountManagerPatch'
+      responses:
+        '200':
+          description: 'Manager access was successfully updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrowdinAccountManagerResource'
+        '400':
+          description: 'Invalid Request Body'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Manager with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '409':
+          description: 'The patch removes a default TM or glossary of a project the manager keeps'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
+        '429':
+          description: 'The daily limit of manager emails is reached, or managers of your account are being updated by another request'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
   '/projects/{projectId}/applications/{applicationIdentifier}/modules/{moduleKey}/advisors/insights':
     put:
       tags:
@@ -6275,13 +6535,13 @@ paths:
       tags:
         - Glossaries
       summary: 'Edit Glossary'
-      description: '**Required scopes:** `glossary` (Read and Write).'
+      description: "**Required scopes:** `glossary` (Read and Write).\n\nUpdates the name, language, or sharing of a glossary. A `remove` on `/managerIds/{managerId}` with your own ID, sent as the only operation in the request, stops you managing the glossary instead. To change another manager's access to the glossary, use [Edit Manager](#operation/api.managers.patch).\n\n__Note:__ You can't stop managing the default glossary of a project you still manage; leave the project instead"
       operationId: api.glossaries.patch
       parameters:
         -
           $ref: '#/components/parameters/GlossaryId'
       requestBody:
-        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>. Supported paths: /name, /languageId, /isShared.'
+        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>. Supported paths: `/name`, `/languageId`, `/isShared`, `/managerIds/{managerId}`'
         content:
           application/json:
             schema:
@@ -6323,6 +6583,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '409':
+          description: 'The glossary is the default glossary of a project you still manage'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
         '500':
           description: 'Internal Server Error'
           content:
@@ -14601,7 +14867,7 @@ paths:
       tags:
         - 'Style Guides'
       summary: 'Edit Style Guide'
-      description: '**Required scopes:** `style-guide` (Read and Write).'
+      description: "**Required scopes:** `style-guide` (Read and Write).\n\nUpdates a style guide. A `remove` on `/managerIds/{managerId}` with your own ID, sent as the only operation in the request, stops you managing the style guide instead. If you created the style guide, the account owner becomes its author. To change another manager's access to the style guide, use [Edit Manager](#operation/api.managers.patch).\n\n__Note:__ If you still manage a project that uses the style guide, you can keep reading it there"
       operationId: api.style-guides.patch
       parameters:
         -
@@ -14613,7 +14879,7 @@ paths:
             type: integer
             format: int32
       requestBody:
-        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>. Supported paths: /name, /aiInstructions, /languageIds, /projectIds, /isShared, /storageId.'
+        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>. Supported paths: `/name`, `/aiInstructions`, `/languageIds`, `/projectIds`, `/isShared`, `/storageId`, `/managerIds/{managerId}`'
         content:
           application/json:
             schema:
@@ -16302,13 +16568,13 @@ paths:
       tags:
         - 'Translation Memory'
       summary: 'Edit TM'
-      description: '**Required scopes:** `tm` (Read and Write).'
+      description: "**Required scopes:** `tm` (Read and Write).\n\nUpdates the name, language, or sharing of a TM. A `remove` on `/managerIds/{managerId}` with your own ID, sent as the only operation in the request, stops you managing the TM instead. To change another manager's access to the TM, use [Edit Manager](#operation/api.managers.patch).\n\n__Note:__ You can't stop managing the default TM of a project you still manage; leave the project instead"
       operationId: api.tms.patch
       parameters:
         -
           $ref: '#/components/parameters/TmId'
       requestBody:
-        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>. Supported paths: /name, /languageId, /isShared.'
+        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>. Supported paths: `/name`, `/languageId`, `/isShared`, `/managerIds/{managerId}`'
         content:
           application/json:
             schema:
@@ -16326,6 +16592,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorCollectionResource'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
         '404':
           description: 'TM with specified id was not found'
           content:
@@ -16338,6 +16610,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '409':
+          description: 'The TM is the default TM of a project you still manage'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
   '/tms/{tmId}/segments':
     get:
       tags:
@@ -17765,7 +18043,7 @@ paths:
       tags:
         - Users
       summary: 'Delete Member From Project'
-      description: '**Required scopes:** `project.member` (Read and Write).'
+      description: "**Required scopes:** `project.member` (Read and Write).\n\nRemoves a member from the project. A manager can pass their own ID to leave the project, and the project owner is notified."
       operationId: api.projects.members.delete
       parameters:
         -
@@ -17788,7 +18066,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
         '404':
-          description: 'Project, language, or member specified id was not found'
+          description: 'Project or member with the specified ID was not found'
           content:
             application/json:
               schema:
@@ -18064,6 +18342,287 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/AuthGuardModule'
+    AccountManagerPatch:
+      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      type: array
+      items:
+        $ref: '#/components/schemas/AccountManagerPatchOperation'
+    AccountManagerPatchOperation:
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - add
+            - replace
+            - remove
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - /projectIds
+            - /tmIds
+            - /glossaryIds
+            - /styleGuideIds
+            - /projectIds/-
+            - /tmIds/-
+            - /glossaryIds/-
+            - /styleGuideIds/-
+            - '/projectIds/{projectId}'
+            - '/tmIds/{tmId}'
+            - '/glossaryIds/{glossaryId}'
+            - '/styleGuideIds/{styleGuideId}'
+      type: object
+      discriminator:
+        propertyName: op
+        mapping:
+          add: '#/components/schemas/AccountManagerPatchOperationAdd'
+          replace: '#/components/schemas/AccountManagerPatchOperationReplace'
+          remove: '#/components/schemas/AccountManagerPatchOperationRemove'
+    AccountManagerPatchOperationAdd:
+      description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.1). Grants access to one resource. Does nothing if the manager already has it'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AccountManagerPatchOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - /projectIds/-
+                - /tmIds/-
+                - /glossaryIds/-
+                - /styleGuideIds/-
+            value:
+              description: 'ID of the resource to grant access to'
+              type: integer
+              example: 104
+    AccountManagerPatchOperationReplace:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3). Sets the whole list. Access to resources missing from the list is revoked'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AccountManagerPatchOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - /projectIds
+                - /tmIds
+                - /glossaryIds
+                - /styleGuideIds
+            value:
+              description: 'IDs of the resources the manager keeps access to, up to 500'
+              type: array
+              items:
+                type: integer
+              maxItems: 500
+              uniqueItems: true
+              example:
+                - 101
+                - 104
+    AccountManagerPatchOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.2). Revokes access to one resource. The last path segment is the resource ID, not an array index'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/AccountManagerPatchOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - '/projectIds/{projectId}'
+                - '/tmIds/{tmId}'
+                - '/glossaryIds/{glossaryId}'
+                - '/styleGuideIds/{styleGuideId}'
+    CrowdinAccountManagerCreateForm:
+      properties:
+        username:
+          description: "Username of a registered user. The user becomes an `active` manager at once.\n\n__Note:__ One of fields `username` or `email` is required. Both cannot be provided simultaneously"
+          type: string
+          pattern: '^[a-zA-Z0-9_.-]+$'
+          example: taras.m
+        email:
+          description: "Email of the person to add. If it belongs to a Crowdin account, the manager is `active` at once. Otherwise the person gets an invitation email and stays `pending` until they accept it.\n\n__Note:__ One of fields `username` or `email` is required. Both cannot be provided simultaneously"
+          type: string
+          format: email
+          example: jane.smith@example.com
+        projectIds:
+          description: 'IDs of your projects, or projects you manage, to grant manager access to. Default TMs and glossaries of these projects are granted too. Get via [List Projects](#operation/api.projects.getMany)'
+          type: array
+          items:
+            type: integer
+          maxItems: 500
+          uniqueItems: true
+          example:
+            - 101
+            - 102
+        tmIds:
+          description: 'IDs of your TMs, or TMs you manage, to grant access to. Get via [List TMs](#operation/api.tms.getMany)'
+          type: array
+          items:
+            type: integer
+          maxItems: 500
+          uniqueItems: true
+          example:
+            - 9
+        glossaryIds:
+          description: 'IDs of your glossaries, or glossaries you manage, to grant access to. Get via [List Glossaries](#operation/api.glossaries.getMany)'
+          type: array
+          items:
+            type: integer
+          maxItems: 500
+          uniqueItems: true
+          example:
+            - 4
+        styleGuideIds:
+          description: "IDs of your style guides, or style guides you manage, to grant access to. Get via [List Style Guides](#operation/api.style-guides.getMany)\n\n__Note:__ At least one of `projectIds`, `tmIds`, `glossaryIds` or `styleGuideIds` must not be empty"
+          type: array
+          items:
+            type: integer
+          maxItems: 500
+          uniqueItems: true
+          example:
+            - 2
+        message:
+          description: 'Personal message added to the notification email'
+          type: string
+          maxLength: 1000
+          example: 'Hi Taras, please help us manage the mobile app localization.'
+      type: object
+    CrowdinAccountManagerCollectionResource:
+      description: 'Manager Collection Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CrowdinAccountManagerResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    CrowdinAccountManagerResource:
+      description: 'Manager Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/CrowdinAccountManager'
+    CrowdinAccountManager:
+      title: Manager
+      properties:
+        id:
+          description: 'ID of the manager. The same as `user.id`'
+          type: integer
+          example: 13240049
+        user:
+          description: 'The person who manages your account, or who was invited to'
+          properties:
+            id:
+              description: 'User ID'
+              type: integer
+              example: 13240049
+            username:
+              description: 'User username. For an invited person without a Crowdin account, a masked email'
+              type: string
+              example: olena
+            fullName:
+              description: 'User full name. The username when the user has not set one'
+              type: string
+              example: 'Olena Koval'
+            avatarUrl:
+              description: 'User avatar URL'
+              type: string
+              example: 'https://crowdin-static.downloads.crowdin.com/avatar/13240049/medium/5cf4d2e1b0b9b6b7e8e1a2b9f7c0d0c1.png'
+          type: object
+        status:
+          description: '`active` when the manager already has access, `pending` when the invitation is not accepted yet'
+          type: string
+          enum:
+            - active
+            - pending
+          example: active
+        isApplicationAgent:
+          description: 'If `true`, the manager is the agent of a Crowdin app installed in your account'
+          type: boolean
+          example: false
+        projectIds:
+          description: 'IDs of your projects, and projects you manage, that the manager has access to. For `pending`, the offered access'
+          type: array
+          items:
+            type: integer
+          example:
+            - 101
+            - 102
+        tmIds:
+          description: 'IDs of the TMs the manager has access to, including the default TMs of `projectIds`'
+          type: array
+          items:
+            type: integer
+          example:
+            - 7
+            - 9
+        projectDefaultTmIds:
+          description: "Subset of `tmIds` that are default TMs of `projectIds`. They follow the projects and can't be removed on their own"
+          type: array
+          items:
+            type: integer
+          example:
+            - 7
+        glossaryIds:
+          description: 'IDs of the glossaries the manager has access to, including the default glossaries of `projectIds`'
+          type: array
+          items:
+            type: integer
+          example:
+            - 4
+        projectDefaultGlossaryIds:
+          description: "Subset of `glossaryIds` that are default glossaries of `projectIds`. They follow the projects and can't be removed on their own"
+          type: array
+          items:
+            type: integer
+          example:
+            - 4
+        styleGuideIds:
+          description: 'IDs of the style guides the manager has access to'
+          type: array
+          items:
+            type: integer
+          example:
+            - 2
+        createdAt:
+          description: 'Date the manager was added or invited, in ISO 8601 format. `null` for records created before this date was stored'
+          type: string
+          format: date-time
+          example: '2026-09-20T11:11:05+00:00'
+          nullable: true
+      type: object
     AdvisorInsightPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -26085,6 +26644,19 @@ components:
               example: 422
           type: object
       type: object
+    TooManyRequestsExceptionResource:
+      description: 'Too Many Requests'
+      properties:
+        error:
+          properties:
+            message:
+              type: string
+              example: 'Too Many Requests'
+            code:
+              type: integer
+              example: 429
+          type: object
+      type: object
     FailedDependencyExceptionResource:
       description: 'Failed dependency'
       properties:
@@ -29676,6 +30248,7 @@ components:
           enum:
             - replace
             - test
+            - remove
         path:
           description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
           type: string
@@ -29684,12 +30257,14 @@ components:
             - /name
             - /languageId
             - /isShared
+            - '/managerIds/{managerId}'
       type: object
       discriminator:
         propertyName: op
         mapping:
           replace: '#/components/schemas/GlossaryOperationReplace'
           test: '#/components/schemas/GlossaryOperationTest'
+          remove: '#/components/schemas/GlossaryOperationRemove'
     GlossaryOperationReplace:
       description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
@@ -29722,6 +30297,20 @@ components:
                   type: string
                 -
                   type: boolean
+    GlossaryOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.2). Stops you managing the glossary. The last path segment must be your own user ID, not an array index'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/GlossaryOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - '/managerIds/{managerId}'
     GlossaryConcordanceForm:
       required:
         - sourceLanguageId
@@ -30177,6 +30766,12 @@ components:
           type: string
           format: date-time
           example: '2019-09-16T13:42:04+00:00'
+        managerIds:
+          description: "IDs of managers who can manage this resource. The resource owner sees all managers; a manager sees only their own ID. Other users get an empty list. Pending invitations aren't included. Get via [List Managers](#operation/api.managers.getMany)"
+          type: array
+          items:
+            type: integer
+            example: 13240049
       type: object
     GlossaryExport:
       description: 'Class GlossaryExportResponseModel'
@@ -41916,6 +42511,7 @@ components:
           enum:
             - replace
             - test
+            - remove
         path:
           description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
           type: string
@@ -41927,12 +42523,14 @@ components:
             - /projectIds
             - /isShared
             - /storageId
+            - '/managerIds/{managerId}'
       type: object
       discriminator:
         propertyName: op
         mapping:
           replace: '#/components/schemas/StyleGuideOperationReplace'
           test: '#/components/schemas/StyleGuideOperationTest'
+          remove: '#/components/schemas/StyleGuideOperationRemove'
     StyleGuideOperationReplace:
       description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
@@ -41975,6 +42573,20 @@ components:
                 -
                   type: array
                   items: { type: integer }
+    StyleGuideOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.2). Stops you managing the style guide. The last path segment must be your own user ID, not an array index'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/StyleGuideOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - '/managerIds/{managerId}'
     CrowdinStyleGuideCreateForm:
       required:
         - name
@@ -42093,6 +42705,12 @@ components:
           type: string
           format: date-time
           example: '2019-09-16T13:42:04+00:00'
+        managerIds:
+          description: "IDs of managers who can manage this resource. The resource owner sees all managers; a manager sees only their own ID. Other users get an empty list. Pending invitations aren't included. Get via [List Managers](#operation/api.managers.getMany)"
+          type: array
+          items:
+            type: integer
+            example: 13240049
       type: object
     TaskSettingsTemplatePatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
@@ -44164,6 +44782,7 @@ components:
           enum:
             - replace
             - test
+            - remove
         path:
           description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
           type: string
@@ -44172,12 +44791,14 @@ components:
             - /name
             - /languageId
             - /isShared
+            - '/managerIds/{managerId}'
       type: object
       discriminator:
         propertyName: op
         mapping:
           replace: '#/components/schemas/TmOperationReplace'
           test: '#/components/schemas/TmOperationTest'
+          remove: '#/components/schemas/TmOperationRemove'
     TmOperationReplace:
       description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
@@ -44210,6 +44831,20 @@ components:
                   type: string
                 -
                   type: boolean
+    TmOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.2). Stops you managing the TM. The last path segment must be your own user ID, not an array index'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/TmOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+              type: string
+              format: json-pointer
+              enum:
+                - '/managerIds/{managerId}'
     TmSegmentMassOperationAdd:
       description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.1)'
       required:
@@ -44769,6 +45404,12 @@ components:
           format: date-time
           example: '2019-09-16T13:42:04+00:00'
           nullable: true
+        managerIds:
+          description: "IDs of managers who can manage this resource. The resource owner sees all managers; a manager sees only their own ID. Other users get an empty list. Pending invitations aren't included. Get via [List Managers](#operation/api.managers.getMany)"
+          type: array
+          items:
+            type: integer
+            example: 13240049
       type: object
     TmConcordance:
       title: Tm
@@ -47774,6 +48415,7 @@ components:
               - modelRequired
               - modelNotSupported
               - toolNotAllowed
+              - backgroundNotAllowed
               - quotaBlocked
               - quotaExceeded
               - paymentRequired
@@ -47797,6 +48439,7 @@ components:
               - modelRequired
               - modelNotSupported
               - toolNotAllowed
+              - backgroundNotAllowed
               - quotaBlocked
               - quotaExceeded
               - paymentRequired
@@ -47809,6 +48452,47 @@ components:
           schema:
             type: object
   parameters:
+    AccountManagerCollectionStatus:
+      name: status
+      in: query
+      description: 'Filter results by manager status. It can be one status or a list of comma-separated ones. One of: `active`, `pending`. Default is both'
+      schema:
+        type: string
+      example: 'active,pending'
+    AccountManagerCollectionEmail:
+      name: email
+      in: query
+      description: 'Filter results to the invitation sent to this email, ignoring case. Applies to `pending` managers only'
+      schema:
+        type: string
+        format: email
+      example: jane.smith@example.com
+    AccountManagerCollectionSearch:
+      name: search
+      in: query
+      description: 'Filter results to managers whose username or full name contains this text, ignoring case'
+      schema:
+        type: string
+      example: olena
+    AccountManagerCollectionProjectIds:
+      name: projectIds
+      in: query
+      description: 'Filter results to managers with access to at least one of these projects. It can be one ID or a list of comma-separated ID values'
+      schema:
+        type: string
+      example: '101,102'
+    AccountManagerCollectionOrderBy:
+      name: orderBy
+      in: query
+      description: 'Read more about [sorting rules](#section/Introduction/Sorting). Default is `id`'
+      schema:
+        type: string
+        default: id
+        enum:
+          - id
+          - username
+          - createdAt
+      example: 'createdAt desc,id'
     AiFineTuningJobCollectionStatuses:
       name: statuses
       in: query
@@ -47831,7 +48515,7 @@ components:
     AiGatewayPath:
       name: path
       in: path
-      description: 'Raw provider API path after `/gateway/`. This is a multi-segment path and may contain slashes (e.g. `chat/completions`, `messages`, `models/gemini-pro:generateContent`). Router pattern: `{path:.+}`.'
+      description: "Raw provider API path after `/gateway/`. This is a multi-segment path and may contain slashes (e.g. `chat/completions`, `messages`, `models/gemini-pro:generateContent`). Router pattern: `{path:.+}`.\n\n__Note:__ Only inference endpoints with AI usage tracking and free metadata endpoints of the provider type are accepted, each with its own HTTP method. Any other method and path is rejected with `pathNotAllowed`, and the error lists the supported endpoints"
       required: true
       schema:
         type: string
@@ -48364,6 +49048,13 @@ components:
       name: userId
       in: path
       description: 'User Identifier. Get via [Get Authenticated User](#operation/api.user.get) for own security logs'
+      required: true
+      schema:
+        type: integer
+    ManagerId:
+      name: managerId
+      in: path
+      description: "ID of the manager. The same as the manager's user ID for both `active` and `pending` managers. Get via [List Managers](#operation/api.managers.getMany)"
       required: true
       schema:
         type: integer
@@ -49138,7 +49829,7 @@ tags:
     description: "\nPlaceholders are the parts of a string that carry a value instead of text — format specifiers, variables, and template constructs. Crowdin ships a fixed set of them, the system placeholders, and recognizes each one per project.\n\nUse API to get the system placeholders of a project and to turn them on or off.\n\nThe unified placeholder Crowdin writes when a project unifies placeholders — `[%s]` — is not on this list. It is governed by the `unifiedPlaceholders` QA check category of the project, not by a placeholder setting.\n\nSeveral of these placeholders match the same construct, so turning one off is not always enough on its own: a construct stays recognized — by the QA checks as well as the Editor — while any placeholder that matches it is still on. To stop a construct being reported, turn off every placeholder that matches it. The Editor is stricter still: it drops a construct only once nothing that stays could claim part of it.\n\nMachine Translation and Translation Memory always recognize every placeholder, whatever a project sets.\n\nSystem placeholder keys, and the syntax or file format each one comes from:\n\n- `wrappedAmpersand` — ampersand-wrapped variables; lowercase letters and underscores only between the ampersands (e.g. `&user_name&`)\n- `appleStringsdictPlural` — Apple plural variables in `.stringsdict` files and String Catalogs (e.g. `%1$#@variable@`)\n- `dollarInsideBraces` — `{$name}` variables in Smarty and PHP templates (e.g. `{$shop_name}`)\n- `dollarOutsideBraces` — `${name}` interpolation in JavaScript, Java EL, Gradle, and shell (e.g. `${user.name}`)\n- `wrappedColon` — colon-wrapped variables; needs a colon on both sides, so the single-colon Laravel `:name` is not covered (e.g. `:placeholder:`)\n- `wrappedDollar` — dollar-wrapped variables, used by Visual Studio templates (e.g. `$placeholder$`)\n- `dollarParentheses` — `$(name)` variables in MSBuild, Xcode build settings, and Make (e.g. `$(user_name)`)\n- `i18nextNesting` — i18next nesting: keys that reference other keys (e.g. `$t(common.nesting)`)\n- `i18nextLegacy` — i18next interpolation before v4 (e.g. `__count__`)\n- `rubyInterpolation` — Ruby-style interpolation in Ruby, Jakarta EL, and Thymeleaf (e.g. `#{value}`)\n- `mailchimpMergeTag` — Mailchimp merge tags in email campaigns (e.g. `*|Model.FullName|*`)\n- `swiftInterpolation` — Swift string interpolation in source strings (e.g. `\\(apples)`)\n- `bracesTriple` — Handlebars triple braces, the output that is not escaped (e.g. `{{{title}}}`)\n- `bracesDouble` — double braces in Mustache, Handlebars, Angular, and Vue (e.g. `{{name}}`)\n- `bracesSingle` — single braces in Python `str.format`, ICU, and Vue I18n (e.g. `{name}`)\n- `bracesDoubleFormatted` — i18next values with a format applied (e.g. `{{date, MM/DD/YYYY}}`, `{{text, uppercase}}`)\n- `dateTimePattern` — a date or time built from several `strftime` parts (e.g. `%Y-%m-%d`, `%H:%i:%s`)\n- `appleStringCatalogNamed` — Apple String Catalog substitutions (e.g. `%(name)@`)\n- `printfSpecifier` — C-style format specifiers in C, PHP, Java, Objective-C, and Android, plus the numbered form of Qt `tr()` (e.g. `%s`, `%1$d`, `%1`)\n- `pythonPercentFormat` — named specifiers in Python and gettext (e.g. `%(count)d`, `%(placeholder)s`)\n- `railsI18n` — Rails i18n values in Ruby on Rails and Vue I18n, and double braces holding a path in Mustache, Liquid, and Rails templates (e.g. `%{count}`, `{{ name.first }}`)\n- `javaMessageFormat` — Java MessageFormat in Java properties files and resource bundles (e.g. `{0}`, `{0,number,integer}`)\n- `dotNetCompositeFormat` — composite formatting in .NET and C# format strings (e.g. `{0}`, `{0,10:f}`)\n- `twig` — Twig tags and statements, the template logic rather than the text (e.g. `{{ data() }}`, `{% endif %}`)\n- `phpInterpolation` — PHP variables in source strings, bare or braced (e.g. `$variable`, `{$user->name}`)\n- `freemarkerDirective` — FreeMarker tags in `.ftl` templates (e.g. `<#if condition>`, `<#include /common/copyright.ftl>`)\n- `wrappedPercent` — percent-wrapped variables in Symfony and Windows environment variables (e.g. `%invitation_url%`)\n- `dateTimeSpecifier` — a single `strftime` date or time component (e.g. `%d`)\n"
   -
     name: Users
-    description: "\nUsers API gives you the possibility to get profile information about the currently authenticated user.\n"
+    description: "\nUsers API gives you the possibility to get profile information about the currently authenticated user.\n\nUse API to manage the managers of your account: list them, add or invite new ones, change their access to your projects, TMs, glossaries, and style guides, or remove them.\n"
   -
     name: Notifications
     description: 'Use API to send custom notifications to the authenticated user or project members.'
