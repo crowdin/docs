@@ -5956,6 +5956,479 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/projects/{projectId}/discussions':
+    get:
+      tags:
+        - Discussions
+      summary: 'List Project Discussions'
+      description: "**Required scopes:** `project.discussion` (Read only).\n\nReturns the project discussions. By default, only `open` discussions are returned, the most recently updated first.\n\n__Note:__ In a public project, any signed-in user can read the discussions"
+      operationId: api.projects.discussions.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          name: status
+          in: query
+          description: 'Filter results to discussions with the given statuses: `open`, `closed`. It can be one status or a list of comma-separated ones. Default is `open`'
+          required: false
+          schema:
+            type: string
+          example: 'open,closed'
+        -
+          name: userIds
+          in: query
+          description: 'Filter results to discussions started by the given users. Get via [List Project Members](#operation/api.projects.members.getMany). It can be one user ID or a list of comma-separated ones'
+          required: false
+          schema:
+            type: string
+          example: '31,57'
+        -
+          name: languageIds
+          in: query
+          description: 'Filter results to discussions about the given target languages. Get via [Project Target Languages](#operation/api.projects.get). It can be one language ID or a list of comma-separated ones'
+          required: false
+          schema:
+            type: string
+          example: 'uk,de'
+        -
+          name: search
+          in: query
+          description: 'Filter results to discussions whose title, description or any regular reply contains the given text, up to 255 characters'
+          required: false
+          schema:
+            type: string
+            maxLength: 255
+          example: checkout
+        -
+          name: orderBy
+          in: query
+          description: 'Sort results by `id`, `title`, `createdAt`, `updatedAt` or `repliesCount`. Default is `updatedAt desc`. Read more about [sorting rules](#section/Introduction/Sorting)'
+          required: false
+          schema:
+            type: string
+          example: 'repliesCount desc'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Discussions list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscussionCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    post:
+      tags:
+        - Discussions
+      summary: 'Add Project Discussion'
+      description: "**Required scopes:** `project.discussion` (Read and Write).\n\nStarts a new project discussion with a description. Every project member is notified about the new discussion, and the users mentioned in the description are notified about the mention.\n\n__Note:__ Only project members can start discussions"
+      operationId: api.projects.discussions.post
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscussionCreateForm'
+      responses:
+        '201':
+          description: 'Discussion created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscussionResource'
+        '400':
+          description: 'Invalid Request Body'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/discussions/{discussionId}':
+    get:
+      tags:
+        - Discussions
+      summary: 'Get Project Discussion'
+      description: "**Required scopes:** `project.discussion` (Read only).\n\nReturns a single project discussion without its replies. Get the replies via [List Discussion Replies](#operation/api.projects.discussions.replies.getMany)."
+      operationId: api.projects.discussions.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/DiscussionId'
+      responses:
+        '200':
+          description: 'Discussion data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscussionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or discussion with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    delete:
+      tags:
+        - Discussions
+      summary: 'Delete Project Discussion'
+      description: "**Required scopes:** `project.discussion` (Read and Write).\n\nDeletes a project discussion together with all its replies.\n\n__Note:__ Only the author of the discussion and project managers can delete it"
+      operationId: api.projects.discussions.delete
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/DiscussionId'
+      responses:
+        '204':
+          description: 'Discussion deleted'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or discussion with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    patch:
+      tags:
+        - Discussions
+      summary: 'Edit Project Discussion'
+      description: "**Required scopes:** `project.discussion` (Read and Write).\n\nRenames, closes, reopens, mutes or unmutes a project discussion. Closing or reopening posts a `system` reply and notifies the discussion participants. Muting applies only to the authenticated user.\n\n__Note:__ Only the author of the discussion and project managers can rename, close or reopen it. Anyone who can reply to the discussion can mute it for themselves"
+      operationId: api.projects.discussions.patch
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/DiscussionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscussionPatch'
+      responses:
+        '200':
+          description: 'Discussion data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscussionResource'
+        '400':
+          description: 'Invalid Request Body'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or discussion with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '429':
+          description: 'Discussion is being updated by another request'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
+  '/projects/{projectId}/discussions/{discussionId}/replies':
+    get:
+      tags:
+        - Discussions
+      summary: 'List Discussion Replies'
+      description: "**Required scopes:** `project.discussion` (Read only).\n\nReturns the replies of a project discussion in the order they were posted, starting with the description of the discussion."
+      operationId: api.projects.discussions.replies.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/DiscussionId'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Discussion replies list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscussionReplyCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or discussion with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    post:
+      tags:
+        - Discussions
+      summary: 'Add Discussion Reply'
+      description: "**Required scopes:** `project.discussion` (Read and Write).\n\nPosts a reply to a project discussion. The discussion participants who have not muted it are notified about the reply, and the users mentioned in the reply are notified about the mention.\n\n__Note:__ Only project members can reply"
+      operationId: api.projects.discussions.replies.post
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/DiscussionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscussionReplyCreateForm'
+      responses:
+        '201':
+          description: 'Reply created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscussionReplyResource'
+        '400':
+          description: 'Invalid Request Body'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or discussion with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/discussions/{discussionId}/replies/{replyId}':
+    get:
+      tags:
+        - Discussions
+      summary: 'Get Discussion Reply'
+      description: "**Required scopes:** `project.discussion` (Read only).\n\nReturns a single reply of a project discussion."
+      operationId: api.projects.discussions.replies.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/DiscussionId'
+        -
+          $ref: '#/components/parameters/DiscussionReplyId'
+      responses:
+        '200':
+          description: 'Reply data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscussionReplyResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project, discussion or reply with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    delete:
+      tags:
+        - Discussions
+      summary: 'Delete Discussion Reply'
+      description: "**Required scopes:** `project.discussion` (Read and Write).\n\nDeletes a discussion reply.\n\n__Note:__ Only regular replies can be deleted, by their author or a project manager. The description and `system` replies stay until the discussion is deleted"
+      operationId: api.projects.discussions.replies.delete
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/DiscussionId'
+        -
+          $ref: '#/components/parameters/DiscussionReplyId'
+      responses:
+        '204':
+          description: 'Reply deleted'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project, discussion or reply with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    patch:
+      tags:
+        - Discussions
+      summary: 'Edit Discussion Reply'
+      description: "**Required scopes:** `project.discussion` (Read and Write).\n\nEdits the text of a discussion reply. Users newly mentioned in the text are notified about the mention.\n\n__Note:__ Only the author can edit their `reply` or `description`. `system` replies can't be edited"
+      operationId: api.projects.discussions.replies.patch
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/DiscussionId'
+        -
+          $ref: '#/components/parameters/DiscussionReplyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscussionReplyPatch'
+      responses:
+        '200':
+          description: 'Reply data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscussionReplyResource'
+        '400':
+          description: 'Invalid Request Body'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project, discussion or reply with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
   '/projects/{projectId}/distributions':
     get:
       tags:
@@ -27200,6 +27673,335 @@ components:
           example: '2019-09-19T14:14:00+00:00'
           nullable: true
       type: object
+    DiscussionPatch:
+      description: 'A JSON Patch document as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-3)'
+      type: array
+      items:
+        $ref: '#/components/schemas/DiscussionPatchOperation'
+    DiscussionPatchOperation:
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+        - value
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+          example: replace
+        path:
+          description: 'A JSON Pointer as defined by [RFC 6901](https://tools.ietf.org/html/rfc6901)'
+          type: string
+          format: json-pointer
+          enum:
+            - /title
+            - /status
+            - /isMuted
+          example: /status
+      type: object
+      discriminator:
+        propertyName: path
+        mapping:
+          /title: '#/components/schemas/DiscussionPatchOperationTitle'
+          /status: '#/components/schemas/DiscussionPatchOperationStatus'
+          /isMuted: '#/components/schemas/DiscussionPatchOperationIsMuted'
+    DiscussionPatchOperationTitle:
+      description: 'Renames the discussion'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DiscussionPatchOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by [RFC 6901](https://tools.ietf.org/html/rfc6901)'
+              type: string
+              format: json-pointer
+              enum:
+                - /title
+            value:
+              description: 'New discussion title, up to 255 characters'
+              type: string
+              maxLength: 255
+              minLength: 1
+              example: 'Formal address on the checkout screens'
+    DiscussionPatchOperationStatus:
+      description: 'Closes or reopens the discussion. A change of status posts a `system` reply and notifies the discussion participants'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DiscussionPatchOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by [RFC 6901](https://tools.ietf.org/html/rfc6901)'
+              type: string
+              format: json-pointer
+              enum:
+                - /status
+            value:
+              description: 'New discussion status. One of: `open`, `closed`'
+              type: string
+              enum:
+                - open
+                - closed
+              example: closed
+    DiscussionPatchOperationIsMuted:
+      description: 'Mutes or unmutes the discussion for the authenticated user'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DiscussionPatchOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by [RFC 6901](https://tools.ietf.org/html/rfc6901)'
+              type: string
+              format: json-pointer
+              enum:
+                - /isMuted
+            value:
+              description: 'If `true`, the authenticated user is no longer notified about new replies in the discussion'
+              type: boolean
+              example: true
+    DiscussionReplyPatch:
+      description: 'A JSON Patch document as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-3)'
+      type: array
+      items:
+        $ref: '#/components/schemas/DiscussionReplyOperation'
+    DiscussionReplyOperation:
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+        - value
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+          example: replace
+        path:
+          description: 'A JSON Pointer as defined by [RFC 6901](https://tools.ietf.org/html/rfc6901)'
+          type: string
+          format: json-pointer
+          enum:
+            - /text
+          example: /text
+        value:
+          description: 'New reply text in Markdown, up to 16000 characters'
+          type: string
+          maxLength: 16000
+          minLength: 1
+          example: 'Informal address matches the rest of the app, @olena please keep it'
+      type: object
+    DiscussionCreateForm:
+      required:
+        - title
+        - text
+      properties:
+        title:
+          description: 'Discussion title, up to 255 characters'
+          type: string
+          maxLength: 255
+          minLength: 1
+          example: 'Tone of voice for the checkout screens'
+        text:
+          description: 'Description of the discussion in Markdown, up to 16000 characters, posted as its first reply. Mention a project member with `@username` to notify them'
+          type: string
+          maxLength: 16000
+          minLength: 1
+          example: 'Should we address customers formally on the checkout screens? @olena what do you think?'
+        languageId:
+          description: 'ID of the target language the discussion is about. Get via [Project Target Languages](#operation/api.projects.get). `null` or omitted for a discussion about all languages'
+          type: string
+          example: uk
+          nullable: true
+      type: object
+    DiscussionReplyCreateForm:
+      required:
+        - text
+      properties:
+        text:
+          description: 'Reply text in Markdown, up to 16000 characters. Mention a project member with `@username` to notify them'
+          type: string
+          maxLength: 16000
+          minLength: 1
+          example: 'Informal address matches the rest of the app, so I would keep it'
+      type: object
+    DiscussionCollectionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/DiscussionResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    DiscussionReplyCollectionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/DiscussionReplyResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    DiscussionReplyResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/DiscussionReply'
+    DiscussionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/Discussion'
+    DiscussionReply:
+      title: 'Discussion Reply'
+      properties:
+        id:
+          description: 'ID of the reply'
+          type: integer
+          example: 912
+        discussionId:
+          description: 'ID of the discussion the reply belongs to'
+          type: integer
+          example: 55
+        type:
+          description: 'Reply type. One of: `description` for the description of the discussion, always its first reply; `reply` for a regular reply; `system` for the note posted when the discussion is closed or reopened'
+          type: string
+          enum:
+            - reply
+            - description
+            - system
+          example: reply
+        text:
+          description: 'Reply text in Markdown. For `system` replies, the status the discussion was moved to: `open` or `closed`'
+          type: string
+          example: 'Informal address matches the rest of the app, so I would keep it'
+        userId:
+          description: 'ID of the user who posted the reply'
+          type: integer
+          example: 31
+        user:
+          description: 'Author of the reply. A deleted account keeps its `id`, and its `username` and `fullName` are `REMOVED_USER`. All fields are `null` only when the user record no longer exists'
+          allOf:
+            -
+              $ref: '#/components/schemas/DiscussionUser'
+        createdAt:
+          description: 'Date the reply was posted, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-20T11:11:05+00:00'
+        updatedAt:
+          description: 'Date the reply was last edited, in ISO 8601 format. Equals `createdAt` when the reply was never edited'
+          type: string
+          format: date-time
+          example: '2026-09-20T11:11:05+00:00'
+      type: object
+    DiscussionUser:
+      description: 'Author of a discussion or reply'
+      properties:
+        id:
+          description: 'ID of the user'
+          type: integer
+          example: 31
+          nullable: true
+        username:
+          description: 'Username of the user'
+          type: string
+          example: olena
+          nullable: true
+        fullName:
+          description: 'Full name of the user, or the username when the full name is not set'
+          type: string
+          example: 'Olena Koval'
+          nullable: true
+        avatarUrl:
+          description: 'URL of the user avatar'
+          type: string
+          example: 'https://crowdin-static.downloads.crowdin.com/avatar/13240049/medium/5cf4d2e1b0b9b6b7e8e1a2b9f7c0d0c1.png'
+          nullable: true
+      type: object
+    Discussion:
+      title: Discussion
+      properties:
+        id:
+          description: 'ID of the discussion'
+          type: integer
+          example: 55
+        projectId:
+          description: 'ID of the project the discussion belongs to'
+          type: integer
+          example: 1
+        title:
+          description: 'Discussion title'
+          type: string
+          example: 'Tone of voice for the checkout screens'
+        status:
+          description: 'Discussion status. One of: `open`, `closed`'
+          type: string
+          enum:
+            - open
+            - closed
+          example: open
+        languageId:
+          description: 'ID of the target language the discussion is about. `null` when the discussion is about all languages'
+          type: string
+          example: uk
+          nullable: true
+        userId:
+          description: 'ID of the user who started the discussion'
+          type: integer
+          example: 31
+        user:
+          description: 'Author of the discussion. A deleted account keeps its `id`, and its `username` and `fullName` are `REMOVED_USER`. All fields are `null` only when the user record no longer exists'
+          allOf:
+            -
+              $ref: '#/components/schemas/DiscussionUser'
+        repliesCount:
+          description: 'Number of replies in the discussion, `system` replies included. The description is not counted'
+          type: integer
+          example: 4
+        isMuted:
+          description: 'If `true`, the authenticated user muted the discussion and is not notified about new replies in it'
+          type: boolean
+          example: false
+        createdAt:
+          description: 'Date the discussion was started, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-20T11:11:05+00:00'
+        updatedAt:
+          description: 'Date of the latest reply, reply edit, title or status change, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-21T09:30:00+00:00'
+      type: object
     DistributionPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -35168,6 +35970,7 @@ components:
       type: object
     TmPreTranslateProjectSettings:
       title: TmPreTranslate
+      description: 'Translates only new strings. Changing this setting or adding a target language does not translate existing strings; use [Apply Auto-Translation](#operation/api.projects.pre-translations.post) for them.'
       properties:
         enabled:
           type: boolean
@@ -35203,6 +36006,7 @@ components:
       type: object
     MtPreTranslateProjectSettings:
       title: MtPreTranslate
+      description: 'Translates only new strings. Changing this setting or adding a target language does not translate existing strings; use [Apply Auto-Translation](#operation/api.projects.pre-translations.post) for them.'
       properties:
         enabled:
           type: boolean
@@ -35228,6 +36032,7 @@ components:
       type: object
     AiPreTranslateProjectSettings:
       title: AiPreTranslate
+      description: 'Translates only new strings. Changing this setting or adding a target language does not translate existing strings; use [Apply Auto-Translation](#operation/api.projects.pre-translations.post) for them.'
       properties:
         enabled:
           type: boolean
@@ -49058,6 +49863,22 @@ components:
       required: true
       schema:
         type: integer
+    DiscussionId:
+      name: discussionId
+      in: path
+      description: 'ID of the discussion. Get via [List Project Discussions](#operation/api.projects.discussions.getMany)'
+      required: true
+      schema:
+        type: integer
+      example: 55
+    DiscussionReplyId:
+      name: replyId
+      in: path
+      description: 'ID of the reply. Get via [List Discussion Replies](#operation/api.projects.discussions.replies.getMany)'
+      required: true
+      schema:
+        type: integer
+      example: 912
     QueryUserId:
       name: userId
       in: query
@@ -49803,6 +50624,9 @@ tags:
   -
     name: 'String Comments'
     description: 'Use API to list, add, edit or remove string comments.'
+  -
+    name: Discussions
+    description: "\nDiscussions are project-wide conversations where project members agree on terminology, style and other questions that are wider than a single string. Each discussion is shown as a topic in the project Discussions section. A new discussion notifies every project member, and replies notify the discussion participants who have not muted it.\n\nUse API to list, start, close, reopen, mute, and delete project discussions, and to manage their replies.\n"
   -
     name: 'Translation Memory'
     description: "\nTranslation Memory (TM) is a vault of translations that were previously made in other projects. Those translations can be reused to speed up the translation process. Every translation made in the project is automatically added to the project Translation Memory.\n\nUse API to create, upload, download, or remove specific TM. Translation Memory export and import are [asynchronous operations](#section/Introduction/Asynchronous-Operations) and shall be completed with sequence of API methods.\n"
