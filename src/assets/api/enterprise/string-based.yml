@@ -9200,6 +9200,227 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalServerErrorExceptionResource'
+  '/webhooks/{organizationWebhookId}/deliveries':
+    get:
+      tags:
+        - 'Organization Webhooks'
+      summary: 'List Organization Webhook Deliveries'
+      description: "**Required scopes:** `webhook` (Read only).\n\nReturns the deliveries of a webhook, the most recent first. Deliveries are kept for 30 days. Test requests are not listed."
+      operationId: api.webhooks.deliveries.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/OrganizationWebhookId'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryStatus'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryEvents'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryCreatedAfter'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryCreatedBefore'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Webhook deliveries list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Webhook with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/webhooks/{organizationWebhookId}/deliveries/{deliveryId}':
+    get:
+      tags:
+        - 'Organization Webhooks'
+      summary: 'Get Organization Webhook Delivery'
+      description: "**Required scopes:** `webhook` (Read only).\n\nReturns a single webhook delivery with its request headers and payload. Header values that can carry credentials are masked. Deliveries of a deleted webhook are available by the ID of that webhook."
+      operationId: api.webhooks.deliveries.get
+      parameters:
+        -
+          $ref: '#/components/parameters/OrganizationWebhookId'
+        -
+          $ref: '#/components/parameters/OrganizationWebhookDeliveryId'
+      responses:
+        '200':
+          description: 'Webhook delivery data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryDetailsResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Webhook or delivery with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  /webhooks/deliveries:
+    get:
+      tags:
+        - 'Organization Webhooks'
+      summary: 'List All Organization Webhook Deliveries'
+      description: "**Required scopes:** `webhook` (Read only).\n\nReturns the deliveries of all organization webhooks, including deleted webhooks, the most recent first. Deliveries are kept for 30 days. Test requests are not listed."
+      operationId: api.webhooks.deliveries.getAll
+      parameters:
+        -
+          $ref: '#/components/parameters/OrganizationWebhookDeliveryWebhookIds'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryStatus'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryEvents'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryCreatedAfter'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryCreatedBefore'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Webhook deliveries list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+  '/webhooks/{organizationWebhookId}/deliveries/{deliveryId}/resend':
+    post:
+      tags:
+        - 'Organization Webhooks'
+      summary: 'Resend Organization Webhook Delivery'
+      description: "**Required scopes:** `webhook` (Read and Write).\n\nSends the payload of a delivery again to the URL it was sent to, with the request method and content type of that delivery and the current headers of the webhook, and returns the new delivery. A delivery of a deleted webhook is resent without custom headers. A failure of the target server is returned as a delivery with `status` set to `failed`, not as an error.\n\n__Note:__ The target system may act on the payload again"
+      operationId: api.webhooks.deliveries.resend.post
+      parameters:
+        -
+          $ref: '#/components/parameters/OrganizationWebhookId'
+        -
+          $ref: '#/components/parameters/OrganizationWebhookDeliveryId'
+      responses:
+        '201':
+          description: 'New webhook delivery'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Webhook or delivery with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/webhooks/{organizationWebhookId}/tests':
+    post:
+      tags:
+        - 'Organization Webhooks'
+      summary: 'Test Organization Webhook'
+      description: "**Required scopes:** `webhook` (Read and Write).\n\nSends a sample payload of one webhook event to the saved webhook URL, with the saved request method, content type and headers, and returns the answer of the target server. A failure of the target server is returned as data with `status` set to `failed`, not as an error. Test requests are not added to the webhook deliveries. The request body can be omitted.\n\n__Note:__ The target system may act on the sample payload"
+      operationId: api.webhooks.tests.post
+      parameters:
+        -
+          $ref: '#/components/parameters/OrganizationWebhookId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookTestCreateForm'
+      responses:
+        '200':
+          description: 'Test request result'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookTestResource'
+        '400':
+          description: 'Invalid Request Body'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Webhook with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
   '/projects/{projectId}/pre-translations':
     get:
       tags:
@@ -21325,6 +21546,243 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalServerErrorExceptionResource'
+  '/projects/{projectId}/webhooks/{webhookId}/deliveries':
+    get:
+      tags:
+        - Webhooks
+      summary: 'List Webhook Deliveries'
+      description: "**Required scopes:** `project.webhook` (Read only).\n\nReturns the deliveries of a webhook, the most recent first. Deliveries are kept for 30 days. Test requests are not listed."
+      operationId: api.projects.webhooks.deliveries.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/WebhookId'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryStatus'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryEvents'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryCreatedAfter'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryCreatedBefore'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Webhook deliveries list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or webhook with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/webhooks/{webhookId}/deliveries/{deliveryId}':
+    get:
+      tags:
+        - Webhooks
+      summary: 'Get Webhook Delivery'
+      description: "**Required scopes:** `project.webhook` (Read only).\n\nReturns a single webhook delivery with its request headers and payload. Header values that can carry credentials are masked. Deliveries of a deleted webhook are available by the ID of that webhook."
+      operationId: api.projects.webhooks.deliveries.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/WebhookId'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryId'
+      responses:
+        '200':
+          description: 'Webhook delivery data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryDetailsResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project, webhook or delivery with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/webhooks/deliveries':
+    get:
+      tags:
+        - Webhooks
+      summary: 'List All Webhook Deliveries'
+      description: "**Required scopes:** `project.webhook` (Read only).\n\nReturns the deliveries of all project webhooks, including deleted webhooks, the most recent first. Deliveries are kept for 30 days. Test requests are not listed."
+      operationId: api.projects.webhooks.deliveries.getAll
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryWebhookIds'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryStatus'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryEvents'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryCreatedAfter'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryCreatedBefore'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Webhook deliveries list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/webhooks/{webhookId}/deliveries/{deliveryId}/resend':
+    post:
+      tags:
+        - Webhooks
+      summary: 'Resend Webhook Delivery'
+      description: "**Required scopes:** `project.webhook` (Read and Write).\n\nSends the payload of a delivery again to the URL it was sent to, with the request method and content type of that delivery and the current headers of the webhook, and returns the new delivery. A delivery of a deleted webhook is resent without custom headers. A failure of the target server is returned as a delivery with `status` set to `failed`, not as an error.\n\n__Note:__ The target system may act on the payload again"
+      operationId: api.projects.webhooks.deliveries.resend.post
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/WebhookId'
+        -
+          $ref: '#/components/parameters/WebhookDeliveryId'
+      responses:
+        '201':
+          description: 'New webhook delivery'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project, webhook or delivery with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/webhooks/{webhookId}/tests':
+    post:
+      tags:
+        - Webhooks
+      summary: 'Test Webhook'
+      description: "**Required scopes:** `project.webhook` (Read and Write).\n\nSends a sample payload of one webhook event to the saved webhook URL, with the saved request method, content type and headers, and returns the answer of the target server. A failure of the target server is returned as data with `status` set to `failed`, not as an error. Test requests are not added to the webhook deliveries. The request body can be omitted.\n\n__Note:__ The target system may act on the sample payload"
+      operationId: api.projects.webhooks.tests.post
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/WebhookId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookTestCreateForm'
+      responses:
+        '200':
+          description: 'Test request result'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookTestResource'
+        '400':
+          description: 'Invalid Request Body'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or webhook with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
   '/projects/{projectId}/workflow-steps':
     get:
       tags:
@@ -54816,7 +55274,7 @@ components:
           type: string
           example: 'https://webhook.site/1c20d9b5-6e6a-4522-974d-9da7ea7595c9'
         events:
-          description: "You can configure webhooks for the following events:\n * 'project.translated' — all strings in project are translated\n * 'project.approved' — all strings in project are approved\n * 'project.qa.finished' - all strings in project QA check are finished\n * 'project.built' - project are successfully built\n * 'preTranslation.completed' - Auto-Translation finishes, fails or is canceled\n * 'translation.updated' — final translation of string is updated (using Replace in suggestions feature)\n * 'string.added' — source string is added\n * 'string.updated' — source string is updated\n * 'string.deleted' — source string is deleted\n * 'stringComment.created' - string comment/issue is added\n * 'stringComment.updated' - string comment/issue is updated\n * 'stringComment.deleted' - string comment/issue is deleted\n * 'stringComment.restored' - string comment/issue is restored\n * 'suggestion.added' — one of source strings is translated\n * 'suggestion.updated' — translation for source string is updated (using Replace in suggestions feature)\n * 'suggestion.deleted' — one of translations is deleted\n * 'suggestion.approved' — translation for string is approved\n * 'suggestion.disapproved' — approval for previously added translation is removed\n * 'task.added' - task is added\n * 'task.statusChanged' - task status was changed\n * 'task.updated' - task is updated\n * 'task.deleted' - task is deleted"
+          description: "You can configure webhooks for the following events:\n * 'project.translated' — all strings in project are translated\n * 'project.approved' — all strings in project are approved\n * 'project.qa.finished' - all strings in project QA check are finished\n * 'project.built' - project are successfully built\n * 'preTranslation.completed' - Auto-Translation finishes, fails or is canceled\n * 'translation.updated' — final translation of string is updated (using Replace in suggestions feature)\n * 'string.added' — source string is added\n * 'string.updated' — source string is updated\n * 'string.deleted' — source string is deleted\n * 'string.labelsAssigned' — labels are assigned to source string\n * 'string.labelsUnassigned' — labels are unassigned from source string\n * 'label.created' — label is created\n * 'label.updated' — label is updated\n * 'label.deleted' — label is deleted\n * 'stringComment.created' - string comment/issue is added\n * 'stringComment.updated' - string comment/issue is updated\n * 'stringComment.deleted' - string comment/issue is deleted\n * 'stringComment.restored' - string comment/issue is restored\n * 'suggestion.added' — one of source strings is translated\n * 'suggestion.updated' — translation for source string is updated (using Replace in suggestions feature)\n * 'suggestion.deleted' — one of translations is deleted\n * 'suggestion.approved' — translation for string is approved\n * 'suggestion.disapproved' — approval for previously added translation is removed\n * 'task.added' - task is added\n * 'task.statusChanged' - task status was changed\n * 'task.updated' - task is updated\n * 'task.deleted' - task is deleted"
           type: array
           items:
             type: string
@@ -54830,6 +55288,11 @@ components:
               - string.added
               - string.updated
               - string.deleted
+              - string.labelsAssigned
+              - string.labelsUnassigned
+              - label.created
+              - label.updated
+              - label.deleted
               - stringComment.created
               - stringComment.updated
               - stringComment.deleted
@@ -54949,7 +55412,7 @@ components:
           type: string
           example: 'https://webhook.site/1c20d9b5-6e6a-4522-974d-9da7ea7595c9'
         events:
-          description: "You can configure webhooks for the following events:\n * 'project.translated' — all strings in project are translated\n * 'project.approved' — all strings in project are approved\n * 'project.qa.finished' - all strings in project QA check are finished\n * 'project.built' - project are successfully built\n * 'preTranslation.completed' - Auto-Translation finishes, fails or is canceled\n * 'translation.updated' — final translation of string is updated (using Replace in suggestions feature)\n * 'string.added' — source string is added\n * 'string.updated' — source string is updated\n * 'string.deleted' — source string is deleted\n * 'stringComment.created' - string comment/issue is added\n * 'stringComment.updated' - string comment/issue is updated\n * 'stringComment.deleted' - string comment/issue is deleted\n * 'stringComment.restored' - string comment/issue is restored\n * 'suggestion.added' — one of source strings is translated\n * 'suggestion.updated' — translation for source string is updated (using Replace in suggestions feature)\n * 'suggestion.deleted' — one of translations is deleted\n * 'suggestion.approved' — translation for string is approved\n * 'suggestion.disapproved' — approval for previously added translation is removed\n * 'task.added' - task is added\n * 'task.statusChanged' - task status was changed\n * 'task.updated' - task is updated\n * 'task.deleted' - task is deleted"
+          description: "You can configure webhooks for the following events:\n * 'project.translated' — all strings in project are translated\n * 'project.approved' — all strings in project are approved\n * 'project.qa.finished' - all strings in project QA check are finished\n * 'project.built' - project are successfully built\n * 'preTranslation.completed' - Auto-Translation finishes, fails or is canceled\n * 'translation.updated' — final translation of string is updated (using Replace in suggestions feature)\n * 'string.added' — source string is added\n * 'string.updated' — source string is updated\n * 'string.deleted' — source string is deleted\n * 'string.labelsAssigned' — labels are assigned to source string\n * 'string.labelsUnassigned' — labels are unassigned from source string\n * 'label.created' — label is created\n * 'label.updated' — label is updated\n * 'label.deleted' — label is deleted\n * 'stringComment.created' - string comment/issue is added\n * 'stringComment.updated' - string comment/issue is updated\n * 'stringComment.deleted' - string comment/issue is deleted\n * 'stringComment.restored' - string comment/issue is restored\n * 'suggestion.added' — one of source strings is translated\n * 'suggestion.updated' — translation for source string is updated (using Replace in suggestions feature)\n * 'suggestion.deleted' — one of translations is deleted\n * 'suggestion.approved' — translation for string is approved\n * 'suggestion.disapproved' — approval for previously added translation is removed\n * 'task.added' - task is added\n * 'task.statusChanged' - task status was changed\n * 'task.updated' - task is updated\n * 'task.deleted' - task is deleted"
           type: array
           items:
             type: string
@@ -54963,6 +55426,11 @@ components:
               - string.added
               - string.updated
               - string.deleted
+              - string.labelsAssigned
+              - string.labelsUnassigned
+              - label.created
+              - label.updated
+              - label.deleted
               - stringComment.created
               - stringComment.updated
               - stringComment.deleted
@@ -55070,6 +55538,13 @@ components:
                 fullName: '{{userFullName}}'
                 avatarUrl: '{{userAvatarUrl}}'
       type: object
+    WebhookTestCreateForm:
+      properties:
+        event:
+          description: 'Event to send a sample payload for. Must be one of the webhook `events`. Default is the first event of the webhook'
+          type: string
+          example: file.translated
+      type: object
     EnterpriseWebhookCollectionResource:
       description: 'Webhook Collection Resource'
       type: object
@@ -55096,6 +55571,48 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/EnterpriseWebhook'
+    WebhookDeliveryCollectionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/WebhookDeliveryResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    WebhookDeliveryDetailsResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/WebhookDeliveryDetails'
+    WebhookDeliveryResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/WebhookDelivery'
+    WebhookTestResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/WebhookTest'
     EnterpriseWebhook:
       title: Webhook
       properties:
@@ -55206,6 +55723,141 @@ components:
           type: string
           format: date-time
           example: '2019-09-23T09:19:07+00:00'
+      type: object
+    WebhookDeliveryDetails:
+      title: 'Webhook Delivery Details'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/WebhookDelivery'
+        -
+          properties:
+            requestType:
+              description: 'HTTP method of the delivery request. One of: `GET`, `POST`'
+              type: string
+              enum:
+                - GET
+                - POST
+              example: POST
+            contentType:
+              description: 'Content type of the delivery request. One of: `multipart/form-data`, `application/json`, `application/x-www-form-urlencoded`. `null` when the stored content type is not one of them'
+              type: string
+              enum:
+                - multipart/form-data
+                - application/json
+                - application/x-www-form-urlencoded
+              example: application/json
+              nullable: true
+            headers:
+              description: 'Headers of the delivery request. Values of headers that can carry credentials are masked: headers with `authorization`, `security`, `token` or `api-key` in the name'
+              type: object
+              example:
+                Authorization: 'Bear*************'
+                X-Team: localization
+            payload:
+              description: 'Payload of the delivery request'
+              type: object
+              example:
+                event: file.translated
+                language: uk
+          type: object
+        -
+          $ref: '#/components/schemas/WebhookDelivery'
+    WebhookDelivery:
+      title: 'Webhook Delivery'
+      properties:
+        id:
+          description: 'ID of the delivery'
+          type: integer
+          example: 9051
+        webhookId:
+          description: 'ID of the webhook the delivery was sent for'
+          type: integer
+          example: 7
+        event:
+          description: 'Event the delivery was sent for'
+          type: string
+          example: file.translated
+        url:
+          description: 'URL the delivery was sent to'
+          type: string
+          example: 'https://hooks.example.com/crowdin'
+        status:
+          description: 'Delivery status. One of: `success` for a 2xx or 304 answer of the target server, `failed` for any other answer or no answer'
+          type: string
+          enum:
+            - success
+            - failed
+          example: success
+        responseStatusCode:
+          description: 'HTTP status code the target server answered with. `null` when no answer was received'
+          type: integer
+          example: 200
+          nullable: true
+        responseBody:
+          description: 'Up to the first 255 characters of the target server answer, or a message explaining why no answer was received. `null` for a successful delivery or an empty answer'
+          type: string
+          example: 'Service temporarily unavailable'
+          nullable: true
+        fileId:
+          description: 'ID of the file the event is about. `null` when the event is not about a file'
+          type: integer
+          example: 12
+          nullable: true
+        languageId:
+          description: 'ID of the language the event is about. `null` when the event is not about a language'
+          type: string
+          example: uk
+          nullable: true
+        createdAt:
+          description: 'Date the delivery was sent, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-28T10:15:00+00:00'
+      type: object
+    WebhookTest:
+      title: 'Webhook Test'
+      properties:
+        event:
+          description: 'Event the sample payload was sent for'
+          type: string
+          example: file.translated
+        url:
+          description: 'URL the request was sent to, as saved in the webhook'
+          type: string
+          example: 'https://hooks.example.com/crowdin'
+        payload:
+          description: 'Sample payload that was sent, built from the webhook payload template with example values'
+          type: object
+          example:
+            event: file.translated
+            project: acme-docs
+            language: uk
+        status:
+          description: 'Test request status. One of: `success` for a 2xx or 304 answer of the target server, `failed` for any other answer or no answer'
+          type: string
+          enum:
+            - success
+            - failed
+          example: success
+        responseStatusCode:
+          description: 'HTTP status code the target server answered with. `null` when no answer was received'
+          type: integer
+          example: 200
+          nullable: true
+        responseBody:
+          description: 'Up to the first 1024 characters of the target server answer. `null` when no answer was received; `error` holds the reason'
+          type: string
+          example: ok
+          nullable: true
+        error:
+          description: 'Why no answer was received. One of: `couldNotConnect`, `timeout`, `forbiddenHost` for a URL that cannot be called from Crowdin. `null` when the target server answered'
+          type: string
+          enum:
+            - couldNotConnect
+            - timeout
+            - forbiddenHost
+          nullable: true
       type: object
     WorkflowStepCollectionResource:
       description: 'Workflow Templates Collection'
@@ -56793,6 +57445,75 @@ components:
           - 3
           - 4
           - 5
+    WebhookDeliveryId:
+      name: deliveryId
+      in: path
+      description: 'ID of the webhook delivery. Get via [List Webhook Deliveries](#operation/api.projects.webhooks.deliveries.getMany) or [List All Webhook Deliveries](#operation/api.projects.webhooks.deliveries.getAll)'
+      required: true
+      schema:
+        type: integer
+      example: 9051
+    OrganizationWebhookDeliveryId:
+      name: deliveryId
+      in: path
+      description: 'ID of the webhook delivery. Get via [List Organization Webhook Deliveries](#operation/api.webhooks.deliveries.getMany) or [List All Organization Webhook Deliveries](#operation/api.webhooks.deliveries.getAll)'
+      required: true
+      schema:
+        type: integer
+      example: 9051
+    WebhookDeliveryStatus:
+      name: status
+      in: query
+      description: 'Filter results to deliveries with the given status. One of: `success` for a 2xx or 304 answer of the target server, `failed` for any other answer or no answer'
+      required: false
+      schema:
+        type: string
+        enum:
+          - success
+          - failed
+      example: failed
+    WebhookDeliveryEvents:
+      name: events
+      in: query
+      description: 'Filter results to deliveries of the given events. It can be one event or a list of comma-separated ones'
+      required: false
+      schema:
+        type: string
+      example: 'file.translated,file.approved'
+    WebhookDeliveryCreatedAfter:
+      name: createdAfter
+      in: query
+      description: 'Filter results to deliveries sent at or after the given date, in ISO 8601 format'
+      required: false
+      schema:
+        type: string
+        format: date-time
+      example: '2026-09-28T00:00:00+00:00'
+    WebhookDeliveryCreatedBefore:
+      name: createdBefore
+      in: query
+      description: 'Filter results to deliveries sent at or before the given date, in ISO 8601 format'
+      required: false
+      schema:
+        type: string
+        format: date-time
+      example: '2026-09-29T00:00:00+00:00'
+    WebhookDeliveryWebhookIds:
+      name: webhookIds
+      in: query
+      description: 'Filter results to deliveries of the given webhooks, including deleted ones. It can be one ID or a list of comma-separated ID values. Get via [List Webhooks](#operation/api.projects.webhooks.getMany)'
+      required: false
+      schema:
+        type: string
+      example: '4,7'
+    OrganizationWebhookDeliveryWebhookIds:
+      name: webhookIds
+      in: query
+      description: 'Filter results to deliveries of the given webhooks, including deleted ones. It can be one ID or a list of comma-separated ID values. Get via [List Webhooks](#operation/api.webhooks.getMany)'
+      required: false
+      schema:
+        type: string
+      example: '4,7'
     UserId:
       name: userId
       in: path
