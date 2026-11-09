@@ -997,8 +997,6 @@ paths:
       operationId: api.ai.prompts.fine-tuning.datasets.get
       parameters:
         -
-          $ref: '#/components/parameters/UserId'
-        -
           $ref: '#/components/parameters/AiPromptId'
         -
           $ref: '#/components/parameters/AiPromptFineTuningDatasetGenerationId'
@@ -1250,8 +1248,6 @@ paths:
       description: '**Required scopes:** `ai.fine-tuning` (Read only).'
       operationId: api.ai.prompts.fine-tuning.datasets.download.get
       parameters:
-        -
-          $ref: '#/components/parameters/UserId'
         -
           $ref: '#/components/parameters/AiPromptId'
         -
@@ -1610,6 +1606,9 @@ paths:
       summary: 'Generate AI Prompt Completion'
       description: '**Required scopes:** `ai.prompt` (Read only).'
       operationId: api.ai.prompts.completions.post
+      parameters:
+        -
+          $ref: '#/components/parameters/AiPromptId'
       requestBody:
         content:
           application/json:
@@ -2289,8 +2288,8 @@ paths:
             schema:
               $ref: '#/components/schemas/AiProxyChatCompletionCreateForm'
       responses:
-        '201':
-          description: 'AI Proxy Chat Completion was created successfully'
+        '200':
+          description: 'AI Proxy Chat Completion data'
           content:
             application/json:
               schema:
@@ -4544,7 +4543,7 @@ paths:
         -
           $ref: '#/components/parameters/BranchId'
         -
-          name: identifier
+          name: jobIdentifier
           in: path
           description: 'Delete operation identifier (UUID). Returned by the async DELETE (Prefer: respond-async).'
           required: true
@@ -6097,7 +6096,7 @@ paths:
         -
           $ref: '#/components/parameters/DirectoryId'
         -
-          name: identifier
+          name: jobIdentifier
           in: path
           description: 'Delete operation identifier (UUID). Returned by the async DELETE (Prefer: respond-async).'
           required: true
@@ -7474,7 +7473,7 @@ paths:
         -
           $ref: '#/components/parameters/FileId'
         -
-          name: identifier
+          name: jobIdentifier
           in: path
           description: 'Delete operation identifier (UUID). Returned by the async DELETE (Prefer: respond-async).'
           required: true
@@ -11288,6 +11287,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+    patch:
+      tags:
+        - AI
+      summary: 'Edit Project AI Settings'
+      description: '**Required scopes:** `project` (Read and Write).'
+      operationId: api.projects.ai.settings.patch
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectAiSettingsPatch'
+      responses:
+        '200':
+          description: 'AI settings was successfully updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseProjectAiSettingsResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
   /projects:
     get:
       tags:
@@ -11888,8 +11933,8 @@ paths:
             schema:
               $ref: '#/components/schemas/FileFormatSettingsPatch'
       responses:
-        '201':
-          description: 'File Format Settings was successfully created'
+        '200':
+          description: 'File Format Settings was successfully updated'
           content:
             application/json:
               schema:
@@ -14807,6 +14852,10 @@ paths:
       responses:
         '200':
           description: 'Screenshot tags were successfully replaced'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagCollectionResource'
         '400':
           description: 'Invalid Request Body'
           content:
@@ -25408,10 +25457,12 @@ components:
           type: string
           format: date-time
           example: '2019-09-23T11:26:54+00:00'
+          nullable: true
         finishedAt:
           type: string
           format: date-time
           example: '2019-09-23T11:26:54+00:00'
+          nullable: true
       type: object
     AiPromptPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
@@ -25770,9 +25821,6 @@ components:
           example: 'Pre-translate prompt'
         action:
           type: string
-          enum:
-            - pre_translate
-            - qa_check
         aiProviderId:
           description: 'AI Provider identifier. Get via [List AI Providers](#operation/api.ai.providers.getMany)'
           type: integer
@@ -25791,6 +25839,7 @@ components:
           items:
             type: integer
             example: 23
+          nullable: true
       type: object
     CrowdinAiPromptCreateForm:
       required:
@@ -25804,10 +25853,17 @@ components:
         -
           properties:
             action:
-              type: string
-              enum:
-                - pre_translate
-                - qa_check
+              description: 'AI prompt action, a built-in one or a custom one'
+              anyOf:
+                -
+                  title: 'Built-in action'
+                  type: string
+                  enum: [pre_translate, qa_check, advisor_context_review]
+                -
+                  title: 'Custom action'
+                  description: '`custom:` followed by its name (e.g. `custom:marketing_tone_check`)'
+                  type: string
+                  pattern: '^custom:.+'
             config:
               description: 'AI prompt configuration'
               oneOf:
@@ -25815,6 +25871,8 @@ components:
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.pre_translate'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.qa_check'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.advisor_context_review'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.crowdin_advanced_mode'
                 -
@@ -25932,6 +25990,19 @@ components:
           type: boolean
           default: false
           deprecated: true
+      type: object
+    ai.prompt.config.basic_mode.advisor_context_review:
+      title: 'Basic mode (advisor context review action)'
+      required:
+        - mode
+      properties:
+        mode:
+          type: string
+          enum:
+            - basic
+        publicProjectDescription:
+          type: boolean
+          example: true
       type: object
     ai.prompt.config.basic_mode.qa_check:
       title: 'Basic mode (QA check action)'
@@ -26268,12 +26339,17 @@ components:
         -
           properties:
             action:
-              description: 'AI prompt action. __Note:__ `assist` is deprecated'
-              type: string
-              enum:
-                - pre_translate
-                - alignment
-                - qa_check
+              description: 'AI prompt action, a built-in one or a custom one'
+              anyOf:
+                -
+                  title: 'Built-in action'
+                  type: string
+                  enum: [pre_translate, alignment, qa_check, advisor_context_review]
+                -
+                  title: 'Custom action'
+                  description: '`custom:` followed by its name (e.g. `custom:marketing_tone_check`)'
+                  type: string
+                  pattern: '^custom:.+'
             config:
               description: 'AI prompt configuration'
               oneOf:
@@ -26283,6 +26359,8 @@ components:
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.enterprise.alignment'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.basic_mode.enterprise.qa_check'
+                -
+                  $ref: '#/components/schemas/ai.prompt.config.basic_mode.advisor_context_review'
                 -
                   $ref: '#/components/schemas/ai.prompt.config.enterprise_advanced_mode'
                 -
@@ -26517,6 +26595,8 @@ components:
             - /name
             - /type
             - /credentials
+            - /credentials/headers
+            - /credentials/sendCustomHeadersOnly
             - /config
             - /isEnabled
             - /useSystemCredentials
@@ -27122,15 +27202,19 @@ components:
       title: 'AI Provider'
       properties:
         id:
+          description: 'ID of the AI provider'
           type: integer
           example: 2
         name:
+          description: 'Name of the AI provider'
           type: string
           example: OpenAI
         type:
+          description: 'Type of the AI provider. One of: `open_ai`, `azure_open_ai`, `google_gemini`, `google_gemini_ai_studio`, `mistral_ai`, `anthropic`, `crowdin_ai`, `x_ai`, `watsonx`, `deepseek`, `microsoft_foundry`, `custom_ai`'
           type: string
           example: open_ai
         credentials:
+          description: 'Credentials of the AI provider, with API keys and custom header values masked. When `useSystemCredentials` is `true`, holds only the `region` of a `crowdin_ai` provider and is `null` for other types'
           type: object
           nullable: true
           oneOf:
@@ -27155,20 +27239,37 @@ components:
             -
               $ref: '#/components/schemas/ai.provider.credentials.custom_ai'
         config:
+          description: 'Settings of the AI provider, such as `actionRules`'
           type: object
         isEnabled:
+          description: 'If `true`, the AI provider can be used for AI requests'
           type: boolean
           default: true
+        autoDisabledReason:
+          description: 'Why Crowdin disabled the AI provider after the provider rejected a request: the HTTP status, followed by the error message returned by the provider, if any. Plain text. `null` when no reason is stored, for example when the AI provider is enabled or was disabled by a user'
+          type: string
+          example: 'Payment required (400 Bad Request): Your credit balance is too low to access the API'
+          nullable: true
+        autoDisabledAt:
+          description: 'Date Crowdin disabled the AI provider, in ISO 8601 format. `null` when `autoDisabledReason` is `null`'
+          type: string
+          format: date-time
+          example: '2026-10-27T10:15:00+00:00'
+          nullable: true
         useSystemCredentials:
+          description: "If `true`, the AI provider runs on Crowdin credentials and is paid for via Crowdin. If `false`, it runs on the organization's own `credentials`"
           type: boolean
           default: false
         createdAt:
+          description: 'Date the AI provider was created, in ISO 8601 format'
           format: date-time
           example: '2019-09-20T11:11:05+00:00'
         updatedAt:
+          description: 'Date the AI provider was last updated, in ISO 8601 format'
           format: date-time
           example: '2019-09-20T12:22:20+00:00'
         promptsCount:
+          description: 'Number of AI prompts that use this AI provider'
           type: number
           format: integer
           example: '42'
@@ -31833,6 +31934,7 @@ components:
             - /exportPattern
             - /isMultilingual
             - /includeProjectSourceLanguage
+            - /sourceLanguageExportPattern
             - /includeInContextPseudoLanguage
             - /labelIds
             - /excludeLabelIds
@@ -31919,6 +32021,7 @@ components:
           description: "Source language export pattern. Works only when `includeProjectSourceLanguage` is enabled.\n\n__Note:__ Can't contain `: * ? \" < > |` symbols"
           type: string
           example: strings-%two_letter_code%.resx
+          nullable: true
         includeInContextPseudoLanguage:
           description: 'Add In-Context pseudo-language to bundle'
           type: boolean
@@ -33382,7 +33485,17 @@ components:
           type: string
           format: json-pointer
           enum:
-            - /words/0
+            - /words
+            - '/words/{wordIndex}'
+        value:
+          description: 'Required for the `add` operation: a word for `/words/{wordIndex}`, a list of words for `/words` that replaces the whole list'
+          oneOf:
+            -
+              type: string
+            -
+              type: array
+              items:
+                type: string
       type: object
     DictionaryCollectionResource:
       description: 'Dictionary Collection Resource'
@@ -33437,6 +33550,7 @@ components:
           type: string
           enum:
             - replace
+            - remove
             - test
         path:
           description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
@@ -33454,6 +33568,7 @@ components:
         propertyName: op
         mapping:
           replace: '#/components/schemas/DirectoryOperationReplace'
+          remove: '#/components/schemas/DirectoryOperationRemove'
           test: '#/components/schemas/DirectoryOperationTest'
     DirectoryOperationReplace:
       description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
@@ -33471,6 +33586,12 @@ components:
                   type: string
                 -
                   type: integer
+    DirectoryOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.2)'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DirectoryOperation'
     DirectoryOperationTest:
       description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
@@ -33626,8 +33747,23 @@ components:
         propertyName: op
         mapping:
           replace: '#/components/schemas/DistributionOperationReplace'
+          test: '#/components/schemas/DistributionOperationTest'
     DistributionOperationReplace:
       description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/DistributionOperation'
+        -
+          properties:
+            value:
+              oneOf:
+                -
+                  type: string
+    DistributionOperationTest:
+      description: 'A JSON Patch `Test` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.6)'
       required:
         - value
       type: object
@@ -33666,6 +33802,7 @@ components:
             - 24
             - 25
             - 38
+          nullable: true
           deprecated: true
         bundleIds:
           description: "Bundles ids. Get via [List Bundles](#operation/api.projects.bundles.getMany)\n\n__Note:__ Required for `bundle` export mode"
@@ -34259,6 +34396,7 @@ components:
           type: string
           enum:
             - replace
+            - remove
             - test
         path:
           description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
@@ -34322,6 +34460,7 @@ components:
             - /importOptions/translateExcelDiagramData
             - /importOptions/translateExcelDrawings
             - /exportOptions/exportPattern
+            - /exportOptions/strongMarker
             - /exportOptions/escapeQuotes
             - /exportOptions/exportQuotes
             - /exportOptions/escapeSpecialCharacters
@@ -34337,6 +34476,7 @@ components:
         propertyName: op
         mapping:
           replace: '#/components/schemas/FileOperationReplace'
+          remove: '#/components/schemas/FileOperationRemove'
           test: '#/components/schemas/FileOperationTest'
     FileOperationReplace:
       description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
@@ -34360,6 +34500,12 @@ components:
                 -
                   type: array
                   items: { type: integer }
+    FileOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.2)'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/FileOperation'
     FileOperationTest:
       description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
@@ -36531,10 +36677,12 @@ components:
           type: string
           format: date-time
           example: '2019-09-23T11:26:54+00:00'
+          nullable: true
         finishedAt:
           type: string
           format: date-time
           example: '2019-09-23T11:26:54+00:00'
+          nullable: true
         error:
           description: 'Only present when the operation failed with a user-actionable reason.'
           properties:
@@ -36863,7 +37011,7 @@ components:
               type: array
               items:
                 oneOf:
-                  - { type: string, enum: [term, description, partOfSpeech, type, status, gender, note, url, conceptDefinition, conceptSubject, conceptNote, conceptUrl, conceptFigure] }
+                  - { type: string, enum: [term, description, partOfSpeech, type, status, gender, note, url, translatable, conceptDefinition, conceptSubject, conceptNote, conceptUrl, conceptFigure] }
                   - { type: string, pattern: '^(field|conceptField)_[0-9a-zA-Z_-]{3,255}$' }
               default:
                 - term
@@ -39191,7 +39339,12 @@ components:
           properties:
             project.created:
               description: 'Read more about [Events payload examples](https://developer.crowdin.com/webhooks). Additionally, you can check out Events payloads while creating webhooks via UI in your Crowdin profile settings > Webhooks tab > click Add webhook.'
-              type: object
+              oneOf:
+                -
+                  type: object
+                -
+                  type: array
+                  items: {  }
           type: object
           example:
             project.created:
@@ -39274,7 +39427,12 @@ components:
           properties:
             project.created:
               description: 'Read more about [Events payload examples](https://developer.crowdin.com/webhooks). Additionally, you can check out Events payloads while creating webhooks via UI in your Crowdin profile settings > Webhooks tab > click Add webhook.'
-              type: object
+              oneOf:
+                -
+                  type: object
+                -
+                  type: array
+                  items: {  }
           type: object
           example:
             project.created:
@@ -39379,9 +39537,12 @@ components:
                 fullName: '{{creatorFullName}}'
                 avatarUrl: '{{creatorAvatarUrl}}'
           additionalProperties:
-            type: array
-            items:
-              type: string
+            oneOf:
+              -
+                type: object
+              -
+                type: array
+                items: {  }
         isActive:
           type: boolean
           example: true
@@ -40365,6 +40526,39 @@ components:
               example: af
             language:
               $ref: '#/components/schemas/Language'
+    ProjectAiSettingsPatch:
+      description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+      type: array
+      items:
+        $ref: '#/components/schemas/ProjectAiSettingsOperation'
+    ProjectAiSettingsOperation:
+      description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
+      required:
+        - op
+        - path
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+            - remove
+            - test
+        path:
+          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a>'
+          type: string
+          format: json-pointer
+          enum:
+            - /preTranslationAiPromptId
+            - /editorSuggestionAiPromptId
+            - /alignmentActionAiPromptId
+            - /qaCheckActionAiPromptId
+            - /contextReviewAiPromptId
+        value:
+          description: 'AI Prompt Identifier. Required for `replace` and `test` operations'
+          type: integer
+          nullable: true
+      type: object
     ProjectInfoPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -40411,6 +40605,7 @@ components:
             - /publicDownloads
             - /hiddenStringsProofreadersAccess
             - /normalizePlaceholder
+            - /tagsDetection
             - /saveMetaInfoInSource
             - /inContext
             - /inContextProcessHiddenStrings
@@ -40418,6 +40613,7 @@ components:
             - /qaCheckIsActive
             - /qaApprovalsCount
             - /qaCheckCategories
+            - /externalQaCheckIds
             - /externalQaChecksIgnorable
             - '/externalQaChecksIgnorable/{checkId}'
             - '/qaCheckCategories/{category}'
@@ -40436,6 +40632,7 @@ components:
             - /assignedGlossaries
             - /assignedTms
             - '/assignedTms/{tmId}'
+            - /tmPenalties
             - '/tmPenalties/{penaltyKey}'
             - /tmContextType
             - /fields
@@ -40996,6 +41193,7 @@ components:
         templateId:
           description: 'Workflow Template Identifier. Get via [List Workflow Templates](#operation/api.workflow-templates.getMany)'
           type: integer
+          nullable: true
         steps:
           description: "Workflow Template Steps Configuration.\n\n__Note:__ Must be used together with `templateId`\n\n__Note:__ Can't be used with `vendorId`, `mtEngineId` in same request"
           type: array
@@ -47984,6 +48182,7 @@ components:
         groupId:
           description: "Group Identifier. Get via [List Groups](#operation/api.groups.getMany)\n\n__Note:__ Can't be used together with `projectId`"
           type: integer
+          nullable: true
         name:
           description: 'Template name'
           type: string
@@ -49855,6 +50054,7 @@ components:
           enum:
             - /identifier
             - /text
+            - '/text/{pluralCategoryName}'
             - /context
             - /isHidden
             - /maxLength
@@ -52419,6 +52619,7 @@ components:
           description: 'Plural category name'
           type: string
           example: few
+          nullable: true
         user:
           description: User
           properties:
@@ -52780,6 +52981,7 @@ components:
               description: 'plural category name'
               type: string
               example: few
+              nullable: true
     Alignment:
       title: Alignment
       properties:
@@ -53191,6 +53393,7 @@ components:
           enum:
             - /name
             - /config
+            - /config/languages
       type: object
       discriminator:
         propertyName: op
@@ -53250,11 +53453,13 @@ components:
         - path
       properties:
         op:
-          description: 'Patch operation to perform'
+          description: 'Patch operation to perform. `add` and `remove` are supported for `/fields/{fieldSlug}` only'
           type: string
           enum:
             - replace
             - test
+            - add
+            - remove
         path:
           description: "A JSON Pointer as defined by <a href=\"https://tools.ietf.org/html/rfc6901\" target=\"_blank\">RFC 6901</a>\n\n__Note__: `splitFiles` is deprecated, use `splitContent` instead"
           type: string
@@ -53299,6 +53504,8 @@ components:
         mapping:
           replace: '#/components/schemas/TaskOperationReplace'
           test: '#/components/schemas/TaskOperationTest'
+          add: '#/components/schemas/TaskOperationAdd'
+          remove: '#/components/schemas/TaskOperationRemove'
     TaskOperationReplace:
       description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
       required:
@@ -53343,6 +53550,35 @@ components:
                 -
                   type: array
                   items: { type: object }
+    TaskOperationAdd:
+      description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.1)'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/TaskOperation'
+        -
+          properties:
+            value:
+              anyOf:
+                -
+                  type: string
+                -
+                  type: integer
+                -
+                  type: boolean
+                -
+                  type: object
+                -
+                  type: array
+                  items: { type: string }
+    TaskOperationRemove:
+      description: 'A JSON Patch `Remove` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.2)'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/TaskOperation'
     VendorTaskOperation:
       description: 'A JSON Patch operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4)'
       required:
@@ -53701,6 +53937,7 @@ components:
           items:
             type: integer
             example: 1
+          nullable: true
         labelMatchRule:
           description: "Match rule for labels:\n- \"all\" - all labels must be present in string\n- \"any\" - any of the labels must be present in string\n\n__Note:__ Can only be used when `labelIds` parameter is provided"
           type: string
@@ -53708,13 +53945,13 @@ components:
           enum:
             - all
             - any
-          nullable: true
         excludeLabelIds:
           description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
           type: array
           items:
             type: integer
             example: 12
+          nullable: true
         excludeLabelMatchRule:
           description: "Match rule for excluded labels:\n- \"all\" - all labels must be present in string\n- \"any\" - any of the labels must be present in string\n\n__Note:__ Can only be used when `excludeLabelIds` parameter is provided"
           type: string
@@ -53722,7 +53959,6 @@ components:
           enum:
             - all
             - any
-          nullable: true
         status:
           description: 'Task status'
           type: string
@@ -54029,7 +54265,6 @@ components:
           enum:
             - all
             - any
-          nullable: true
         excludeLabelIds:
           description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
           type: array
@@ -54043,7 +54278,6 @@ components:
           enum:
             - all
             - any
-          nullable: true
         description:
           description: 'Task description'
           type: string
@@ -54150,7 +54384,6 @@ components:
           enum:
             - all
             - any
-          nullable: true
         description:
           description: 'Task description'
           type: string
@@ -55778,24 +56011,31 @@ components:
         description:
           type: string
           example: 'use for pages only (check screenshots)'
+          nullable: true
         partOfSpeech:
           type: string
           example: verb
+          nullable: true
         status:
           type: string
           example: preferred
+          nullable: true
         type:
           type: string
           example: abbreviation
+          nullable: true
         gender:
           type: string
           example: masculine
+          nullable: true
         note:
           type: string
           example: 'Any kind of note, such as a usage note, explanation, or instruction'
+          nullable: true
         url:
           type: string
           example: 'Base URL'
+          nullable: true
         conceptId:
           type: integer
           example: 6
@@ -56224,11 +56464,6 @@ components:
             - csv
             - xlsx
       type: object
-    TmLanguageCodeColumnCode:
-      properties:
-        columnNumber:
-          type: integer
-      type: object
     TmLanguageScheme:
       title: 'Tm Schema'
       description: "Defines data columns mapping. The passed value should be an associative array containing both language id and column number:\n* `{languageId}` – Crowdin id for the specified language. Get via [List Supported Languages](#operation/api.languages.getMany)\n* `{columnNumber}` – a column number. Please note, that column numbering starts at 0\n\n__Note:__ Required for CSV or XLS/XLSX files"
@@ -56239,7 +56474,7 @@ components:
         pl: 2
         uk: 4
       additionalProperties:
-        $ref: '#/components/schemas/TmLanguageCodeColumnCode'
+        type: integer
     TmUploadForm:
       required:
         - storageId
@@ -57499,8 +57734,16 @@ components:
         - value
       properties:
         value:
-          type: string
           example: Smith
+          oneOf:
+            -
+              type: string
+            -
+              type: integer
+            -
+              type: boolean
+            -
+              $ref: '#/components/schemas/EnterpriseAdditionalFields'
         op:
           description: 'Patch operation to perform'
           type: string
@@ -57517,6 +57760,7 @@ components:
             - /status
             - /adminAccess
             - /avatarStorageId
+            - /fields
           example: /lastName
       type: object
     ProjectsPermissionsMassPatch:
@@ -57564,7 +57808,10 @@ components:
           type: string
           format: json-pointer
           enum:
+            - '/{projectId}'
             - '/{projectId}/roles'
+            - '/{projectId}/roles/-'
+            - '/{projectId}/roles/{roleName}'
           example: '/{projectId}/roles'
       type: object
       discriminator:
@@ -57598,6 +57845,7 @@ components:
           format: json-pointer
           enum:
             - '/{projectId}'
+            - '/{projectId}/roles/{roleName}'
       type: object
     ProjectPermissionsMassOperationAdd:
       description: 'A JSON Patch `Add` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
@@ -57785,6 +58033,7 @@ components:
           description: 'Invited user timezone'
           type: string
           example: America/New_York
+          nullable: true
         adminAccess:
           description: 'Grant admin access to an organization'
           type: boolean
@@ -58427,11 +58676,7 @@ components:
           example:
             Authorization: 'Bearer <ACCESS_TOKEN>'
         payload:
-          description: 'Custom webhook payload'
-          properties:
-            project.created:
-              description: 'Read more about [Events payload examples](https://developer.crowdin.com/webhooks). Additionally, you can check out Events payloads while creating webhooks via UI in your Crowdin profile settings > Webhooks tab > click Add webhook.'
-              type: object
+          description: 'Custom webhook payload. Read more about [Events payload examples](https://developer.crowdin.com/webhooks). Additionally, you can check out Events payloads while creating webhooks via UI in your Crowdin project > Tools tab > Webhooks section > click Add webhook.'
           type: object
           example:
             string.added:
@@ -58483,6 +58728,13 @@ components:
                 username: '{{userUsername}}'
                 fullName: '{{userFullName}}'
                 avatarUrl: '{{userAvatarUrl}}'
+          additionalProperties:
+            oneOf:
+              -
+                type: object
+              -
+                type: array
+                items: {  }
       type: object
     EnterpriseWebhookCreateForm:
       required:
@@ -58572,11 +58824,7 @@ components:
           example:
             Authorization: 'Bearer <ACCESS_TOKEN>'
         payload:
-          description: 'Custom webhook payload'
-          properties:
-            project.created:
-              description: 'Read more about [Events payload examples](https://developer.crowdin.com/webhooks). Additionally, you can check out Events payloads while creating webhooks via UI in your Crowdin profile settings > Webhooks tab > click Add webhook.'
-              type: object
+          description: 'Custom webhook payload. Read more about [Events payload examples](https://developer.crowdin.com/webhooks). Additionally, you can check out Events payloads while creating webhooks via UI in your Crowdin project > Tools tab > Webhooks section > click Add webhook.'
           type: object
           example:
             string.added:
@@ -58632,6 +58880,13 @@ components:
                 username: '{{userUsername}}'
                 fullName: '{{userFullName}}'
                 avatarUrl: '{{userAvatarUrl}}'
+          additionalProperties:
+            oneOf:
+              -
+                type: object
+              -
+                type: array
+                items: {  }
       type: object
     WebhookTestCreateForm:
       properties:
@@ -58794,9 +59049,12 @@ components:
                 fullName: '{{userFullName}}'
                 avatarUrl: '{{userAvatarUrl}}'
           additionalProperties:
-            type: array
-            items:
-              type: string
+            oneOf:
+              -
+                type: object
+              -
+                type: array
+                items: {  }
         isActive:
           type: boolean
           example: true
@@ -58923,11 +59181,16 @@ components:
           example: 'https://hooks.example.com/crowdin'
         payload:
           description: 'Sample payload that was sent, built from the webhook payload template with example values'
-          type: object
           example:
             event: file.translated
             project: acme-docs
             language: uk
+          oneOf:
+            -
+              type: object
+            -
+              type: array
+              items: {  }
         status:
           description: 'Test request status. One of: `success` for a 2xx or 304 answer of the target server, `failed` for any other answer or no answer'
           type: string
@@ -59917,6 +60180,10 @@ components:
             type: boolean
           -
             type: object
+          -
+            type: array
+            items:
+              type: string
     SkippedInfo:
       properties:
         translation_eq_source:
