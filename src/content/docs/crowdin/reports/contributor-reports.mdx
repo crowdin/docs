@@ -9,18 +9,13 @@ sidebar:
 import { Image } from 'astro:assets';
 import { Steps, Aside } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
-import translatorsProjectStatus from '!/crowdin/reports/reports_translators_project_overview.png';
 import costEstimateGenerating from '!/crowdin/reports/reports_translators_cost_estimate_generating.png';
 import addTmMatchType from '!/crowdin/reports/reports_cost_estimate_add_tm_match_type.png';
 import addCustomRates from '!/crowdin/reports/reports_add_custom_rates.png';
 import addCustomRatesMyContribution from '!/crowdin/reports/reports_my_contribution_add_custom_rates.png';
 import myContributionGenerating from '!/crowdin/reports/reports_my_contribution_generating.png';
-import topMembers from '!/crowdin/reports/reports_translators_top_members.png';
-import archiveViewing from '!/crowdin/reports/reports_translators_archive_viewing.png';
 
 As a translator or a proofreader, you can estimate and count the price of your contribution to the project and view your position in the Top Members list. You can also view the progress of the project and track contributions over a specific period of time. For this, open the project and go to the **Reports** tab.
-
-<Image src={translatorsProjectStatus} alt="Project Overview" />
 
 ## Project Overview
 
@@ -36,6 +31,8 @@ The top of the page displays the primary statistics for the project's volume:
 * *Hidden*: The total amount of text in hidden strings.
 * *Total*: The total amount of text in the project (*Translatable* + *Hidden*).
 * *Translation to*: The number of target languages in the project.
+
+The *Translatable* and *Hidden* values include duplicate strings, and each shows how much of its text is in duplicates.
 
 Below the main statistics, the **Overview** section contains the following report:
 
@@ -166,7 +163,7 @@ Click **Templates** to view and select saved rate templates.
 
 ### Include Auto-translated Strings
 
-Select **Include auto-translated strings** if you want a Cost Estimate report to also count strings for translation when they were only auto-translated (via TM, MT, or AI) and aren't approved yet. By default, this option is cleared.
+In the **Advanced settings** section, select **Include auto-translated strings** if you want a Cost Estimate report to also count strings for translation when they were only auto-translated (via TM, MT, or AI) and aren't approved yet. By default, this option is cleared.
 
 For example, there is an untranslated string `Validate your username` in the project, and a Cost Estimate report counts it for translation. Then a project manager auto-translates this string via TM or MT. With **Include auto-translated strings** cleared, the next Cost Estimate report no longer counts this string for translation. With the option selected, the report keeps counting it for translation as long as the string has no approved translation and no translation added by a person.
 
@@ -174,7 +171,7 @@ For example, there is an untranslated string `Validate your username` in the pro
 
 Internal Fuzzy Matches are partial (fuzzy) TM matches found among untranslated strings in your project that can potentially be added to the Translation Memory. For example, if the first string in a file is `Validate your username` and the last one is `Validate your username again`, there is an internal fuzzy match.
 
-To include fuzzy (99% and less) internal matches, as well as perfect (101%) and 100% matches, in your Cost Estimate report and get a more comprehensive prediction of how many strings can be added to the TM if translated in sequence, select **Calculate Internal Fuzzy Matches**. Note that these calculations are approximate because the actual translation order may differ.
+To include fuzzy (99% and less) internal matches, as well as perfect (101%) and 100% matches, in your Cost Estimate report and get a more comprehensive prediction of how many strings can be added to the TM if translated in sequence, select **Calculate Internal Fuzzy Matches** in the **Advanced settings** section. Note that these calculations are approximate because the actual translation order may differ.
 
 If you clear **Calculate Internal Fuzzy Matches**, the Cost Estimate report will only show perfect (101%) and 100% internal matches (repetitions), and will not include any fuzzy matches.
 
@@ -190,7 +187,7 @@ When the report is generated, you will see the following amounts:
 * **Subtotals** - Cost estimate for each task:
   * **Translation** – Cost for strings requiring new or updated translations (no high–percentage match leverage).
   * **Proofreading** – Cost for reviewing translations.
-  * **TM Savings** – Savings from existing translations (in TM or within the project).
+  * **TM savings** – Savings from existing translations (in TM or within the project).
   * **Weighted Words / Strings / Characters / Characters with Spaces** – Final word count for cost calculations after applying TM/internal match discounts.
 * The main table with details on match categories and statuses.
 * The second table showing data for each folder or file included in the task.
@@ -212,7 +209,7 @@ Default parameters:
 - *Languages*: all languages
 - *Contributors*: all
 
-The **YOU** label appears next to your own username in the report table, making it easier to identify your personal contribution.
+The **You** label appears next to your own username in the report table, making it easier to identify your personal contribution.
 
 Re-sort the members by clicking on the needed parameter. For example, if you are a proofreader, you might want to know who approved most of the strings. For this, click on the *Approved* parameter to redo sorting.
 
@@ -221,8 +218,8 @@ Re-sort the members by clicking on the needed parameter. For example, if you are
 To generate a custom list of top members, follow these steps:
 
 <Steps>
-  1. Select the preferred report unit (words, strings, characters with or without spaces).
-  1. Select the time period for which you want to see the activity of contributors.
+  1. In the upper-right corner, select the preferred report unit (words, strings, characters with or without spaces).
+  1. In the **Date Range** field, select the time period for which you want to see the activity of contributors.
   1. To make a list of contributors for a specific language, select the language you need from the drop-down menu above the list. Alternatively, select **All languages**.
   1. Click **Generate**.
 </Steps>
@@ -235,18 +232,16 @@ The Top Members list includes the following columns:
 * *Name* &ndash; contributor's first name, last name and username.
 * *Languages* &ndash; project languages.
 * *Translated* &ndash; the number of translated source content units.
-* *Target* &ndash; the number of translated content units in a target language.
+* *Target Words / Characters / Characters with Spaces* &ndash; the number of translated content units in a target language.
 <br/> This parameter is not available for the *Strings* content unit because the number of source and translated strings is always the same.
 * *Approved* &ndash; the number of approved content units.
 * *Voted* &ndash; the number of votes a contributor made.
 * *"+" votes received* &ndash; the number of upvotes a contributor received for translations.
 * *"-" votes received* &ndash; the number of downvotes a contributor received for translations.
 * *Winning* &ndash; the number of source content units in the contributor's translations that were approved, counted once for each approver.
-* *Given access* &ndash; indicates when a member was granted access to a project.
+* *Joined* &ndash; the date a member joined a project.
 
 To customize the visibility of columns in the report, click <Icon name="material-symbols:table-chart" class="inline-icon" /> at the upper-right side of the table and select the preferred ones.
-
-<Image src={topMembers} alt="Top Members" />
 
 ## My Contribution
 
@@ -265,12 +260,13 @@ To generate the My Contribution report, follow these steps:
 <Steps>
   1. Select the preferred currency and the report unit (words, strings, characters without spaces, or characters with spaces).
   1. Set your [rates](#rates-my-contribution).
-  1. *(Optional)* Configure the [Advanced settings](#advanced-settings-my-contribution).
   1. Use the available filter parameters to specify the report data you're interested in.
   1. Click **Generate**.
 </Steps>
 
 <Image src={myContributionGenerating} alt="Generating My Contribution" />
+
+When setting up the report, you can also expand [Advanced settings](#advanced-settings-my-contribution) to adjust how the report is calculated. By default, the generated report is saved to the [Archive](#archive). To skip saving it, clear **Save to archive**.
 
 <Aside>
   Rates are automatically saved after you click **Generate**.
@@ -297,11 +293,11 @@ Click **Advanced settings** to expand a section with additional configuration op
 
 * **Use category-based proofread rates** (enabled by default): Treats each approval as an identical translation at the 100% match rate of its [Net Rate Scheme](#net-rate-schemes-my-contribution) category (TM, MT, AI, or Other). When disabled, all approvals use the flat **Proofread** base rate.
 * **Exclude approvals for edited translations** (enabled by default): Skips an approval when the same user already translated the string, so their work isn't counted twice. When disabled, both the translation and the approval are counted.
-* **Use Specific Categories for Auto-translations** (enabled by default): Assigns auto-translation matches to their source category (MT, AI) instead of the default **Other translations** category. Post-editing MT or AI output usually takes a different effort than editing human translations, so this measures cost more precisely.
+* **Use Specific Categories for Auto-Translations** (enabled by default): Assigns auto-translation matches to their source category (MT, AI) instead of the default **Other translations** category. Post-editing MT or AI output usually takes a different effort than editing human translations, so this measures cost more precisely.
 * **Use edit distance for TM Net Rate Scheme** (disabled by default): Categorizes TM matches by how much the suggestion was edited to reach the final translation instead of by source similarity, which better reflects post-editing effort. Enabling it removes the **101 (perfect)** match type and caps TM matches at **100**. Matches recorded before July 13, 2026, fall back to source similarity, but because the option removes the **101 (perfect)** match type, any perfect matches among them are also counted as **100**.
 
 <Aside>
-  The **Exclude approvals for edited translations** and **Use Specific Categories for Auto-translations** options will become selected by default and non-configurable starting from Jan 4, 2027.
+  The **Exclude approvals for edited translations** and **Use Specific Categories for Auto-Translations** options will become selected by default and non-configurable starting from Jan 4, 2027.
 </Aside>
 
 #### Net Rate Schemes {#net-rate-schemes-my-contribution}
@@ -486,11 +482,10 @@ To view the summary of the previously generated reports (i.e., archive records),
 
 <Steps>
   1. Open the project and go to **Reports > Archive**.
-  1. Click on the name of the needed archive record.
-  1. Once you open the archive report record, you can view all the needed data.
+  1. Double-click the needed report in the list. Alternatively, click <Icon name="mdi:dots-horizontal" class="inline-icon" /> on it and select **View**.
 </Steps>
 
-<Image src={archiveViewing} alt="Viewing Previously Generated Reports" />
+The record shows the same results as the generated report. To download it, click **Export** and select the file format. For Cost Estimate and My Contribution records, click **Rate Schema** to see the rates and settings the report was generated with.
 
 ### Exporting Previously Generated Reports
 
