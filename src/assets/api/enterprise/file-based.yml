@@ -30549,6 +30549,122 @@ components:
                 example: 4.1
             type: object
       type: object
+    EnterpriseAuditLogExportForm:
+      title: 'Audit Log Export'
+      properties:
+        format:
+          description: 'Format of the exported file. One of: `csv`, `json`. Default is `csv`'
+          type: string
+          default: csv
+          enum:
+            - csv
+            - json
+        createdAfter:
+          description: 'Filter results to records created at or after this date, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-11-01T00:00:00+00:00'
+        createdBefore:
+          description: 'Filter results to records created at or before this date, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-11-30T23:59:59+00:00'
+        userId:
+          description: "Filter results to actions of this user. Get via [List Users](#operation/api.users.getMany)\n\n__Note:__ Required for a member who is not an organization admin, and it must be their own ID"
+          type: integer
+          example: 7
+        projectId:
+          description: 'Filter results to actions in this project. Get via [List Projects](#operation/api.projects.getMany)'
+          type: integer
+          example: 12
+        group:
+          description: 'Filter results to actions of this group'
+          type: integer
+          example: 35
+        action:
+          description: 'Filter results to this action'
+          type: string
+          example: branch.create
+        source:
+          description: 'Filter results to actions made through this source. One of: `api`, `web`'
+          type: string
+          enum:
+            - api
+            - web
+      type: object
+    EnterpriseAuditLogExportResource:
+      description: 'Audit Log Export Resource'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/EnterpriseAuditLogExport'
+    EnterpriseAuditLogExport:
+      description: 'Audit Log Export'
+      properties:
+        identifier:
+          description: 'ID of the export, to be passed to the status and download operations'
+          type: string
+          example: 50fb3506-4127-4ba8-8296-f97dc7e3e0c3
+        status:
+          description: 'Export status. The file is ready only once it is `finished`'
+          type: string
+          enum:
+            - created
+            - in_progress
+            - canceled
+            - failed
+            - finished
+          example: finished
+        progress:
+          description: 'Share of the matching records already written, in percent. Capped at `99` while the file is being built, so `100` is reached only together with `status` `finished`'
+          type: integer
+          example: 100
+        attributes:
+          description: 'The export request as it was accepted'
+          properties:
+            format:
+              description: 'Format of the exported file'
+              type: string
+              enum:
+                - csv
+                - json
+              example: csv
+            filters:
+              description: 'The filters the export was requested with. Empty when the export covers every record'
+              type: object
+          type: object
+        createdAt:
+          description: 'Date the export was requested, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-01-23T11:26:54+00:00'
+        updatedAt:
+          description: 'Date the export last changed, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-01-23T11:27:10+00:00'
+        startedAt:
+          description: 'Date the export started building the file, in ISO 8601 format. `null` while the export is still queued'
+          type: string
+          format: date-time
+          example: '2026-01-23T11:26:56+00:00'
+          nullable: true
+        finishedAt:
+          description: 'Date the export reached a final status, in ISO 8601 format. `null` until then'
+          type: string
+          format: date-time
+          example: '2026-01-23T11:27:10+00:00'
+          nullable: true
+        eta:
+          description: 'Human-readable time the export has been running, measured to `finishedAt` once it is set and to the current time before that. `null` until the export starts'
+          type: string
+          example: '14 seconds'
+          nullable: true
+      type: object
     AutomationRulePatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
