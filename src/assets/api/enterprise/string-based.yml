@@ -3887,6 +3887,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '429':
+          description: 'Too many branch clones are already running'
+          headers:
+            Retry-After:
+              description: 'Suggested number of seconds to wait before retrying the request'
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
       x-doc-sections:
         - string-based
   '/projects/{projectId}/branches/{branchId}/clones/{cloneId}':
@@ -4204,6 +4215,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConflictExceptionResource'
+        '429':
+          description: 'Too many deletions are already running (when `Prefer: respond-async` is sent)'
+          headers:
+            Retry-After:
+              description: 'Suggested number of seconds to wait before retrying the request'
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
         '503':
           description: 'Service Unavailable'
           content:
@@ -4388,6 +4410,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+        '429':
+          description: 'Too many branch merges are already running'
+          headers:
+            Retry-After:
+              description: 'Suggested number of seconds to wait before retrying the request'
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
         '503':
           description: 'Service Unavailable'
           content:
@@ -4959,6 +4992,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
+        '429':
+          description: 'Too many bundle exports are already running'
+          headers:
+            Retry-After:
+              description: 'Suggested number of seconds to wait before retrying the request'
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
   '/projects/{projectId}/bundles/{bundleId}/exports/{exportId}':
     get:
       tags:
@@ -6770,6 +6814,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConflictExceptionResource'
+        '429':
+          description: 'Too many glossary exports are already running'
+          headers:
+            Retry-After:
+              description: 'Suggested number of seconds to wait before retrying the request'
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
   '/glossaries/{glossaryId}/exports/{exportId}':
     get:
       tags:
@@ -6914,6 +6969,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConflictExceptionResource'
+        '429':
+          description: 'Too many glossary imports are already running'
+          headers:
+            Retry-After:
+              description: 'Suggested number of seconds to wait before retrying the request'
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
   '/glossaries/{glossaryId}/imports/{importId}':
     get:
       tags:
@@ -14526,6 +14592,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
+        '429':
+          description: 'Too many string uploads are already running'
+          headers:
+            Retry-After:
+              description: 'Suggested number of seconds to wait before retrying the request'
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
         '500':
           description: 'Internal Server Error'
           content:
@@ -15033,6 +15110,180 @@ paths:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
       x-doc-sections:
         - string-based
+  '/projects/{projectId}/strings/replacements':
+    post:
+      tags:
+        - 'Source Strings'
+      summary: 'Replace Text in Source Strings'
+      description: "**Required scopes:** `project.source.string` (Read and Write).\n\nFinds a text in the project source strings and replaces it, as an [asynchronous operation](#section/Introduction/Asynchronous-Operations). Start with `dryRun` set to `true`, review the result via [Get String Replacement Summary](#operation/api.projects.strings.replacements.summary.get) and [List String Replacement Matches](#operation/api.projects.strings.replacements.matches.getMany), then run the replacement for real, optionally passing the chosen `stringIds`. Protected strings and strings of files that cannot be edited online are skipped and counted in the summary.\n\n__Note:__ Only one source string replacement that is not a dry run can run in a project at a time, and a replacement can match up to 10000 strings"
+      operationId: api.projects.strings.replacements.post
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StringReplacementCreateForm'
+      responses:
+        '202':
+          description: 'Replacement started'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringReplacementResource'
+        '400':
+          description: 'Invalid Request Body, the text matches more than 10000 strings, or the given directories or branches contain no files'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '409':
+          description: 'Another source string replacement is in progress in this project, including one started by another user. Dry runs neither block nor get blocked'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
+  '/projects/{projectId}/strings/replacements/{replacementId}':
+    get:
+      tags:
+        - 'Source Strings'
+      summary: 'Get String Replacement Status'
+      description: "**Required scopes:** `project.source.string` (Read only).\n\nReturns the status and progress of a source string replacement started via [Replace Text in Source Strings](#operation/api.projects.strings.replacements.post)."
+      operationId: api.projects.strings.replacements.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/StringReplacementId'
+      responses:
+        '200':
+          description: 'Replacement status'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringReplacementResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or replacement with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/strings/replacements/{replacementId}/matches':
+    get:
+      tags:
+        - 'Source Strings'
+      summary: 'List String Replacement Matches'
+      description: "**Required scopes:** `project.source.string` (Read only).\n\nReturns the strings of a source string replacement, sorted by string ID. For a dry run, lists the strings a real run would change, each with its current text and the text the replacement would produce from it. For a real run, lists the strings that were changed, each with its current text. Skipped strings are not listed, and neither are strings deleted since the replacement, so a page can hold fewer items than `limit`.\n\n__Note:__ Matches are available as long as the replacement exists"
+      operationId: api.projects.strings.replacements.matches.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/StringReplacementId'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Replacement matches list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringReplacementMatchCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or replacement with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/strings/replacements/{replacementId}/summary':
+    get:
+      tags:
+        - 'Source Strings'
+      summary: 'Get String Replacement Summary'
+      description: "**Required scopes:** `project.source.string` (Read only).\n\nReturns the counters of a source string replacement: how many strings matched, how many were changed and how many were skipped, and why. Every matched string is either changed or skipped.\n\n__Note:__ The counters are final once the replacement status is `finished`"
+      operationId: api.projects.strings.replacements.summary.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/StringReplacementId'
+      responses:
+        '200':
+          description: 'Replacement summary'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringReplacementSummaryResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or replacement with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
   '/projects/{projectId}/approvals':
     get:
       tags:
@@ -19675,6 +19926,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConflictExceptionResource'
+        '429':
+          description: 'Too many TM exports are already running'
+          headers:
+            Retry-After:
+              description: 'Suggested number of seconds to wait before retrying the request'
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
   '/tms/{tmId}/exports/{exportId}':
     get:
       tags:
@@ -19888,6 +20150,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConflictExceptionResource'
+        '429':
+          description: 'Too many TM imports are already running'
+          headers:
+            Retry-After:
+              description: 'Suggested number of seconds to wait before retrying the request'
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
   '/tms/{tmId}/imports/{importId}':
     get:
       tags:
@@ -20389,7 +20662,7 @@ paths:
       tags:
         - Translations
       summary: 'Import Translations'
-      description: '**Required scopes:** `project.translation` (Read and Write).'
+      description: "**Required scopes:** `project.translation` (Read and Write).\n\nStarts an [asynchronous operation](#section/Introduction/Asynchronous-Operations) that imports translations from a file uploaded to storage, and returns its `identifier`. Poll [Import Translations Status](#operation/api.projects.translations.enterprise.imports.get) for its `status`.\n\n__Note:__ Up to 10 imports can run at once in a project, and up to 20 across all projects of the organization. A request over the limit returns `429`; wait at least the number of seconds in the `Retry-After` header before retrying."
       operationId: api.projects.translations.enterprise.imports
       parameters:
         -
@@ -20450,6 +20723,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnprocessableEntityExceptionResource'
+        '429':
+          description: 'Too many translation imports are already running in the project or the organization'
+          headers:
+            Retry-After:
+              description: 'Suggested number of seconds to wait before retrying the request'
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
         '500':
           description: 'Internal Server Error'
           content:
@@ -20564,6 +20848,347 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalServerErrorExceptionResource'
+  '/projects/{projectId}/translations/replacements':
+    post:
+      tags:
+        - Translations
+      summary: 'Replace Text in Translations'
+      description: "**Required scopes:** `project.translation` (Read and Write).\n\nFinds a text in the project translations and replaces it, as an [asynchronous operation](#section/Introduction/Asynchronous-Operations). Start with `dryRun` set to `true`, review the result via [Get Translation Replacement Summary](#operation/api.projects.translations.replacements.summary.get) and [List Translation Replacement Matches](#operation/api.projects.translations.replacements.matches.getMany), then run the replacement for real, optionally passing the chosen `translationIds`. A finished replacement can be undone via [Revert Translation Replacement](#operation/api.projects.translations.replacements.reverts.post). In the languages you proofread, any translation is replaced, approved ones included. In the languages you only translate, only your own translations without approvals are replaced. Translations of protected strings are skipped and counted in the summary.\n\n__Note:__ Only one translation replacement that is not a dry run, or one revert, can run in a project at a time, and a replacement can match up to 10000 translations"
+      operationId: api.projects.translations.replacements.post
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslationReplacementCreateForm'
+      responses:
+        '202':
+          description: 'Replacement started'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationReplacementResource'
+        '400':
+          description: 'Invalid Request Body, the text matches more than 10000 translations, or the given directories or branches contain no files'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: 'Forbidden, or you cannot translate in one of the given languages'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '409':
+          description: 'Another translation replacement or revert is in progress in this project, including one started by another user. Dry runs neither block nor get blocked'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
+  '/projects/{projectId}/translations/replacements/{replacementId}':
+    get:
+      tags:
+        - Translations
+      summary: 'Get Translation Replacement Status'
+      description: "**Required scopes:** `project.translation` (Read only).\n\nReturns the status and progress of a translation replacement started via [Replace Text in Translations](#operation/api.projects.translations.replacements.post). Only the user who started the replacement can get it."
+      operationId: api.projects.translations.replacements.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/TranslationReplacementId'
+      responses:
+        '200':
+          description: 'Replacement status'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationReplacementResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or replacement with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/translations/replacements/{replacementId}/matches':
+    get:
+      tags:
+        - Translations
+      summary: 'List Translation Replacement Matches'
+      description: "**Required scopes:** `project.translation` (Read only).\n\nReturns the translations of a translation replacement, sorted by translation ID. For a dry run, lists the translations a real run would change, each with its current text and the text the replacement would produce from it. For a real run, lists the translations that were changed, each with its text before the replacement and its current text. Skipped translations are not listed, and neither are translations deleted since the replacement, so a page can hold fewer items than `limit`.\n\n__Note:__ Matches are available as long as the replacement exists"
+      operationId: api.projects.translations.replacements.matches.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/TranslationReplacementId'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Replacement matches list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationReplacementMatchCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or replacement with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/translations/replacements/{replacementId}/reverts':
+    get:
+      tags:
+        - Translations
+      summary: 'List Translation Replacement Reverts'
+      description: "**Required scopes:** `project.translation` (Read only).\n\nReturns the reverts of a translation replacement, oldest first. A revert that failed or was canceled can be started again, so the list holds every attempt. Only the user who started the replacement can list its reverts."
+      operationId: api.projects.translations.replacements.reverts.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/TranslationReplacementId'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Replacement reverts list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationReplacementRevertCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or replacement with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    post:
+      tags:
+        - Translations
+      summary: 'Revert Translation Replacement'
+      description: "**Required scopes:** `project.translation` (Read and Write).\n\nRestores the translations a finished replacement changed to their text before the replacement, as an [asynchronous operation](#section/Introduction/Asynchronous-Operations). Exactly the translations the replacement changed are restored. Translations changed or deleted after the replacement, for example by an undo, are left as they are and counted as skipped in [Get Translation Replacement Revert Summary](#operation/api.projects.translations.replacements.reverts.summary.get). The request body can be omitted or empty.\n\n__Note:__ A replacement can be reverted within 7 days after it finished. A revert that failed or was canceled can be started again"
+      operationId: api.projects.translations.replacements.reverts.post
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/TranslationReplacementId'
+      responses:
+        '202':
+          description: 'Revert started'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationReplacementRevertResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: 'Forbidden, or you cannot restore one of the changed translations'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or replacement with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '409':
+          description: 'The replacement is not finished, is a dry run, changed nothing, finished more than 7 days ago, was already reverted or its revert is still running, or another translation replacement or revert is in progress in this project, including one started by another user'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
+  '/projects/{projectId}/translations/replacements/{replacementId}/reverts/{revertId}':
+    get:
+      tags:
+        - Translations
+      summary: 'Get Translation Replacement Revert Status'
+      description: "**Required scopes:** `project.translation` (Read only).\n\nReturns the status and progress of a translation replacement revert started via [Revert Translation Replacement](#operation/api.projects.translations.replacements.reverts.post). The counters of the revert are returned by [Get Translation Replacement Revert Summary](#operation/api.projects.translations.replacements.reverts.summary.get)."
+      operationId: api.projects.translations.replacements.reverts.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/TranslationReplacementId'
+        -
+          $ref: '#/components/parameters/TranslationReplacementRevertId'
+      responses:
+        '200':
+          description: 'Revert status'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationReplacementRevertResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project, replacement or revert with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/translations/replacements/{replacementId}/reverts/{revertId}/summary':
+    get:
+      tags:
+        - Translations
+      summary: 'Get Translation Replacement Revert Summary'
+      description: "**Required scopes:** `project.translation` (Read only).\n\nReturns the counters of a translation replacement revert: how many translations were restored and how many were left as they are. Every translation the replacement changed is either restored or skipped.\n\n__Note:__ The counters are final once the revert status is `finished`"
+      operationId: api.projects.translations.replacements.reverts.summary.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/TranslationReplacementId'
+        -
+          $ref: '#/components/parameters/TranslationReplacementRevertId'
+      responses:
+        '200':
+          description: 'Revert summary'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationReplacementRevertSummaryResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project, replacement or revert with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/projects/{projectId}/translations/replacements/{replacementId}/summary':
+    get:
+      tags:
+        - Translations
+      summary: 'Get Translation Replacement Summary'
+      description: "**Required scopes:** `project.translation` (Read only).\n\nReturns the counters of a translation replacement: how many translations matched, how many were changed and how many were skipped, and why. Every matched translation is either changed or skipped.\n\n__Note:__ The counters are final once the replacement status is `finished`"
+      operationId: api.projects.translations.replacements.summary.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+        -
+          $ref: '#/components/parameters/TranslationReplacementId'
+      responses:
+        '200':
+          description: 'Replacement summary'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationReplacementSummaryResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project or replacement with specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
   '/projects/{projectId}/members':
     get:
       tags:
@@ -46513,33 +47138,48 @@ components:
       title: Revision
       properties:
         id:
+          description: 'Number of the revision within the file, starting at `1`'
           type: integer
           example: 2
         projectId:
+          description: 'ID of the project. Get via [List Projects](#operation/api.projects.getMany)'
           type: integer
           example: 2
         fileId:
+          description: 'ID of the file. Get via [List Files](#operation/api.projects.files.getMany)'
           type: integer
           example: 248
         restoreToRevision:
+          description: 'Number of the revision whose content this revision restored. `null` when the revision was not created by a revert'
           type: integer
           example: null
           nullable: true
-        date:
-          type: string
-          format: date-time
-          example: '2019-09-20T09:08:16+00:00'
-      type: object
-    revision-info:
-      title: 'Revision Info'
-      properties:
-        strings:
-          type: integer
-          example: 17
-        words:
-          type: integer
-          example: 43
+        user:
+          description: 'User who created the revision. All fields are `null` when the author is unknown, as for some older revisions'
+          properties:
+            id:
+              description: 'ID of the user'
+              type: integer
+              example: 12
+              nullable: true
+            username:
+              description: 'Username of the user'
+              type: string
+              example: john_smith
+              nullable: true
+            fullName:
+              description: 'Full name of the user, or the username when the full name is not set'
+              type: string
+              example: 'John Smith'
+              nullable: true
+            avatarUrl:
+              description: 'URL of the user avatar'
+              type: string
+              example: 'https://crowdin-static.downloads.crowdin.com/avatar/13240049/medium/5cf4d2e1b0b9b6b7e8e1a2b9f7c0d0c1.png'
+              nullable: true
+          type: object
         info:
+          description: 'Strings and words the revision added, deleted and updated compared with the previous revision'
           properties:
             added:
               $ref: '#/components/schemas/revision-info'
@@ -46548,6 +47188,23 @@ components:
             updated:
               $ref: '#/components/schemas/revision-info'
           type: object
+        date:
+          description: 'Date the revision was created, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2019-09-20T09:08:16+00:00'
+      type: object
+    revision-info:
+      title: 'Revision Info'
+      properties:
+        strings:
+          description: 'Number of strings'
+          type: integer
+          example: 17
+        words:
+          description: 'Number of words'
+          type: integer
+          example: 43
       type: object
     ScreenshotPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
@@ -48791,6 +49448,261 @@ components:
                   type: string
                   example: 'Asset context'
               type: object
+    StringReplacementCreateForm:
+      required:
+        - text
+        - replaceWith
+      properties:
+        text:
+          description: "Text to find in the source strings, 1 to 128 characters. Matched literally, without regular expressions\n\n__Note:__ In plural strings, only the main form is searched. On a match, file-based projects get the text replaced in every form, string-based projects in the main form only"
+          type: string
+          maxLength: 128
+          minLength: 1
+          example: Workspace
+        replaceWith:
+          description: 'Text that replaces every match, up to 10000 characters. Inserted literally: `$1` or `\0` stay as typed. An empty string removes the matches'
+          type: string
+          maxLength: 10000
+          example: Space
+        matchMode:
+          description: 'How `text` is matched. One of: `phrase` finds the whole phrase anywhere in a string, `allWords` finds strings that contain every word of `text` and replaces each of these words, `entireText` finds strings whose whole text equals `text`. Default is `phrase`'
+          type: string
+          default: phrase
+          enum:
+            - phrase
+            - allWords
+            - entireText
+          example: phrase
+        caseSensitive:
+          description: 'If `true`, the letter case of `text` must match. Default is `false`'
+          type: boolean
+          default: false
+          example: false
+        branchIds:
+          description: 'Limit the replacement to the strings of the given branches. Get via [List Branches](#operation/api.projects.branches.getMany). All project branches by default'
+          type: array
+          items:
+            type: integer
+          example:
+            - 6
+          x-doc-sections:
+            - string-based
+        stringIds:
+          description: 'Limit the replacement to the given strings, for example to the matches of a dry run that should really be replaced. Get via [List String Replacement Matches](#operation/api.projects.strings.replacements.matches.getMany). Up to 10000 IDs'
+          type: array
+          items:
+            type: integer
+          maxItems: 10000
+          example:
+            - 42
+            - 57
+        updateOption:
+          description: 'What happens to the translations of the changed strings. One of: `keep_translations_and_approvals`, `keep_translations` (approvals are removed), `clear_translations_and_approvals`. Default is `keep_translations_and_approvals`'
+          type: string
+          default: keep_translations_and_approvals
+          enum:
+            - keep_translations_and_approvals
+            - keep_translations
+            - clear_translations_and_approvals
+          example: keep_translations_and_approvals
+        dryRun:
+          description: 'If `true`, the matches are found and listed, but no string is changed. Default is `false`'
+          type: boolean
+          default: false
+          example: true
+      type: object
+    StringReplacementMatchCollectionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/StringReplacementMatchResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    StringReplacementMatchResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/StringReplacementMatch'
+    StringReplacementResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/StringReplacement'
+    StringReplacementSummaryResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/StringReplacementSummary'
+    StringReplacementMatch:
+      title: 'String Replacement Match'
+      properties:
+        stringId:
+          description: 'ID of the matched source string. Pass it in `stringIds` to replace only the chosen matches'
+          type: integer
+          example: 42
+        text:
+          description: 'Current text of the string, for a dry run. `null` for a real run, because the text before the replacement is not stored'
+          type: string
+          example: 'Welcome to Workspace'
+          nullable: true
+        replacedText:
+          description: 'For a dry run, the text the replacement would produce from the current text. For a real run, the current text of the string'
+          type: string
+          example: 'Welcome to Space'
+      type: object
+    StringReplacement:
+      title: 'String Replacement'
+      properties:
+        identifier:
+          description: 'ID of the replacement'
+          type: string
+          example: 50fb3506-4127-4ba8-8296-f97dc7e3e0c3
+        status:
+          description: 'Replacement status. One of: `created`, `in_progress`, `failed`, `finished`'
+          type: string
+          enum:
+            - created
+            - in_progress
+            - failed
+            - finished
+          example: finished
+        progress:
+          description: 'Replacement progress in percent'
+          type: integer
+          example: 100
+        attributes:
+          description: 'Parameters the replacement was started with'
+          properties:
+            text:
+              description: 'Text to find'
+              type: string
+              example: Workspace
+            replaceWith:
+              description: 'Text that replaces every match'
+              type: string
+              example: Space
+            matchMode:
+              description: 'How the text is matched. One of: `phrase`, `allWords`, `entireText`'
+              type: string
+              enum:
+                - phrase
+                - allWords
+                - entireText
+              example: phrase
+            caseSensitive:
+              description: 'If `true`, the letter case must match'
+              type: boolean
+              example: false
+            branchIds:
+              description: 'Branches the replacement is limited to. Empty for all project branches'
+              type: array
+              items:
+                type: integer
+              example:
+                - 6
+              x-doc-sections:
+                - string-based
+            stringIds:
+              description: 'Strings the replacement is limited to. Empty for all matching strings'
+              type: array
+              items:
+                type: integer
+              example:
+                - 42
+                - 57
+            updateOption:
+              description: 'What happens to the translations of the changed strings. One of: `keep_translations_and_approvals`, `keep_translations`, `clear_translations_and_approvals`'
+              type: string
+              enum:
+                - keep_translations_and_approvals
+                - keep_translations
+                - clear_translations_and_approvals
+              example: keep_translations_and_approvals
+            dryRun:
+              description: 'If `true`, no string is changed'
+              type: boolean
+              example: true
+          type: object
+        createdAt:
+          description: 'Date the replacement was requested, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-23T11:26:54+00:00'
+        updatedAt:
+          description: 'Date the replacement status or progress last changed, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-23T11:26:58+00:00'
+        startedAt:
+          description: 'Date the replacement started, in ISO 8601 format. `null` while it waits in the queue'
+          type: string
+          format: date-time
+          example: '2026-09-23T11:26:55+00:00'
+          nullable: true
+        finishedAt:
+          description: 'Date the replacement finished, in ISO 8601 format. `null` until it finishes'
+          type: string
+          format: date-time
+          example: '2026-09-23T11:26:58+00:00'
+          nullable: true
+      type: object
+    StringReplacementSummary:
+      title: 'String Replacement Summary'
+      properties:
+        dryRun:
+          description: 'If `true`, the replacement only found the matches and changed nothing'
+          type: boolean
+          example: false
+        status:
+          description: 'Replacement status. One of: `created`, `in_progress`, `failed`, `finished`. The counters are final once the status is `finished`'
+          type: string
+          enum:
+            - created
+            - in_progress
+            - failed
+            - finished
+          example: finished
+        details:
+          description: 'Counters of the replacement. Every matched string is either replaced or counted in one of the `skipped` counters. In a dry run, nothing is replaced, and the matched strings that are not skipped are the ones a real run would change'
+          properties:
+            matched:
+              description: 'Number of strings found by the search. A string whose text the replacement would leave unchanged is not counted'
+              type: integer
+              example: 122
+            replaced:
+              description: 'Number of strings changed, listed by [List String Replacement Matches](#operation/api.projects.strings.replacements.matches.getMany). Always `0` for a dry run'
+              type: integer
+              example: 118
+            skippedProtected:
+              description: 'Number of strings skipped because their branch is protected. Only branches of string-based projects can be protected, so it is always `0` in file-based projects'
+              type: integer
+              example: 3
+            skippedUnsupported:
+              description: 'Number of strings skipped because their file cannot be edited online, for example a file with segmentation or SRX rules, or because their file could not be updated'
+              type: integer
+              example: 1
+          type: object
+      type: object
     ApprovalMassPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -54763,6 +55675,419 @@ components:
           x-doc-sections:
             - string-based
       type: object
+    TranslationReplacementCreateForm:
+      required:
+        - text
+        - replaceWith
+        - languageIds
+      properties:
+        text:
+          description: 'Text to find in the translations, 1 to 128 characters. Matched literally, without regular expressions'
+          type: string
+          maxLength: 128
+          minLength: 1
+          example: 'Робочий простір'
+        replaceWith:
+          description: 'Text that replaces every match, up to 10000 characters. Inserted literally: `$1` or `\0` stay as typed. A translation that would become empty is skipped'
+          type: string
+          maxLength: 10000
+          example: Простір
+        matchMode:
+          description: 'How `text` is matched. One of: `phrase` finds the whole phrase anywhere in a translation, `allWords` finds translations that contain every word of `text` and replaces each of these words, `entireText` finds translations whose whole text equals `text`. Default is `phrase`'
+          type: string
+          default: phrase
+          enum:
+            - phrase
+            - allWords
+            - entireText
+          example: phrase
+        caseSensitive:
+          description: 'If `true`, the letter case of `text` must match. Default is `false`'
+          type: boolean
+          default: false
+          example: false
+        languageIds:
+          description: 'Target languages to replace the translations in. Get via [Project Target Languages](#operation/api.projects.get)'
+          type: array
+          items:
+            type: string
+          example:
+            - uk
+            - de
+        branchIds:
+          description: 'Limit the replacement to the translations of the strings in the given branches. Get via [List Branches](#operation/api.projects.branches.getMany). All project branches by default'
+          type: array
+          items:
+            type: integer
+          example:
+            - 6
+          x-doc-sections:
+            - string-based
+        taskId:
+          description: 'Limit the replacement to the strings of the given task. Get via [List Tasks](#operation/api.projects.tasks.getMany)'
+          type: integer
+          example: 7
+          nullable: true
+        labelIds:
+          description: 'Limit the replacement to the translations of the strings with the given labels, matched as `labelMatchRule` sets. Get via [List Labels](#operation/api.projects.labels.getMany)'
+          type: array
+          items:
+            type: integer
+          example:
+            - 3
+        labelMatchRule:
+          description: "How a string is matched against `labelIds`. One of: `all` — the string carries every one of the labels, `any` — at least one of them. Default is `all`\n\n__Note:__ Must be used together with `labelIds`"
+          type: string
+          default: all
+          enum:
+            - all
+            - any
+          example: any
+        translationIds:
+          description: 'Limit the replacement to the given translations, for example to the matches of a dry run that should really be replaced. Get via [List Translation Replacement Matches](#operation/api.projects.translations.replacements.matches.getMany) or [List Language Translations](#operation/api.projects.languages.translations.getMany). Up to 10000 IDs'
+          type: array
+          items:
+            type: integer
+          maxItems: 10000
+          example:
+            - 921
+            - 922
+        dryRun:
+          description: 'If `true`, the matches are found and listed, but no translation is changed. Default is `false`'
+          type: boolean
+          default: false
+          example: true
+      type: object
+    TranslationReplacementMatchCollectionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/TranslationReplacementMatchResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    TranslationReplacementMatchResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/TranslationReplacementMatch'
+    TranslationReplacementResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/TranslationReplacement'
+    TranslationReplacementRevertCollectionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/TranslationReplacementRevertResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    TranslationReplacementRevertResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/TranslationReplacementRevert'
+    TranslationReplacementRevertSummaryResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/TranslationReplacementRevertSummary'
+    TranslationReplacementSummaryResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/TranslationReplacementSummary'
+    TranslationReplacementMatch:
+      title: 'Translation Replacement Match'
+      properties:
+        translationId:
+          description: 'ID of the matched translation. Pass it in `translationIds` to replace only the chosen matches'
+          type: integer
+          example: 921
+        stringId:
+          description: 'ID of the source string the translation belongs to'
+          type: integer
+          example: 42
+        languageId:
+          description: 'ID of the target language of the translation'
+          type: string
+          example: uk
+        text:
+          description: 'For a dry run, the current text of the translation. For a real run, the text before the replacement, or `null` once the replacement is reverted'
+          type: string
+          example: 'Ласкаво просимо до Робочого простору'
+          nullable: true
+        replacedText:
+          description: 'For a dry run, the text the replacement would produce from the current text. For a real run, the current text of the translation'
+          type: string
+          example: 'Ласкаво просимо до Простору'
+      type: object
+    TranslationReplacement:
+      title: 'Translation Replacement'
+      properties:
+        identifier:
+          description: 'ID of the replacement'
+          type: string
+          example: 6c1e5d0a-2b47-4f06-9d0e-3c8d1f6b2a11
+        status:
+          description: 'Replacement status. One of: `created`, `in_progress`, `failed`, `finished`'
+          type: string
+          enum:
+            - created
+            - in_progress
+            - failed
+            - finished
+          example: finished
+        progress:
+          description: 'Replacement progress in percent'
+          type: integer
+          example: 100
+        attributes:
+          description: 'Parameters the replacement was started with'
+          properties:
+            text:
+              description: 'Text to find'
+              type: string
+              example: 'Робочий простір'
+            replaceWith:
+              description: 'Text that replaces every match'
+              type: string
+              example: Простір
+            matchMode:
+              description: 'How the text is matched. One of: `phrase`, `allWords`, `entireText`'
+              type: string
+              enum:
+                - phrase
+                - allWords
+                - entireText
+              example: phrase
+            caseSensitive:
+              description: 'If `true`, the letter case must match'
+              type: boolean
+              example: false
+            languageIds:
+              description: 'Target languages of the replacement'
+              type: array
+              items:
+                type: string
+              example:
+                - uk
+            branchIds:
+              description: 'Branches the replacement is limited to. Empty for all project branches'
+              type: array
+              items:
+                type: integer
+              example:
+                - 6
+              x-doc-sections:
+                - string-based
+            taskId:
+              description: 'Task the replacement is limited to. `null` when not limited to a task'
+              type: integer
+              example: null
+              nullable: true
+            labelIds:
+              description: 'Labels the replacement is limited to. Empty when not limited by labels'
+              type: array
+              items:
+                type: integer
+              example:
+                - 3
+            labelMatchRule:
+              description: 'How a string is matched against `labelIds`. One of: `all`, `any`'
+              type: string
+              enum:
+                - all
+                - any
+              example: all
+            translationIds:
+              description: 'Translations the replacement is limited to. Empty for all matching translations'
+              type: array
+              items:
+                type: integer
+              example:
+                - 921
+            dryRun:
+              description: 'If `true`, no translation is changed'
+              type: boolean
+              example: false
+          type: object
+        createdAt:
+          description: 'Date the replacement was requested, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-23T11:26:54+00:00'
+        updatedAt:
+          description: 'Date the replacement status or progress last changed, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-23T11:26:58+00:00'
+        startedAt:
+          description: 'Date the replacement started, in ISO 8601 format. `null` while it waits in the queue'
+          type: string
+          format: date-time
+          example: '2026-09-23T11:26:55+00:00'
+          nullable: true
+        finishedAt:
+          description: 'Date the replacement finished, in ISO 8601 format. `null` until it finishes'
+          type: string
+          format: date-time
+          example: '2026-09-23T11:26:58+00:00'
+          nullable: true
+      type: object
+    TranslationReplacementRevert:
+      title: 'Translation Replacement Revert'
+      properties:
+        identifier:
+          description: 'ID of the revert'
+          type: string
+          example: 0f3b8f14-9c1a-4b1e-8e3a-5d2f7c9a6b40
+        status:
+          description: 'Revert status. One of: `created`, `in_progress`, `failed`, `finished`'
+          type: string
+          enum:
+            - created
+            - in_progress
+            - failed
+            - finished
+          example: finished
+        progress:
+          description: 'Revert progress in percent'
+          type: integer
+          example: 100
+        attributes:
+          description: 'Parameters the revert was started with'
+          properties:
+            replacementId:
+              description: 'ID of the reverted replacement'
+              type: string
+              example: 6c1e5d0a-2b47-4f06-9d0e-3c8d1f6b2a11
+          type: object
+        createdAt:
+          description: 'Date the revert was requested, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-23T12:00:00+00:00'
+        updatedAt:
+          description: 'Date the revert status or progress last changed, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-23T12:00:04+00:00'
+        startedAt:
+          description: 'Date the revert started, in ISO 8601 format. `null` while it waits in the queue'
+          type: string
+          format: date-time
+          example: '2026-09-23T12:00:01+00:00'
+          nullable: true
+        finishedAt:
+          description: 'Date the revert finished, in ISO 8601 format. `null` until it finishes'
+          type: string
+          format: date-time
+          example: '2026-09-23T12:00:04+00:00'
+          nullable: true
+      type: object
+    TranslationReplacementRevertSummary:
+      title: 'Translation Replacement Revert Summary'
+      properties:
+        status:
+          description: 'Revert status. One of: `created`, `in_progress`, `failed`, `finished`. The counters are final once the status is `finished`'
+          type: string
+          enum:
+            - created
+            - in_progress
+            - failed
+            - finished
+          example: finished
+        details:
+          description: 'Counters of the revert. Every translation the replacement changed is either reverted or skipped, so once the revert finishes, `reverted` plus `skipped` equals `replaced` of [Get Translation Replacement Summary](#operation/api.projects.translations.replacements.summary.get)'
+          properties:
+            reverted:
+              description: 'Number of translations restored to their text before the replacement'
+              type: integer
+              example: 112
+            skipped:
+              description: 'Number of translations left as they are because they were changed or deleted after the replacement, for example by an undo'
+              type: integer
+              example: 4
+          type: object
+      type: object
+    TranslationReplacementSummary:
+      title: 'Translation Replacement Summary'
+      properties:
+        dryRun:
+          description: 'If `true`, the replacement only found the matches and changed nothing'
+          type: boolean
+          example: false
+        status:
+          description: 'Replacement status. One of: `created`, `in_progress`, `failed`, `finished`. The counters are final once the status is `finished`'
+          type: string
+          enum:
+            - created
+            - in_progress
+            - failed
+            - finished
+          example: finished
+        details:
+          description: 'Counters of the replacement. Every matched translation is either replaced or counted in one of the `skipped` counters. In a dry run, nothing is replaced, and the matched translations that are not skipped are the ones a real run would change'
+          properties:
+            matched:
+              description: 'Number of translations found by the search. A translation whose text the replacement would leave unchanged is not counted'
+              type: integer
+              example: 122
+            replaced:
+              description: 'Number of translations changed, listed by [List Translation Replacement Matches](#operation/api.projects.translations.replacements.matches.getMany). Always `0` for a dry run'
+              type: integer
+              example: 116
+            skippedProtected:
+              description: 'Number of translations skipped because the branch of their string is protected. Only branches of string-based projects can be protected, so it is always `0` in file-based projects'
+              type: integer
+              example: 3
+            skippedEmpty:
+              description: 'Number of translations skipped because the replacement would leave them empty'
+              type: integer
+              example: 1
+            skippedQaIssues:
+              description: 'Number of translations skipped because their new text failed a QA check that blocks saving. Always `0` for a dry run, which runs no QA checks'
+              type: integer
+              example: 2
+          type: object
+      type: object
     userPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -57823,6 +59148,14 @@ components:
           - ai
           - outdated
         example: 'variables,tags'
+    StringReplacementId:
+      name: replacementId
+      in: path
+      description: 'ID of the source string replacement. Get via [Replace Text in Source Strings](#operation/api.projects.strings.replacements.post)'
+      required: true
+      schema:
+        type: string
+      example: 50fb3506-4127-4ba8-8296-f97dc7e3e0c3
     TaskStatisticStatus:
       name: status
       in: query
@@ -57836,6 +59169,22 @@ components:
           - 3
           - 4
           - 5
+    TranslationReplacementId:
+      name: replacementId
+      in: path
+      description: 'ID of the translation replacement. Get via [Replace Text in Translations](#operation/api.projects.translations.replacements.post)'
+      required: true
+      schema:
+        type: string
+      example: 6c1e5d0a-2b47-4f06-9d0e-3c8d1f6b2a11
+    TranslationReplacementRevertId:
+      name: revertId
+      in: path
+      description: 'ID of the translation replacement revert. Get via [List Translation Replacement Reverts](#operation/api.projects.translations.replacements.reverts.getMany)'
+      required: true
+      schema:
+        type: string
+      example: 0f3b8f14-9c1a-4b1e-8e3a-5d2f7c9a6b40
     WebhookDeliveryId:
       name: deliveryId
       in: path
