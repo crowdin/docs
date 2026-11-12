@@ -7,6 +7,7 @@ sidebar:
 ---
 
 import { Steps, CardGrid, LinkCard, Card, Aside } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
 import { Image } from 'astro:assets';
 import usageStats from '!/enterprise/billing/usage_statistics.png';
 import balanceManagement from '!/enterprise/billing/balance_management.png';
@@ -29,13 +30,14 @@ Crowdin can manage the following paid services without the need to register sepa
 
 ## Using Crowdin Credits
 
-Crowdin Credits simplifies the use of paid tools like AI models by handling payments through a dedicated balance within your Crowdin account. This centralizes balance management and provides a clear overview of your spending.
+Crowdin Credits simplifies the use of paid tools like AI models and apps by handling payments through a dedicated balance within your Crowdin account. This centralizes balance management and provides a clear overview of your spending.
 
 In the **Crowdin Credits** section, you can:
 
 - **Manage Balance**: Add funds to your dedicated balance for the paid services you use.
 - **Set Balance Warnings**: Receive notifications when your balance is low.
 - **Track Usage**: View spending with detailed usage statistics.
+- **Control App Spending**: Set limits on how much apps can charge to your balance and review their transactions.
 
 To start using Crowdin Credits, [add funds to your account balance](#adding-funds-to-account-balance) and activate the **managed by Crowdin** option for the services you want to use in your projects.
 
@@ -77,7 +79,7 @@ To set up low-balance notifications, follow these steps:
 
 The **Usage Statistics** section provides a comprehensive visual analysis of your usage costs through an interactive graph, allowing you to review detailed statistics and track spending on each service based on your selected time period. In addition to the graph, the **Used during the selected time period** field shows the total amount spent during the chosen period.
 
-The graph displays usage costs for each service from the [available categories](#available-services). Hover over any bar to see a breakdown of the expenses per service for that day, month, or year.
+The graph displays usage costs for each service from the [available categories](#available-services). Charges made by apps appear as separate segments of each bar, one for each app, labeled **App:** followed by the app name, and count toward the total. Hover over any bar to see a breakdown of the expenses per service for that day, month, or year.
 
 Depending on the selected date range, each stacked bar represents:
 
@@ -88,6 +90,76 @@ Depending on the selected date range, each stacked bar represents:
 You can also focus on specific services by hovering over the service titles under the graph. To hide certain services from the graph, click on their names.
 
 <Image src={usageStats} alt="Usage Statistics" />
+
+## App Spending Limits
+
+Some apps charge Crowdin Credits for their paid actions. To limit how much they charge, go to **Organization Settings > Billing**, click **Crowdin Credits**, and use the **Application spending limits** section. You can set limits organization-wide, as a per-user baseline, and for specific users. When a limit is reached, app charges are declined until the period resets.
+
+For each limit, you can set a **Daily** amount, a **Monthly** amount, or both. Leaving a field empty means no limit for that period. An organization-wide limit of $0 stops all app charges, and a default per-user limit of $0 stops them for members without custom limits. By default, organization-wide limits are $0, so apps can't charge until you set them. A daily limit can't be higher than the monthly limit. Daily limits reset every day at 00:00 UTC. Monthly limits reset on the 1st of each month at 00:00 UTC.
+
+### Organization-Wide Limits
+
+The maximum all apps together can charge across your entire organization. When a limit is reached, app charges are declined for all users until the period resets. Below each field, you can see how much apps have charged in the current period.
+
+### Default Per-User Limits
+
+Applied to every organization member who doesn't have custom limits. When a member reaches a limit, app charges for their actions are declined until the period resets.
+
+Default per-user limits can't be higher than the organization-wide limits.
+
+### Per-User Limits
+
+Give specific organization members custom limits that replace the default per-user limits, or block app spending for them.
+
+In the **Per-user limits** section, you can view every organization member with the following details:
+
+* **User**: The organization member the limits apply to.
+* **Daily limit**: The daily limit that applies to the user.
+* **Monthly limit**: The monthly limit that applies to the user.
+* **Daily usage**: How much apps have charged today for the user's actions.
+* **Monthly usage**: How much apps have charged this month for the user's actions.
+
+Use the **Search** field to quickly find specific users. To narrow down the list, click the **Filter** button and use the **Limits** filter:
+
+* **Custom**: Users with custom limits.
+* **Inherited**: Users who follow the default per-user limits.
+* **No per-user limit**: Users set to use apps without a personal limit.
+* **App spending blocked**: Users blocked from app spending.
+
+You can also choose which columns are displayed. Click the column selector icon <Icon name="material-symbols:table-chart" class="inline-icon" /> and select the columns to show or hide, or use **All selected** to show or hide all columns at once. The **User** column is always visible.
+
+To download the list as a CSV file, click **Export** and select **Export** for all users or **Export Filtered** for the users who match your current search and filter.
+
+To set custom limits for one or more users, follow these steps:
+
+<Steps>
+  1. Click <Icon name="mdi:plus" class="inline-icon" />**Set user limits** in the **Per-user limits** section.
+  2. In the **Set user limits** dialog, use the **User** field to select one or more members of your organization. Users who already have custom limits can't be selected.
+  3. Choose how to limit the selected users:
+     * Enter a **Daily limit**, a **Monthly limit**, or both. Leaving a field empty removes the per-user limit for that period. Leaving both empty means those users have no personal limit (the organization-wide limits still apply).
+     * Alternatively, enable **Restrict this user from application spending** to decline all app charges for the selected users, ignoring any limits.
+  4. Click **Save**.
+</Steps>
+
+To manage the limits of a specific user, click <Icon name="mdi:dots-vertical" class="inline-icon" /> (or right-click) on the needed user and select one of the following options:
+
+* **Set limits** or **Edit**: Set or change the user's custom limits with **Use custom limits** selected. Clearing it returns the user to the default per-user limits.
+* **Block app spending** or **Unblock app spending**: Decline all app charges for the user or lift the block. Unblocking returns the user to the default per-user limits, even if they had custom limits before the block.
+* **Remove custom limits**: Return the user to the default per-user limits.
+
+## App Transactions
+
+The **Application transactions** section on the **Crowdin Credits** page lists the Crowdin Credits charged by apps, newest first, with the following details:
+
+* **Date**: When the app made the charge.
+* **Application**: The app that made the charge.
+* **User**: The user whose action triggered the charge.
+* **Amount**: The charged amount.
+* **Description**: The app's description of the charge.
+
+To narrow down the list, use the **Time period**, **Application**, and **User** filters.
+
+To download the transactions, click **Export** and select **Export CSV** or **Export JSON**. The export includes the transactions that match the current filters.
 
 ## See Also
 
