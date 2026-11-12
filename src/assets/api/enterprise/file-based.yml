@@ -11221,7 +11221,7 @@ paths:
       tags:
         - 'Translation Status'
       summary: 'Get Language Progress'
-      description: '**Required scopes:** `project.status.progress` (Read only).'
+      description: "**Required scopes:** `project.status.progress` (Read only).\n\nReturns translation progress of the specified language for each project file, or for each branch in string-based projects, in the order they were added."
       operationId: api.projects.languages.files.progress.getMany
       parameters:
         -
@@ -11232,6 +11232,33 @@ paths:
           $ref: '#/components/parameters/ProjectId'
         -
           $ref: '#/components/parameters/ProjectTargetLanguageId'
+        -
+          name: branchIds
+          in: query
+          description: "Filter results to files of the specified branches, including files in their nested directories. It can be one ID or a list of comma-separated ID values. Up to 50 values. Get via [List Branches](#operation/api.projects.branches.getMany)\n\n__Note:__ Can't be used with `directoryIds` or `fileIds` in the same request"
+          schema:
+            type: string
+          example: '1,2,3'
+          x-doc-sections:
+            - file-based
+        -
+          name: directoryIds
+          in: query
+          description: "Filter results to files of the specified directories, including files in their nested directories. It can be one ID or a list of comma-separated ID values. Up to 50 values. Get via [List Directories](#operation/api.projects.directories.getMany)\n\n__Note:__ Can't be used with `branchIds` or `fileIds` in the same request"
+          schema:
+            type: string
+          example: '1,2,3'
+          x-doc-sections:
+            - file-based
+        -
+          name: fileIds
+          in: query
+          description: "Filter results to the specified files. It can be one ID or a list of comma-separated ID values. Up to 50 values. Get via [List Files](#operation/api.projects.files.getMany)\n\n__Note:__ Can't be used with `branchIds` or `directoryIds` in the same request"
+          schema:
+            type: string
+          example: '1,2,3'
+          x-doc-sections:
+            - file-based
       responses:
         '200':
           description: 'Language translation progress'
@@ -11241,6 +11268,12 @@ paths:
                 $ref: '#/components/schemas/LanguageFilesProgressCollectionResource'
           x-doc-sections:
             - file-based
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
         '401':
           description: Unauthorized
           content:
