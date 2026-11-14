@@ -1,0 +1,245 @@
+---
+title: 编辑器按钮模块
+description: 向编辑器添加按钮，用于打开应用的面板和模态框或向其发送点击事件
+slug: developer/crowdin-apps-module-editor-button
+sidebar:
+  order: 9
+  label: 编辑器按钮
+---
+
+此模块允许向编辑器添加按钮，这些按钮作用于同一应用的另一个模块。
+
+编辑器按钮位置：
+
+* `header-right`：编辑器标题栏的右上角
+* `header-left`：编辑器标题栏的左上角
+* `menu`：编辑器主菜单中的**应用**菜单
+* `translation-toolbar`：带有当前翻译操作的工具栏
+* `strings-menu`：当前选定字符串的菜单
+
+按钮可以执行以下操作之一：
+
+* 在编辑器的右侧面板中打开指定的应用模块（参见[编辑器右侧面板模块](/developer/crowdin-apps-module-editor-right-panel/)）
+* 在模态对话框中打开指定的应用模块（参见[模态模块](/developer/crowdin-apps-module-modal/)）
+* 向指定的应用模块发送 `editor.button.click` 事件
+
+`panel` 和 `modal` 类型在每个位置都可用。 `event` 类型在 `translation-toolbar` 和 `strings-menu` 位置可用。
+
+`panel` 或 `event` 按钮仅在其目标模块也声明的编辑器模式中出现，因此请将按钮的 `modes` 保持在目标模块的范围内。 `modal` 按钮仅取决于其自身的 `modes`。
+
+标题栏位置和翻译工具栏各自最多显示四个按钮，其余的在**更多应用操作**下拉菜单中可用。在 `assets` 模式下，按钮在 `header-right`、`header-left` 和 `menu` 位置可用。在移动端，按钮在 `menu`、`translation-toolbar` 和 `strings-menu` 位置可用，翻译工具栏一次显示一个按钮。
+
+编辑器按钮也列在编辑器的命令面板中，每个按钮都可以在**帮助 > 键盘快捷键**中分配键盘快捷键。
+
+## 访问权限
+
+您可以将此模块的访问权限授予以下用户类别之一：
+
+对于 Crowdin：
+
+* 仅限我自己（即项目所有者）
+* 本人、项目管理员和开发者
+* 所有项目成员
+* 选定用户
+
+对于 Crowdin 企业版：
+
+* 仅限组织管理员
+* 组织管理员、项目管理员和开发者
+* 组织项目中的所有用户
+* 选定用户
+
+## 结构
+
+### 面板
+
+按钮在编辑器的右侧面板中打开指定的模块。
+
+```json title="manifest.json"
+{
+  "modules": {
+    "editor-button": [
+      {
+        "key": "editor-button-key",
+        "name": "Name of Editor Button",
+        "logo": "/editor-button-logo.png",
+        "modes": [
+          "translate"
+        ],
+        "options": {
+          "location": "header-right",
+          "type": "panel",
+          "module": "editor-panel-module-key",
+          "weight": 10
+        }
+      }
+    ],
+    "editor-right-panel": [
+      {
+        "key": "editor-panel-module-key",
+        "name": "New Panel",
+        "modes": [
+          "translate"
+        ],
+        "url": "/editor-page"
+      }
+    ]
+  }
+}
+```
+
+### Modal
+
+按钮在模态对话框中打开指定的模块。
+
+```json title="manifest.json"
+{
+  "modules": {
+    "editor-button": [
+      {
+        "key": "editor-button-key",
+        "name": "Name of Editor Button",
+        "modes": [
+          "translate"
+        ],
+        "options": {
+          "location": "menu",
+          "type": "modal",
+          "module": "modal-module-key"
+        }
+      }
+    ],
+    "modal": [
+      {
+        "key": "modal-module-key",
+        "name": "New Modal",
+        "url": "/path/to/modal/module"
+      }
+    ]
+  }
+}
+```
+
+### 事件
+
+按钮向指定的模块发送 `editor.button.click` 事件而不打开它。
+
+```json title="manifest.json"
+{
+  "modules": {
+    "editor-button": [
+      {
+        "key": "editor-button-key",
+        "name": "Name of Editor Button",
+        "modes": [
+          "translate"
+        ],
+        "options": {
+          "location": "translation-toolbar",
+          "type": "event",
+          "module": "editor-panel-module-key"
+        }
+      }
+    ],
+    "editor-right-panel": [
+      {
+        "key": "editor-panel-module-key",
+        "name": "New Panel",
+        "modes": [
+          "translate"
+        ],
+        "url": "/editor-page"
+      }
+    ]
+  }
+}
+```
+
+事件载荷取决于按钮的位置。有关对象结构，请参见[支持的事件](/developer/crowdin-apps-js/#supported-events)。
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。<br />它必须不同于应用的 <code>editor-right-panel</code>、<code>editor-background-worker</code> 和 <code>modal</code> 模块的键。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 显示在按钮工具提示中以及菜单中项目标签的用户可读名称。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>logo</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 按钮图标的相对 URL。<br />图标以 16x16 像素显示。如果省略，按钮使用应用的徽标。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>modes</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>允许的值：</strong> <code>translate</code>、<code>comfortable</code>、<code>side-by-side</code>、<code>multilingual</code>、<code>review</code>、<code>assets</code></p>
+        <p><strong>描述：</strong> 模块将在其中可用的编辑器模式列表。<br />使用 <code>translate</code> 使模块在以下视图中可用：<code>comfortable</code>、<code>side-by-side</code> 和 <code>multilingual</code>。<br />如需更精细的控制，请直接指定一个或多个这些值。<br />
+        <code>review</code> 模式仅在 Crowdin Enterprise 中可用，且仅适用于<a href="/zh/enterprise/source-text-review/">源文本审核</a>工作流步骤。<br />
+        <code>assets</code> 模式用于在编辑器中管理资产。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">options.location</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>允许值：</strong> <code>header-right</code>、<code>header-left</code>、<code>menu</code>、<code class="whitespace-nowrap">translation-toolbar</code>、<code>strings-menu</code></p>
+        <p><strong>描述：</strong> 编辑器中添加按钮的位置。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.type</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>允许值：</strong> <code>panel</code>、<code>modal</code>、<code>event</code></p>
+        <p><strong>描述：</strong> 此按钮将执行的操作类型。<br />
+        <code>event</code> 类型在 <code>translation-toolbar</code> 和 <code>strings-menu</code> 位置受支持。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.module</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 按钮所作用模块的 <code>key</code>。该模块必须在同一应用中声明，并且两者必须至少共享一个 <code>environments</code> 值。<br />对于 <code>panel</code> 类型使用 <code>editor-right-panel</code> 模块，对于 <code>modal</code> 类型使用 <code>modal</code> 模块，对于 <code>event</code> 类型使用 <code>editor-right-panel</code> 或 <code>editor-background-worker</code> 模块。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.weight</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>integer</code></p>
+        <p><strong>描述：</strong> 同一位置中按钮相对于其他按钮的顺序。值较低的按钮排在前面：在标题栏和翻译工具栏中靠左，在菜单中靠上。<br />默认值为 <code>100</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> <code>crowdin</code>、<code>crowdin-enterprise</code></p>
+        <p><strong>描述：</strong> 可安装该模块的环境集合。<br />此参数在跨产品的应用程序中必需。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 运行时状态
+
+应用可以在编辑器打开时更新自己的按钮：设置图标、添加徽章、覆盖工具提示或使按钮处于非活动状态。使用 [AP.editor.updateButton](/developer/crowdin-apps-js/#update-button) 方法应用更改，使用 [AP.editor.resetButton](/developer/crowdin-apps-js/#reset-button) 将按钮恢复到清单中声明的状态。
