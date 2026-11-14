@@ -23,7 +23,7 @@ import { Aside } from '@astrojs/starlight/components';
 * 所有项目成员
 * 选定用户
 
-对于 Crowdin Enterprise：
+对于 Crowdin 企业版：
 
 * 仅限组织管理员
 * 组织项目中的所有用户
@@ -174,9 +174,9 @@ import { Aside } from '@astrojs/starlight/components';
 {
   "data": {
     "strings": [...], // 修改后的字符串数组
-    "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // 包含修改后字符串的换行符分隔 JSON 文件
-    "preview": "VGhpbmdzIGFyZSBvbmx5IGltcG9zc2libGUgdW50aWwgdGhleSdyZSBub3Qu", // 可选，预览 HTML 文件的 base64 编码内容，不支持含复数字符串的情况
-    "previewUrl": "https://app.example.com/LN3km2K6M-preview.html", // 可选，预览 HTML 文件的 URL，不支持含复数字符串的情况
+    "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // 包含修改后字符串的换行分隔 JSON 文件
+    "preview": "VGhpbmdzIGFyZSBvbmx5IGltcG9zc2libGUgdW50aWwgdGhleSdyZSBub3Qu", // 可选，预览 HTML 文件的 base64 编码内容
+    "previewUrl": "https://app.example.com/LN3km2K6M-preview.html", // 可选，预览 HTML 文件的 URL
   },
   "error": {
     "message": "Your error message"
@@ -203,8 +203,7 @@ import { Aside } from '@astrojs/starlight/components';
       <td>
         <p><strong>类型（data.preview）：</strong> <code>string</code></p>
         <p><strong>类型（data.previewUrl）：</strong> <code>string</code></p>
-        <p><strong>说明：</strong> 用于传递可由应用生成的已解析字符串内容的可选 HTML 预览的参数。生成的 HTML 预览将在编辑器中显示。请参阅 <a href="/zh/developer/crowdin-apps-module-custom-file-format/#html文件预览示例">HTML 预览文件示例。</a></p>
-        <p><Aside type="caution">如果应用传递的字符串包含复数形式，HTML 预览将不会在 Crowdin 编辑器中显示。</Aside></p>
+        <p><strong>说明：</strong> 用于传递可由应用生成的已解析字符串内容的可选 HTML 预览的参数。生成的 HTML 预览将在编辑器中显示。预览中的元素通过其在响应中的位置与字符串关联。参见<a href="#html-preview-of-the-file">文件的 HTML 预览</a>。</p><p><Aside type="caution">自定义文件格式模块中使用的 <code>previewId</code> 字符串属性和 <code>id="string_preview_id_\{previewId}"</code> 元素在此模块中不受支持。</Aside></p>
       </td>
     </tr>
     <tr>
@@ -298,8 +297,36 @@ import { Aside } from '@astrojs/starlight/components';
       <td><code class="whitespace-nowrap">attributes.crowdinType</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>允许值：</strong> 大部分与 <a href="/zh/developer/api/v2/#operation/api.projects.files.post">添加文件 API 方法</a>接受的 <code>type</code> 值匹配，但不包括以下值：<code>auto</code>、<code>xml</code>、<code>csv</code>、<code>docx</code>、<code>xlsx</code>、<code>dita</code>、<code>idml</code>、<code>mif</code>、<code>svg</code>。此外，还支持通过自定义文件格式模块中的 <a href="/zh/developer/crowdin-apps-module-custom-file-format/#自定义文件格式类型示例"><code>type</code> 属性</a>定义的自定义值。</p><p><strong>说明：</strong> 用于在需要后处理时为字符串指定文件格式类型。例如，如果 JSON 文件包含嵌入 HTML 的字符串，将 <code>crowdinType</code> 设置为 <code>html</code> 可使用 HTML 解析器重新解析该字符串。这有助于确保正确渲染并防止不必要的标签被显示出来。 Crowdin parses and segments such content the same way as a file of that format, and merges the translations back into the original string when generating the translation file. 该值必须与支持的 Crowdin 文件类型之一或自定义文件格式标识符匹配。</p>
+        <p><strong>允许值：</strong> 大部分与 <a href="/zh/developer/api/v2/#operation/api.projects.files.post">添加文件 API 方法</a>接受的 <code>type</code> 值匹配，但不包括以下值：<code>auto</code>、<code>xml</code>、<code>csv</code>、<code>docx</code>、<code>xlsx</code>、<code>dita</code>、<code>idml</code>、<code>mif</code>、<code>svg</code>。此外，还支持通过自定义文件格式模块中的 <a href="/zh/developer/crowdin-apps-module-custom-file-format/#自定义文件格式类型示例"><code>type</code> 属性</a>定义的自定义值。</p><p><strong>说明：</strong> 用于在需要后处理时为字符串指定文件格式类型。例如，如果 JSON 文件包含嵌入 HTML 的字符串，将 <code>crowdinType</code> 设置为 <code>html</code> 可使用 HTML 解析器重新解析该字符串。这有助于确保正确渲染并防止不必要的标签被显示出来。 Crowdin 以与该格式文件相同的方式解析和分段此类内容，并在生成翻译文件时将翻译合并回原始字符串。该值必须与支持的 Crowdin 文件类型之一或自定义文件格式标识符匹配。</p>
       </td>
     </tr>
   </tbody>
 </table>
+
+## 文件 HTML 预览
+
+HTML 预览在编辑器中渲染[文件的所见即所得视图](/online-editor/#wysiwyg-file-preview)。将每个可翻译字符串包裹在一个同时携带以下两者的元素中：
+
+* `id="crowdin_phrase_index_{N}"`，其中 `{N}` 是字符串在应用响应中的从零开始的位置（在 `data.strings` 中或 `data.stringsUrl` 指向的文件中）。使用双引号并使值完全匹配。
+* `class="crowdin_phrase"`，以便在预览中点击字符串即可选择并就地编辑。
+
+在应用拆分、合并或添加字符串后，按应用返回的字符串来计算位置。如果应用改变了字符串的数量或顺序，请返回一个与返回的字符串匹配的预览。
+
+如果返回的字符串包含 `attributes.crowdinType`，请在两个响应中都返回预览。仅当第一个响应中有预览时，Crowdin 才会发送第二个请求，并且在该请求中，嵌套内容已被解析为单独的字符串。 Crowdin 仅使用第二个响应中的预览，并且 `{N}` 计算的是该响应中的字符串。
+
+Crowdin 仅在导入或更新源文件时使用 HTML 预览，在上传翻译时会忽略它。
+
+包含复数形式的字符串的文件也会显示预览。它一次显示每个复数形式字符串的一种形式。要显示其他形式，请在翻译字段中选择它。我们建议在那里翻译复数形式的字符串，而不是在预览中就地翻译。
+
+文件 HTML 预览示例：
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <h1>HTML preview of the file</h1>
+    <p><span id="crowdin_phrase_index_0" class="crowdin_phrase">Source Text 1</span></p> <!-- data.strings 中的第一个字符串 -->
+    <p><span id="crowdin_phrase_index_1" class="crowdin_phrase">Source Text 2</span></p> <!-- data.strings 中的第二个字符串 -->
+  </body>
+</html>
+```

@@ -9,7 +9,11 @@ import ReadMore from '~/components/ReadMore.astro';
 
 Crowdin MCP（模型上下文协议）服务器使 AI 代理能够通过自然语言命令与您的 Crowdin 账户进行交互，让您无需离开聊天界面即可自动完成翻译、管理术语、协调团队并生成洞察报告。
 
-可以将 MCP 服务器视为一个通用适配器和解释器。 您的 AI 助手（例如 Crowdin Copilot、Claude、Cursor 或 ChatGPT）使用"人类语言"，而 Crowdin API 使用精确的"技术语言"。 MCP 服务器位于两者之间，将您的自然语言请求转换为 Crowdin 能够理解的精确命令，然后将响应转换回清晰易读的答案。
+可以将 MCP 服务器视为一个通用适配器和解释器。你的 AI 助手，例如 Crowdin Assistant（前身为 Copilot）、Claude、Cursor 或 ChatGPT，说“人类语言”，而 Crowdin API 说精确的“技术语言”。 MCP 服务器位于两者之间，将您的自然语言请求转换为 Crowdin 能够理解的精确命令，然后将响应转换回清晰易读的答案。
+
+<ReadMore>
+  阅读更多关于 [Crowdin 技能](/developer/crowdin-skills/)的内容，它教 AI 编码代理在本地使用 Crowdin 的开发者工具。
+</ReadMore>
 
 ## 为什么使用 MCP 服务器？
 
@@ -21,7 +25,7 @@ Crowdin MCP（模型上下文协议）服务器使 AI 代理能够通过自然�
 
 * 一个 Crowdin 账户。
 * 一种[验证方式](#authentication-access-tokens-and-scopes)——可以使用 OAuth 登录流程（无需令牌）或通过个人访问令牌或 OAuth 应用程序生成的访问令牌。
-* 兼容 MCP 的客户端（例如 Crowdin Copilot、Claude Desktop、Cursor、VS Code 或 Windsurf）。
+* 兼容 MCP 的客户端（例如 Crowdin Assistant、Claude Desktop、Cursor、VS Code 或 Windsurf）。
 
 ## 设置与配置
 
@@ -31,18 +35,18 @@ Crowdin MCP（模型上下文协议）服务器使 AI 代理能够通过自然�
 
 MCP 服务器支持两种方式验证您的客户端身份：
 
-* **OAuth 登录流程** — 您的客户端仅使用 MCP 端点 URL 进行连接，并打开浏览器供您登录 Crowdin。 这是交互式客户端（大多数 IDE 和桌面应用程序）的最简单选项，无需创建或存储令牌。
-* **访问令牌** — 您在 `Authorization: Bearer {YOUR_CROWDIN_TOKEN}` 请求头中传递静态令牌。 适用于无头设置、自动化或不支持 OAuth 流程的客户端。 您可以通过创建**个人访问令牌 (PAT)** 或使用 **OAuth 应用程序**来获取令牌。
+* **OAuth 登录流程** — 您的客户端仅使用 MCP 端点 URL 进行连接，并打开浏览器供您登录 Crowdin。这是交互式客户端（大多数 IDE 和桌面应用程序）的最简单选项，无需创建或存储令牌。
+* **访问令牌** — 您在 `Authorization: Bearer {YOUR_CROWDIN_TOKEN}` 请求头中传递静态令牌。适用于无头设置、自动化或不支持 OAuth 流程的客户端。您可以通过创建**个人访问令牌 (PAT)** 或使用 **OAuth 应用程序**来获取令牌。
 
-无论使用哪种方式，您都需要授予特定的**权限范围**（权限），以定义允许执行的操作。 为使 MCP 服务器正常运行，您使用的凭据必须具备所需命令对应的权限范围。 例如，要创建项目任务，您的凭据需要具备\*\*任务（读取和写入）\*\*权限范围。
+无论使用哪种方式，您都需要授予特定的**权限范围**（权限），以定义允许执行的操作。为使 MCP 服务器正常运行，您使用的凭据必须具备所需命令对应的权限范围。例如，要创建项目任务，您的凭据需要具备\*\*任务（读取和写入）\*\*权限范围。
 
 #### OAuth 登录流程
 
-对于支持 MCP OAuth 的客户端，您只需配置 MCP 端点 URL，无需令牌。 首次连接时，客户端会打开浏览器，供您授权访问 Crowdin 账户，之后客户端会为您存储并刷新令牌。 您无需提前创建 OAuth 应用程序：客户端会自动注册自身。 您在登录时批准的权限范围决定了客户端可以执行的操作。
+对于支持 MCP OAuth 的客户端，您只需配置 MCP 端点 URL，无需令牌。首次连接时，客户端会打开浏览器，供您授权访问 Crowdin 账户，之后客户端会为您存储并刷新令牌。您无需提前创建 OAuth 应用程序：客户端会自动注册自身。您在登录时批准的权限范围决定了客户端可以执行的操作。
 
 #### 个人访问令牌 (PAT)
 
-PAT 是一种安全的个人密钥，直接与您的账户绑定。 它是使用静态令牌进行个人身份验证的最快捷方式。
+PAT 是一种安全的个人密钥，直接与您的账户绑定。它是使用静态令牌进行个人身份验证的最快捷方式。
 
 <ReadMore>
   了解更多关于[创建个人访问令牌（Crowdin）](/zh/account-settings/#创建个人访问令牌)或[创建个人访问令牌（Crowdin Enterprise）](/zh/enterprise/account-settings/#创建个人访问令牌)的信息。
@@ -50,7 +54,7 @@ PAT 是一种安全的个人密钥，直接与您的账户绑定。 它是使用
 
 #### OAuth 应用
 
-如果您正在构建集成、开发自定义应用程序，或希望不使用个人凭据，可以使用 OAuth 应用程序进行身份验证。 您可以在账户或组织设置中创建新的 OAuth 应用程序，配置所需的权限范围，并使用它发起授权请求。
+如果您正在构建集成、开发自定义应用程序，或希望不使用个人凭据，可以使用 OAuth 应用程序进行身份验证。您可以在账户或组织设置中创建新的 OAuth 应用程序，配置所需的权限范围，并使用它发起授权请求。
 
 <ReadMore>
   详细了解如何在 [Crowdin](/zh/account-settings/#oauth) 和 [Crowdin Enterprise](/zh/enterprise/organization-settings/#oauth-apps) 中管理 OAuth 应用程序。
@@ -58,7 +62,7 @@ PAT 是一种安全的个人密钥，直接与您的账户绑定。 它是使用
 
 ### 端点结构
 
-Crowdin MCP 服务器提供两个 API 版本。 **推荐使用 V2** 进行新集成。 它保留了核心 MCP 流程的熟悉性，同时增加了改进的工具设计、更丰富的参数、通过请求头进行服务器端过滤以及用于更快上下文访问的 MCP 资源。
+Crowdin MCP 服务器提供两个 API 版本。**推荐使用 V2** 进行新集成。它保留了核心 MCP 流程的熟悉性，同时增加了改进的工具设计、更丰富的参数、通过请求头进行服务器端过滤以及用于更快上下文访问的 MCP 资源。
 
 <Tabs syncKey="apiVersion">
   <TabItem label="V2（推荐）">
@@ -89,11 +93,11 @@ Crowdin MCP 服务器提供两个 API 版本。 **推荐使用 V2** 进行新集
   </TabItem>
 </Tabs>
 
-两个版本均可配置为仅公开您的代理所需的工具。 在 V1 中，此过滤通常在代理端进行。 在 V2 中，您还可以使用请求头直接在 MCP 端应用过滤，从而使设置更快捷、更方便。
+两个版本均可配置为仅公开您的代理所需的工具。在 V1 中，此过滤通常在代理端进行。在 V2 中，您还可以使用请求头直接在 MCP 端应用过滤，从而使设置更快捷、更方便。
 
 ### 可用工具集
 
-在 V2 中，工具集按产品领域组织。 选择与您工作流程匹配的工具集。
+在 V2 中，工具集按产品领域组织。选择与您工作流程匹配的工具集。
 
 #### 核心本地化与内容
 
@@ -127,21 +131,21 @@ Crowdin MCP 服务器提供两个 API 版本。 **推荐使用 V2** 进行新集
 * **`applications`** - 管理应用安装、同步作业和集成设置。
 * **`machine_translations`** - 配置机器翻译提供商并运行机器翻译。
 * **`notifications`** - 向用户和角色发送通知。
-* **`external_qa_checks`** - 访问外部质量保证和自定义拼写检查集成。 **（仅限 Crowdin Enterprise。）**
+* **`external_qa_checks`** - 访问外部质量保证和自定义拼写检查集成。**（仅限 Crowdin Enterprise。）**
 
 #### 人员与组织管理
 
 * **`users`** - 管理用户、项目成员、权限和贡献。
-* **`teams`** - 管理团队、成员资格和团队对项目的权限。 **（仅限 Crowdin Enterprise。）**
-* **`clients`** - 查看客户账户。 **（仅限 Crowdin Enterprise。）**
-* **`vendors`** - 查看供应商实体。 **（仅限 Crowdin Enterprise。）**
-* **`fields`** - 管理自定义字段。 **（仅限 Crowdin Enterprise。）**
-* **`organization`** - 查看组织详情和身份验证设置。 **（仅限 Crowdin Enterprise。）**
-* **`workflows`** - 查看工作流步骤、模板和分配给工作流步骤的内容。 **（仅限 Crowdin Enterprise。）**
+* **`teams`** - 管理团队、成员资格和团队对项目的权限。**（仅限 Crowdin Enterprise。）**
+* **`clients`** - 查看客户账户。**（仅限 Crowdin Enterprise。）**
+* **`vendors`** - 查看供应商实体。**（仅限 Crowdin Enterprise。）**
+* **`fields`** - 管理自定义字段。**（仅限 Crowdin Enterprise。）**
+* **`organization`** - 查看组织详情和身份验证设置。**（仅限 Crowdin Enterprise。）**
+* **`workflows`** - 查看工作流步骤、模板和分配给工作流步骤的内容。**（仅限 Crowdin Enterprise。）**
 * **`security_logs`** - 审查用户和组织安全日志。
 
 <Aside>
-  为获得最佳性能，请仅指定您所需的工具集。 如果省略，将加载一组默认的常用工具。 您可以使用下文描述的[配置请求头](#fine-tuning-with-headers)来微调可用的工具。
+  为获得最佳性能，请仅指定您所需的工具集。如果省略，将加载一组默认的常用工具。您可以使用下文描述的[配置请求头](#fine-tuning-with-headers)来微调可用的工具。
 </Aside>
 
 ### 基本配置示例
@@ -177,14 +181,14 @@ Crowdin MCP 服务器提供两个 API 版本。 **推荐使用 V2** 进行新集
 
 ### 通过请求头进行微调
 
-V2 端点支持可选的 HTTP 请求头，使工具过滤更加便捷。 在 V1 中，类似的过滤通常在加载所有工具后在代理端配置。 在 V2 中，您还可以在返回工具列表之前直接在 MCP 端应用过滤。
+V2 端点支持可选的 HTTP 请求头，使工具过滤更加便捷。在 V1 中，类似的过滤通常在加载所有工具后在代理端配置。在 V2 中，您还可以在返回工具列表之前直接在 MCP 端应用过滤。
 
-| 请求头                    | 值                                                                        | 描述                                                       |
-| ---------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------- |
-| `crowdin-tool-sets`    | `all`，或逗号分隔的名称（例如，`ai,reports,webhooks`；参见[可用工具集](#available-tool-sets)） | 控制加载哪些工具集。 默认情况下，服务器加载所有可用的工具集。 设置逗号分隔的列表以将工具限制在特定工作流程中。 |
-| `crowdin-read-only`    | `true` 或 `false`                                                         | 当设置为 `true` 时，仅公开只读工具（列表和获取操作）。 适用于安全探索或只读集成。            |
-| `crowdin-project-type` | `string-based` 或 `file-based`                                            | 过滤掉不适用于指定项目类型的工具，减少 AI 代理的干扰。                            |
-| `crowdin-tool-filter`  | 逗号分隔的模式（例如，`project*`、`list_*`）                                          | 对工具名称应用通配符模式匹配，允许您仅包含特定的工具子集。                            |
+| 请求头                    | 值                                                                        | 描述                                                     |
+| ---------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------ |
+| `crowdin-tool-sets`    | `all`，或逗号分隔的名称（例如，`ai,reports,webhooks`；参见[可用工具集](#available-tool-sets)） | 控制加载哪些工具集。默认情况下，服务器加载所有可用的工具集。设置逗号分隔的列表以将工具限制在特定工作流程中。 |
+| `crowdin-read-only`    | `true` 或 `false`                                                         | 当设置为 `true` 时，仅公开只读工具（列表和获取操作）。适用于安全探索或只读集成。           |
+| `crowdin-project-type` | `string-based` 或 `file-based`                                            | 过滤掉不适用于指定项目类型的工具，减少 AI 代理的干扰。                          |
+| `crowdin-tool-filter`  | 逗号分隔的模式（例如，`project*`、`list_*`）                                          | 对工具名称应用通配符模式匹配，允许您仅包含特定的工具子集。                          |
 
 **示例 — 基于字符串的项目的只读访问：**
 
@@ -221,7 +225,7 @@ V2 端点支持可选的 HTTP 请求头，使工具过滤更加便捷。 在 V1 
 
 **示例 — 为特定工作流程限制工具集：**
 
-默认情况下，服务器加载所有可用的工具集。 如果您想将代理聚焦于特定工作流程，请明确设置 `crowdin-tool-sets`。
+默认情况下，服务器加载所有可用的工具集。如果您想将代理聚焦于特定工作流程，请明确设置 `crowdin-tool-sets`。
 
 <Tabs syncKey="product">
   <TabItem label="Crowdin">
@@ -253,69 +257,69 @@ V2 端点支持可选的 HTTP 请求头，使工具过滤更加便捷。 在 V1 
 </Tabs>
 
 <Aside type="tip">
-  从您工作流程所需的工具集开始，根据需要添加更多工具集。 加载较少的工具有助于代理保持专注并提高准确性。
+  从您工作流程所需的工具集开始，根据需要添加更多工具集。加载较少的工具有助于代理保持专注并提高准确性。
 </Aside>
 
 ### MCP 资源
 
-V2 端点公开 **MCP 资源**——只读引用，AI 代理可通过 `crowdin://` URI 方案直接访问，无需调用单个工具。 它们提供了一种无需依赖长串参数或过滤器即可获取上下文的简单方式。
+V2 端点公开 **MCP 资源**——只读引用，AI 代理可通过 `crowdin://` URI 方案直接访问，无需调用单个工具。它们提供了一种无需依赖长串参数或过滤器即可获取上下文的简单方式。
 
-资源仅返回当前令牌可访问的数据。 例如，`crowdin://projects` 列出经过身份验证的用户可访问且令牌作用域允许的项目。 如果令牌可以访问大量项目，广泛的资源可能返回大量结果集。
+资源仅返回当前令牌可访问的数据。例如，`crowdin://projects` 列出经过身份验证的用户可访问且令牌作用域允许的项目。如果令牌可以访问大量项目，广泛的资源可能返回大量结果集。
 
 可用资源：
 
-| 资源 URI                                       | 描述                                     |
-| -------------------------------------------- | -------------------------------------- |
-| `crowdin://projects`                         | 经过身份验证的用户可访问的所有项目列表。                   |
-| `crowdin://projects/{projectId}`             | 特定项目的完整详情。                             |
-| `crowdin://projects/{projectId}/progress`    | 项目中每种语言的翻译进度。                          |
-| `crowdin://projects/{projectId}/files`       | 项目中的源文件。                               |
-| `crowdin://projects/{projectId}/branches`    | 项目中的版本分支。                              |
-| `crowdin://projects/{projectId}/directories` | 项目中的目录。                                |
-| `crowdin://projects/{projectId}/strings`     | 项目中的源字符串。                              |
-| `crowdin://projects/{projectId}/tasks`       | 项目中的任务。                                |
-| `crowdin://projects/{projectId}/labels`      | 项目中的标签。                                |
-| `crowdin://projects/{projectId}/languages`   | 为项目配置的目标语言。                            |
-| `crowdin://tasks`                            | 分配给经过身份验证的用户的所有项目中的任务。                 |
-| `crowdin://glossaries`                       | 所有术语库的列表。                              |
-| `crowdin://glossaries/{glossaryId}`          | 特定术语库的完整详情。                            |
-| `crowdin://glossaries/{glossaryId}/terms`    | 术语库中的术语。                               |
-| `crowdin://glossaries/{glossaryId}/concepts` | 术语库中的概念。                               |
-| `crowdin://tms`                              | 所有翻译记忆库的列表。                            |
-| `crowdin://tms/{tmId}`                       | 特定翻译记忆库的完整详情。                          |
-| `crowdin://tms/{tmId}/segments`              | 翻译记忆库中的片段。                             |
-| `crowdin://languages`                        | Crowdin 支持的所有语言列表。                     |
-| `crowdin://languages/{languageId}`           | 特定语言的完整详情。                             |
-| `crowdin://groups`                           | 所有组的列表。 **（仅限 Crowdin Enterprise。）**   |
-| `crowdin://groups/{groupId}`                 | 特定组的完整详情。 **（仅限 Crowdin Enterprise。）** |
+| 资源 URI                                       | 描述                                    |
+| -------------------------------------------- | ------------------------------------- |
+| `crowdin://projects`                         | 经过身份验证的用户可访问的所有项目列表。                  |
+| `crowdin://projects/{projectId}`             | 特定项目的完整详情。                            |
+| `crowdin://projects/{projectId}/progress`    | 项目中每种语言的翻译进度。                         |
+| `crowdin://projects/{projectId}/files`       | 项目中的源文件。                              |
+| `crowdin://projects/{projectId}/branches`    | 项目中的版本分支。                             |
+| `crowdin://projects/{projectId}/directories` | 项目中的目录。                               |
+| `crowdin://projects/{projectId}/strings`     | 项目中的源字符串。                             |
+| `crowdin://projects/{projectId}/tasks`       | 项目中的任务。                               |
+| `crowdin://projects/{projectId}/labels`      | 项目中的标签。                               |
+| `crowdin://projects/{projectId}/languages`   | 为项目配置的目标语言。                           |
+| `crowdin://tasks`                            | 分配给经过身份验证的用户的所有项目中的任务。                |
+| `crowdin://glossaries`                       | 所有术语库的列表。                             |
+| `crowdin://glossaries/{glossaryId}`          | 特定术语库的完整详情。                           |
+| `crowdin://glossaries/{glossaryId}/terms`    | 术语库中的术语。                              |
+| `crowdin://glossaries/{glossaryId}/concepts` | 术语库中的概念。                              |
+| `crowdin://tms`                              | 所有翻译记忆库的列表。                           |
+| `crowdin://tms/{tmId}`                       | 特定翻译记忆库的完整详情。                         |
+| `crowdin://tms/{tmId}/segments`              | 翻译记忆库中的片段。                            |
+| `crowdin://languages`                        | Crowdin 支持的所有语言列表。                    |
+| `crowdin://languages/{languageId}`           | 特定语言的完整详情。                            |
+| `crowdin://groups`                           | 所有组的列表。**（仅限 Crowdin Enterprise。）**   |
+| `crowdin://groups/{groupId}`                 | 特定组的完整详情。**（仅限 Crowdin Enterprise。）** |
 
 <Aside>
-  使用 V2 端点时，资源会自动可用。 您的 AI 客户端可能会在执行命令之前使用它们收集上下文，从而产生更准确的响应。 当您想缩小结果集时，请使用更具体的资源路径。
+  使用 V2 端点时，资源会自动可用。您的 AI 客户端可能会在执行命令之前使用它们收集上下文，从而产生更准确的响应。当您想缩小结果集时，请使用更具体的资源路径。
 </Aside>
 
 ## 配置您的 AI 客户端
 
-本节将引导您将首选的 AI 客户端连接到 Crowdin MCP 服务器。 虽然具体步骤在不同客户端之间可能略有差异，但核心流程都包括向客户端提供服务器 URL 和用于身份验证的令牌。
+本节将引导您将首选的 AI 客户端连接到 Crowdin MCP 服务器。虽然具体步骤在不同客户端之间可能略有差异，但核心流程都包括向客户端提供服务器 URL 和用于身份验证的令牌。
 
 ### 兼容的 MCP 客户端
 
-Crowdin MCP 服务器基于模型上下文协议构建，这是一个专为 AI 交互设计的开放标准。 这意味着任何允许配置自定义工具或外部上下文的 AI 客户端或开发环境都应该兼容。
+Crowdin MCP 服务器基于模型上下文协议构建，这是一个专为 AI 交互设计的开放标准。这意味着任何允许配置自定义工具或外部上下文的 AI 客户端或开发环境都应该兼容。
 
-我们已成功在多种流行客户端上测试了 MCP 服务器，包括 Crowdin Copilot、Claude Desktop 等桌面应用程序、Cursor 等 AI 原生 IDE 以及 OpenAI（ChatGPT）等平台。
+我们已成功使用各种流行客户端测试了 MCP 服务器，包括 Crowdin Assistant、Claude Desktop 等桌面应用、Cursor 等 AI 原生 IDE 以及 OpenAI（ChatGPT）等平台。
 
-<LinkCard title="Crowdin Copilot 应用" description="使用 Crowdin Copilot 内置的 Crowdin MCP V2 支持——无需手动配置 MCP。" href="https://store.crowdin.com/crowdin-copilot" target="_blank" />
+<LinkCard title="Crowdin Assistant 应用" description="使用内置 Crowdin MCP V2 支持的 Crowdin Assistant——无需手动配置 MCP。" href="https://store.crowdin.com/crowdin-assistant" target="_blank" />
 
 此列表并不详尽，我们鼓励您尝试将 MCP 服务器与您自己喜欢的 AI 工具连接。
 
 ### 通用配置步骤
 
-如果您使用 Crowdin Copilot，则无需手动设置 MCP。 对于外部兼容 MCP 的客户端，核心流程包括以下步骤：
+如果你使用 Crowdin Assistant，则无需手动设置 MCP。对于外部兼容 MCP 的客户端，核心流程包括以下步骤：
 
 1. **选择身份验证方式：** 决定使用 OAuth 登录流程（无需准备令牌）还是带有必要权限范围的静态访问令牌，详情请参阅[身份验证](#authentication-access-tokens-and-scopes)部分。
 2. **找到客户端设置：** 打开您的 AI 客户端，找到用于连接外部工具或 MCP 服务器的设置区域。
 3. **输入配置详情：** 在大多数客户端中，您需要提供：
    * Crowdin MCP 服务器的**端点 URL**。
-   * 对于基于令牌的身份验证，需要包含令牌的**授权请求头**（例如 `Authorization: Bearer {YOUR_CROWDIN_TOKEN}`）。 使用 OAuth 流程时，您只需提供 URL，然后通过浏览器登录即可。
+   * 对于基于令牌的身份验证，需要包含令牌的**授权请求头**（例如 `Authorization: Bearer {YOUR_CROWDIN_TOKEN}`）。使用 OAuth 流程时，您只需提供 URL，然后通过浏览器登录即可。
    * 可选的**过滤请求头**，如果您想限制可用工具集或启用只读访问。
 
 <Aside type="tip" title="安全令牌管理">
@@ -380,7 +384,7 @@ Crowdin MCP 服务器基于模型上下文协议构建，这是一个专为 AI �
 </Steps>
 
 <Aside type="tip" title="偏好 OAuth？">
-  如需使用 OAuth 流程登录而非管理令牌，请删除 `--header` 参数（及其值）以及 `env` 块，仅保留 `mcp-remote@latest` 和 URL 参数。 首次连接时，浏览器会打开，供您授权访问 Crowdin。
+  如需使用 OAuth 流程登录而非管理令牌，请删除 `--header` 参数（及其值）以及 `env` 块，仅保留 `mcp-remote@latest` 和 URL 参数。首次连接时，浏览器会打开，供您授权访问 Crowdin。
 </Aside>
 
 ### Claude Code
@@ -401,7 +405,7 @@ Crowdin MCP 服务器基于模型上下文协议构建，这是一个专为 AI �
 </Tabs>
 
 <Aside type="tip" title="偏好 OAuth？">
-  如需使用 OAuth 流程登录而非管理令牌，请去掉 `--header` 标志：`claude mcp add --transport http crowdin https://mcp.crowdin.com/v2/mcp`。 首次使用服务器时，Claude Code 会打开浏览器，供您授权访问 Crowdin。
+  如需使用 OAuth 流程登录而非管理令牌，请去掉 `--header` 标志：`claude mcp add --transport http crowdin https://mcp.crowdin.com/v2/mcp`。首次使用服务器时，Claude Code 会打开浏览器，供您授权访问 Crowdin。
 </Aside>
 
 ### Cursor
@@ -446,7 +450,7 @@ Crowdin MCP 服务器基于模型上下文协议构建，这是一个专为 AI �
 </Steps>
 
 <Aside type="tip" title="偏好 OAuth？">
-  如需使用 OAuth 流程登录而非管理令牌，请删除 `headers` 块，仅保留 `url`。 首次连接时，Cursor 会打开浏览器，供您授权访问 Crowdin。
+  如需使用 OAuth 流程登录而非管理令牌，请删除 `headers` 块，仅保留 `url`。首次连接时，Cursor 会打开浏览器，供您授权访问 Crowdin。
 </Aside>
 
 ### VS Code
@@ -493,7 +497,7 @@ Crowdin MCP 服务器基于模型上下文协议构建，这是一个专为 AI �
 </Steps>
 
 <Aside type="tip" title="偏好 OAuth？">
-  如需使用 OAuth 流程登录而非管理令牌，请删除 `headers` 块，仅保留 `type` 和 `url`。 首次连接时，VS Code 会提示您在浏览器中登录 Crowdin。
+  如需使用 OAuth 流程登录而非管理令牌，请删除 `headers` 块，仅保留 `type` 和 `url`。首次连接时，VS Code 会提示您在浏览器中登录 Crowdin。
 </Aside>
 
 ### Windsurf
@@ -544,7 +548,7 @@ Crowdin MCP 服务器基于模型上下文协议构建，这是一个专为 AI �
 </Steps>
 
 <Aside type="tip" title="偏好 OAuth？">
-  如需使用 OAuth 流程登录而非管理令牌，请从 `args` 中删除 `--header` 参数及其值，仅保留 `mcp-remote@latest` 和 URL。 首次连接时，浏览器会打开，供您授权访问 Crowdin。
+  如需使用 OAuth 流程登录而非管理令牌，请从 `args` 中删除 `--header` 参数及其值，仅保留 `mcp-remote@latest` 和 URL。首次连接时，浏览器会打开，供您授权访问 Crowdin。
 </Aside>
 
 ## 发起您的第一个请求
@@ -553,13 +557,13 @@ Crowdin MCP 服务器基于模型上下文协议构建，这是一个专为 AI �
 
 与您的 AI 助手开始新的对话，并输入以下内容：`What tasks am I currently working on?`
 
-在执行请求之前，AI 客户端可能会从 Crowdin MCP 服务器识别所需工具，并请求您的许可以继续操作。 您需要批准此确认步骤才能运行命令。 许多客户端还提供了针对受信任来源简化此行为的方法。
+在执行请求之前，AI 客户端可能会从 Crowdin MCP 服务器识别所需工具，并请求您的许可以继续操作。您需要批准此确认步骤才能运行命令。许多客户端还提供了针对受信任来源简化此行为的方法。
 
-授予权限后，AI 将通过列出当前分配给您的任务来响应。 这确认您的连接正常工作，并且您的客户端可以访问预期的 Crowdin 上下文。
+授予权限后，AI 将通过列出当前分配给您的任务来响应。这确认您的连接正常工作，并且您的客户端可以访问预期的 Crowdin 上下文。
 
 ## 适合您角色的实际工作流程
 
-MCP 服务器的真正威力来自于将命令串联起来以完成真实的本地化任务。 以下是不同角色如何使用它来简化工作的示例。
+MCP 服务器的真正威力来自于将命令串联起来以完成真实的本地化任务。以下是不同角色如何使用它来简化工作的示例。
 
 ### 项目经理
 
@@ -617,7 +621,7 @@ MCP 服务器的真正威力来自于将命令串联起来以完成真实的本�
    ```text wrap
    Show me the organization members of the 'German Translation' team.
    ```
-2. **识别变更需求：** AI 列出成员。 管理员注意到一名已离职的用户。
+2. **识别变更需求：** AI 列出成员。管理员注意到一名已离职的用户。
 3. **采取行动：**
    ```text wrap
    Delete 'John Doe' from the organization.
@@ -629,11 +633,11 @@ MCP 服务器的真正威力来自于将命令串联起来以完成真实的本�
 
 ## 最佳实践
 
-* **使用 V2 端点：** V2 端点（`/v2/mcp`）提供智能工具加载、高级过滤和 MCP 资源，可提高 AI 代理的准确性和性能。 所有新集成均使用 V2。
-* **仅加载您需要的工具集：** 从工作流程所需的工具集开始，仅在需要时添加更多工具集。 较小的工具列表有助于代理保持专注。
-* **设置您的项目类型：** 如果您知道您的项目类型，请传递 `crowdin-project-type` 请求头（`string-based` 或 `file-based`）。 这会过滤掉不相关的工具，帮助 AI 代理做出更好的决策。
-* **使用只读模式进行安全探索：** 在新成员入职或测试集成时，设置 `crowdin-read-only: true`。 这可以防止意外更改，同时仍提供完整的读取访问权限。
-* **在提示中保持具体：** 引用项目名称和 ID，而不是使用通用术语。 例如，`List tasks for project ID 12345 in French` 比 `Show me my tasks.` 更好。
+* **使用 V2 端点：** V2 端点（`/v2/mcp`）提供智能工具加载、高级过滤和 MCP 资源，可提高 AI 代理的准确性和性能。所有新集成均使用 V2。
+* **仅加载您需要的工具集：** 从工作流程所需的工具集开始，仅在需要时添加更多工具集。较小的工具列表有助于代理保持专注。
+* **设置您的项目类型：** 如果您知道您的项目类型，请传递 `crowdin-project-type` 请求头（`string-based` 或 `file-based`）。这会过滤掉不相关的工具，帮助 AI 代理做出更好的决策。
+* **使用只读模式进行安全探索：** 在新成员入职或测试集成时，设置 `crowdin-read-only: true`。这可以防止意外更改，同时仍提供完整的读取访问权限。
+* **在提示中保持具体：** 引用项目名称和 ID，而不是使用通用术语。例如，`List tasks for project ID 12345 in French` 比 `Show me my tasks.` 更好。
 * **从简单查询开始：** 以安全的提示开始，例如 `What tasks am I currently working on?`，以确认您的客户端可以访问预期的 Crowdin 上下文。
 * **安全管理令牌：** 将您的凭据视为密码，妥善保管。
   * **使用最小权限范围：** 创建令牌或配置应用程序时，仅授予执行预期任务所需的权限。

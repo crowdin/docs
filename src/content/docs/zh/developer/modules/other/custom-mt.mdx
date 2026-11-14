@@ -10,7 +10,7 @@ import { Aside } from '@astrojs/starlight/components';
 import { Image } from 'astro:assets';
 import mt from '!/developer/module_mt.png';
 
-该模块可帮助您连接 Crowdin 尚不支持的机器翻译引擎。 创建此类应用后，您就可以使用连接的 MT 对内容进行自动翻译，或将 MT 提出的翻译建议显示在编辑器中供翻译人员使用。
+该模块可帮助您连接 Crowdin 尚不支持的机器翻译引擎。创建此类应用后，您就可以使用连接的 MT 对内容进行自动翻译，或将 MT 提出的翻译建议显示在编辑器中供翻译人员使用。
 
 <Image src={mt} alt="Custom MT 模块" />
 
@@ -24,7 +24,7 @@ import mt from '!/developer/module_mt.png';
 * 所有项目成员
 * 选定用户
 
-对于 Crowdin Enterprise：
+对于 Crowdin 企业版：
 
 * 仅限组织管理员
 * 组织项目中的所有用户
@@ -75,8 +75,7 @@ import mt from '!/developer/module_mt.png';
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 将在 Crowdin 界面中显示的自定义 MT 徽标的相对 URL。<br />
-        建议分辨率为 48x48 像素。</p>
+        <p><strong>描述：</strong> 将在 Crowdin 界面中显示的自定义 MT 徽标的相对 URL。<br />建议分辨率为 48x48 像素。</p>
       </td>
     </tr>
     <tr>
@@ -109,7 +108,7 @@ import mt from '!/developer/module_mt.png';
         <p><strong>类型：</strong> <code>boolean</code></p>
         <p><strong>必填：</strong> 否</p>
         <p><strong>默认值：</strong> <code>true</code></p>
-        <p><strong>描述：</strong> 控制[批量处理](#批量处理与文件上下文)。 如果设置为 <code>false</code>，文件中的所有字符串将在单次请求中发送到 MT 引擎。 如果设置为 <code>true</code>（默认值），Crowdin 会将字符串拆分为多个块。</p>
+        <p><strong>描述：</strong> 控制[批量处理](#批量处理与文件上下文)。如果设置为 <code>false</code>，文件中的所有字符串将在单次请求中发送到 MT 引擎。如果设置为 <code>true</code>（默认值），Crowdin 会将字符串拆分为多个块。</p>
       </td>
     </tr>
     <tr>
@@ -117,8 +116,7 @@ import mt from '!/developer/module_mt.png';
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>允许值：</strong> <code>crowdin</code>、<code>crowdin-enterprise</code></p>
-        <p><strong>描述：</strong> 可安装该模块的环境集合。<br />
-        此参数在跨产品的应用程序中必需。</p>
+        <p><strong>描述：</strong> 可安装该模块的环境集合。<br />此参数在跨产品的应用程序中必需。</p>
       </td>
     </tr>
   </tbody>
@@ -129,7 +127,7 @@ import mt from '!/developer/module_mt.png';
 系统使用 `url` 发送待翻译文本，然后应用处理这些文本并以两种可能的响应类型之一返回给系统：[无错误](#应用的预期响应-无错误)和[有错误](#应用的预期响应-有错误)。
 
 <Aside>
-  确保您的 Custom MT 应用使用与 Crowdin 支持的相同[语言代码](/zh/developer/language-codes/)。 如果某些语言不匹配，请设置语言映射。
+  确保您的 Custom MT 应用使用与 Crowdin 支持的相同[语言代码](/zh/developer/language-codes/)。如果某些语言不匹配，请设置语言映射。
 </Aside>
 
 **HTTP 请求：**
@@ -138,7 +136,7 @@ import mt from '!/developer/module_mt.png';
 https://{AppBaseUrl}/translate/?source=en&target=uk&project_id=727186&jwtToken={yourTokenValue}
 ```
 
-## 查询参数
+### 查询参数
 
 <table>
   <tbody>
@@ -180,56 +178,7 @@ https://{AppBaseUrl}/translate/?source=en&target=uk&project_id=727186&jwtToken={
   </tbody>
 </table>
 
-## 批量处理与文件上下文
-
-默认情况下，Crowdin 将源字符串拆分为较小的块（`splitStringsIntoChunks: true`）以优化处理时间并管理请求大小。
-
-但是，某些现代 MT 引擎和 AI 提供商（如 XL8 或 LLM）需要文件的完整上下文才能生成高质量的翻译。 这对于字幕（SRT）或文学内容等格式尤为重要，因为在这些格式中，一个句子的翻译在很大程度上依赖于前一个句子。
-
-如果您要连接支持基于文件或文档级别翻译的引擎：
-
-1. 在清单中将 `splitStringsIntoChunks` 设置为 `false`。
-2. Crowdin 将在一次请求中发送属于单个文件的所有字符串。
-
-<Aside type="caution">
-  当 <code>splitStringsIntoChunks</code> 设置为 <code>false</code> 时，请确保您的端点和所连接的 MT 引擎能够处理大型负载，因为请求正文大小将与完整源文件的大小相对应。
-</Aside>
-
-## 为您的 MT 引擎处理不可翻译元素
-
-对于包含不可翻译元素（例如标签、占位符等）的字符串，Crowdin 会将这些元素替换为特殊的 *notranslate* 标签。 这确保了这些元素在字符串被 MT 引擎翻译后保持其原始状态。 Crowdin 使用这种方法来避免可能破坏导出翻译文件的潜在问题。
-
-以下是字符串修改前后的示例。
-
-以下是包含不可翻译元素（标签、占位符等）的字符串示例 在 Crowdin 中的显示效果：
-
-```html
-<strong>任务：</strong>
-```
-
-以下是 Crowdin 在将上述字符串发送到 MT 引擎之前对其进行修改的方式：
-
-```html
-<span class="notranslate">0</span>任务：<span class="notranslate">1</span>
-```
-
-### 为您的 MT 引擎自定义不可翻译元素
-
-如果您的 MT 引擎已有类似功能但实现方式与 Crowdin 不同，我们建议在您的 Custom MT 应用中调整不可翻译元素的处理方式，以匹配您的 MT 引擎的实现。 具体来说，将 Crowdin 的默认值替换，例如
-
-```html
-<span class="notranslate">%index%</span>
-```
-
-替换为特定于您的 MT 引擎的禁止翻译元素。
-
-您可以在此处查看 Amazon Translate 中禁止翻译元素的实现示例：[在 Amazon Translate 中使用禁止翻译](https://docs.aws.amazon.com/translate/latest/dg/customizing-translations-tags.html)。
-
-### 处理包含已更改不可翻译元素的翻译
-
-如果 MT 引擎向 Crowdin 发送的翻译未包含所有原始状态的标签，或标签以某种方式被更改（例如被翻译），Crowdin 将忽略此类翻译，不会将其保存到字符串中。
-
-## 从 Crowdin 到应用的 applicationUrl 请求（简单）
+### 从 Crowdin 到应用的 applicationUrl 请求（简单）
 
 请求载荷示例：
 
@@ -244,7 +193,7 @@ https://{AppBaseUrl}/translate/?source=en&target=uk&project_id=727186&jwtToken={
 }
 ```
 
-## 从 Crowdin 到应用的 applicationUrl 请求（扩展）
+### 从 Crowdin 到应用的 applicationUrl 请求（扩展）
 
 要使用扩展请求，请将 `withContext` 参数添加到您的 Custom MT 模块。
 
@@ -305,7 +254,7 @@ https://{AppBaseUrl}/translate/?source=en&target=uk&project_id=727186&jwtToken={
 }
 ```
 
-## 应用的预期响应（无错误）
+### 应用的预期响应（无错误）
 
 响应载荷示例：
 
@@ -322,7 +271,23 @@ https://{AppBaseUrl}/translate/?source=en&target=uk&project_id=727186&jwtToken={
 }
 ```
 
-## 应用的预期响应（有错误）
+`translations` 数组必须嵌套在顶级 `data` 对象下。在顶层返回数组（例如 `{"translations": [...]}`）的响应会被视为不包含翻译并被拒绝。
+
+为每个源字符串返回恰好一个翻译，顺序与接收字符串的顺序相同。 Crowdin 通过翻译在数组中的位置而不是标识符来匹配源字符串。如果返回的翻译数量与发送的字符串数量不匹配，则跳过该批次。
+
+对于大型载荷，你可以返回 `translationsUrl` 而不是内联的 `translations` 数组：
+
+```json
+{
+  "data": {
+    "translationsUrl": "https://app.example.com/jKe8ujs7a-translations.ndjson"
+  }
+}
+```
+
+`translationsUrl` 是指向包含已翻译字符串的[换行分隔 JSON](https://github.com/ndjson/ndjson-spec) 文件的公共 URL。使用 `translations` 或 `translationsUrl` 之一。
+
+### 应用的预期响应（有错误）
 
 响应载荷示例：
 
@@ -335,3 +300,65 @@ https://{AppBaseUrl}/translate/?source=en&target=uk&project_id=727186&jwtToken={
 ```
 
 应用返回的响应结构应与所提供的示例一致，否则 Crowdin 将视其为无效。
+
+## 批量处理与文件上下文
+
+默认情况下，Crowdin 将源字符串拆分为较小的块（`splitStringsIntoChunks: true`）以优化处理时间并管理请求大小。
+
+但是，某些现代 MT 引擎和 AI 提供商（如 XL8 或 LLM）需要文件的完整上下文才能生成高质量的翻译。这对于字幕（SRT）或文学内容等格式尤为重要，因为在这些格式中，一个句子的翻译在很大程度上依赖于前一个句子。
+
+如果您要连接支持基于文件或文档级别翻译的引擎：
+
+1. 在清单中将 `splitStringsIntoChunks` 设置为 `false`。
+2. Crowdin 将在一次请求中发送属于单个文件的所有字符串。
+
+<Aside type="caution">
+  当 <code>splitStringsIntoChunks</code> 设置为 <code>false</code> 时，请确保您的端点和所连接的 MT 引擎能够处理大型负载，因为请求正文大小将与完整源文件的大小相对应。
+</Aside>
+
+## 为您的 MT 引擎处理不可翻译元素
+
+对于包含不可翻译元素（例如标签、占位符等）的字符串，Crowdin 会将这些元素替换为特殊的 *notranslate* 标签。这确保了这些元素在字符串被 MT 引擎翻译后保持其原始状态。 Crowdin 使用这种方法来避免可能破坏导出翻译文件的潜在问题。
+
+以下是字符串修改前后的示例。
+
+以下是包含不可翻译元素（标签、占位符等）的字符串示例在 Crowdin 中的显示效果：
+
+```html
+<strong>任务：</strong>
+```
+
+以下是 Crowdin 在将上述字符串发送到 MT 引擎之前对其进行修改的方式：
+
+```html
+<span class="notranslate">0</span>任务：<span class="notranslate">1</span>
+```
+
+### 为您的 MT 引擎自定义不可翻译元素
+
+如果您的 MT 引擎已有类似功能但实现方式与 Crowdin 不同，我们建议在您的 Custom MT 应用中调整不可翻译元素的处理方式，以匹配您的 MT 引擎的实现。具体来说，将 Crowdin 的默认值替换，例如
+
+```html
+<span class="notranslate">%index%</span>
+```
+
+替换为特定于您的 MT 引擎的禁止翻译元素。
+
+您可以在此处查看 Amazon Translate 中禁止翻译元素的实现示例：[在 Amazon Translate 中使用禁止翻译](https://docs.aws.amazon.com/translate/latest/dg/customizing-translations-tags.html)。
+
+### 处理包含已更改不可翻译元素的翻译
+
+如果 MT 引擎向 Crowdin 发送的翻译未包含所有原始状态的标签，或标签以某种方式被更改（例如被翻译），Crowdin 将忽略此类翻译，不会将其保存到字符串中。
+
+## 故障排除
+
+如果自定义 MT 应用返回响应但翻译未保存，则响应正文很可能与预期模式不匹配。当响应被拒绝时，Crowdin 会在错误消息中包含收到的状态码和正文，以便你可以将其与上面的模式进行比较。
+
+| 错误消息                 | 可能原因                                              | 如何修复                                                                              |
+| -------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 自定义 MT 引擎未返回翻译       | `translations` 数组缺失、为空，或放置在 `data` 对象之外（例如在顶层返回）。 | 将 `translations` 数组嵌套在 `data` 对象下，并确保它不为空。                                        |
+| 自定义 MT 引擎返回了无效翻译     | `translations` 数组中的某个元素不是字符串。                     | 将每个翻译作为纯字符串返回。                                                                    |
+| 自定义 MT 引擎返回了意外的响应    | 响应正文不是有效的 JSON。                                   | 返回与预期模式匹配的格式良好的 JSON 正文。                                                          |
+| 自定义 MT 引擎返回了 HTTP 错误 | 端点返回了非 2xx 的 HTTP 状态码。                            | 对于成功的翻译返回 HTTP 200，并使用[错误响应格式](#expected-response-from-the-app-with-errors)来报告失败。 |
+
+有些响应被拒绝时没有错误消息。如果返回的翻译数量与发送的源字符串数量不匹配，Crowdin 会跳过该批次并使这些字符串保持未翻译状态。确保你的应用为每个源字符串返回恰好一个翻译，顺序相同。

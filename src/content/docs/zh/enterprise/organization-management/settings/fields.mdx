@@ -13,13 +13,13 @@ import fieldsProjectLabels from '!/enterprise/organization-management/fields_pro
 
 字段是自定义属性，允许您通过向各种实体（如项目、用户账户、任务等）添加额外的有用信息、链接或数据来增强 Crowdin 企业版中的工作组织和数据管理。
 
-字段提供灵活性和定制性以适应各种用例，无论是标记关键项目、分类任务还是向用户账户添加语境信息。 这使得 Crowdin 企业版组织内正在开展的工作更加清晰。 可以通过 UI 或 API 创建和管理字段。
+字段提供灵活性和定制性以适应各种用例，无论是标记关键项目、分类任务还是向用户账户添加语境信息。这使得 Crowdin 企业版组织内正在开展的工作更加清晰。可以通过 UI 或 API 创建和管理字段。
 
-字段也经常由 Crowdin 应用程序创建。 通常，最好保留 Crowdin 应用程序创建的自定义属性。
+字段也经常由 Crowdin 应用程序创建。通常，最好保留 Crowdin 应用程序创建的自定义属性。
 
 ## 用例
 
-您可以在多种场景中使用字段。 以下是几个例子：
+您可以在多种场景中使用字段。以下是几个例子：
 
 * **项目优先级** – 使用自定义复选框字段标记关键项目，以便于识别和确定优先级。
 * **任务分类** – 使用自定义标记或选择列表根据特定标准或属性对任务进行分类。
@@ -34,7 +34,7 @@ import fieldsProjectLabels from '!/enterprise/organization-management/fields_pro
 
 ## 权限
 
-只有组织所有者和管理员可以通过 UI 或 API 创建和编辑字段。 一旦创建，字段就可以由组织中具有适当角色的用户使用。 例如，可以创建项目的用户将能够在创建项目对话框中或该字段实体可用的任何其他位置查看和应用字段。
+只有组织所有者和管理员可以通过 UI 或 API 创建和编辑字段。一旦创建，字段就可以由组织中具有适当角色的用户使用。例如，可以创建项目的用户将能够在创建项目对话框中或该字段实体可用的任何其他位置查看和应用字段。
 
 ## 创建新字段
 
@@ -60,18 +60,24 @@ import fieldsProjectLabels from '!/enterprise/organization-management/fields_pro
 
 可以使用 [Fields 类别](/developer/enterprise/api/v2/#tag/Fields)中的 API 方法创建字段。
 
-创建字段后，您可以通过 Patch 和 Get API 方法将其与预配置的实体配合使用：
+创建字段后，你可以在预配置的实体上处理其值。 `List` 和 `Edit` 方法用途不同：
 
-* [列出项目](/developer/enterprise/api/v2/#operation/api.projects.getMany)
-* [编辑项目](/developer/enterprise/api/v2/#operation/api.projects.patch)
-* [列出任务](/developer/enterprise/api/v2/#operation/api.projects.tasks.getMany)
-* [编辑任务](/developer/enterprise/api/v2/#operation/api.projects.tasks.patch)
-* [列出用户](/developer/enterprise/api/v2/#operation/api.users.getMany)
-* [编辑用户](/developer/enterprise/api/v2/#operation/api.users.patch)
-* [列出文件](/developer/enterprise/api/v2/#operation/api.projects.files.getMany)
-* [编辑文件](/developer/enterprise/api/v2/#operation/api.projects.files.patch)
-* [列出字符串](/developer/enterprise/api/v2/#operation/api.projects.strings.getMany)
-* [编辑字符串](/developer/enterprise/api/v2/#operation/api.projects.strings.patch)
+* **检索字段值** – 使用 `List` 方法读取分配给实体的当前字段值。返回值仅供参考，不用于筛选或搜索实体：
+  * [列出项目](/developer/enterprise/api/v2/#operation/api.projects.getMany)
+  * [列出任务](/developer/enterprise/api/v2/#operation/api.projects.tasks.getMany)
+  * [列出用户](/developer/enterprise/api/v2/#operation/api.users.getMany)
+  * [列出文件](/developer/enterprise/api/v2/#operation/api.projects.files.getMany)
+  * [列出字符串](/developer/enterprise/api/v2/#operation/api.projects.strings.getMany)
+  * [列出术语](/developer/enterprise/api/v2/#operation/api.glossaries.terms.getMany)
+  * [列出概念](/developer/enterprise/api/v2/#operation/api.glossaries.concepts.getMany)
+* **更新字段值** – 使用 `Edit` 方法设置或更改特定实体的字段值：
+  * [编辑项目](/developer/enterprise/api/v2/#operation/api.projects.patch)
+  * [编辑任务](/developer/enterprise/api/v2/#operation/api.projects.tasks.patch)
+  * [编辑用户](/developer/enterprise/api/v2/#operation/api.users.patch)
+  * [编辑文件](/developer/enterprise/api/v2/#operation/api.projects.files.patch)
+  * [编辑字符串](/developer/enterprise/api/v2/#operation/api.projects.strings.patch)
+  * [编辑术语](/developer/enterprise/api/v2/#operation/api.glossaries.terms.patch)
+  * [更新概念](/developer/enterprise/api/v2/#operation/api.glossaries.concepts.put)
 
 ## 编辑字段值
 
@@ -83,18 +89,18 @@ import fieldsProjectLabels from '!/enterprise/organization-management/fields_pro
 
 ### 通过 API 编辑字段值
 
-将字段分配给实体后，可以通过 API 编辑其值。 为此，请在支持字段的 API 调用中添加新参数 `field`。 参数 `field` 应包含一个对象，其键为字段的 slug，值为特定实体的字段值（例如，`{"fieldSlug": 2}`）。
+将字段分配给实体后，可以通过 API 编辑其值。为此，请将 `fields` 参数添加到支持字段的 API 调用中。 `fields` 参数应包含一个对象，其中每个键为字段的 slug，对应的值为特定实体的字段值（例如 `"fields": {"fieldSlug": 2}`）。
 
 ## 字段类型
 
 Crowdin Enterprise 支持多种字段类型，每种类型满足不同的数据输入需求：
 
-* **单选按钮** – 提供具有单选功能的选项列表。 在创建过程中，需要配置选项列表。 每个选项都有一个值和一个标签。 值必须唯一。 在查看模式下，显示选中的选项。
-* **复选框字段** – 接受 true/false 值，通常用于二进制选项。 在查看模式下，显示一个图标。
-* **日期选择器** – 允许用户从日历控件中选择日期。 在查看模式下，将日期显示为字符串。
-* **日期和时间选择器** – 与日期选择器类似，但还包括时间选择。 在查看模式下，将日期和时间显示为字符串。
-* **数字字段** – 接受指定范围内的数字输入。 您可以选择添加显示在数字输入旁边的单位。
-* **标记** – 提供多选选项。 每个选项都有唯一的值和标签。 允许用户创建新选项。 在查看模式下，将选中的选项显示为标签片段。
+* **单选按钮** – 提供具有单选功能的选项列表。在创建过程中，需要配置选项列表。每个选项都有一个值和一个标签。值必须唯一。在查看模式下，显示选中的选项。
+* **复选框字段** – 接受 true/false 值，通常用于二进制选项。在查看模式下，显示一个图标。
+* **日期选择器** – 允许用户从日历控件中选择日期。在查看模式下，将日期显示为字符串。
+* **日期和时间选择器** – 与日期选择器类似，但还包括时间选择。在查看模式下，将日期和时间显示为字符串。
+* **数字字段** – 接受指定范围内的数字输入。您可以选择添加显示在数字输入旁边的单位。
+* **标记** – 提供多选选项。每个选项都有唯一的值和标签。允许用户创建新选项。在查看模式下，将选中的选项显示为标签片段。
 * **选择列表（单选）** – 从预定义列表中提供单选选项。
 * **选择列表（多选）** – 与标记类似，但不允许用户创建新选项。
 * **文本字段（仅纯文本）** – 提供单行文本输入字段。
@@ -127,6 +133,12 @@ Crowdin Enterprise 支持多种字段类型，每种类型满足不同的数据�
 * **字符串**：
   * 字符串详情（编辑器）
   * 字符串编辑模态框（项目字符串选项卡和编辑器）（可编辑）
+* **术语**：
+  * 术语详情（编辑器中的术语面板）
+  * 术语编辑模态框（术语表和编辑器）（可编辑）
+* **概念**：
+  * 概念详情（编辑器中的术语面板）
+  * 概念编辑模态框（术语表和编辑器）（可编辑）
 
 ## UI 中的字段
 

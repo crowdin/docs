@@ -24,27 +24,59 @@ import { Aside } from '@astrojs/starlight/components';
     <td>自定义分段规则</td>
     <td>
       <div>
-        定义自己的分段规则。
-        <Aside>需要启用**内容分段**选项，才能启用并定义**自定义分段规则**。</Aside>
-        <ReadMore>了解更多关于[自定义分段](/zh/custom-segmentation/)的信息。</ReadMore>
+        定义自己的分段规则。<Aside>需要启用**内容分段**选项，才能启用并定义**自定义分段规则**。</Aside><ReadMore>了解更多关于[自定义分段](/zh/custom-segmentation/)的信息。</ReadMore>
       </div>
     </td>
     <td>Generic XML、DITA、AsciiDoc、纯文本、MadCap Flare、HTML、Office 文档、Adobe FrameMaker、Adobe InDesign、Markdown、MediaWiki</td>
   </tr>
   <tr>
     <td>排除的元素</td>
-    <td>定义不应可供翻译的元素的 CSS 样式选择器列表（例如，code、pre > code、.code-block）。 仅适用于块元素。 内联元素将被忽略。</td>
-    <td>HTML、带 Front Matter 的 HTML</td>
+    <td>定义不应可供翻译的元素的 CSS 样式选择器列表（例如，code、pre > code、.code-block）。仅适用于块元素。内联元素将被忽略。</td>
+    <td>HTML、HTML（带前置内容）</td>
+  </tr>
+  <tr>
+    <td>内联标签</td>
+    <td>定义应作为内联元素而非块级元素处理的标签列表（例如，<code>item, list</code>）。内联标签内的文本仍然是周围字符串的一部分。</td><td>通用 XML、HTML、HTML（带前置内容）、Markdown、WebXml</td>
+  </tr>
+  <tr>
+    <td>隐藏属性值</td>
+    <td>HTML 属性（如 <code>src</code>、<code>href</code> 和 <code>data</code>）将作为隐藏字符串导入，因此不会显示给译者。</td>
+    <td>HTML、HTML（带前置内容）、WebXml</td>
   </tr>
   <tr>
     <td>排除的 front matter 元素</td>
-    <td>定义不应可供翻译的 front matter 元素列表（例如，keywords、"internal.description"、tags）。 路径元素应以句点分隔。 包含句点的键必须用引号括起来。</td>
-    <td>带 Front Matter 的 HTML、MDX</td>
+    <td>定义不应可供翻译的 front matter 元素列表（例如，keywords、"internal.description"、tags）。路径元素应以句点分隔。包含句点的键必须用引号括起来。</td>
+    <td>HTML（带前置内容）、Markdown、MDX</td>
+  </tr>
+  <tr>
+    <td>前置内容导出引号</td>
+    <td>定义导出文件中前置内容值的引号方式。<strong>默认</strong>仅引用包含冒号的值，其他两个选项使用单引号或双引号引用每个值。</td>
+    <td>Markdown</td>
   </tr>
   <tr>
     <td>排除代码块</td>
-    <td>定义是否导入代码块。 仅适用于代码块。 包含代码的内联元素将被忽略。</td>
-    <td>MDX</td>
+    <td>定义是否导入代码块。仅适用于代码块。包含代码的内联元素将被忽略。</td>
+    <td>Markdown、MDX</td>
+  </tr>
+  <tr>
+    <td>加粗标记</td>
+    <td>定义导出文件中用于加粗文本的标记，可以是 <strong>星号 (\*)</strong> 或 <strong>下划线 (_)</strong>。</td>
+    <td>Markdown、MDX</td>
+  </tr>
+  <tr>
+    <td>强调标记</td>
+    <td>定义导出文件中用于强调文本的标记，可以是 <strong>星号 (\*)</strong> 或 <strong>下划线 (_)</strong>。</td>
+    <td>Markdown、MDX</td>
+  </tr>
+  <tr>
+    <td>无序列表项目符号</td>
+    <td>定义导出文件中每个无序列表项的起始字符：<strong>短横线 (-)</strong>、<strong>星号 (\*)</strong> 或 <strong>加号 (+)</strong>。</td>
+    <td>Markdown、MDX</td>
+  </tr>
+  <tr>
+    <td>表格格式</td>
+    <td>定义导出文件中表格列的格式。<strong>均匀分布单元格</strong> 将每列填充到其最长值，<strong>合并</strong> 在每个值的两侧各留一个空格。</td>
+    <td>Markdown、MDX</td>
   </tr>
   <tr>
     <td>翻译内容</td>
@@ -60,8 +92,7 @@ import { Aside } from '@astrojs/starlight/components';
     <td>可翻译元素</td>
     <td>
       <div>
-        定义可供翻译的特定节点和属性。
-        <Aside>如果已定义，则导入时将忽略**翻译内容**和**翻译属性**参数。</Aside>
+        定义可供翻译的特定节点和属性。<Aside>如果已定义，则导入时将忽略**翻译内容**和**翻译属性**参数。</Aside>
       </div>
     </td>
     <td>Generic XML</td>
@@ -70,8 +101,7 @@ import { Aside } from '@astrojs/starlight/components';
     <td>转义单引号</td>
     <td>
       <div>
-        定义导出翻译中单引号转义的行为。<br />
-        可用选项：
+        定义导出翻译中单引号转义的行为。<br />可用选项：
         * 不转义单引号
         * 使用反斜杠转义单引号（`It's okay`⇒`It\'s okay`）
         * 使用另一个单引号转义单引号（`It's okay`⇒`It''s okay`）
@@ -90,34 +120,47 @@ import { Aside } from '@astrojs/starlight/components';
     <td>Java 属性</td>
   </tr>
   <tr>
+    <td>导出引号</td>
+    <td>定义导出的字符串是否用单引号或双引号括起来。</td>
+    <td>JavaScript</td>
+  </tr>
+  <tr>
+    <td>跳过包含指令</td>
+    <td><code>include::</code> 指令将保持未处理状态，因此它们指向的文件内容不会包含在此文件中。当这些文件单独上传到 Crowdin 且其文本已在其中翻译时非常有用。</td>
+    <td>AsciiDoc</td>
+  </tr>
+  <tr>
+    <td>内联提取超链接文本</td>
+    <td>超链接的文本将与周围的句子一起提取，因此译者可以在上下文中看到它，而不是作为单独的不可编辑标签。</td>
+    <td>Adobe InDesign</td>
+  </tr>
+  <tr>
+    <td>转换为 ICU MessageFormat</td>
+    <td>占位符将在导入时转换为 ICU MessageFormat 语法。</td>
+    <td>Steamworks 本地化</td>
+  </tr>
+  <tr>
+    <td>将 VDF 性别语法转换为 ICU Select 时使用 "_gender" 标记变量</td>
+    <td>转换性别语法时，变量名将添加 <code>_gender</code> 后缀。在启用 <strong>转换为 ICU MessageFormat</strong> 时可用。</td>
+    <td>Steamworks 本地化</td>
+  </tr>
+  <tr>
+    <td>将标识符（键）导入为源字符串</td>
+    <td>当文件没有字符串的源文本时，其标识符将作为源字符串导入。</td><td>字符串目录</td>
+  </tr>
+  <tr>
+    <td>导入翻译</td>
+    <td>文件中已存储的翻译将与源字符串一起导入。</td><td>字符串目录</td>
+  </tr>
+  <tr>
     <td>清除多余标签</td>
-    <td>导入时将删除与文本间距相关的额外格式标签。 在翻译从其他格式（例如 PDF 等）转换而来的 Office 文档时非常有用，因为转换过程中引入了大量不必要的格式标签。</td>
-    <td>Office 文档</td>
+    <td>导入时将删除与文本间距相关的额外格式标签。在翻译从其他格式（例如 PDF）转换而来的 Office 文档时很有用，因为转换引入了许多不必要的格式标签。</td>
+    <td>Office 文档、Microsoft Visio</td>
   </tr>
   <tr>
     <td>翻译超链接 URL</td>
     <td>超链接 URL 将可供翻译。</td>
-    <td>Office 文档</td>
-  </tr>
-  <tr>
-    <td>翻译隐藏文本</td>
-    <td>隐藏文本将可供翻译。</td>
-    <td>Office 文档</td>
-  </tr>
-  <tr>
-    <td>翻译隐藏行和列</td>
-    <td>隐藏的行和列将可供翻译。</td>
-    <td>Office 文档</td>
-  </tr>
-  <tr>
-    <td>导入隐藏幻灯片</td>
-    <td>隐藏的幻灯片将可供翻译。</td>
-    <td>Office 文档</td>
-  </tr>
-  <tr>
-    <td>导入备注</td>
-    <td>幻灯片备注将可供翻译。</td>
-    <td>Office 文档</td>
+    <td>Office 文档、Microsoft Visio</td>
   </tr>
   </tbody>
 </table>
