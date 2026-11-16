@@ -4399,6 +4399,518 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  /applications/credits/settings:
+    get:
+      tags:
+        - Applications
+      summary: 'Get Application Credit Settings'
+      description: "**Required scopes:** `application.credits` (Read only).\n\nSpending limits for paid actions of installed applications: the overall limits, the default limits of each user and per-user overrides. `null` means no limit, `0` blocks spending. Until the overall limits are set, both are `0`, so applications cannot spend"
+      operationId: api.applications.credits.settings.get
+      responses:
+        '200':
+          description: 'Application credit settings'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationCreditSettingsResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    patch:
+      tags:
+        - Applications
+      summary: 'Edit Application Credit Settings'
+      description: "**Required scopes:** `application.credits` (Read and Write).\n\nEdits the overall limits, the default limits of each user and per-user overrides. `null` removes a limit. A daily limit cannot exceed the monthly one, and a default user limit cannot exceed the matching overall limit, unless that limit is `0`: a `0` limit blocks spending on its own, so a daily limit set alone does not lift the monthly `0` the overall limits start with. For a `custom` override set at least one limit; for `blocked` and `unlimited` both limits must be `null`"
+      operationId: api.applications.credits.settings.patch
+      requestBody:
+        description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationCreditSettingsPatch'
+      responses:
+        '200':
+          description: 'Application credit settings were successfully updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationCreditSettingsResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  /applications/credits/transactions:
+    get:
+      tags:
+        - Applications
+      summary: 'List Application Credit Transactions'
+      description: "**Required scopes:** `application.transaction` (Read only).\n\nCrowdin Credits transactions of installed applications, newest first. An access token of an installed application sees only the transactions of that application"
+      operationId: api.applications.credits.transactions.getMany
+      parameters:
+        -
+          name: applicationIdentifier
+          in: query
+          description: 'Only transactions of this application. Required with an access token of an installed application, where it must name the calling application'
+          schema:
+            type: string
+            maxLength: 255
+            minLength: 2
+          example: crowdin-copilot
+        -
+          name: userId
+          in: query
+          description: 'Only transactions charged for this user'
+          schema:
+            type: integer
+            minimum: 1
+          example: 7
+        -
+          $ref: '#/components/parameters/ApplicationCreditCreatedAfter'
+        -
+          $ref: '#/components/parameters/ApplicationCreditCreatedBefore'
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'Application credit transaction list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationCreditTransactionCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    post:
+      tags:
+        - Applications
+      summary: 'Add Application Credit Transaction'
+      description: "**Required scopes:** `application.transaction` (Read and Write).\n\nWithdraws Crowdin Credits from the organization balance for a paid action the application performed for a user, and records the transaction.\n\nThe transaction is rejected with `402` when the amount is more than the balance, the user is blocked, or the amount does not fit a daily or monthly limit of the organization or the user. To avoid an unpaid action, check the limits of the user with `GET /applications/credits/usage/members/{memberId}` (scope `application.credits`, read) before starting it.\n\nSend a unique `Idempotency-Key` header with every new transaction. A retry with the same key and the same body returns the original transaction without a second withdrawal. The same key with a different body returns `409`.\n\n__Note:__ Requires the application's own access token - personal access tokens are not supported"
+      operationId: api.applications.credits.transactions.post
+      parameters:
+        -
+          name: Idempotency-Key
+          in: header
+          description: 'Unique key of the transaction, 1-255 printable ASCII characters'
+          required: true
+          schema:
+            type: string
+            maxLength: 255
+            minLength: 1
+          example: automation-a1b2c3-run-42
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationCreditTransactionCreateForm'
+      responses:
+        '201':
+          description: 'Application Credit Transaction was successfully created, or the original transaction for a repeated Idempotency-Key'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationCreditTransactionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '402':
+          description: 'Not enough balance or a spending limit is reached. The message says which one'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRequiredExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '409':
+          description: 'The Idempotency-Key has already been used with a different request'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictExceptionResource'
+  '/applications/credits/transactions/{transactionId}':
+    get:
+      tags:
+        - Applications
+      summary: 'Get Application Credit Transaction'
+      description: "**Required scopes:** `application.transaction` (Read only).\n\nAn access token of an installed application sees only the transactions of that application"
+      operationId: api.applications.credits.transactions.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationCreditCallerIdentifier'
+        -
+          name: transactionId
+          in: path
+          description: 'ID of the transaction. Get via [List Application Credit Transactions](#operation/api.applications.credits.transactions.getMany)'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Application credit transaction'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationCreditTransactionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  /applications/credits/transactions/exports:
+    post:
+      tags:
+        - Applications
+      summary: 'Export Application Credit Transactions'
+      description: "**Required scopes:** `application.transaction` (Read only).\n\nStarts building a file with the transactions that match the filters, newest first. Poll the export status and download the file when it is `finished`. An access token of an installed application sees only the transactions of that application"
+      operationId: api.applications.credits.transactions.exports.post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationCreditTransactionExportForm'
+      responses:
+        '201':
+          description: 'Export was successfully started'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationCreditTransactionExportResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/applications/credits/transactions/exports/{exportId}':
+    get:
+      tags:
+        - Applications
+      summary: 'Check Application Credit Transactions Export Status'
+      description: "**Required scopes:** `application.transaction` (Read only).\n\nReturns the status of an export. The file can be downloaded once `status` is `finished`"
+      operationId: api.applications.credits.transactions.exports.get
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationCreditCallerIdentifier'
+        -
+          name: exportId
+          in: path
+          description: 'ID of the export. Get via [Export Application Credit Transactions](#operation/api.applications.credits.transactions.exports.post)'
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 'Export status'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationCreditTransactionExportResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Export with the specified id was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/applications/credits/transactions/exports/{exportId}/download':
+    get:
+      tags:
+        - Applications
+      summary: 'Download Application Credit Transactions Export'
+      description: "**Required scopes:** `application.transaction` (Read only).\n\nReturns a link to the exported file, which expires one hour after this call. The export has to be `finished`; until it is, this operation answers 404"
+      operationId: api.applications.credits.transactions.exports.download.download
+      parameters:
+        -
+          $ref: '#/components/parameters/ApplicationCreditCallerIdentifier'
+        -
+          name: exportId
+          in: path
+          description: 'ID of the export. Get via [Export Application Credit Transactions](#operation/api.applications.credits.transactions.exports.post)'
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 'Link to the exported file'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadLinkResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Export with the specified id was not found, or has not finished yet'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  /applications/credits/usage:
+    get:
+      tags:
+        - Applications
+      summary: 'Get Application Credit Usage'
+      description: "**Required scopes:** `application.credits` (Read only).\n\nWhat installed applications spent in the current calendar day and month against the limits. `effectiveDailyCostLimit` and `effectiveMonthlyCostLimit` are the limits that actually apply to the user"
+      operationId: api.applications.credits.usage.get
+      responses:
+        '200':
+          description: 'Application credit usage'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationCreditUsageResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  /applications/credits/usage/members:
+    get:
+      tags:
+        - Applications
+      summary: 'List Application Credit Usage Members'
+      description: "**Required scopes:** `application.credits` (Read only).\n\nMembers with the limits that apply to them and what installed applications spent for them in the current calendar day and month"
+      operationId: api.applications.credits.usage.members.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+        -
+          $ref: '#/components/parameters/ApplicationCreditUsageMemberCollectionUserIds'
+        -
+          $ref: '#/components/parameters/ApplicationCreditUsageMemberCollectionOrderBy'
+      responses:
+        '200':
+          description: 'Application credit usage members list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationCreditUsageMemberCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  '/applications/credits/usage/members/{memberId}':
+    get:
+      tags:
+        - Applications
+      summary: 'Get Application Credit Usage Member'
+      description: "**Required scopes:** `application.credits` (Read only).\n\nLimits that apply to the member and what installed applications spent for them in the current calendar day and month. Check it before a paid action: a withdrawal that does not fit the limits or the balance is rejected"
+      operationId: api.applications.credits.usage.members.get
+      parameters:
+        -
+          name: memberId
+          in: path
+          description: 'Member Identifier'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Application credit usage of the member'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationCreditUsageMemberResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
   '/projects/{projectId}/branches/{branchId}/clones/{cloneId}/branch':
     get:
       tags:
@@ -7484,6 +7996,84 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/projects/{projectId}/logo':
+    put:
+      tags:
+        - Projects
+      summary: 'Upload Project Logo'
+      description: "**Required scopes:** `project.settings` (Read and Write).\n\nReplaces the project logo with an image uploaded via [Add Storage](#operation/api.storages.post). Supported formats: JPEG, PNG, GIF, WebP. Maximum file size is 10 MB."
+      operationId: api.projects.logo.put
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoUploadForm'
+      responses:
+        '200':
+          description: 'Project with the new logo'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrowdinStringBasedProjectResource'
+          x-doc-sections:
+            - string-based
+        '400':
+          description: 'Invalid request parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    delete:
+      tags:
+        - Projects
+      summary: 'Delete Project Logo'
+      description: "**Required scopes:** `project.settings` (Read and Write).\n\nRemoves the project logo. The `logo` field of the project then returns `null`."
+      operationId: api.projects.logo.delete
+      parameters:
+        -
+          $ref: '#/components/parameters/ProjectId'
+      responses:
+        '204':
+          description: 'Logo was removed'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Project was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
   '/projects/{projectId}/issues':
     get:
       tags:
@@ -37058,8 +37648,10 @@ components:
           type: string
           example: private
         logo:
+          description: 'URL of the project logo. `null` when no logo is uploaded'
           type: string
-          example: 'data:image/png;base64,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'
+          example: 'https://crowdin-static.downloads.crowdin.com/images/project-logo/8/small/c2a1f1e3b9d84b6f0e5a7c3d2b1a9f8e127.png'
+          nullable: true
         publicDownloads:
           type: boolean
           example: true
