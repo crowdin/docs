@@ -6,7 +6,18 @@ sidebar:
   label: 外部 QA 检查
 ---
 
+import { Aside } from '@astrojs/starlight/components';
+
 该模块支持集成高级、AI 驱动及其他专项 QA 检查，能够对译文进行验证，检测[默认 QA 检查](/enterprise/project-settings/qa-checks/)或基于 JavaScript 的[自定义 QA 检查](/enterprise/custom-qa-checks/)无法发现的细微问题。
+
+Crowdin Enterprise 通过 HTTP 将翻译分批发送到应用，应用会回答每个翻译是否通过检查。检查可以以两种模式之一运行：
+
+* **异步**（默认）：保存翻译后在后台调用应用。结果会在几秒或几分钟后出现在编辑器中，并且永远不会阻止翻译被保存。
+* **同步**：在保存翻译时也会调用应用，因此译员可以立即看到结果。项目可以将同步检查设置为[阻止](#blocking-checks)未通过检查的翻译。
+
+<Aside>
+  外部 QA 检查模块仅在 Crowdin Enterprise 中可用。
+</Aside>
 
 ## 访问权限
 
@@ -28,12 +39,15 @@ sidebar:
         "description": "Description",
         "runQaCheckUrl": "/validate",
         "getBatchSizeUrl": "/batch-size",
+        "supportsSynchronousRun": true,
         "url": "/settings/index.html"
       }
     ]
   }
 }
 ```
+
+一个应用可以声明多个 `external-qa-check` 模块。每个模块都成为单独的 QA 检查。
 
 ## 属性
 
@@ -51,8 +65,8 @@ sidebar:
       <td><code>name</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 模块的可读名称。</p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 模块的用户可读名称。<br />该名称显示在项目 QA 设置、编辑器中的 QA 问题以及导入报告中。</p>
       </td>
     </tr>
     <tr>
@@ -66,16 +80,25 @@ sidebar:
       <td><code>runQaCheckUrl</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 发送文本进行 QA 验证时触发的相对 URL。</p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 发送文本进行 QA 验证时触发的相对 URL。 Crowdin 会向此 URL 发送 <code>POST</code> 请求。</p>
       </td>
     </tr>
     <tr>
       <td><code class="whitespace-nowrap">getBatchSizeUrl</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>必填：</strong> 否</p>
-        <p><strong>描述：</strong> 检索模块支持的批次大小时触发的相对 URL。</p>
+        <p><strong>必需：</strong> 否</p>
+        <p><strong>描述：</strong> 检索模块支持的批处理大小时触发的相对 URL。<br />如果未设置，Crowdin 使用 500 的批处理大小。参见[批处理](#batching)。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">supportsSynchronousRun</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>boolean</code></p>
+        <p><strong>必需：</strong> 否</p>
+        <p><strong>默认值：</strong> <code>false</code></p>
+        <p><strong>描述：</strong> 如果应用可以在保存翻译时做出应答，则设置为 <code>true</code>。<br />只有同步检查可以设置为阻止翻译。参见[同步检查](#synchronous-checks)。</p>
       </td>
     </tr>
     <tr>
@@ -99,13 +122,17 @@ sidebar:
 
 ## 外部 QA 检查应用与 Crowdin 之间的通信
 
-系统使用 `runQaCheckUrl` 发送文本进行 QA 验证，触发时机为编辑器中保存译文后或执行 QA 检查时。应用随后处理文本，并向系统返回以下两种可能类型的响应之一：[无 QA 问题](#expected-response-from-the-app-without-qa-issues)或[存在 QA 问题](#expected-response-from-the-app-with-qa-issues)。当应用需要确定 QA 检查的最大批次大小时，可在 `manifest.json` 中设置 `getBatchSizeUrl` 键，指向提供最优批次大小的端点 URL。
+Crowdin 以带有 JSON 正文的 `POST` 请求形式，将翻译发送到 `runQaCheckUrl` 进行 QA 验证。应用检查翻译并在同一个 HTTP 响应中作答，可以[没有 QA 问题](#expected-response-from-the-app-without-qa-issues)，也可以[有 QA 问题](#expected-response-from-the-app-with-qa-issues)。
+
+* 每个请求包含针对一个检查、一种目标语言和一个文件（在基于字符串的项目中则没有文件）的翻译。
+* 请求包含 `Authorization: Bearer \<JWT>` 标头。令牌标识组织和应用。它不标识项目或用户；这些信息在请求正文中。使用应用的客户端密钥验证令牌。阅读更多关于 [Crowdin 应用安全性](/developer/crowdin-apps-security/)的内容。
+* 批处理大小通过使用相同标头的 `GET` 请求向 `getBatchSizeUrl` 请求获取。参见[批处理](#batching)。
 
 ### Crowdin 向应用发出的 runQaCheckUrl 请求
 
 请求载荷示例：
 
-```json collapse={26-82}
+```json collapse={27-83}
 {
   "data": {
     "translations": [
@@ -117,8 +144,7 @@ sidebar:
         "text": "La mise à jour est installé avec succès.",
         "provider": null,
         "pluralCategoryName": null,
-        "isPreTranslated": false,
-        "rating": 0
+        "isPreTranslated": false
       }
     ],
     "strings": [
@@ -127,6 +153,8 @@ sidebar:
         "key": "update_success",
         "context": "Confirmation of successful software update",
         "maxLength": null,
+        "createdAt": "2026-09-01T10:00:00+00:00",
+        "updatedAt": null,
         "text": "The update was successfully installed.",
         "fields": []
       }
@@ -201,6 +229,18 @@ sidebar:
 }
 ```
 
+关于请求载荷的说明：
+
+* `translations[].provider` 是生成翻译的 MT、TM 或 AI 引擎的名称，对于手动翻译或上传，则为 `null`。
+* 对于复数形式的字符串，`strings[].text` 是一个对象，每种复数形式对应一个文本，而 `translations` 包含每个复数形式的一项，每项都有其 `pluralCategoryName`。
+* `file` 对象仅在基于文件的项目中发送。
+* 某些字段（例如 `strings[].originalText`）仅在具有值时才发送。将示例中未显示的字段视为可选。
+* 空翻译不会被发送。
+
+<Aside type="caution" title="翻译 ID">
+  不要按 `translations[].id` 存储或缓存任何内容。在同步调用中，翻译尚未保存，因此 `id` 是一个临时数字，仅在此次保存中标识该翻译。它不必从 `0` 开始。在响应中将此值作为 `translationId` 返回。要缓存结果，请改用源文本、翻译文本和目标语言。
+</Aside>
+
 ### 应用的预期响应（无 QA 问题）
 
 响应载荷示例：
@@ -230,13 +270,41 @@ sidebar:
         "translationId": 456,
         "passed": false,
         "error": {
-          "message": "Example error message"
+          "message": "Example error message",
+          "details": {
+            "rule": "brand-names"
+          },
+          "suggestedFixes": [
+            {
+              "indexStart": 0,
+              "indexEnd": 6,
+              "replacement": "Crowdin"
+            }
+          ]
         }
       }
     ]
   }
 }
 ```
+
+* `error.message`（必需）：在编辑器中向译员显示的文本。使用纯文本，因为 HTML 不会被渲染。对于阻止性检查，该消息也会在 API 错误中返回。
+* `error.details`（可选）：包含任何附加数据的对象。它会与 QA 问题一起存储。
+* `error.suggestedFixes`（可选）：在编辑器中向译员提供的修复建议。 `indexStart` 和 `indexEnd` 是翻译文本中的位置，`replacement` 是要放在那里的文本。
+
+### 响应格式规则
+
+Crowdin 会将整个响应视为无效并拒绝，如果：
+
+* 正文不是 JSON，或者不完全是 `{"data": {"validations": [...]}}`。
+* 任何对象包含上面示例中未显示的键。例如，不要向通过的翻译添加 `"error": null`，也不要在 `data` 旁边添加顶级 `error`。
+* `translationId` 不是整数，或者 `passed` 不是布尔值。
+* 带有 `"passed": false` 的翻译没有 `error` 对象。
+* 请求中的某个翻译没有验证。
+
+带有请求中不存在的 ID 的验证会被忽略。
+
+无效响应的处理方式与不可用应用相同。参见[错误处理](#error-handling)。
 
 ### 应用向 Crowdin 返回的 getBatchSizeUrl 响应
 
@@ -250,4 +318,167 @@ sidebar:
 }
 ```
 
-应用响应的结构应与所提供的示例一致，否则 Crowdin 将视其为无效。
+如果响应与此示例不匹配，Crowdin 使用默认批处理大小 500。
+
+## 在项目中启用检查
+
+应用安装后，每个 `external-qa-check` 模块在项目 QA 设置中显示为单独的检查。项目经理在**设置 > 质量保证**中启用它。仅当项目中启用了 QA 检查时，该检查才会运行。
+
+对于每个启用的外部检查，项目经理在**保存翻译**下选择其严重性：
+
+* **警告**（默认）：译员会看到 QA 问题，并且仍然可以通过**仍然保存**来保存翻译。异步检查始终使用此严重性。
+* **错误**：未通过检查的翻译不会被保存。仅适用于具有 `supportsSynchronousRun: true` 的检查。使用[编辑项目](/developer/enterprise/api/v2/#operation/api.projects.patch) API 方法更新项目时，将检查 ID 添加到 `externalQaCheckIds`，并将 `externalQaChecksIgnorable` 中的值设置为 `false` 以使其成为阻止性检查。
+
+如果应用更新移除了 `supportsSynchronousRun`，该检查将停止在所有项目中阻止翻译，并作为异步检查工作。
+
+应用更新中对模块的更改（例如，新的 URL 或新的 `supportsSynchronousRun` 值）会在约一分钟内生效。应用更新不会重新检查现有翻译。要重新检查它们，请参见[重新验证](#revalidation)。
+
+## 检查运行时机
+
+### 后台检查
+
+每个启用的外部检查（无论是否同步）都会在以下情况下在后台被调用：
+
+* 某个翻译成为字符串的顶级翻译时（例如，在新翻译、批准、投票之后，或当先前的顶级翻译被删除时）。
+* 编辑现有翻译时。
+* 字符串的源文本或最大长度更改时。
+* 源文件更新或恢复时。
+
+后台检查仅涵盖每个字符串的顶级翻译。一个请求可以包含来自多次保存的翻译。
+
+后台检查的结果始终以**警告**严重性显示，即使是阻止性检查也是如此，因为翻译已经保存。
+
+### 同步检查
+
+如果模块具有 `supportsSynchronousRun: true`，则在保存翻译时、存储之前也会调用应用。这在添加翻译时发生：
+
+* 在编辑器中，包括**查找和替换**以及批量保存。
+* 使用 API（[添加翻译](/developer/enterprise/api/v2/#operation/api.projects.translations.post)、[翻译批量操作](/developer/enterprise/api/v2/#operation/api.projects.translations.patch)）。
+* 通过上传包含翻译的文件。
+* 通过 MT、TM 或 AI 进行自动翻译，包括工作流步骤中的自动翻译。
+* 通过供应商订单。
+
+正在保存的每个翻译都会调用同步检查，而不仅仅是顶级翻译。其他操作（例如批准或由工作流在项目之间复制的翻译）在操作期间不会调用该检查。它们改为在后台检查，并且无法被阻止。
+
+同步调用之后，后台检查仍会运行，但它只会为在保存期间未应答的检查调用应用。如果应用在保存期间已应答，则不会为相同的翻译再次调用它。
+
+### 阻止性检查
+
+当翻译未通过具有**错误**严重性的检查时，会显示应用的 `error.message`，并且翻译不会被保存：
+
+| 翻译添加位置             | 发生的情况                           |
+| ------------------ | ------------------------------- |
+| 编辑器，单条翻译           | 翻译不会被保存。没有**仍然保存**选项。           |
+| API，添加翻译           | API 返回 HTTP 400 和应用的错误消息。       |
+| API，翻译批量操作         | 整个请求被拒绝，不会保存任何内容。               |
+| 编辑器，**查找和替换**或批量保存 | 只有未通过检查的翻译不会被保存。                |
+| 文件上传，自动翻译          | 未通过检查的翻译会被跳过。报告会将其显示为被 QA 检查跳过。 |
+
+<Aside>
+  阻止性检查永远不会因为应用不可用而阻止翻译。如果应用未及时应答，翻译会被保存。参见[错误处理](#error-handling)。
+</Aside>
+
+### 重新验证
+
+要使用应用的检查重新检查现有翻译，请调用[重新验证 QA 检查](/developer/enterprise/api/v2/#operation/api.projects.qa-checks.revalidate.post) API 方法，并在 `externalQaCheckIds` 中传递检查 ID。你可以使用[列出外部 QA 检查](/developer/enterprise/api/v2/#operation/api.external-qa-checks.getMany) API 方法获取 ID。[项目 QA 设置](/enterprise/project-settings/qa-checks/#revalidate-qa-checks)中的**重新验证**按钮仅重新运行**术语一致性**和**AI 驱动的检查**。
+
+一个项目中一次只能运行一个重新验证。重新验证仅检查顶级翻译，并且不会重试失败的请求。
+
+### 验证翻译而不保存
+
+[通过 QA 检查验证文本](/developer/enterprise/api/v2/#operation/api.projects.translations.validate-qa-checks.post) API 方法检查翻译而不保存它们。它使用[同步超时](#timeouts)调用所有启用的外部检查，无论是否同步。如果检查未应答，响应包含 `Unable to complete check {name}.` 问题。
+
+## 批处理
+
+Crowdin Enterprise 按目标语言和文件对一次操作的翻译进行分组，并将每组拆分为应用从 `getBatchSizeUrl` 返回的大小的批次。
+
+* 默认批处理大小为 500。如果未设置 `getBatchSizeUrl`、对其请求失败或返回 `0` 或更少，也会使用该默认值。
+* 批处理大小会被缓存，因此新值会在 10 分钟内生效。
+* 对 `getBatchSizeUrl` 的请求有较短的时间限制（保存期间为 2 秒，后台为 10 秒）。如果应用未及时应答，使用默认值 500。从静态值返回批处理大小，而不是计算它。
+* 对于一组翻译，最多同时发送 10 个请求。同一集合的不同检查和语言会并行发送。大型操作（例如文件上传和自动翻译）会分块处理，一个块接一个块。
+* 一个组织中可以同时运行许多操作（编辑器保存、文件上传、自动翻译、后台检查）。它们各自发送自己的请求。
+
+例如，当上传一个包含 2,000 个字符串的文件并翻译成 3 种语言，且批处理大小为 500 时，应用会收到 12 个请求。
+
+## 超时
+
+时间限制适用于每个请求，而不是整个操作。
+
+| 调用                  | 单个请求的时间限制           |
+| ------------------- | ------------------- |
+| 同步检查，单条翻译           | 10 秒                |
+| 同步检查，多条翻译           | 60 秒                |
+| 通过 QA 检查 API 方法验证文本 | 单条翻译 10 秒，多条翻译 60 秒 |
+| 后台检查和重新验证           | 15 分钟               |
+
+失败的请求不会立即重试。重试仅针对后台检查发生，如下所述。
+
+## 错误处理
+
+当应用超时、连接失败、应用返回 HTTP 错误状态或响应[无效](#response-format-rules)时，请求失败。一个检查的多个请求通常一起发送（例如，为一次文件上传）。如果其中一个失败，与其一起发送的其他请求的结果也会被丢弃，并且它们的所有翻译都被视为未检查。
+
+接下来会发生什么取决于检查是如何被调用的：
+
+| 调用                  | 失败时发生的情况                                                                     |
+| ------------------- | ---------------------------------------------------------------------------- |
+| 同步检查                | 翻译被保存，并带有 QA 问题 `Unable to complete check {name}.`（严重性**警告**）。后台检查稍后会再次调用应用。 |
+| 后台检查                | 该检查稍后会重试，次数有限。如果最后一次尝试也失败，翻译会得到相同的错误。                                        |
+| 重新验证                | 翻译会立即得到相同的错误，无需重试。                                                           |
+| 通过 QA 检查 API 方法验证文本 | 响应包含相同的错误。不会保存任何内容。                                                          |
+
+`Unable to complete check {name}.` 问题永远不会阻止翻译。它在过滤器和统计中计为 QA 问题，并会一直保留，直到该翻译的下一次成功检查（例如，在下一次保存、源文本更改或重新验证之后）。
+
+### 断路器
+
+为保护已宕机的应用，Crowdin Enterprise 会在反复失败后暂停调用它一小段时间：
+
+* 在反复失败的请求之后，对该检查的调用会暂停约一分钟。
+* 暂停适用于整个组织：所有项目和所有类型的调用。
+* 当调用暂停时，同步检查会立即得到 `Unable to complete check {name}.`，因此阻止性检查在暂停期间不会阻止翻译。后台检查会等待下一次重试。
+* 超时、连接错误、HTTP `5xx` 和 `429` 响应以及无效响应都计为失败。其他 HTTP `4xx` 响应不计入，因为它们通常意味着请求有问题，而不是应用不可用。
+* `Retry-After` 标头会被忽略。
+
+## 稍后返回结果
+
+应用仅在针对同一请求的 HTTP 响应中返回结果。如果检查需要更多时间，请选择以下选项之一：
+
+* **保持请求打开**（仅后台调用）。后台检查对一个请求最多等待 15 分钟。将其用于偶尔的长时间检查，而不是作为正常响应时间。
+* **返回错误并让 Crowdin 重试。** HTTP `5xx` 或 `429` 响应会使后台检查稍后重试，次数有限。重复错误会暂停整个组织的检查，如[断路器](#circuit-breaker)所述。
+* **现在应答并稍后请求重新验证。** 立即响应，在后台完成工作，然后在 `externalQaCheckIds` 中带上你的检查 ID 调用[重新验证 QA 检查](/developer/enterprise/api/v2/#operation/api.projects.qa-checks.revalidate.post) API 方法。这需要项目经理权限，并会为整个项目重新检查，因此请将其用于罕见的大型更新。
+
+如果同步检查未在时间限制内应答，翻译会被保存，后台检查会以 15 分钟的限制再次请求。因此，有时较慢的同步检查仍然会得到结果，但会更晚且不会阻止。
+
+## 调用量和速率限制
+
+Crowdin Enterprise 不限制其调用应用的频率。唯一的限制是对于一组翻译的 10 个并行请求以及[断路器](#circuit-breaker)。针对以下负载来源规划你的应用及其背后任何服务的容量：
+
+* **日常工作**：在编辑器中或通过 API 的每次保存都会发送一个请求。文件上传和自动翻译每批发送一个请求。
+* **重复文本**：结果不会被缓存，不同项目中的相同文本会分别检查。在**仍然保存**、批准、投票、源文本更改、重试或重新验证之后，相同文本会再次发送。通过 AI 进行自动翻译并在 QA 问题上重试时，每个文本会发送两次：一次为第一个 AI 输出，一次为最终文本。
+* **完整重新检查**：当项目经理在项目中启用检查，或使用其 ID 调用重新验证 QA 检查 API 方法时，项目中每个字符串的顶级翻译都会在所有语言中检查。你的应用无法控制这种情况何时发生。
+* **并行工作**：组织中所有项目的操作同时运行，并且每个操作都发送自己的请求。
+
+例如，一个有 10,000 个字符串和 5 种目标语言的项目有 50,000 条顶级翻译。在该项目中启用检查会发送所有这些翻译，在默认批处理大小下为 100 个请求。
+
+如果你的应用依赖于有严格速率限制的服务，请遵循以下建议：
+
+* **速率限制**：在服务前面放置队列和速率限制器。当服务繁忙时，Crowdin Enterprise 不会降低请求速率。
+* **缓存**：按源文本、翻译文本、目标语言和检查版本缓存结果。
+* **重复项**：在批次中移除重复项。复数形式和重复的字符串通常共享相同的文本。
+* **批量调用**：如果服务支持，将整个批次在一次调用中发送到服务，而不是每条翻译一次调用。
+* **批处理大小**：使用较大的批处理大小。更少、更大的请求更容易进行速率限制。高达 500 的批处理大小效果很好。
+* **响应时间**：同步检查必须在[时间限制](#timeouts)内很好地应答。
+* **繁忙响应**：不要使用 HTTP `4xx` 来表示“繁忙”。后台检查仍会重试这些请求，并且[断路器](#circuit-breaker)不会保护你的服务免受它们的影响。
+* **未检查的翻译**：检查未运行时不要返回 `"passed": true`。译员不会知道翻译未被检查。
+* **一致的结果**：对相同的文本返回相同的结果。结果会保留到翻译的下一次检查，因此相同文本的不同结果会迷惑译员。
+* **重新检查峰值**：为大型项目的完整重新检查调整应用和服务的规模，并让速率限制器将其分散到一段时间内。
+* **同步运行**：仅当检查在时间限制内可靠应答时才设置 `supportsSynchronousRun: true`。否则，译员会得到 `Unable to complete check {name}.` 问题，并且在需要时阻止不起作用。
+
+## 故障排除
+
+| 问题                                      | 可能原因                                 | 如何修复                                                                  |
+| --------------------------------------- | ------------------------------------ | --------------------------------------------------------------------- |
+| 翻译显示 `Unable to complete check {name}.` | 应用超时、返回 HTTP 错误或返回无效响应。              | 检查响应是否完全符合[格式规则](#response-format-rules)，以及应用是否在[时间限制](#timeouts)内应答。 |
+| 检查在所有项目中失败约一分钟                          | [断路器](#circuit-breaker)在反复失败后暂停了该检查。 | 修复失败的原因。调用会在约一分钟后自动恢复。                                                |
+| 无法选择**错误**严重性                           | 模块没有 `supportsSynchronousRun: true`。 | 在清单中向模块添加 `"supportsSynchronousRun": true` 并更新应用。                     |
+| 阻止性检查未阻止某些翻译                            | 翻译是由不调用同步检查的操作添加的，或者应用未及时应答。         | 参见[同步检查](#synchronous-checks)和[错误处理](#error-handling)。                |
+| 翻译之间的结果混淆                               | 应用按 `translationId` 存储或缓存结果。         | 完全按收到的内容返回 `translationId`，并改为按文本缓存。                                  |

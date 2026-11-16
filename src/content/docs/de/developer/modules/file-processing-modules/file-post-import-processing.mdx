@@ -171,17 +171,18 @@ Eigenschaften:
 Beispiel für die Nutzlast der Antwort:
 
 ```json
-// max response payload - 5 MB
-// wait timeout - 2 minutes
+// Maximale Antwortgröße – 5 MB
+// Wartezeit – 2 Minuten
 {
   "data": {
-    "strings": [...], // modified strings array
-    "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // new-line delimited json file with modified strings
-    "preview": "VGhpbmdzIGFyZSBvbmx5IGltcG9zc2libGUgdW50aWwgdGhleSdyZSBub3Qu", // optional, base64 encoded content of preview html file, not supported if there are plural strings
-    "previewUrl": "https://app.example.com/LN3km2K6M-preview.html", // optional, URL of preview html file, not supported if there are plural strings
+    "strings": [...], // geändertes String-Array
+    "stringsUrl": "https://app.example.com/jKe8ujs7a-segments.ndjson", // durch Zeilenumbrüche getrennte JSON-Datei mit geänderten Strings
+    "preview": "VGhpbmdzIGFyZSBvbmx5IGltcG9zc2libGUgdW50aWwgdGhleSdyZSBub3Qu", // optional, Base64-kodierter Inhalt der HTML-Vorschau-Datei
+    
+    "previewUrl": "https://app.example.com/LN3km2K6M-preview.html", // optional, URL der HTML-Vorschau-Datei
   },
   "error": {
-    "message": "Your error message"
+    "message": "Deine Fehlermeldung"
   }
 }
 ```
@@ -206,7 +207,8 @@ Eigenschaften:
       <td>
         <p><strong>Typ(data.preview):</strong> <code>string</code></p>
         <p><strong>Typ(data.previewUrl):</strong> <code>string</code></p>
-        <p><strong>Beschreibung:</strong> Parameter zur Übergabe der optionalen HTML-Vorschau des geparsten String-Inhalts, die von der App generiert werden kann. Die generierte HTML-Vorschau wird im Editor angezeigt. Siehe das <a href="/developer/crowdin-apps-module-custom-file-format/#html-preview-of-the-file">Beispiel für eine HTML-Vorschau der Datei.</a></p> <p><Aside type="caution">Die HTML-Vorschau wird im Crowdin Editor nicht angezeigt, wenn die App Strings mit Pluralformen übergibt.</Aside></p>
+        <p><strong>Beschreibung:</strong> Parameter zur Übergabe der optionalen HTML-Vorschau des geparsten String-Inhalts, die von der App generiert werden kann. Die generierte HTML-Vorschau wird im Editor angezeigt. Die Elemente der Vorschau sind anhand ihrer Position in der Antwort mit Zeichenketten verknüpft. Sieh dir <a href="#html-preview-of-the-file">HTML-Vorschau der Datei</a> an.</p>
+        <p><Aside type="caution">Die im Modul „Benutzerdefiniertes Dateiformat“ verwendete Zeichenfolge-Eigenschaft <code>previewId</code> sowie die Elemente <code>id="string_preview_id_\{previewId}"</code> werden in diesem Modul nicht unterstützt.</Aside></p>
       </td>
     </tr>
     <tr>
@@ -306,3 +308,31 @@ Eigenschaften:
     </tr>
   </tbody>
 </table>
+
+## HTML-Vorschau der Datei
+
+Die HTML-Vorschau rendert im Editor eine [WYSIWYG-Ansicht der Datei](/online-editor/#wysiwyg-file-preview). Umschließe jeden übersetzbaren String mit einem Element, das beide folgenden Attribute enthält:
+
+* `id="crowdin_phrase_index_{N}"`, wobei `{N}` die nullbasierte Position der Zeichenfolge in der Antwort der App angibt (in `data.strings` oder in der Datei unter `data.stringsUrl`). Verwende doppelte Anführungszeichen und stelle sicher, dass der Wert exakt übereinstimmt.
+* `class="crowdin_phrase"`, damit du die Zeichenfolge in der Vorschau durch Anklicken auswählen und direkt bearbeiten kannst.
+
+Zähle die Positionen in den Zeichenketten, die die App zurückgibt, nachdem sie Zeichenketten aufgeteilt, zusammengeführt oder hinzugefügt hat. Wenn die App die Anzahl oder Reihenfolge der Zeichenfolgen ändert, gib eine Vorschau zurück, die mit den zurückgegebenen Zeichenfolgen übereinstimmt.
+
+Wenn die zurückgegebenen Zeichenfolgen `attributes.crowdinType` enthalten, gib die Vorschau in beiden Antworten zurück. Crowdin sendet erst dann eine zweite Anfrage, wenn die erste Antwort eine Vorschau enthält, und in dieser Anfrage sind die verschachtelten Inhalte bereits in separate Zeichenfolgen aufgeteilt. Crowdin verwendet ausschließlich die Vorschau aus der zweiten Antwort, und `{N}` zählt die Zeichenfolgen in dieser Antwort.
+
+Crowdin verwendet die HTML-Vorschau nur, wenn du eine Quelldatei importierst oder aktualisierst, und ignoriert sie, wenn du Übersetzungen hochlädst.
+
+Die Vorschau wird auch für Dateien angezeigt, die Pluralformen enthalten. Es wird dir jeweils eine Form jeder Pluralzeichenfolge angezeigt. Um ein anderes Formular anzuzeigen, wähle es im Übersetzungsfeld aus. Wir empfehlen dir, Pluralformen dort zu übersetzen und nicht direkt in der Vorschau.
+
+Beispiel für die HTML-Vorschau der Datei:
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <h1>HTML-Vorschau der Datei</h1>
+    <p><span id="crowdin_phrase_index_0" class="crowdin_phrase">Quelltext 1</span></p> <!-- erste Zeichenfolge in „data.strings“ -->
+    <p><span id="crowdin_phrase_index_1" class="crowdin_phrase">Quelltext 2</span></p> <!-- zweite Zeichenfolge in „data.strings“ -->
+  </body>
+</html>
+```

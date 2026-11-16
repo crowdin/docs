@@ -20,6 +20,7 @@ import branchApproved from '/src/assets/code/webhooks/branch.approved.json?raw';
 import projectTranslated from '/src/assets/code/webhooks/project.translated.json?raw';
 import projectApproved from '/src/assets/code/webhooks/project.approved.json?raw';
 import projectBuilt from '/src/assets/code/webhooks/project.built.json?raw';
+import preTranslationCompleted from '/src/assets/code/webhooks/preTranslation.completed.json?raw';
 import translationUpdated from '/src/assets/code/webhooks/translation.updated.json?raw';
 import translationUpdatedSb from '/src/assets/code/webhooks/sb/translation.updated.json?raw';
 import stringAdded from '/src/assets/code/webhooks/string.added.json?raw';
@@ -59,11 +60,7 @@ import projectDeleted from '/src/assets/code/webhooks/project.deleted.json?raw';
 import groupCreated from '/src/assets/code/webhooks/group.created.json?raw';
 import groupDeleted from '/src/assets/code/webhooks/group.deleted.json?raw';
 
-您可以添加 webhook 以与第三方服务或后端建立集成。 当您针对项目配置 webhook 后，Crowdin 将开始通过 HTTP 发送带有数据的 POST 或 GET 请求。
-
-<Aside title="响应超时">
-  您的端点应在 **30 秒**内返回 `2XX` 响应。 如果处理时间较长，请异步处理。
-</Aside>
+您可以添加 webhook 以与第三方服务或后端建立集成。当您针对项目配置 webhook 后，Crowdin 将开始通过 HTTP 发送带有数据的 POST 或 GET 请求。
 
 ## 配置 Webhook
 
@@ -93,6 +90,22 @@ Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
   详细了解 [IP 地址](/zh/developer/ip-addresses/#webhooks-ai-providers-and-mt-engines)。
 </ReadMore>
 
+## 投递
+
+Crowdin 将每个排队的事件向你的端点发送一次。当你的端点在请求超时前返回 `2XX` 状态码时，投递即视为成功。任何其他响应、超时或连接错误都会被记录为失败的调用，Crowdin 不会再次发送该事件。如果 Webhook 启用了**批量 Webhook**，Crowdin 会将多个事件合并为一个包含 `events` 数组的请求，响应适用于该请求中的每个事件。
+
+<Aside title="响应超时">
+  您的端点应在 **30 秒**内返回 `2XX` 响应。如果处理时间较长，请异步处理。
+</Aside>
+
+将每个请求视为你将收到的该事件的唯一通知。先响应，然后再进行处理，并使用 API 来补上服务不可用期间遗漏的任何内容。
+
+每个请求在 `event` 字段中指明事件名称，并携带其所描述对象的载荷。如果你的服务需要识别已经处理过的请求，请根据这些值构建幂等键，例如事件名称加上对象 ID 及其时间戳。
+
+<ReadMore>
+  阅读更多关于 [Crowdin](/webhooks/#failing-webhooks) 和 [Crowdin Enterprise](/enterprise/webhooks/#failing-webhooks) 中 Webhook 失败的内容。
+</ReadMore>
+
 ## 事件
 
 您可以为项目、账户或组织中发生的不同事件配置 webhook。
@@ -116,6 +129,7 @@ Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
 * [项目已完全翻译](#项目已完全翻译) &ndash; 所有文件已翻译成目标语言之一
 * [项目已完全审核](#项目已完全审核) &ndash; 所有文件中的译文已被批准为目标语言之一
 * [项目已成功构建](#项目已成功构建) &ndash; 项目已成功构建
+* [自动翻译完成](#auto-translation-completed) &ndash; 自动翻译完成、失败或被取消
 * [导出的译文已更新](#导出的译文已更新) &ndash; 字符串的最终译文已更新
 
 #### 源字符串
@@ -200,6 +214,10 @@ Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
 ### 项目已成功构建
 
 <Code code={projectBuilt} lang="json" wrap />
+
+### 自动翻译完成
+
+<Code code={preTranslationCompleted} lang="json" wrap />
 
 ### 导出的译文已更新
 
@@ -406,7 +424,7 @@ Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
 
 ## Crowdin 和 Crowdin Enterprise 事件负载
 
-Crowdin 和 Crowdin Enterprise 事件的负载结构基本相同。 唯一的区别在于 `project` 对象。 对于 Crowdin Enterprise 事件，`project` 对象包含额外字段。
+Crowdin 和 Crowdin Enterprise 事件的负载结构基本相同。唯一的区别在于 `project` 对象。对于 Crowdin Enterprise 事件，`project` 对象包含额外字段。
 
 ```diff del={"Crowdin:":18-20} ins={"Crowdin Enterprise:":22-24} lang="json"
 {
