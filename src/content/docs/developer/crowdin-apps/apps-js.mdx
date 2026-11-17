@@ -4310,6 +4310,168 @@ Closes the currently open modal, but only if it was opened by your app using `AP
 AP.editor.closeModal();
 ```
 
+#### AP.editor.ui.openTermDialog(request, [callback]) {#open-term-dialog}
+
+Opens the Editor's **Create Term** dialog with a term and its translations filled in. The translations are added as draft terms, and nothing reaches the glossary until the user saves the term.
+
+If the project's default glossary already has the term (or the concept set in `conceptId`), the dialog opens that concept and adds only the languages it doesn't have yet. Otherwise, the dialog creates a new concept.
+
+<Aside>
+  Call this method from a user action in your app, such as a button click. The dialog opens only while your app's frame has focus.
+</Aside>
+
+**Example:**
+
+```js
+AP.editor.ui.openTermDialog({
+  term: 'discount',
+  partOfSpeech: 'noun',
+  type: 'full form',
+  translations: [
+    { languageId: 'uk', text: 'знижка', partOfSpeech: 'noun', gender: 'feminine', type: 'full form' }
+  ]
+}, function(opened) {
+  if (!opened) {
+    console.log("The term dialog wasn't opened.");
+  }
+});
+```
+
+##### Parameters
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>request</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>object</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The term and its translations. See the <code>Input Object
+            Structure</code> below.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>function</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> An optional callback function that receives a <code>boolean</code>:
+          <code>true</code> when the dialog opens, or <code>false</code> when the request isn't valid, your app's
+          frame doesn't have focus, the user can't add glossary terms in this project, the project glossary isn't
+          available, or a term dialog is already open.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Input Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>term</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The term in the project's source language. Maximum length: 512
+          characters.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>partOfSpeech</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> The term's part of speech, as the Crowdin API names it (for example,
+          <code>noun</code> or <code>proper noun</code>) or as its code (for example, <code>NOUN</code> or
+          <code>PROPN</code>). Applies to a new concept only.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> The term's type. Applies to a new concept only.</p>
+        <p><strong>Allowed values:</strong> <code>full form</code>, <code>acronym</code>,
+          <code>abbreviation</code>, <code>short form</code>, <code>phrase</code>, <code>variant</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>conceptId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>integer</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> The ID of a concept in the project's default glossary to add the
+          translations to. If omitted, the dialog looks up the term in that glossary.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>translations</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>array</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> The term's translations, one per language. The dialog uses the first
+          500 items. See the <code>Translation Object Structure</code> below.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### Translation Object Structure
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>languageId</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code> | <code>integer</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The language, as the Crowdin API identifies it (for example,
+          <code>uk</code> or <code>es-ES</code>), or the Editor's numeric language ID. The dialog adds
+          translations for the project's target languages and skips a second translation for the same
+          language.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>text</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> Yes</p>
+        <p><strong>Description:</strong> The term in that language. Maximum length: 512 characters.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>partOfSpeech</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> The translation's part of speech, in the same format as the
+          term's <code>partOfSpeech</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>gender</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> The translation's grammatical gender.</p>
+        <p><strong>Allowed values:</strong> <code>masculine</code>, <code>feminine</code>, <code>common</code>,
+          <code>neuter</code>, <code>other</code>.</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td>
+        <p><strong>Type:</strong> <code>string</code></p>
+        <p><strong>Required:</strong> No</p>
+        <p><strong>Description:</strong> The translation's type, with the same allowed values as the term's
+          <code>type</code>.</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 ## Project Actions
 
 This group of methods allows your app to interact with the Crowdin project, such as navigating to different project pages or opening the Editor. They are all called via the `AP.project` object.
