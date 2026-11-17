@@ -22,28 +22,28 @@ Enable this option to transform placeholders into a unified format within the Ed
 
 On export, placeholders are converted back to the original syntax. This feature applies only to Android XML, iOS strings, iOS XLIFF, and Apple Strings Catalog.
 
-### Duplicate Strings
+### Duplicate Strings Handling {#duplicate-strings}
 
 You can save time by translating all duplicates with the same translation and hiding these instances from translators. This can affect accuracy.
 
 Crowdin's localization process is based on translating source strings to the defined target languages. Source strings are uploaded to the system in localization files. Each unique source string first uploaded or added (for CSV and other formats supporting [string editing](/string-management/#string-editing)) in Crowdin is considered a master string. All other strings that are identical to the master string but were uploaded or created later are considered duplicate strings.
 
 <Aside>
-  In [string-based](/creating-project/#string-based-project) projects, duplicate strings are managed using the **Show within a version branch (regular detection)** option, which is enabled by default and cannot be changed.
+  In [string-based](/creating-project/#string-based-project) projects, duplicate strings are managed using the **Show only within the same branch (strict — match identifiers (keys) & text)** option, which is enabled by default and cannot be changed.
 </Aside>
 
 #### Duplicate Strings Management
 
 If your project contains duplicated strings, you can choose how the system should treat them. The available options combine three dimensions: detection basis, visibility, and translation sharing.
 
-| Option                                               | Detection basis                                | Visibility in the Editor                       | Translation sharing |
-| ---------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------- | ------------------- |
-| **Show**                                             | Regular (source text)                          | Duplicates stay visible                        | No                  |
-| **Show, but auto-translate them**                    | Regular (source text)                          | Duplicates stay visible                        | Yes                 |
-| **Show within a version branch (regular detection)** | Regular + branch path scope                    | Duplicates are hidden between version branches | Yes                 |
-| **Show within a version branch (strict detection)**  | Strict (source text + key) + branch path scope | Duplicates are hidden between version branches | Yes                 |
-| **Hide (regular detection)**                         | Regular (source text)                          | Duplicates are hidden                          | Yes                 |
-| **Hide (strict detection)**                          | Strict (source text + key)                     | Duplicates are hidden                          | Yes                 |
+| Option                                                                          | Detection basis                                | Visibility in the Editor                       | Translation sharing |
+| ------------------------------------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------- | ------------------- |
+| **Show — translate each instance separately**                                   | Regular (source text)                          | Duplicates stay visible                        | No                  |
+| **Show — auto-translate all duplicates**                                        | Regular (source text)                          | Duplicates stay visible                        | Yes                 |
+| **Show only within the same branch (regular — match text)**                     | Regular + branch path scope                    | Duplicates are hidden between version branches | Yes                 |
+| **Show only within the same branch (strict — match identifiers (keys) & text)** | Strict (source text + key) + branch path scope | Duplicates are hidden between version branches | Yes                 |
+| **Hide all duplicates (regular — match text)**                                  | Regular (source text)                          | Duplicates are hidden                          | Yes                 |
+| **Hide all duplicates (strict — match identifiers (keys) & text)**              | Strict (source text + key)                     | Duplicates are hidden                          | Yes                 |
 
 <Aside>
   Translation is shared from the master string only while a duplicate has no translation of its own.
@@ -55,7 +55,7 @@ The detection basis determines what counts as a duplicate:
 * **Strict duplicate detection** &ndash; when comparing strings, Crowdin considers both string identifiers (keys) and source texts.
 
 <Aside type="tip">
-  If your source files contain strings with apparent identifiers (keys), it's better to use a **strict** version of the Duplicate Strings options. In other cases, feel free to use a **regular** one.
+  If your source files contain strings with apparent identifiers (keys), it's better to use a **strict** option. In other cases, feel free to use a **regular** one.
 </Aside>
 
 #### How Translation Sharing Works
@@ -70,23 +70,23 @@ If that unique translation is later removed, sharing is restored automatically, 
 
 Shared translation will not apply in the following cases:
 
-* **Show** is selected (automatic sharing is disabled).
+* **Show — translate each instance separately** is selected (automatic sharing is disabled).
 * The duplicate already has its own unique translation.
-* In **Show within a version branch** modes, strings are outside the branch or path matching scope used for duplicate detection.
+* In the **Show only within the same branch** modes, strings are outside the branch or path matching scope used for duplicate detection.
 
 #### Show All Duplicates
 
-When the **Show – translators will translate each instance separately** option is selected, all duplicate strings will be visible to translators. Each duplicate will require a separate translation.
+When the **Show — translate each instance separately** option is selected, all duplicate strings will be visible to translators. Each duplicate will require a separate translation.
 
 💡 **Use case**: works perfectly for projects where the same words might have various meanings depending on the context.
 
 #### Show, but Auto-Translate Duplicates
 
-When the **Show, but auto-translate them** option is selected, all duplicate strings are shown and automatically inherit translations from their master strings. This allows translators to review and re-translate duplicate strings if necessary.
+When the **Show — auto-translate all duplicates** option is selected, all duplicate strings are shown and automatically inherit translations from their master strings. This allows translators to review and re-translate duplicate strings if necessary.
 
 💡 **Use case**: works excellently if you want to save time but still require automatic translations to be reviewed.
 
-To better illustrate how the **Show, but auto-translate them** option works, consider the following five-string JSON file: two strings are unique, and three strings have identical source text.
+To better illustrate how the **Show — auto-translate all duplicates** option works, consider the following five-string JSON file: two strings are unique, and three strings have identical source text.
 
 ```json
 {
@@ -100,7 +100,7 @@ To better illustrate how the **Show, but auto-translate them** option works, con
 
 Upon importing this file, the system designates the first of these identical strings (`"save1": "Save"`) as the master string with a "Master" marker, while the subsequent two identical strings (`"save2": "Save"` and `"save3": "Save"`) are designated as duplicates of this master string with a "Duplicate" marker.
 
-Once you set the **Duplicate Strings** option to **Show, but auto-translate them**, the system keeps all five strings visible to translators and enables automatic translation sharing.
+Once you set **Duplicate strings handling** to **Show — auto-translate all duplicates**, the system keeps all five strings visible to translators and enables automatic translation sharing.
 
 Let's consider the following scenarios:
 
@@ -109,7 +109,7 @@ Let's consider the following scenarios:
 
 #### Show Within a Version Branch
 
-When the **Show within a version branch** options (regular or strict detection) are selected, only the master strings that were originally uploaded to the system will be available for translation. All duplicate strings will automatically inherit the translations of the master strings and will be hidden in all [version branches](/version-management/).
+When the **Show only within the same branch** options (regular or strict) are selected, only the master strings that were originally uploaded to the system will be available for translation. All duplicate strings will automatically inherit the translations of the master strings and will be hidden in all [version branches](/version-management/).
 
 Here are a few things to keep in mind:
 
@@ -120,7 +120,7 @@ Here are a few things to keep in mind:
 
 #### Hide All Duplicates
 
-When the **Hide** options (regular or strict detection) are selected, the system spots the duplicate strings in all files. Only the master strings that were originally uploaded are visible and should be translated. The hidden duplicate strings will automatically inherit the translations from the corresponding master strings.
+When the **Hide all duplicates** options (regular or strict) are selected, the system spots the duplicate strings in all files. Only the master strings that were originally uploaded are visible and should be translated. The hidden duplicate strings will automatically inherit the translations from the corresponding master strings.
 
 💡 **Use case**: works great for projects with narrow scopes where all duplicates share the same context.
 
