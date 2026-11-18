@@ -2907,7 +2907,7 @@ paths:
       tags:
         - Applications
       summary: 'Upload Application Bundle'
-      description: "**Required scopes:** `application.installation` (Read and Write).\n\nUpload a bundle archive for a serverless app installed from manifest content. The bundle must be a ZIP archive that contains a non-empty `app.js` entry point at its root."
+      description: "**Required scopes:** `application.installation` (Read and Write).\n\nUse [Edit Application Installation](#operation/api.applications.installations.patch) with the `/appFile` path instead: an app file replaces the build together with the manifest.\n\nUploads a bundle archive for a serverless app installed from manifest content. The bundle must be a ZIP archive that contains a non-empty `app.js` entry point at its root."
       operationId: api.applications.installations.bundles.post
       parameters:
         -
@@ -2954,6 +2954,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+      deprecated: true
   /applications/installations:
     get:
       tags:
@@ -3017,7 +3018,7 @@ paths:
       tags:
         - Applications
       summary: 'Install Application'
-      description: "**Required scopes:** `application.installation` (Read and Write).\n\nInstall an application either from a hosted manifest URL or from its manifest content.<br><br>**Note:** Any application - with or without a backend, and regardless of whether it is published to the Crowdin Store - can be installed from a manifest URL (the manifest only needs to be reachable at that URL). Installing from manifest content is supported only for serverless apps - apps that run entirely in the browser with no backend (no `baseUrl`)."
+      description: "**Required scopes:** `application.installation` (Read and Write).\n\nInstalls an application from a hosted manifest URL or from its app file (`.crowdinapp`). Installing from manifest content is deprecated: use an app file, which carries the manifest together with the build.\n\n__Note:__ Any application - with or without a backend, and regardless of whether it is published to the Crowdin Store - can be installed from a manifest URL (the manifest only needs to be reachable at that URL). Installing from an app file or from manifest content is supported only for serverless apps - apps that run entirely in the browser with no backend (no `baseUrl`)."
       operationId: api.applications.installations.post
       requestBody:
         content:
@@ -3028,6 +3029,8 @@ paths:
                   $ref: '#/components/schemas/ApplicationInstallationCreateForm'
                 -
                   $ref: '#/components/schemas/ApplicationInstallationCreateFromManifestForm'
+                -
+                  $ref: '#/components/schemas/ApplicationInstallationCreateFromFileForm'
       responses:
         '201':
           description: 'Application Installation was successfully created'
@@ -3154,7 +3157,7 @@ paths:
       tags:
         - Applications
       summary: 'Edit Application Installation'
-      description: '**Required scopes:** `application.installation` (Read and Write).'
+      description: "**Required scopes:** `application.installation` (Read and Write).\n\nChanges the permissions of an installed application and of its modules. For a serverless app installed from an app file or from manifest content, it also replaces the app file and switches development mode."
       operationId: api.applications.installations.patch
       parameters:
         -
@@ -3190,6 +3193,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/applications/installations/{identifier}/download':
+    get:
+      tags:
+        - Applications
+      summary: 'Download Application File'
+      description: "**Required scopes:** `application.installation` (Read only).\n\nDownload a serverless app installed from manifest content or an app file as an app file (`.crowdinapp`): a ZIP archive with the app's current `manifest.json` and its uploaded build. Install the file in another organization with [Install Application](#operation/api.applications.installations.post). The manifest leaves out `identifier` and `bundle`, because every installation gets its own.<br><br>Not available for apps installed from a manifest URL, apps with a backend (`baseUrl`), and apps whose build was never uploaded."
+      operationId: api.applications.installations.download.get
+      parameters:
+        -
+          $ref: '#/components/parameters/Identifier'
+      responses:
+        '200':
+          description: 'Download link of the app file'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadLinkResource'
+        '400':
+          description: 'The app cannot be downloaded as an app file'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Application installation with specified identifier was not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
         '405':
           description: 'Method Not Allowed'
           content:
@@ -27492,11 +27542,11 @@ components:
           enum:
             - replace
         path:
-          description: 'A JSON Pointer as defined by <a href="https://tools.ietf.org/html/rfc6901" target="_blank">RFC 6901</a> identifying the field to replace.<br><br>Supported paths:<br>• `/permissions` and `/modules/{moduleKey}/permissions` (where `{moduleKey}` is a module key from the manifest) - available for any installation.<br>• `/manifest` - the full manifest content, available only for applications installed from manifest content (not from a manifest URL). A single request may combine a `/manifest` operation with permission operations; the manifest is applied first, so permissions can target modules the new manifest introduces.'
+          description: "A JSON Pointer as defined by [RFC 6901](https://tools.ietf.org/html/rfc6901) identifying the field to replace.\n\nSupported paths:\n\n- `/permissions` and `/modules/{moduleKey}/permissions` (where `{moduleKey}` is a module key from the manifest) - available for any installation.\n- `/appFile` - an app file (`.crowdinapp`) that replaces the manifest and the build at once, available only for applications installed from an app file or from manifest content (not from a manifest URL). A single request may combine it with permission operations; the app file is applied first, so permissions can target modules the new manifest introduces. The installation keeps its own `bundle` (development mode) unless the same request replaces `/bundle`.\n- `/bundle` - where the app is loaded from, available for the same applications as `/appFile`: `external` turns development mode on, `internal` turns it off. An app that has no build yet cannot be switched to `internal` unless the same request replaces `/appFile`.\n- `/manifest` - deprecated, use `/appFile` instead. The full manifest content, available for the same applications as `/appFile` and combined with permission operations the same way. A request that replaces `/manifest` cannot also replace `/appFile` or `/bundle`."
           type: string
           format: json-pointer
         value:
-          description: 'The value to set at `path`. Its type depends on the `path` being replaced:<br>• `/manifest` - a manifest content object, the same shape as the `manifest` field of Install Application (`identifier` is ignored - the server keeps the existing one).<br>• `/permissions` and `/modules/{moduleKey}/permissions` - a permissions object (see `ApplicationInstallationReplaceValue`).'
+          description: "The value to set at `path`. Its type depends on the `path` being replaced:\n\n- `/permissions` and `/modules/{moduleKey}/permissions` - a permissions object (see `ApplicationInstallationReplaceValue`).\n- `/appFile` - an object with the `storageId` of the app file, e.g. `{\"storageId\": 12}`. Get it via [Add Storage](#operation/api.storages.post).\n- `/bundle` - a bundle object (see `ApplicationBundle`), e.g. `{\"mode\": \"external\", \"url\": \"http://localhost:8080/\"}`.\n- `/manifest` - a manifest content object, the same shape as the `manifest` field of Install Application (`identifier` is ignored - the server keeps the existing one)."
           anyOf:
             -
               type: string
@@ -27566,7 +27616,7 @@ components:
         -
           properties:
             value:
-              description: 'The value to set at `path`. Its type depends on the `path` being replaced:<br>• `/manifest` - a manifest content object, the same shape as the `manifest` field of Install Application (`identifier` is ignored - the server keeps the existing one).<br>• `/permissions` and `/modules/{moduleKey}/permissions` - a permissions object (see `ApplicationInstallationReplaceValue`).'
+              description: "The value to set at `path`. Its type depends on the `path` being replaced:\n\n- `/permissions` and `/modules/{moduleKey}/permissions` - a permissions object (see `ApplicationInstallationReplaceValue`).\n- `/appFile` - an object with the `storageId` of the app file, e.g. `{\"storageId\": 12}`. Get it via [Add Storage](#operation/api.storages.post).\n- `/bundle` - a bundle object (see `ApplicationBundle`), e.g. `{\"mode\": \"external\", \"url\": \"http://localhost:8080/\"}`.\n- `/manifest` - a manifest content object, the same shape as the `manifest` field of Install Application (`identifier` is ignored - the server keeps the existing one)."
               anyOf:
                 -
                   type: string
@@ -27735,12 +27785,30 @@ components:
       type: object
     ApplicationInstallationCreateFromManifestForm:
       title: 'Install an application from manifest content'
-      description: 'Install an application by sending its manifest content inline (instead of a hosted manifest URL). Symmetric to the URL form: `manifest` replaces `url`, while `permissions` and per-module `modules` permissions stay at the root. The server always generates an opaque identifier; clients cannot supply one.'
+      description: "Deprecated. Use the app file form (`storageId`) instead: it installs the manifest together with the build.\n\nInstall an application by sending its manifest content inline (instead of a hosted manifest URL). Symmetric to the URL form: `manifest` replaces `url`, while `permissions` and per-module `modules` permissions stay at the root. The server always generates an opaque identifier; clients cannot supply one."
       required:
         - manifest
       properties:
         manifest:
           $ref: '#/components/schemas/ApplicationManifest'
+        permissions:
+          $ref: '#/components/schemas/applications.installations.permissions'
+        modules:
+          $ref: '#/components/schemas/applications.installations.modules'
+      type: object
+      deprecated: true
+    ApplicationInstallationCreateFromFileForm:
+      title: 'Install an application from an app file'
+      description: "Install a serverless app from its app file (`.crowdinapp`): a ZIP archive with the app's `manifest.json` and its build (a non-empty `app.js` and any other files) at the root. The app and its build are installed in one request: if the build cannot be published, nothing is installed. The `bundle` field of the manifest is ignored - development mode is set by the `bundle` field of this request - and the server generates the identifier."
+      required:
+        - storageId
+      properties:
+        storageId:
+          description: 'Storage Identifier of the app file. Get via [List Storages](#operation/api.storages.getMany)'
+          type: integer
+          example: 12
+        bundle:
+          $ref: '#/components/schemas/ApplicationBundle'
         permissions:
           $ref: '#/components/schemas/applications.installations.permissions'
         modules:
@@ -33762,42 +33830,42 @@ components:
       title: 'Spreadsheet File Import Options'
       properties:
         firstLineContainsHeader:
-          description: 'Defines whether the file includes a first-row header that should not be imported'
+          description: 'If `true`, the first row of the file is treated as a header and is not imported'
           type: boolean
           default: false
           example: false
         importHiddenSheets:
-          description: 'Defines whether hidden sheets that should be imported'
+          description: 'If `true`, hidden sheets are imported'
           type: boolean
           default: true
           example: false
         importHiddenRows:
-          description: 'Defines whether hidden rows that should be imported'
+          description: 'If `true`, hidden rows are imported'
           type: boolean
           default: true
           example: false
         importEqSuggestions:
-          description: 'Defines whether to import translations identical to sources'
+          description: 'If `true`, translations identical to the source strings are imported. Applies only when adding a file with `importTranslations` set to `true`'
           type: boolean
           default: false
           example: true
         autoApproveImported:
-          description: 'Defines whether to auto-approve imported translations'
+          description: 'If `true`, the imported translations are approved automatically. Applies only when adding a file with `importTranslations` set to `true`'
           type: boolean
           default: false
           example: true
         translateHidden:
-          description: 'Defines whether to import translations for hidden strings'
+          description: 'If `true`, translations of hidden strings are imported. Applies only when adding a file with `importTranslations` set to `true`'
           type: boolean
           default: false
           example: false
         addToTm:
-          description: 'Defines whether to add imported translations to TM'
+          description: 'If `true`, the imported translations are added to Translation Memory. Applies only when adding a file with `importTranslations` set to `true`'
           type: boolean
-          default: true
+          default: false
           example: true
         contentSegmentation:
-          description: "Defines whether to split long texts into smaller text segments.\n\n  __Important!__ This option disables the possibility to upload existing translations for Spreadsheet files when enabled."
+          description: "If `true`, long texts are split into smaller text segments.\n\n__Note:__ When this option is enabled, translations from the language columns may not be imported for texts split into several segments"
           type: boolean
           default: false
         srxStorageId:
@@ -33807,7 +33875,7 @@ components:
           default: null
           example: 61
         importTranslations:
-          description: 'Defines whether to import translations from the file'
+          description: 'If `true`, translations from the language columns defined in `scheme` are imported along with the source strings'
           type: boolean
           default: false
           example: true
@@ -34124,11 +34192,11 @@ components:
       title: 'StringCatalog File Import Options'
       properties:
         importKeyAsSource:
-          description: 'Determines whether to import the key as source string if it does not exist.'
+          description: 'If `true`, the key is imported as the source string for strings that have no source text. If not set, the value from the String Catalog [file format settings](#operation/api.projects.file-format-settings.getMany) of the project is used (Parser configuration in the UI)'
           type: boolean
           default: true
         importTranslations:
-          description: 'Defines whether to import translations from the file'
+          description: 'If `true`, the translations stored in the file are imported along with the source strings. If not set, the value from the String Catalog [file format settings](#operation/api.projects.file-format-settings.getMany) of the project is used (Parser configuration in the UI)'
           type: boolean
           default: false
       type: object
