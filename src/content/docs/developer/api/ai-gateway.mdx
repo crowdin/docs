@@ -1,0 +1,73 @@
+---
+title: AI Gateway
+description: Call the AI providers configured in Crowdin through their own SDKs
+slug: developer/ai-gateway
+---
+
+import { LinkCard } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+The AI Gateway passes your requests to an AI provider configured in Crowdin or Crowdin Enterprise. You call the provider with its own SDK, such as the OpenAI, Anthropic, or Google Gen AI SDK, and authenticate with a Crowdin access token. The provider's credentials stay in Crowdin, and the requests follow the same AI usage limits and logging as the rest of Crowdin AI. Crowdin recommends the gateway for calling AI providers from scripts and Crowdin apps.
+
+<LinkCard
+  title="Crowdin API Reference"
+  description="AI Gateway: supported providers, request paths, and error codes"
+  href="/developer/api/v2/#tag/AI-Gateway"
+/>
+<LinkCard
+  title="Crowdin Enterprise API Reference"
+  description="AI Gateway: supported providers, request paths, and error codes"
+  href="/developer/enterprise/api/v2/#tag/AI-Gateway"
+/>
+
+## Base URL
+
+Set the gateway URL as the base URL of the SDK client. The SDK then adds the provider's own request paths to it.
+
+Crowdin base URL:
+
+```bash
+https://api.crowdin.com/api/v2/users/{userId}/ai/providers/{aiProviderId}/gateway/
+```
+
+Crowdin Enterprise base URL:
+
+```bash
+https://{domain}.api.crowdin.com/api/v2/ai/providers/{aiProviderId}/gateway/
+```
+
+Replace `{aiProviderId}` with the ID of an AI provider. In Crowdin, replace `{userId}` with the ID of the user the provider belongs to. That user (in Crowdin) and organization admins (in Crowdin Enterprise) can get provider IDs with the List AI Providers endpoint, which requires the `ai.provider` scope.
+
+## Authorization
+
+Use one of the following access tokens as the API key in the SDK client:
+
+* [Crowdin Personal Access Token](/account-settings/#creating-a-personal-access-token)
+* [Crowdin Enterprise Personal Access Token](/enterprise/account-settings/#creating-a-personal-access-token)
+* [OAuth Access Token](/developer/authorizing-oauth-apps/#make-requests-to-the-api-with-the-access-token-returned)
+
+The gateway reads the token from the authentication header that each SDK sends, such as `Authorization`, `x-api-key`, or `x-goog-api-key`. A token with limited [scopes](/developer/understanding-scopes/) needs the `ai.proxy` scope: read access is enough for `GET` requests, and other requests need write access.
+
+In Crowdin, the user the AI provider belongs to and the managers of that user's projects can send requests with their own tokens. In Crowdin Enterprise, organization admins and users who own or manage at least one project or group can send requests with their own tokens. Other users send requests through a Crowdin app that has the `ai.proxy` scope with write access and is [available to them](/developer/crowdin-apps-installation/#user-access-categories). In Crowdin, each such user also has to allow the app to access the API on their behalf.
+
+## Using the AI Gateway in Crowdin Apps
+
+To call the gateway from an app, add `ai.proxy` to the `scopes` in the [app descriptor](/developer/crowdin-apps-app-descriptor/). A self-hosted app uses the access token it gets after [installation](/developer/crowdin-apps-installation/). A serverless app, or the page of any app inside Crowdin, sends the request through [`AP.apiRequest`](/developer/crowdin-apps-js/#api-request) with the gateway path relative to `/api/v2`. Crowdin runs it on behalf of the current user and returns the complete response, so use requests without streaming.
+
+## Usage and Logs
+
+Requests that generate content are subject to the AI usage limits and appear in AI Logs. When the provider doesn't report token usage, for example because a streamed response broke off, Crowdin estimates the usage from the request and the part of the response it received. Other requests, such as listing models or counting tokens, aren't logged, but they're blocked too once a usage limit is reached.
+
+<ReadMore>
+  Read more about AI Usage Limits in [Crowdin](/crowdin-ai/#ai-usage-limits) and [Crowdin Enterprise](/enterprise/crowdin-ai/#ai-usage-limits), and about AI Logs in [Crowdin](/crowdin-ai/#ai-logs) and [Crowdin Enterprise](/enterprise/crowdin-ai/#ai-logs).
+</ReadMore>
+
+## Errors
+
+When Crowdin rejects a request itself, for example because of a validation error, a reached AI usage limit, or a disabled provider, it returns the error in the provider's error format, so the SDK reports it like any other provider error. The `X-Crowdin-Gateway-Error` response header names the cause, such as `providerDisabled` or `quotaExceeded`. The API reference lists all the values. Authentication and permission errors use the standard Crowdin API error format.
+
+When the provider itself rejects a request, the gateway passes on the provider's status code and error. If the rejection comes from a problem with your provider account, Crowdin also disables the provider.
+
+<ReadMore>
+  Read more about Disabling AI Providers in [Crowdin](/crowdin-ai/#disabling-ai-providers) and [Crowdin Enterprise](/enterprise/crowdin-ai/#disabling-ai-providers).
+</ReadMore>
