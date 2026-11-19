@@ -10991,6 +10991,139 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceUnavailableExceptionResource'
+  /oauth-clients:
+    get:
+      tags:
+        - 'OAuth Clients'
+      summary: 'List OAuth Clients'
+      description: "**Required scopes:** `oauth-client` (Read only).\n\nReturns a list of OAuth clients sorted by name, with their secrets masked except for the first 3 characters."
+      operationId: api.oauth-clients.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: 'OAuth client list'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OauthClientCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+    post:
+      tags:
+        - 'OAuth Clients'
+      summary: 'Add OAuth Client'
+      description: "**Required scopes:** `oauth-client` (Read and Write).\n\nCreates an OAuth client that an application or integration uses to call the API on behalf of users, and returns it together with its secret.\n\nA token limited to particular projects or other resources cannot create clients.\n\n__Note:__ The secret is returned only in this response. Store it securely"
+      operationId: api.oauth-clients.post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OauthClientCreateForm'
+      responses:
+        '201':
+          description: 'OAuth client was successfully created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OauthClientResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
+  '/oauth-clients/{clientId}':
+    get:
+      tags:
+        - 'OAuth Clients'
+      summary: 'Get OAuth Client'
+      description: "**Required scopes:** `oauth-client` (Read only).\n\nReturns an OAuth client with its secret masked except for the first 3 characters."
+      operationId: api.oauth-clients.get
+      parameters:
+        -
+          name: clientId
+          in: path
+          description: 'ID of the OAuth client. Get via [List OAuth Clients](#operation/api.oauth-clients.getMany)'
+          required: true
+          schema:
+            type: string
+          example: dD03Ecs4yVxW0yDNqqw4
+      responses:
+        '200':
+          description: 'OAuth client'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OauthClientResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '405':
+          description: 'Method Not Allowed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MethodNotAllowedExceptionResource'
   /organization/auth-settings:
     get:
       tags:
@@ -40867,6 +41000,114 @@ components:
           type: string
           example: 'New notification message'
       type: object
+    OauthClientCreateForm:
+      required:
+        - name
+        - redirectUrls
+      properties:
+        name:
+          description: 'Client name shown to users when the client asks for access (2–255 characters)'
+          type: string
+          example: 'Acme Glossary Sync'
+        redirectUrls:
+          description: 'URLs the user may return to after authorizing the client'
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          maxItems: 10
+          minItems: 1
+          example:
+            - 'https://acme.example.com/crowdin/callback'
+        description:
+          description: 'Client description (up to 10,000 characters)'
+          type: string
+          example: 'Syncs glossaries between Acme and Crowdin'
+          nullable: true
+        scopes:
+          description: 'Scopes the client may request. Default is `*`. The client cannot get a scope that the token or the app making this request lacks, so a caller without `*` has to list the scopes here.<br><br>Available scopes: `*`, `user`, `team`, `field`, `notification`, `tm`, `glossary`, `style-guide`, `mt`, `webhook`, `manager`, `vendor`, `client`, `group`, `project`, `project.settings`, `project.member`, `project.status`, `project.status.issue`, `project.status.progress`, `project.status.qa-check`, `project.source`, `project.source.file`, `project.source.string`, `project.translation`, `project.task`, `project.dictionary`, `project.report`, `project.advisor`, `project.placeholder`, `project.discussion`, `project.webhook`, `project.screenshot`, `security-log`, `ai`, `ai.prompt`, `ai.provider`, `ai.proxy`, `ai.translate`, `ai.request-log`, `application`, `application.installation`, `application.proxy`, `application.consent`, `application.storage`, `application.credits`, `application.transaction`, `organization`, `custom-placeholder`, `custom-spellchecker`, `language`, `external-qa-check`, `automation`, `automation.rule`, `automation.rule.execution`, `oauth-client`.<br><br>Each scope supports `:read` and `:write` modifiers (e.g. `project:read`); without a modifier the scope grants both'
+          type: array
+          items:
+            type: string
+          minItems: 1
+          example:
+            - project
+            - 'tm:read'
+        confidential:
+          description: 'If `true`, the client gets a secret. If `false`, the client is public and authorizes with PKCE only. Default is `true`'
+          type: boolean
+          example: true
+      type: object
+    OauthClientCollectionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/OauthClientResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    OauthClientResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/OauthClient'
+    OauthClient:
+      title: 'OAuth Client'
+      properties:
+        id:
+          description: 'Client ID the application passes to the OAuth endpoints'
+          type: string
+          example: dD03Ecs4yVxW0yDNqqw4
+        name:
+          description: 'Client name shown to users when the client asks for access'
+          type: string
+          example: 'Acme Glossary Sync'
+        description:
+          description: 'Client description. `null` when none was given'
+          type: string
+          example: 'Syncs glossaries between Acme and Crowdin'
+          nullable: true
+        redirectUrls:
+          description: 'URLs the user may return to after authorizing the client'
+          type: array
+          items:
+            type: string
+          example:
+            - 'https://acme.example.com/crowdin/callback'
+        scopes:
+          description: 'Scopes the client may request'
+          type: array
+          items:
+            type: string
+          example:
+            - project
+            - 'tm:read'
+        confidential:
+          description: 'If `true`, the client authenticates with its secret. If `false`, the client is public and authorizes with PKCE only'
+          type: boolean
+          example: true
+        secret:
+          description: 'Client secret. Returned in full only by [Add OAuth Client](#operation/api.oauth-clients.post); elsewhere all characters but the first 3 are replaced with `*`. `null` for a public client'
+          type: string
+          example: Bv8qJ2sYx7Wm4KcN1rTz6PaE9uLd3HgQ5oFi0VnC
+          nullable: true
+        createdAt:
+          description: 'Date the client was created, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-11-10T10:41:33+00:00'
+      type: object
     OrganizationAuthenticationSettingsResource:
       description: 'Organization authentication settings resource'
       type: object
@@ -64311,6 +64552,9 @@ tags:
   -
     name: Applications
     description: "\nCrowdin Apps are web applications that can be integrated with Crowdin to extend its functionality.\n\nUse the API to manage the necessary app data.\n"
+  -
+    name: 'OAuth Clients'
+    description: "\nOAuth clients identify the applications and integrations that call the Crowdin API on behalf of users.\n\nUse the API to register OAuth clients, for example when deploying a Crowdin app, and to view them.\n"
   -
     name: Integrations
     description: "\nIntegration applications provide synchronization between Crowdin and external content management systems.\n\nUse the API to manage integration files, jobs, settings, and authentication.\n"
