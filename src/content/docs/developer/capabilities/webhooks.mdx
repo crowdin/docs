@@ -11,6 +11,7 @@ import ReadMore from '~/components/ReadMore.astro';
 
 import fileTranslated from '/src/assets/code/webhooks/file.translated.json?raw';
 import fileApproved from '/src/assets/code/webhooks/file.approved.json?raw';
+import fileQaFinished from '/src/assets/code/webhooks/file.qa.finished.json?raw';
 import fileAdded from '/src/assets/code/webhooks/file.added.json?raw';
 import fileUpdated from '/src/assets/code/webhooks/file.updated.json?raw';
 import fileReverted from '/src/assets/code/webhooks/file.reverted.json?raw';
@@ -19,6 +20,7 @@ import branchTranslated from '/src/assets/code/webhooks/branch.translated.json?r
 import branchApproved from '/src/assets/code/webhooks/branch.approved.json?raw';
 import projectTranslated from '/src/assets/code/webhooks/project.translated.json?raw';
 import projectApproved from '/src/assets/code/webhooks/project.approved.json?raw';
+import projectQaFinished from '/src/assets/code/webhooks/project.qa.finished.json?raw';
 import projectBuilt from '/src/assets/code/webhooks/project.built.json?raw';
 import preTranslationCompleted from '/src/assets/code/webhooks/preTranslation.completed.json?raw';
 import translationUpdated from '/src/assets/code/webhooks/translation.updated.json?raw';
@@ -29,6 +31,13 @@ import stringUpdated from '/src/assets/code/webhooks/string.updated.json?raw';
 import stringUpdatedSb from '/src/assets/code/webhooks/sb/string.updated.json?raw';
 import stringDeleted from '/src/assets/code/webhooks/string.deleted.json?raw';
 import stringDeletedSb from '/src/assets/code/webhooks/sb/string.deleted.json?raw';
+import stringLabelsAssigned from '/src/assets/code/webhooks/string.labelsAssigned.json?raw';
+import stringLabelsAssignedSb from '/src/assets/code/webhooks/sb/string.labelsAssigned.json?raw';
+import stringLabelsUnassigned from '/src/assets/code/webhooks/string.labelsUnassigned.json?raw';
+import stringLabelsUnassignedSb from '/src/assets/code/webhooks/sb/string.labelsUnassigned.json?raw';
+import labelCreated from '/src/assets/code/webhooks/label.created.json?raw';
+import labelUpdated from '/src/assets/code/webhooks/label.updated.json?raw';
+import labelDeleted from '/src/assets/code/webhooks/label.deleted.json?raw';
 import suggestionAdded from '/src/assets/code/webhooks/suggestion.added.json?raw';
 import suggestionAddedSb from '/src/assets/code/webhooks/sb/suggestion.added.json?raw';
 import suggestionUpdated from '/src/assets/code/webhooks/suggestion.updated.json?raw';
@@ -114,6 +123,7 @@ You can configure webhooks for different events that occur in the project, accou
 
 * [File fully translated](#file-fully-translated) &ndash; a file is translated into one of the target languages
 * [File fully reviewed](#file-fully-reviewed) &ndash; translations in a file are approved for one of the target languages
+* [File QA checks finished](#file-qa-checks-finished) &ndash; QA checks are finished for a file translated into one of the target languages
 * [File added](#file-added) &ndash; a new file is added to the project
 * [File updated](#file-updated) &ndash; a file is updated
 * [File reverted](#file-reverted) &ndash; a file is reverted to the previous revision
@@ -128,6 +138,7 @@ You can configure webhooks for different events that occur in the project, accou
 
 * [Project fully translated](#project-fully-translated) &ndash; all files are translated into one of the target languages
 * [Project fully reviewed](#project-fully-reviewed) &ndash; translations in all files are approved for one of the target languages
+* [Project QA checks finished](#project-qa-checks-finished) &ndash; QA checks are finished for all files translated into one of the target languages
 * [Project successfully built](#project-successfully-built) &ndash; a project is built successfully
 * [Auto-Translation completed](#auto-translation-completed) &ndash; an auto-translation completes, fails, or is canceled
 * [Exported translation updated](#exported-translation-updated) &ndash; final translation of a string is updated
@@ -137,6 +148,14 @@ You can configure webhooks for different events that occur in the project, accou
 * [Source string added](#source-string-added) &ndash; a new string is added to the project
 * [Source string updated](#source-string-updated) &ndash; a string in the project is updated
 * [Source string deleted](#source-string-deleted) &ndash; a string is deleted
+* [Labels assigned to string](#labels-assigned-to-string) &ndash; labels are assigned to a string
+* [Labels unassigned from string](#labels-unassigned-from-string) &ndash; labels are unassigned from a string
+
+#### Label
+
+* [Label created](#label-created) &ndash; a label is created
+* [Label updated](#label-updated) &ndash; a label title is updated
+* [Label deleted](#label-deleted) &ndash; a label is deleted
 
 #### Suggested Translation
 
@@ -169,7 +188,7 @@ You can configure webhooks for different events that occur in the project, accou
 
 ## Webhook Payload Examples
 
-View the examples of the webhook payloads for different events.
+View the examples of the webhook payloads for the supported events. The examples show the payloads as they appear in Crowdin. In Crowdin Enterprise, the payloads have minor differences. See [Crowdin and Crowdin Enterprise Events Payloads](#crowdin-and-crowdin-enterprise-events-payloads) for comparison.
 
 ### File Fully Translated
 
@@ -178,6 +197,10 @@ View the examples of the webhook payloads for different events.
 ### File Fully Reviewed
 
 <Code code={fileApproved} lang="json" wrap />
+
+### File QA Checks Finished
+
+<Code code={fileQaFinished} lang="json" wrap />
 
 ### File Added
 
@@ -210,6 +233,10 @@ View the examples of the webhook payloads for different events.
 ### Project Fully Reviewed
 
 <Code code={projectApproved} lang="json" wrap />
+
+### Project QA Checks Finished
+
+<Code code={projectQaFinished} lang="json" wrap />
 
 ### Project Successfully Built
 
@@ -262,6 +289,40 @@ View the examples of the webhook payloads for different events.
     <Code code={stringDeletedSb} lang="json" wrap />
   </TabItem>
 </Tabs>
+
+### Labels Assigned to String
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={stringLabelsAssigned} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={stringLabelsAssignedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Labels Unassigned from String
+
+<Tabs syncKey="projectType">
+  <TabItem label="File-based project">
+    <Code code={stringLabelsUnassigned} lang="json" wrap />
+  </TabItem>
+  <TabItem label="String-based project">
+    <Code code={stringLabelsUnassignedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### Label Created
+
+<Code code={labelCreated} lang="json" wrap />
+
+### Label Updated
+
+<Code code={labelUpdated} lang="json" wrap />
+
+### Label Deleted
+
+<Code code={labelDeleted} lang="json" wrap />
 
 ### Suggested Translation Added
 
@@ -449,7 +510,7 @@ The payload structure for Crowdin and Crowdin Enterprise events is basically the
 -    "visibility": "private",
 -    "publicDownloads": true,
 
-+    "logo": ""data:image/png;base64,iVBORw0KGgoAAAANSU....",
++    "logo": "data:image/png;base64,iVBORw0KGgoAAAANSU....",
 +    "isExternal": false,
 +    "externalType": null,
 +    "hasCrowdsourcing": true,
