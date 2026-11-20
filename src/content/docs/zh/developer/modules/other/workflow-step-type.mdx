@@ -4,10 +4,27 @@ description: 为 Crowdin Enterprise 工作流创建新的工作流步骤类型
 slug: developer/crowdin-apps-module-workflow-step-type
 sidebar:
   label: 工作流步骤类型
-  badge: 新
 ---
 
-此模块允许您创建自定义工作流步骤类型，以扩展 Crowdin Enterprise 中默认工作流步骤列表。 安装此应用后，新的工作流步骤类型将在工作流编辑器中可用，可将其添加到工作流和模板中，从而实现更高程度的自定义和灵活性。
+import { Steps, Aside } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+通过此模块，你可以创建自定义工作流步骤类型，以扩展 Crowdin Enterprise 中的默认工作流步骤列表。应用安装后，新的步骤类型将在工作流编辑器中可用，可以添加到工作流和模板中。
+
+自定义工作流步骤是工作流中的外部处理阶段。 Crowdin Enterprise 负责路由字符串、跟踪其状态并统计进度，而你的应用实现该步骤的完成条件：它决定字符串何时在该步骤完成以及通过哪个输出离开。典型用途包括基于 AI 的审核、与外部审核或 MT 系统集成、合规关卡以及延迟或调度步骤。
+
+## 工作原理
+
+该模块以异步方式工作，由 Webhook 事件驱动：
+
+<Steps>
+  1. 组织管理员安装应用。应用提供的自定义步骤类型在工作流编辑器中可用。
+  2. 项目经理将自定义步骤添加到工作流或工作流模板，并通过应用提供的设置 UI 进行配置。
+  3. 当字符串到达自定义步骤时，Crowdin Enterprise 会向应用发送 `string.status_on_step.recalculation_triggered` Webhook 事件。
+  4. 应用使用自己的逻辑处理接收到的字符串。处理是异步的，可以按需花费任意长的时间。
+  5. 应用通过 API 更新每个已处理字符串的状态，根据其路由逻辑将其分配到该步骤声明的输出端口之一。
+  6. Crowdin Enterprise 将字符串路由到连接到该输出的下一个工作流步骤。
+</Steps>
 
 ## 访问权限
 
@@ -19,8 +36,30 @@ sidebar:
 
 ## 结构
 
+以下示例展示了一个提供自定义工作流步骤的完整应用描述符。 `crowdin_agent` 身份验证类型、`agent` 对象以及订阅了 `string.status_on_step.recalculation_triggered` 事件的 `webhook` 模块都是必需的：
+
 ```json title="manifest.json"
 {
+  "identifier": "custom-workflow-step-app",
+  "name": "Custom Workflow Step App",
+  "description": "A sample app that provides a custom workflow step",
+  "logo": "/logo.png",
+  "baseUrl": "https://example.com",
+  "authentication": {
+    "type": "crowdin_agent",
+    "clientId": "your-client-id"
+  },
+  "agent": {
+    "name": "Custom Step",
+    "username": "custom-step-agent",
+    "avatarUrl": "/assets/agent-avatar.png"
+  },
+  "events": {
+    "installed": "/hooks/installed"
+  },
+  "scopes": [
+    "project"
+  ],
   "modules": {
     "workflow-step-type": [
       {
@@ -61,6 +100,15 @@ sidebar:
           "crowdin-enterprise"
         ]
       }
+    ],
+    "webhook": [
+      {
+        "key": "workflow-step-webhook",
+        "url": "/hooks/workflow",
+        "events": [
+          "string.status_on_step.recalculation_triggered"
+        ]
+      }
     ]
   }
 }
@@ -82,50 +130,48 @@ sidebar:
       <td><code>name</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 模块的可读名称。</p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 工作流编辑器中显示的工作流步骤类型的用户可读名称。</p>
       </td>
     </tr>
     <tr>
       <td><code>logo</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 自定义 AI 徽标的相对 URL，将显示在 Crowdin Enterprise 界面中。<br />
-        建议分辨率为 48x48 像素。</p>
+        <p><strong>必需：</strong> 否</p>
+        <p><strong>描述：</strong> 工作流编辑器中显示的工作流步骤类型徽标的相对 URL。<br />建议分辨率为 48x48 像素。</p>
       </td>
     </tr>
     <tr>
       <td><code>description</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 模块功能的人类可读说明。<br />
-        该描述将在 Crowdin Enterprise 界面中显示。</p>
+        <p><strong>必需：</strong> 否</p>
+        <p><strong>描述：</strong> 对工作流步骤功能的用户可读描述。<br />该描述将在 Crowdin Enterprise 界面中显示。</p>
       </td>
     </tr>
     <tr>
       <td><code>boundaries</code></td>
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
-        <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 定义工作流步骤的输入和输出端口，决定字符串进入和退出步骤的方式。</p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 定义工作流步骤的输入和输出端口，决定字符串如何进入和离开该步骤。阅读更多关于<a href="#boundaries-and-ports">边界和端口</a>的内容。</p>
       </td>
     </tr>
     <tr>
       <td><code>boundaries.input</code></td>
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
-        <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 指定工作流步骤输入数据的属性，包括可用端口。</p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 指定工作流步骤输入数据的属性，包括可用端口。只允许一个输入组。</p>
       </td>
     </tr>
     <tr>
       <td><code class="whitespace-nowrap">boundaries.input.title</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 工作流步骤输入部分的标题。</p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 工作流步骤输入部分的标题（3–30 个字符）。</p>
       </td>
     </tr>
     <tr>
@@ -141,19 +187,20 @@ sidebar:
       <td><code>boundaries.outputs</code></td>
       <td>
         <p><strong>类型：</strong> <code>array</code></p>
-        <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 指定工作流步骤的可能输出，决定已处理字符串的后续流向。</p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 指定工作流步骤的可能输出，决定已处理的字符串如何继续流转。一个步骤可以声明一个或两个输出。</p>
       </td>
     </tr>
     <tr>
       <td><code>boundaries.outputs.[]</code></td>
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
-        <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 定义工作流步骤的输出。 数组中的每个对象包含：</p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong><code>port</code> 的允许值：</strong> <code>untranslated</code>、<code>translated</code>、<code>approved</code>、<code>all</code>、<code>false</code>、<code>true</code>、<code>skipped</code></p>
+        <p><strong>描述：</strong> 定义工作流步骤的输出。数组中的每个对象包含：</p>
         <ul>
-          <li><code>title</code>（<strong>string</strong>）– 工作流步骤输出部分的标题。</li>
-          <li><code>port</code>（<strong>string</strong>）– 用于连接输出的端口类型。</li>
+          <li><code>title</code>（<strong>string</strong>）– 工作流步骤输出部分的标题（3–30 个字符）。</li>
+          <li><code>port</code>（<strong>string</strong>）– 用于连接输出的端口类型。 <code>initial</code> 端口不能用作输出。</li>
         </ul>
       </td>
     </tr>
@@ -161,9 +208,9 @@ sidebar:
       <td><code>editorMode</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>必填：</strong> 否</p>
+        <p><strong>必需：</strong> 否</p>
         <p><strong>允许值：</strong> <code>side-by-side</code>、<code>comfortable</code>、<code>multilingual</code></p>
-        <p><strong>描述：</strong> 定义此工作流步骤的 Crowdin Enterprise 编辑器模式。</p>
+        <p><strong>描述：</strong> 定义用户为此工作流步骤打开编辑器时使用的默认 Crowdin Enterprise 编辑器模式。</p>
       </td>
     </tr>
     <tr>
@@ -171,23 +218,23 @@ sidebar:
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>必填：</strong> 否</p>
-        <p><strong>描述：</strong> 用于在用户在工作流编辑器中保存更改后发送已更新工作流步骤设置的相对 URL。 如果自定义工作流步骤具有配置，则使用此项。</p>
+        <p><strong>描述：</strong> 用于在用户在工作流编辑器中保存更改后发送已更新工作流步骤设置的相对 URL。如果自定义工作流步骤具有配置，则使用此项。</p>
       </td>
     </tr>
     <tr>
       <td><code>deleteSettingsUrl</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>必填：</strong> 否</p>
-        <p><strong>描述：</strong> 用于在工作流编辑器中删除工作流步骤的相对 URL。</p>
+        <p><strong>必需：</strong> 否</p>
+        <p><strong>描述：</strong> 在工作流编辑器中删除该工作流步骤时通知的相对 URL。</p>
       </td>
     </tr>
     <tr>
       <td><code>url</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>必填：</strong> 否</p>
-        <p><strong>描述：</strong> 用于配置工作流步骤设置的 iframe 的相对 URL。</p>
+        <p><strong>必需：</strong> 否</p>
+        <p><strong>描述：</strong> 包含工作流步骤设置 UI 的 iframe 的相对 URL。当用户配置该步骤时，页面会在工作流编辑器中加载。</p>
       </td>
     </tr>
     <tr>
@@ -195,22 +242,202 @@ sidebar:
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>允许值：</strong> <code>crowdin-enterprise</code></p>
-        <p><strong>描述：</strong> 可安装模块的环境集合。<br />
-        此参数在跨产品的应用程序中必需。</p>
+        <p><strong>描述：</strong> 可安装模块的环境集合。<br />此参数在跨产品的应用程序中必需。</p>
       </td>
     </tr>
   </tbody>
 </table>
 
+### 边界和端口
+
+`boundaries` 对象声明工作流中该步骤的连接器。端口描述流经其的内容状态，而不是它所连接的步骤。一个步骤的输出可以连接到下一个步骤的输入，前提是双方使用相同的端口，或者任一方使用 `all` 端口。
+
+| 端口               | 含义                                  |
+| ---------------- | ----------------------------------- |
+| `initial`        | 字符串直接从工作流的起始点到达，未经过先前处理。只能用作**输入**。 |
+| `untranslated`   | 字符串还没有翻译。                           |
+| `translated`     | 字符串有翻译。                             |
+| `approved`       | 字符串的翻译已获批准。                         |
+| `skipped`        | 字符串被前一个步骤跳过（例如，预翻译未找到匹配项）。          |
+| `true` / `false` | 用于分支逻辑的通用布尔对。这些与自定义代码步骤使用的连接器相同。    |
+| `all`            | 可连接到另一端任何端口的通配符。                    |
+
+常见配置是一个“成功”输出（例如 `translated`、`approved` 或 `true`）和一个“失败”或“绕过”输出（例如 `untranslated`、`skipped` 或 `false`），以便工作流可以将已处理和未处理的字符串路由到不同的路径。
+
+## 要求
+
+包含 `workflow-step-type` 模块的应用必须满足以下所有要求。安装应用时只验证前两项：
+
+* **`crowdin_agent` 身份验证** – 应用必须使用 `crowdin_agent` 身份验证类型，并在应用描述符中声明 `agent`。此模块不允许其他身份验证类型（例如 `crowdin_app` 或 `none`）。阅读更多关于[身份验证](#authentication)的内容。
+* **应用后端** – 所有模块 URL 都相对于应用的 `baseUrl`，因此该模块与[无服务器应用](/developer/crowdin-apps-serverless/)不兼容。
+* **配套 Webhook 模块** – 同一应用还必须声明一个订阅了 `string.status_on_step.recalculation_triggered` 事件的 [Webhook 模块](/developer/crowdin-apps-module-webhook/)。如果没有它，安装时或将步骤添加到工作流时不会报错——到达该步骤的字符串会静默地永远不会传递给应用。验证错误（*某些必需的依赖项未满足*）只有在稍后再次保存工作流时才会出现。
+* **仅 Crowdin Enterprise** – 自定义工作流步骤仅在具有工作流的 Crowdin Enterprise 项目中可用。在 Crowdin（crowdin.com）中，该模块不可用，而不是被拒绝。
+
+## 身份验证
+
+`workflow-step-type` 模块需要 `crowdin_agent` 身份验证类型。如果应用描述符使用任何其他身份验证类型（或省略 `authentication` 对象），安装将失败并显示以下错误：
+
+> Only crowdin_agent authentication type is allowed for workflow-step-type module type
+
+### 为什么使用代理身份验证类型
+
+自定义工作流步骤在安装后很长时间内会继续在你的项目中处理字符串，由 Webhook 触发且无需用户会话。为此，Crowdin Enterprise 会创建一个专用**代理**（在组织中代表你的应用的机器人用户）：
+
+* 代理用户会在应用安装时自动创建，并在应用卸载时移除。
+* 应用为处理自定义步骤上的字符串而进行的所有 API 调用都以代理用户身份进行身份验证。
+* 代理必须对使用该自定义步骤的每个项目具有经理访问权限。项目经理在设置工作流步骤时邀请代理作为经理加入项目。或者，可以在应用安装期间将代理分配为所有现有项目的经理。
+* 应用执行的所有操作在项目活动中都归属于代理用户。
+
+在 Crowdin Enterprise UI 中，代理用户被称为*机器人*。
+
+### 代理声明
+
+使用 `crowdin_agent` 身份验证类型时，应用描述符必须包含一个描述代理用户的顶级 `agent` 对象：
+
+```json title="manifest.json"
+{
+  "authentication": {
+    "type": "crowdin_agent",
+    "clientId": "your-client-id"
+  },
+  "agent": {
+    "name": "Custom Step",
+    "username": "custom-step-agent",
+    "avatarUrl": "/assets/agent-avatar.png"
+  }
+}
+```
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>agent.username</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>长度：</strong> 3–128 个字符</p>
+        <p><strong>描述：</strong> 在组织中创建的代理用户的用户名。如果用户名已被占用，Crowdin 会附加一个随机后缀，因此不要依赖你声明的确切值。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>agent.name</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 否</p>
+        <p><strong>描述：</strong> 代理用户的显示名称。 Crowdin 会在此值后附加 <code>&nbsp;Agent</code>。如果省略，则使用应用名称。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">agent.avatarUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 否</p>
+        <p><strong>描述：</strong> 代理用户头像的相对 URL。如果省略，则使用应用徽标。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### 获取 API 令牌
+
+`crowdin_agent` 的令牌流程类似于 [`crowdin_app` 流程](/developer/crowdin-apps-installation/#installed-event-communication-flow)。应用安装时，Crowdin 会向应用发送[已安装事件](/developer/crowdin-apps-app-descriptor/#installed-event-payload)。对于使用 `crowdin_agent` 身份验证类型的应用，已安装事件载荷还包含 `agentId` 属性，即为你的应用创建的代理用户的数字标识符。
+
+为获取 API 访问令牌，应用发送以下请求：
+
+```shell
+POST https://accounts.crowdin.com/oauth/token
+```
+
+**令牌请求参数：**
+
+<table>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">grant_type: crowdin_agent</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>必需：</strong> 是</p>
+      <p><strong>描述：</strong> 指定代理应用的令牌流程。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>client_id</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>必需：</strong> 是</p>
+      <p><strong>描述：</strong> 应用的客户端 ID 在应用注册时获得。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>client_secret</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>必需：</strong> 是</p>
+      <p><strong>描述：</strong> 应用的客户端密钥在应用注册时获得。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>app_id</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>必填：</strong> 是</p>
+      <p><strong>描述：</strong> 应用程序描述符中的 Crowdin 应用程序标识符。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>app_secret</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>必需：</strong> 是</p>
+      <p><strong>描述：</strong> 用于授权你的 Crowdin 应用的唯一密钥。此值从已安装事件中获取。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>domain</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string|null</code></p>
+      <p><strong>必需：</strong> 是</p>
+      <p><strong>描述：</strong> 应用安装到的组织的名称。此值从已安装事件中获取。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>user_id</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>必填：</strong> 是</p>
+      <p><strong>描述：</strong> 安装该应用程序的用户的标识符。此值从已安装事件中获取。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>agent_id</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>integer</code></p>
+      <p><strong>必需：</strong> 是</p>
+      <p><strong>描述：</strong> 为你的应用创建的代理用户的标识符。此值从已安装事件中获取（<code>agentId</code> 属性）。</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+生成的访问令牌是为代理用户签发的。在用于管理自定义步骤上字符串状态的 [API 方法](#api-methods) 中，将其用于 `Authorization: Bearer` 标头。
+
+<Aside>
+  应用描述符中请求的作用域不得超过 OAuth 应用中配置的作用域。要管理自定义工作流步骤上的字符串状态，应用需要 `project` 作用域。
+</Aside>
+
 ## 应用与 Crowdin 之间的通信
 
-工作流步骤类型模块依赖 Webhook 和 API 方法与 Crowdin Enterprise 进行通信。 包含此模块的应用还必须定义 [Webhook 模块](/zh/developer/crowdin-apps-module-webhook/)，以接收与字符串相关的事件（即 `string.status_on_step.recalculation_triggered`）并进行相应处理。
+工作流步骤类型模块依赖 Webhook 和 API 方法与 Crowdin Enterprise 进行通信。包含此模块的应用还必须定义 [Webhook 模块](/zh/developer/crowdin-apps-module-webhook/)，以接收与字符串相关的事件（即 `string.status_on_step.recalculation_triggered`）并进行相应处理。
 
 ### 从 Crowdin 接收 Webhook 事件
 
-每当字符串到达应用提供的自定义工作流步骤时，Crowdin Enterprise 会定期向应用的 Webhook 模块发送批量 Webhook 负载。
+每当字符串到达应用提供的自定义工作流步骤时，Crowdin Enterprise 都会向应用的 Webhook 模块发送批量 Webhook 载荷。当字符串到达自定义步骤时（例如，它刚被添加、由前一个步骤移入或重新触发），其在该步骤上的状态变为**需要处理**，并且 Webhook 事件会排队等待投递。
 
-此负载包含 `string.status_on_step.recalculation_triggered` 事件，并包含所有需要外部处理的相关字符串（例如，基于 AI 的校对）。
+此载荷包含 `string.status_on_step.recalculation_triggered` 事件，并包含所有需要外部处理的相关字符串（例如基于 AI 的校对）。
+
+<Aside>
+  Webhook 事件以批次形式投递，可能会稍有延迟。尽快返回 `2xx` 状态码并异步处理字符串。阅读更多关于[投递保证](#delivery-guarantees-and-reconciliation)的内容。
+</Aside>
 
 `string.status_on_step.recalculation_triggered` 事件的 Webhook 负载示例：
 
@@ -331,14 +558,34 @@ sidebar:
 }
 ```
 
+### 自定义步骤上的字符串状态
+
+自定义工作流步骤上的每个字符串都有每种目标语言的状态。使用 [API 方法](#api-methods)时你会遇到的状态：
+
+| 状态             | 含义                                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------------- |
+| `NEED_PROCESS` | 字符串已到达步骤，正在等待应用的决定。在项目进度中计为“待办”。                                                                        |
+| `TODO`         | 应用通过设置空输出（`""`）明确将字符串停放在该步骤上。                                                                           |
+| `DONE`         | 应用将字符串分配到该步骤的输出端口之一，字符串在工作流中继续流转。                                                                       |
+| `FAILED`       | 向应用投递 Webhook 失败。此状态的字符串在项目中显示为失败词，并且不会自动重新发送。阅读更多关于[投递保证](#delivery-guarantees-and-reconciliation)的内容。 |
+| `INCOMPLETE`   | 该字符串当前未针对该语言路由到此步骤（例如，它被隐藏或从工作流中排除）。                                                                    |
+
 ### 处理字符串并更新其状态
 
-1. **应用逻辑** - 应用根据其内部逻辑处理收到的字符串（例如，将其发送到 AI 服务或执行自定义验证）。
-2. [**通过 API 更新字符串状态**](#api-methods) - 处理完成后，应用调用 Crowdin Enterprise 的私有 API 更新自定义工作流步骤上每个字符串的状态。 此操作将字符串路由到相应的工作流步骤输出。
+1. **应用逻辑** - 应用根据其内部逻辑处理接收到的字符串（例如，将其发送到 AI 服务或运行自定义验证）。
+2. [**通过 API 更新字符串状态**](#api-methods) - 处理后，应用调用 Crowdin Enterprise API 更新自定义工作流步骤上每个字符串的状态。此操作将字符串路由到相应的工作流步骤输出。
 
 #### API 方法
 
-以下是用于管理自定义工作流步骤上字符串状态的 API 方法。 **更新字符串状态**方法是必填的，因为它会最终确定字符串状态并将其路由到正确的工作流输出。 另一个可用方法**获取当前字符串状态**是可选的，但可帮助处理应用中的边界情况或高级逻辑。
+以下是用于管理自定义工作流步骤上字符串状态的 API 方法。**更新字符串状态**方法是必填的，因为它会最终确定字符串状态并将其路由到正确的工作流输出。另一个可用方法**获取当前字符串状态**是可选的，但可帮助处理应用中的边界情况或高级逻辑。
+
+<Aside>
+  这些端点专为带有 `workflow-step-type` 模块的应用构建，不属于通用 [Crowdin API 参考](/developer/api/) 的一部分。
+</Aside>
+
+<Aside type="caution">
+  这些端点必须使用通过 [`crowdin_agent` 授权类型](#obtaining-an-api-token)获取的访问令牌调用。以普通用户身份或通过其他授权类型获取的令牌进行身份验证的请求会被拒绝，并返回 `403 Forbidden` 错误。代理用户必须对项目具有经理访问权限。
+</Aside>
 
 <details>
   <summary><strong>更新字符串状态</strong></summary>
@@ -363,7 +610,7 @@ sidebar:
         <td><code>organization_domain</code></td>
         <td>是</td>
         <td><code>string</code></td>
-        <td>您的 Crowdin Enterprise 组织域名。</td>
+        <td>你的 Crowdin Enterprise 组织的域。</td>
       </tr>
       <tr>
         <td><code>projectId</code></td>
@@ -381,10 +628,15 @@ sidebar:
         <td><code>languageId</code></td>
         <td>是</td>
         <td><code>string</code></td>
-        <td>目标语言代码。</td>
+        <td>目标语言代码。必须是该步骤的目标语言之一（参见 Webhook 载荷中的 <code>workflowStep.languages</code> 属性）。</td>
       </tr>
     </tbody>
   </table>
+
+  请求体是一个 JSON Patch 数组。仅支持 `replace` 操作。 `path` 的格式为 `/{stringId}/output`，`value` 必须是模块 `boundaries.outputs` 中声明的输出端口之一，或者为空字符串：
+
+  * 声明的输出端口（例如 `translated`）– 字符串在该步骤上标记为**完成**，并立即路由到连接到该输出的工作流步骤。
+  * 空字符串（`""`）– 字符串停放在该步骤上，状态为**待办**。使用此选项可让字符串保持挂起状态（例如，作为剩余工作可见），直到你的应用完成处理。
 
   **请求正文（示例）**：
   ```json
@@ -397,7 +649,7 @@ sidebar:
     {
       "op": "replace",
       "path": "/1106430/output",
-      "value": "approved"
+      "value": "untranslated"
     }
   ]
   ```
@@ -409,19 +661,19 @@ sidebar:
       {
         "data": {
           "stringId": 1106423,
-          "languageId": "uk",
-          "stepId": 889,
+          "languageId": "et",
+          "stepId": 1035,
           "status": "DONE",
-          "output": "true"
+          "output": "translated"
         }
       },
       {
         "data": {
           "stringId": 1106430,
-          "languageId": "uk",
-          "stepId": 889,
+          "languageId": "et",
+          "stepId": 1035,
           "status": "DONE",
-          "output": "true"
+          "output": "untranslated"
         }
       }
     ]
@@ -452,7 +704,7 @@ sidebar:
         <td><code>organization_domain</code></td>
         <td>是</td>
         <td><code>string</code></td>
-        <td>您的 Crowdin Enterprise 组织域名。</td>
+        <td>你的 Crowdin Enterprise 组织的域。</td>
       </tr>
       <tr>
         <td><code>projectId</code></td>
@@ -475,6 +727,45 @@ sidebar:
     </tbody>
   </table>
 
+  **查询参数：**
+
+  <table>
+    <thead>
+      <tr>
+        <th>参数</th>
+        <th>必填</th>
+        <th>类型</th>
+        <th>描述</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>stringIds</code></td>
+        <td>否</td>
+        <td><code>string</code></td>
+        <td>按字符串标识符筛选（逗号分隔，每个请求最多 500 个）。</td>
+      </tr>
+      <tr>
+        <td><code>status</code></td>
+        <td>否</td>
+        <td><code>string</code></td>
+        <td>按状态筛选：<code>TODO</code>、<code>DONE</code>、<code>INCOMPLETE</code>、<code>NEED_PROCESS</code> 或 <code>FAILED</code>。</td>
+      </tr>
+      <tr>
+        <td><code>limit</code></td>
+        <td>否</td>
+        <td><code>integer</code></td>
+        <td>要检索的最大项目数。</td>
+      </tr>
+      <tr>
+        <td><code>offset</code></td>
+        <td>否</td>
+        <td><code>integer</code></td>
+        <td>集合中的起始偏移量。</td>
+      </tr>
+    </tbody>
+  </table>
+
   **响应示例**：
   ```json
   {
@@ -482,19 +773,19 @@ sidebar:
       {
         "data": {
           "stringId": 1106423,
-          "languageId": "uk",
-          "stepId": 889,
+          "languageId": "et",
+          "stepId": 1035,
           "status": "DONE",
-          "output": "true"
+          "output": "translated"
         }
       },
       {
         "data": {
           "stringId": 1106430,
-          "languageId": "uk",
-          "stepId": 889,
+          "languageId": "et",
+          "stepId": 1035,
           "status": "DONE",
-          "output": "true"
+          "output": "untranslated"
         }
       }
     ]
@@ -502,21 +793,45 @@ sidebar:
   ```
 </details>
 
+### 投递保证和对账
+
+不要将 Webhook 视为队列：
+
+* **批处理和延迟** – 事件被收集成批并每分钟发送一次，因此它们可能在字符串到达步骤后稍有延迟到达。
+* **有限重试** – 如果应用无法访问或返回错误，投递会重试有限次数。之后，受影响的字符串在该步骤上标记为**失败**，并且不会自动重新发送。
+* **从失败中恢复** – **失败**状态的字符串在项目中显示为失败词。项目经理可以从 Crowdin Enterprise 的工作流步骤重新触发它们的处理，这会将其重置为**需要处理**并重新发送 Webhook 事件。
+* **无处理截止时间** – 字符串可以无限期地处于**需要处理**状态。 Crowdin Enterprise 不会使其过期或重新分配，因此你的应用负责最终处理它收到的每个字符串。
+
+由于投递不保证，请定期将应用的状态与 Crowdin Enterprise 对账：对每个活动步骤和语言调用 **获取当前字符串状态** 端点并带上 `status=NEED_PROCESS` 过滤器，然后照常处理返回的字符串。
+
 ### 在工作流编辑器中配置工作流步骤
 
-用户可以在 Crowdin Enterprise 工作流编辑器中配置或删除自定义工作流步骤：
+用户可以在 Crowdin Enterprise 工作流编辑器中配置或删除自定义工作流步骤。 Crowdin Enterprise 通过 `updateSettingsUrl` 和 `deleteSettingsUrl` 回调通知你的应用这些更改，这些回调使用与 iframe 请求相同的 `Authorization: Bearer` JWT 签名。这些通知是你的应用了解其存在哪些步骤以及如何配置的方式，因此请存储你收到的数据。
 
 * **更新设置（`updateSettingsUrl`）**
-  * 当用户在工作流编辑器中更改步骤设置后点击**保存**时，Crowdin Enterprise 会向清单中定义的 `updateSettingsUrl` 发送 **POST** 请求。
+  * 当用户在工作流编辑器中添加或更改步骤后点击**保存**时，Crowdin Enterprise 会向应用描述符中定义的 `updateSettingsUrl` 发送一个 **POST** 请求。
+  * 对于项目工作流中的步骤，请求体包含 `organizationId`、`projectId`、`workflowId`、`stepId` 和 `settings`（由设置 UI 保存的步骤配置）。
+  * 对于工作流模板中的步骤，请求体包含 `organizationId`、`templateId`、`stepId` 和 `settings`。
   * 应用返回 **2XX 状态**以确认已成功处理更新后的配置。
 
 * **删除步骤（`deleteSettingsUrl`）**
   * 当用户在工作流编辑器中删除步骤时，Crowdin Enterprise 会向 `deleteSettingsUrl` 发送 **DELETE** 请求。
+  * 对于项目工作流中的步骤，请求体包含 `organizationId`、`projectId`、`workflowId` 和 `stepId`。对于工作流模板中的步骤，它包含 `organizationId`、`templateId` 和 `stepId`。
   * 应用可安全删除与已删除工作流步骤相关的所有已存储设置，并返回 **2XX 状态**以确认成功。
+
+<Aside>
+  卸载应用会停用所有基于其模块的工作流步骤。将[卸载事件](/developer/crowdin-apps-app-descriptor/#uninstall-event-payload)视为所有相关步骤的删除，并清理存储的数据。
+</Aside>
 
 ### 在您的应用中实现设置界面
 
 如果工作流步骤通过界面提供任何设置，则需要实现工作流步骤配置的验证和保存功能。
+
+使用 Crowdin Apps SDK 构建的应用可以在 `settingsUiModule.formSchema` 中以 JSON schema 的形式描述设置表单。然后 SDK 会渲染表单并处理其验证和保存。
+
+<ReadMore>
+  阅读更多关于[使用 Crowdin Apps SDK 构建工作流步骤](https://crowdin.github.io/app-project-module/tools/workflow-step-type/)的内容。
+</ReadMore>
 
 #### 验证方法
 
@@ -541,3 +856,37 @@ window.formRef = {
 window.currentFormData = settings;
 AP.formDataUpdated(settings)；
 ```
+
+当用户保存工作流时，保存的设置会通过 `updateSettingsUrl` 回调传递回你的应用。
+
+## 推荐的实现流程
+
+<Steps>
+  1. **注册一个 OAuth 应用**，使用你的应用所需的作用域（至少 `project`）。阅读更多关于[创建 OAuth 应用](/developer/authorizing-oauth-apps/)的内容。
+  2. **准备应用描述符** - 将 `authentication.type` 设置为 `crowdin_agent` 并带上你的 `clientId`，声明 `agent` 对象、一个或多个 `workflow-step-type` 模块，以及一个订阅了 `string.status_on_step.recalculation_triggered` 事件的 `webhook` 模块。如果你的步骤有每步骤配置，请添加 `updateSettingsUrl`、`deleteSettingsUrl` 和设置 iframe 的 `url`。
+  3. **处理已安装事件** - 存储收到的凭据，包括 `agentId`，并在需要时通过 `crowdin_agent` 授权类型获取 API 令牌。
+  4. **处理设置回调** - 持久化在 `updateSettingsUrl` 上收到的数据，该数据标识每个活动步骤及其设置。
+  5. **处理 Webhook** - 快速以 `2xx` 响应确认并将字符串排队等待处理。载荷以批次形式到达（`{"events": [...]}`）。验证 `X-Crowdin-Signature` 标头。
+  6. **使用自己的逻辑处理字符串**，并使用 **更新字符串状态** 端点报告结果，将每个字符串分配到反映你决定的输出端口，或使用 `""` 将其保留在步骤上。
+  7. **定期对账** - 使用 `status=NEED_PROCESS` 过滤器查询 **获取当前字符串状态** 端点，以获取你的应用可能遗漏了 Webhook 事件的字符串。
+  8. **处理删除** - 在 `deleteSettingsUrl` 请求时丢弃存储的每步骤状态，并将应用卸载视为删除所有步骤。
+</Steps>
+
+## 故障排除
+
+| 错误消息                                                                                          | 可能原因                                                                                                 | 如何修复                                                                                                 |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 安装失败，提示*Only crowdin_agent authentication type is allowed for workflow-step-type module type* | 应用描述符使用 `crowdin_app` 或 `none` 身份验证，或缺少 `authentication` 对象                                          | 将 `authentication.type` 设置为 `crowdin_agent`，指定 `clientId`，并添加 `agent` 对象                             |
+| 安装失败，提示*Serverless apps allow only UI module types*                                           | 应用描述符没有 `baseUrl`                                                                                    | 添加 `baseUrl` – 此模块需要应用后端                                                                             |
+| 安装失败，提示*Requested scopes exceed the access level specified in the OAuth app*                  | 应用描述符中的作用域比 OAuth 应用的作用域更广                                                                           | 使应用描述符作用域与 OAuth 应用配置保持一致                                                                            |
+| 步骤类型未出现在工作流编辑器中                                                                               | 应用安装在 Crowdin 而不是 Crowdin Enterprise 中；当前用户无权访问该模块；或应用没有订阅所需事件的 Webhook 模块                           | 在 Crowdin Enterprise 中安装应用，检查模块访问设置，并为 `string.status_on_step.recalculation_triggered` 添加 Webhook 模块 |
+| 工作流验证错误 *“\{agentName}”需要项目的经理权限*                                                             | 代理用户没有项目的经理访问权限                                                                                      | 邀请代理用户作为经理加入项目                                                                                       |
+| 字符串状态端点返回 `403 Forbidden`                                                                     | 访问令牌不是通过 `crowdin_agent` 授权类型获取的（例如，它属于普通用户），或者代理不是项目的经理                                             | 通过 `crowdin_agent` 授权类型和 `agent_id` 参数获取令牌，并验证代理的项目角色                                                |
+| 字符串状态端点返回 `404 Not Found`                                                                     | `languageId` 不在该步骤的目标语言中，或者该步骤不是活动的自定义工作流步骤                                                          | 使用 Webhook 的 `workflowStep.languages` 属性中的语言代码，并验证步骤标识符                                              |
+| 更新字符串状态时返回 `400 Bad Request`                                                                  | 输出值不是该步骤声明的输出端口之一                                                                                    | 发送模块的 `boundaries.outputs[].port` 值之一或空字符串                                                           |
+| 字符串在该步骤上卡住成为失败词                                                                               | 向应用投递 Webhook 失败                                                                                     | 修复应用可用性，然后从 Crowdin Enterprise 的工作流步骤重新触发失败的字符串                                                      |
+| Webhook 从未到达，或重新保存工作流失败并提示*Some required dependencies are unmet*                              | 应用没有订阅 `string.status_on_step.recalculation_triggered` 的 Webhook 模块；Webhook 模块订阅了错误的事件；或者它属于与步骤不同的应用 | 将**同一**应用的 Webhook 模块订阅到 `string.status_on_step.recalculation_triggered` 事件                          |
+
+<ReadMore>
+  从组织管理角度阅读更多关于[基于应用的工作流步骤](/enterprise/app-based-workflow-step/)的内容。
+</ReadMore>

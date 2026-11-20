@@ -1,0 +1,237 @@
+---
+title: 公告模块
+description: 在 Crowdin Enterprise 标题栏和词汇表页面上显示来自应用的通知
+slug: developer/crowdin-apps-module-announcement
+sidebar:
+  order: 22
+  label: 公告
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+此模块允许应用向 Crowdin Enterprise 组织的用户显示通知。
+
+公告放置位置：
+
+* `header-alert`：页面标题栏下方的警告条，显示在组织的每个页面上
+* `glossary`：词汇表页面上术语表上方
+
+该模块仅在 Crowdin Enterprise 中可用，且仅适用于自托管应用。
+
+## 工作原理
+
+<Steps>
+  1. 组织管理员安装应用并选择谁可以看到其公告。
+  2. 用户打开包含模块放置位置的页面。 Crowdin Enterprise 向模块的 `url` 发送带有当前上下文的请求。
+  3. 应用以希望该用户看到的公告或空列表作答。
+  4. Crowdin Enterprise 在放置位置显示公告。用户可以关闭应用标记为可关闭的公告。
+</Steps>
+
+## 访问权限
+
+您可以将此模块的访问权限授予以下用户类别之一：
+
+* 仅限组织管理员
+* 组织管理员、项目管理员和开发者
+* 组织项目中的所有用户
+* 选定用户
+
+Crowdin Enterprise 为此模块预选**组织项目中的所有用户**。
+
+## 结构
+
+```json title="manifest.json"
+{
+  "baseUrl": "https://app.example.com",
+  "modules": {
+    "announcement": [
+      {
+        "key": "header-announcements",
+        "name": "Header announcements",
+        "url": "/announcements/header",
+        "placement": "header-alert"
+      }
+    ]
+  }
+}
+```
+
+一个应用可以声明多个公告模块，每个放置位置一个或多个在同一放置位置。
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 模块的可读名称。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin Enterprise 请求公告的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>placement</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>允许值：</strong> <code>header-alert</code>、<code>glossary</code></p>
+        <p><strong>描述：</strong> 模块公告的显示位置。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>environments</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>描述：</strong> 可安装模块的环境集合。<br />此参数在跨产品的应用程序中必需。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 公告应用与 Crowdin 之间的通信
+
+Crowdin Enterprise 每次渲染模块的放置位置时都会请求公告。它向 `baseUrl` + `url` 发送一个 `POST` 请求，在 `Authorization` 标头中携带应用的 JWT，应用有 10 秒时间作答。
+
+### 向应用发出请求
+
+请求载荷示例：
+
+```json
+{
+  "context": {
+    "placement": "glossary",
+    "userId": 123,
+    "glossaryId": 456
+  }
+}
+```
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>context.placement</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 请求公告的放置位置。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>context.userId</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>integer</code></p>
+        <p><strong>描述：</strong> 请求公告的用户。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">context.glossaryId</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>integer</code></p>
+        <p><strong>描述：</strong> 用户打开的词汇表所属的词汇表 ID。<br />随 <code>glossary</code> 放置位置发送。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+组织由 JWT 标识，因此载荷仅携带上下文。
+
+### 应用的预期响应
+
+响应载荷示例：
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": "autumn-release-terms",
+        "text": "The autumn release terminology is in the glossary. Check it before you start translating.",
+        "dismissible": true,
+        "expiresAt": "2026-10-01T00:00:00+00:00",
+        "actionLabel": "Read the release notes",
+        "actionUrl": "https://example.com/releases/autumn"
+      }
+    ]
+  }
+}
+```
+
+当应用没有可显示的内容时，返回空的 `items` 数组。
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 模块内公告的标识符，最多 255 个字符。<br />已关闭的公告只要保留此值就保持关闭，因此若要再次显示编辑过的公告，请为其提供新的 <code>id</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>text</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 公告本身，最多 65,535 个字符。<br />文本以纯文本形式显示，其中的裸 <code>http</code> 和 <code>https</code> URL 会变成链接。在标题栏中，文本显示在一行上，完整文本在工具提示中显示。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>dismissible</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>boolean</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 用户是否可以关闭公告。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>expiresAt</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 公告停止显示的时刻，采用 ISO 8601 格式。<br />没有此字段的公告将一直显示，直到应用停止返回它们。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>actionLabel</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 公告操作链接的标签，最多 255 个字符。<br />与 <code>actionUrl</code> 一起使用。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>actionUrl</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 操作链接在新标签页中打开的地址，最多 2,048 个字符。<br />必须以 <code>https://</code> 开头。与 <code>actionLabel</code> 一起使用。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Crowdin Enterprise 读取最多 512 KB、最多 1,000 个项目的响应，并显示其中的前 10 个有效公告。违反上述规则的公告将被跳过，响应的其余部分仍会被使用。
+
+## 显示规则
+
+Crowdin Enterprise 对应用返回的公告应用以下规则：
+
+* 用户无法关闭的公告排在前面，其余公告按应用安装顺序排列。
+* 标题栏一次显示一个公告。如果有多个公告，标题栏还会显示计数器和用于在它们之间移动的箭头。
+* 关闭公告仅在该浏览器中隐藏它。
+* Crowdin Enterprise 每 15 分钟重新加载标题栏公告，并在用户返回标签页时重新加载两个位置的公告。带有 `expiresAt` 的公告在其到期时也会触发重新加载。

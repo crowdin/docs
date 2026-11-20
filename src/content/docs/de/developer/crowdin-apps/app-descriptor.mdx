@@ -183,7 +183,7 @@ Ein serverloser Deskriptor enthält kein `baseUrl`, deklariert UI-Module ohne `u
     <td><code class="whitespace-nowrap">stringBasedAvailable</code></td>
     <td>
       <p><strong>Typ:</strong> <code>boolean</code></p>
-      <p><strong>Beschreibung:</strong> Whether the App's Modul are verfügbar in string-based Projekte. In Datei-based Projekte they are immer verfügbar.</p>
+      <p><strong>Beschreibung:</strong> Whether the App's Modul are verfügbar in string-based Projekte. In dateibasierten Projekten sind sie für dich immer verfügbar.</p>
     </td>
   </tr>
   </tbody>
@@ -202,14 +202,14 @@ Alle anderen URLs im Manifest, wie beispielsweise `logo`, `events` und Modul-URL
 Gibt den Authentifizierungstyp an, den Crowdin zum Signieren von Anfragen an die App verwendet:
 
 * **`crowdin_app`**: Through an OAuth App. Verwende ihn, wenn die App die Crowdin API jederzeit selbst aufruft.
-* **`none`**: Without an OAuth App. Die App kann die API weiterhin erreichen, aber nur, während sie auf der Benutzerseite ausgeführt wird, beispielsweise solange ihr Iframe geöffnet ist. Serverless Apps use this Typ.
-* **`crowdin_agent`**: Through a dedicated bot Benutzer that Crowdin erstellens wenn the App is installiereniert, so the App beibehaltens woderking in Projekte nachwards, für Beispiel on a benutzerdefiniert woderkflow step. Die API calls are authenticated as that Benutzer. Wird vom Modul [Workflow-Schritt-Typ](/developer/crowdin-apps-module-workflow-step-type/#authentication) benötigt.
+* **`none`**: Ohne OAuth-App. Die App kann die API weiterhin erreichen, aber nur, während sie auf der Benutzerseite ausgeführt wird, beispielsweise solange ihr Iframe geöffnet ist. Serverlose Anwendungen verwenden diesen Typ.
+* **`crowdin_agent`**: Über einen speziellen Bot-Benutzer, den Crowdin bei der Installation der App anlegt, damit die App anschließend weiterhin in deinen Projekten funktioniert, beispielsweise in einem benutzerdefinierten Workflow-Schritt. Die API-Aufrufe deiner App werden als dieser Benutzer authentifiziert. Wird vom Modul [Workflow-Schritt-Typ](/developer/crowdin-apps-module-workflow-step-type/#authentication) benötigt.
 
 <ReadMore>
   Erfahre mehr über [Sicherheit für Crowdin-Apps](/developer/crowdin-apps-security/).
 </ReadMore>
 
-Example:
+Beispiel:
 
 ```json title="manifest.json"
 {
@@ -220,29 +220,29 @@ Example:
 }
 ```
 
-| Feld       | Typ      | Beschreibung                                                                                  |
-| ---------- | -------- | --------------------------------------------------------------------------------------------- |
-| `type`     | `string` | Der Typ des authentication to use: `none` (the default), `crowdin_app`, oder `crowdin_agent`. |
-| `clientId` | `string` | OAuth client id für authoderization über the `crowdin_app` Typ.                               |
+| Feld       | Typ      | Beschreibung                                                                                               |
+| ---------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| `type`     | `string` | Die Authentifizierungsart, die du verwenden kannst: `none` (Standard), `crowdin_app` oder `crowdin_agent`. |
+| `clientId` | `string` | OAuth-Client-ID für die Autorisierung über den Typ `crowdin_app`.                                          |
 
-## Modul
+## Module
 
-Modul are wie an App extends Crowdin. Jede Typ declares wo the App appears in the interface oder was it processes:
+Über Module kannst du Crowdin um App-Funktionen erweitern. Jeder Typ legt fest, wo die App in der Benutzeroberfläche angezeigt wird oder was sie verarbeitet:
 
 * **UI-Module**: Panels, Dashboards, Menüs und Dialoge innerhalb von Crowdin.
-* **AI Modul**: benutzerdefiniert AI bietenrs, prompt bietenrs, und processoders für AI Anfrages.
+* **KI-Module**: Benutzerdefinierte KI-Anbieter, Prompt-Anbieter und Prozessoren für KI-Anfragen.
 * **Module zur Dateiverarbeitung**: Benutzerdefinierte Dateiformate sowie Verarbeitung vor oder nach Import und Export.
-* **Andere Modul**: benutzerdefiniert machine translation engines, webhooks, woderkflow steps, QA prüfens, und spellprüfeners.
+* **Weitere Module**: Benutzerdefinierte maschinelle Übersetzungsengines, Webhooks, Workflow-Schritte, Qualitätssicherungsprüfungen und Rechtschreibprüfungen.
 
 <ReadMore>
-  Erfahren Sie mehr über [UI-Module](/developer/crowdin-apps-modules-ui/), [KI-Module](/developer/crowdin-apps-modules-ai/) und [Dateiverarbeitungsmodule](/developer/crowdin-apps-modules-file-processing/).
+  Erfahre mehr über [UI-Module](/developer/crowdin-apps-modules-ui/), [KI-Module](/developer/crowdin-apps-modules-ai/) und [Dateiverarbeitungsmodule](/developer/crowdin-apps-modules-file-processing/).
 </ReadMore>
 
 ## Events
 
-A selbst gehostet App registers callbacks für events that happen in the woderkspace. Jede property in this object is a URL relative to the App's `baseUrl`, und Crowdin sends a POST Anfrage to it wenn the event fires. Der/Die/Das `installed` callback ist part of the Installation itself, und the rest behave like webhooks.
+Eine selbst gehostete App registriert Callbacks für Ereignisse, die in deinem Arbeitsbereich auftreten. Jede Eigenschaft in diesem Objekt ist eine URL, die relativ zur `baseUrl` deiner App ist, und Crowdin sendet eine POST-Anfrage an diese URL, sobald das Ereignis ausgelöst wird. Der Callback `installed` ist Teil der Installation selbst, während sich die übrigen wie Webhooks verhalten.
 
-Example:
+Beispiel:
 
 ```json title="manifest.json"
 {
@@ -253,14 +253,14 @@ Example:
 }
 ```
 
-| Event       | Typ      | Beschreibung                                                                                                                                                 |
-| ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `installed` | `string` | Sent to the App nach a Benutzer installierens it in Crowdin. Erforderlich mit the `crowdin_app` und `crowdin_agent` [authentication](#authentication) Typen. |
-| `uninstall` | `string` | Sent to the App bevoder it is uninstalliereniert von Crowdin.                                                                                                |
+| Event       | Typ      | Beschreibung                                                                                                                                                             |
+| ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `installed` | `string` | Wird an die App gesendet, nachdem du sie in Crowdin installiert hast. Erforderlich bei den [Authentifizierungstypen](#authentication) `crowdin_app` und `crowdin_agent`. |
+| `uninstall` | `string` | Wird an die App gesendet, bevor diese aus Crowdin deinstalliert wird.                                                                                                    |
 
-### installiert Event Payload
+### Installierte Ereignis-Nutzdaten
 
-Crowdin sends the `installed` event to the App wenn a Benutzer installierens it. The payload describes the woderkspace oder proDatei the App was installiereniert to, the App itself, und the Zugangsdaten the App benötigens to fetch an API Token.
+Crowdin sendet das `installed`-Ereignis an die App, wenn du sie installierst. Die Nutzlast beschreibt den Arbeitsbereich oder das Profil, in dem die App installiert wurde, die App selbst sowie die Anmeldedaten, die die App benötigt, um ein API-Token abzurufen.
 
 <ReadMore>
   Erfahre mehr über den [Ablauf bei installierten Events](/developer/crowdin-apps-installation/#installed-event-communication-flow).
@@ -294,20 +294,20 @@ Payload Beispiel:
 
 Eigenschaften:
 
-| Feld             | Typ       | Beschreibung                                                                                                                                  |
-| ---------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `appId`          | `string`  | Der/Die/Das Bezeichner of the App that ist declared in the App descriptoder Datei.                                                            |
-| `appSecret`      | `string`  | The eindeutig secret verwendet für authoderization of your Crowdin App.                                                                       |
-| `clientId`       | `string`  | Der/Die/Das OAuth client Bezeichner that ist declared in the App descriptoder Datei.                                                          |
-| `userId`         | `integer` | The numeric Bezeichner of the Benutzer that installiereniert the App.                                                                         |
-| `organizationId` | `integer` | The numeric Bezeichner of the Organisation the App was installiereniert to.                                                                   |
-| `domain`         | `string`  | The Name of the Organisation in Crowdin Enterprise the App was installiereniert to. In Crowdin the value is immer `null`.                     |
-| `baseUrl`        | `string`  | The `baseUrl` of the Organisation in Crowdin Enterprise the App was installiereniert to. In Crowdin the value is immer `https://crowdin.com`. |
-| `agentId`        | `integer` | The numeric Bezeichner of the agent Benutzer erstellt für the App. Sent nur für Apps mit the `crowdin_agent` authentication Typ.              |
+| Feld             | Typ       | Beschreibung                                                                                                                                                  |
+| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `appId`          | `string`  | Die Kennung deiner App, die in der App-Deskriptordatei angegeben ist.                                                                                         |
+| `appSecret`      | `string`  | Der eindeutige Schlüssel, der für die Autorisierung deiner Crowdin-App verwendet wird.                                                                        |
+| `clientId`       | `string`  | Die OAuth-Client-ID, die in der App-Deskriptordatei deklariert ist.                                                                                           |
+| `userId`         | `integer` | Die numerische Kennung des Benutzers, der die App installiert hat.                                                                                            |
+| `organizationId` | `integer` | Die numerische Kennung der Organisation, in der die App installiert wurde.                                                                                    |
+| `domain`         | `string`  | Der Name der Organisation in Crowdin Enterprise, in der die App installiert wurde. In Crowdin ist der Wert immer `null`.                                      |
+| `baseUrl`        | `string`  | Die `baseUrl` deiner Organisation in Crowdin Enterprise, in der du die App installiert hast. In Crowdin lautet der Wert für dich immer `https://crowdin.com`. |
+| `agentId`        | `integer` | Die numerische Kennung des für die App angelegten Agentenbenutzers. Wird nur für Apps mit dem Authentifizierungstyp `crowdin_agent` gesendet.                 |
 
-### Uninstallieren Event Payload
+### Nutzdaten für die Deinstallation
 
-Crowdin sends the `uninstall` event to the App bevoder the App is entfernend. Like the `installed` event, the payload describes the woderkspace oder Konto the App was installiereniert to und the App itself. Use it to entfernen the Daten you Stored für that woderkspace oder Konto.
+Crowdin sendet das `uninstall`-Ereignis an die App, bevor diese entfernt wird. Ähnlich wie beim `installed`-Ereignis beschreibt die Nutzlast den Arbeitsbereich oder das Konto, in dem die App installiert wurde, sowie die App selbst. Verwende diese Funktion, um die Daten zu löschen, die du für diesen Arbeitsbereich oder dieses Konto gespeichert hast.
 
 Payload Beispiel:
 
@@ -333,10 +333,10 @@ Payload Beispiel:
 
 Eigenschaften:
 
-| Feld             | Typ       | Beschreibung                                                                                                                                     |
-| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `appId`          | `string`  | Der/Die/Das Bezeichner of the App that ist declared in the App descriptoder Datei.                                                               |
-| `clientId`       | `string`  | Der/Die/Das OAuth client Bezeichner that ist declared in the App descriptoder Datei.                                                             |
-| `organizationId` | `integer` | The numeric Bezeichner of the Organisation the App was uninstalliereniert von.                                                                   |
-| `domain`         | `string`  | The Name of the Organisation in Crowdin Enterprise the App was uninstalliereniert von. In Crowdin the value is immer `null`.                     |
-| `baseUrl`        | `string`  | The `baseUrl` of the Organisation in Crowdin Enterprise the App was uninstalliereniert von. In Crowdin the value is immer `https://crowdin.com`. |
+| Feld             | Typ       | Beschreibung                                                                                                                                                  |
+| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `appId`          | `string`  | Die Kennung deiner App, die in der App-Deskriptordatei angegeben ist.                                                                                         |
+| `clientId`       | `string`  | Die OAuth-Client-ID, die in der App-Deskriptordatei deklariert ist.                                                                                           |
+| `organizationId` | `integer` | Die numerische Kennung der Organisation, aus der du die App deinstalliert hast.                                                                               |
+| `domain`         | `string`  | Der Name der Organisation in Crowdin Enterprise, aus der du die App deinstalliert hast. In Crowdin ist der Wert immer `null`.                                 |
+| `baseUrl`        | `string`  | Die `baseUrl` der Organisation in Crowdin Enterprise, aus der du die App deinstalliert hast. In Crowdin lautet der Wert für dich immer `https://crowdin.com`. |

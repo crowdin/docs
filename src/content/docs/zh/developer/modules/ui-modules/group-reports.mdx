@@ -1,0 +1,99 @@
+---
+title: 组织报告模块
+description: 将您应用中的报告添加到 Crowdin Enterprise 的组织和组报告中
+slug: developer/crowdin-apps-module-group-reports
+sidebar:
+  order: 13
+  label: 组织报告
+---
+
+该模块将您应用中的报告添加到 Crowdin Enterprise 组织的 **报告** 中。在 [权限粒度模式](/enterprise/permissions-granularity-mode/) 中，报告也会出现在每个组的 **报告** 中。
+
+该模块仅在 Crowdin Enterprise 中可用。要将报告添加到项目，请使用 [报告模块](/developer/crowdin-apps-module-project-reports/)。
+
+## 访问权限
+
+您可以将此模块的访问权限授予以下用户类别之一：
+
+* 仅管理员
+* 管理员、经理和开发者 / 翻译请求者
+* 自定义访问
+
+在所选类别中，组织管理员可以在组织和每个组中看到报告，组管理员可以在他们管理的组中看到报告。
+
+## 结构
+
+```json title="manifest.json"
+{
+  "modules": {
+    "group-reports": [
+      {
+        "key": "your-module-key",
+        "name": "模块名称",
+        "description": "模块描述",
+        "logo": "/logo.png",
+        "url": "/reports-page"
+      }
+    ]
+  }
+}
+```
+
+## 属性
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> Crowdin 应用内的模块标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 模块的可读名称。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 模块功能的可读描述。<br />该描述将在 Crowdin Enterprise 界面中显示。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>logo</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 将在 Crowdin Enterprise UI 中显示的报告徽标的相对 URL。如果未设置，则使用应用的徽标。<br />建议分辨率为 48x48 像素。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 是（仅自托管应用）</p>
+        <p><strong>描述：</strong> 集成到 Crowdin Enterprise UI 中的模块内容页面的相对 URL。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">environments</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> <code>crowdin-enterprise</code></p>
+        <p><strong>描述：</strong> 可安装模块的环境集合。<br />此参数在跨产品的应用程序中必需。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 组织和组级别
+
+Crowdin Enterprise 为组织及其组打开相同的模块 `url`。当在组中打开报告时，上下文在 [JWT 令牌载荷](/developer/crowdin-apps-security/#token-payload) 和 [AP.getContext()](/developer/crowdin-apps-js/#get-context) 响应中都包含 `group_id`（该组的 ID）。如果没有 `group_id`，报告将在组织的 **报告** 中打开。
+
+Crowdin Enterprise 在检查用户对该组的访问权限后将 `group_id` 添加到令牌中，因此使用令牌值来决定报告显示哪些数据。
