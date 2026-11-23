@@ -19,7 +19,7 @@ The app descriptor is a JSON file, usually `manifest.json`, that tells Crowdin w
 
 ## App Descriptor Structure
 
-The app descriptor is a JSON object. A self-hosted app serves it from its own server, and a serverless app keeps it in the project and pushes it to Crowdin with the CLI.
+The app descriptor is a JSON object. A self-hosted app serves it from its own server, and a serverless app keeps it in the project and ships it to Crowdin inside the app file, together with the build.
 
 ### Self-Hosted App
 
@@ -66,9 +66,6 @@ A serverless descriptor has no `baseUrl`, declares UI modules without a `url`, a
   "identifier": "your-application-identifier",
   "name": "Your Application",
   "description": "Application description",
-  "bundle": {
-    "mode": "internal"
-  },
   "scopes": [
     "project"
   ],
@@ -122,17 +119,18 @@ A serverless descriptor has no `baseUrl`, declares UI modules without a `url`, a
     </td>
   </tr>
   <tr>
-    <td><code>bundle</code></td>
-    <td>
-      <p><strong>Type:</strong> <code>object</code></p>
-      <p><strong>Description:</strong> Serverless apps only. Where Crowdin serves the app from. Set <code>mode</code> to <code>internal</code> for the bundle uploaded to Crowdin, or to <code>external</code> with a <code>url</code> that points to a local development server.</p>
-    </td>
-  </tr>
-  <tr>
     <td><code>authentication</code></td>
     <td>
       <p><strong>Type:</strong> <code>Authentication</code></p>
       <p><strong>Description:</strong> The authentication type used when signing requests between Crowdin and the app. Defaults to <code>none</code>, which is the type serverless apps use.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>agent</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>object</code></p>
+      <p><strong>Required:</strong> yes (self-hosted apps with the <code>crowdin_agent</code> authentication type only)</p>
+      <p><strong>Description:</strong> The bot user Crowdin creates for the app when it's installed: <code>username</code> (required), plus optional <code>name</code> and <code>avatarUrl</code>. Read more in <a href="/developer/crowdin-apps-module-workflow-step-type/#authentication">Workflow Step Type</a>.</p>
     </td>
   </tr>
   <tr>
@@ -193,7 +191,7 @@ A serverless descriptor has no `baseUrl`, declares UI modules without a `url`, a
   Each app must have a unique `baseUrl`. If you would like to serve multiple apps from the same host, consider adding a path prefix into the `baseUrl`.
 </Aside>
 
-The `baseUrl` must start with `https://`, and it cannot change after the app is installed without uninstalling the app first, so choose it before you make the app public.
+The `baseUrl` must start with `https://`. When it moves to a different host, every installation waits for an admin to approve the update, so choose it before you make the app public.
 
 All other URLs in the manifest, such as `logo`, `events`, and module URLs, are relative to `baseUrl`. Start each of them with `/`. Crowdin removes a trailing `/` from `baseUrl`, so `https://example.com/` and `https://example.com` work the same.
 
@@ -202,7 +200,9 @@ All other URLs in the manifest, such as `logo`, `events`, and module URLs, are r
 Specifies the authentication type Crowdin uses when it signs requests to the app:
 
 * **`crowdin_app`**: Through an OAuth app. Use it when the app calls the Crowdin API on its own, at any time.
-* **`none`**: Without an OAuth app. The app still reaches the API, but only while it runs on the user side, for example while its iframe is open. Serverless apps use this type.
+* **`authorization_code`**: Through an OAuth authorization code for the user who installed the app. The `installed` event carries the code, and the app exchanges it for an API token.
+* **`crowdin_app_with_code`** (Crowdin Enterprise only): Like `crowdin_app`, and the app also gets an authorization code for each user who opens one of its modules (in the module's JWT), plus one for the installing user in the `installed` event.
+* **`none`**: Without an OAuth app. The app still reaches the API, but only while it runs on the user side, for example while its iframe is open. Serverless apps always use this type.
 * **`crowdin_agent`**: Through a dedicated bot user that Crowdin creates when the app is installed, so the app keeps working in projects afterwards, for example on a custom workflow step. The app's API calls are authenticated as that user. Required by the [Workflow Step Type](/developer/crowdin-apps-module-workflow-step-type/#authentication) module.
 
 <ReadMore>
@@ -222,8 +222,8 @@ Example:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `type` | `string` | The type of authentication to use: `none` (the default), `crowdin_app`, or `crowdin_agent`. |
-| `clientId` | `string` | OAuth client id for authorization via the `crowdin_app` type. |
+| `type` | `string` | The type of authentication to use: `none` (the default), `authorization_code`, `crowdin_app`, `crowdin_agent`, or `crowdin_app_with_code` (Crowdin Enterprise only). |
+| `clientId` | `string` | OAuth client ID. Required with every type except `none`; leave it out with `none`. |
 
 ## Modules
 
@@ -255,7 +255,7 @@ Example:
 
 | Event | Type | Description |
 |-------|------|-------------|
-| `installed` | `string` | Sent to the app after a user installs it in Crowdin. Required with the `crowdin_app` and `crowdin_agent` [authentication](#authentication) types. |
+| `installed` | `string` | Sent to the app after a user installs it in Crowdin, and again when the app's permissions or owner change. Required with every [authentication](#authentication) type except `none`, because it carries the credentials the app needs. |
 | `uninstall` | `string` | Sent to the app before it is uninstalled from Crowdin. |
 
 ### Installed Event Payload
@@ -304,6 +304,7 @@ Properties:
 | `domain` | `string` | The name of the organization in Crowdin Enterprise the app was installed to. In Crowdin the value is always `null`. |
 | `baseUrl` | `string` | The `baseUrl` of the organization in Crowdin Enterprise the app was installed to. In Crowdin the value is always `https://crowdin.com`. |
 | `agentId` | `integer` | The numeric identifier of the agent user created for the app. Sent only for apps with the `crowdin_agent` authentication type. |
+| `code` | `string` | The OAuth authorization code for the user who installed the app. Sent only for apps with the `authorization_code` and `crowdin_app_with_code` authentication types. |
 
 ### Uninstall Event Payload
 
@@ -314,6 +315,7 @@ Payload example:
 ```json
 {
   "appId": "your-application-identifier",
+  "appSecret": "dbfg....asdffgg",
   "clientId": "your-client-id",
   "organizationId": 1,
   "domain": null,
@@ -324,6 +326,7 @@ Payload example:
 ```json
 {
   "appId": "your-application-identifier",
+  "appSecret": "dbfg....asdffgg",
   "clientId": "your-client-id",
   "organizationId": 1,
   "domain": "{domain}",
@@ -336,6 +339,7 @@ Properties:
 | Field | Type | Description |
 |-------|------|-------------|
 | `appId` | `string` | The identifier of the app that is declared in the app descriptor file. |
+| `appSecret` | `string` | The unique secret used for authorization of your Crowdin app. |
 | `clientId` | `string` | The OAuth client identifier that is declared in the app descriptor file. |
 | `organizationId` | `integer` | The numeric identifier of the organization the app was uninstalled from. |
 | `domain` | `string` | The name of the organization in Crowdin Enterprise the app was uninstalled from. In Crowdin the value is always `null`. |
