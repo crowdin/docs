@@ -4,19 +4,19 @@ description: 确保 Crowdin 应用的高级别安全性
 slug: developer/crowdin-apps-security
 ---
 
-为了确保 Crowdin 应用在使用 Crowdin 数据时（即通过 `crowdin_app` 授权）的高级别安全性，我们开发了一套安全机制。 该安全机制的核心原理基于 Crowdin 与 Crowdin 应用之间的 JWT 令牌交换。 JWT 令牌使用只有最后两方知道的 OAuth 客户端密钥进行签名。 这样，Crowdin 应用就能确认页面是在 Crowdin 中打开的。
+import { Aside } from '@astrojs/starlight/components';
 
-## 实现
+当你构建一个处理 Crowdin 数据的自托管应用时，它通过 [`crowdin_app`](/developer/crowdin-apps-app-descriptor/#authentication) 进行身份验证，并在 Crowdin 向其发送的每个请求中收到一个已签名的 JWT 令牌。验证该令牌是应用区分真实请求与其他请求的方式。
 
-要在您的 Crowdin 应用程序中实现授权和身份验证，请按照以下步骤操作：
+两个 SDK 都会为你处理这一点：[Crowdin Apps SDK](/developer/crowdin-apps-sdk/) 会验证令牌并提取上下文，而[无服务器应用](/developer/crowdin-apps-serverless/)根本不会收到令牌。以下内容适用于自行验证请求的应用，例如用其他语言编写的应用。
 
-* 在您的应用描述符中添加通过 `crowdin_app` 进行的授权，并添加用于授权的 OAuth 客户端 ID。
-* 在您的 Crowdin 应用中添加回调，以处理[安装事件](/zh/developer/crowdin-apps-installation/#安装事件通信流程)。
-* 在您的 Crowdin 应用程序所需的应用程序描述符中指定必要的范围集。 指定的范围集不应超出 OAuth 中指定的范围。
+<Aside>
+  带有[工作流步骤类型](/developer/crowdin-apps-module-workflow-step-type/#authentication)模块的应用使用 `crowdin_agent` 身份验证类型，而不是 `crowdin_app`。
+</Aside>
 
-通过上述方式，每次向 Crowdin 应用发出请求时，Crowdin 都会传递一组参数以及安全令牌，该令牌可通过 OAuth 中的密钥进行验证。
+## Crowdin 发送的内容
 
-以下是 Crowdin 用于打开模块页面的 URL 示例。
+Crowdin 打开模块页面时，会在查询字符串中带上令牌及其上下文：
 
 ```shell wrap
 https://example.com/app-module?jwtToken=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJCcjRhMmhwUW……MX0.yt-lbv3Z8JyIGX4jG405mjZvX8lwc1q0EfWdTtm9GCc&origin=https://{domain}.crowdin.com&clientId=your-client-id
@@ -50,17 +50,9 @@ https://example.com/app-module?jwtToken=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ
   </tbody>
 </table>
 
-最佳实践是向 Crowdin 应用程序添加中间件，以验证每个请求是否具有带有有效签名和到期时间的令牌。 您可以使用[现有库](https://jwt.io/)之一来验证令牌的真实性。
+令牌使用 OAuth 客户端密钥签名，只有 Crowdin 和你的应用知道该密钥，因此有效的签名可以证明请求的来源。验证应用收到的每个令牌的签名和有效期，例如在代码其余部分之前运行的中间件中进行验证。任何[现有的库](https://jwt.io/)都可以为你完成这项工作。
 
-## JWT 令牌结构
-
-JWT 令牌包含以下部分：
-
-* 头部 - 包含关于令牌类型和编码算法的信息。
-* 载荷 - 包含关于令牌签发的额外信息和令牌的过期时间、令牌签发者和请求者的信息和其他上下文信息。
-* 签名 - 基于头部和载荷的签名部分。
-
-JWT 令牌有效载荷示例：
+## 令牌载荷
 
 ```json
 {
@@ -95,15 +87,14 @@ JWT 令牌有效载荷示例：
     <td><code>domain</code></td>
     <td>
       <p><strong>类型：</strong> <code>string|null</code></p>
-      <p><strong>必填：</strong> 是</p>
-      <p><strong>描述：</strong> 访问应用时所在组织的名称。 对于 Crowdin，domain 值始终为 <code>null</code></p>
+      <p><strong>描述：</strong> 访问应用所在的组织。始终存在，且在 Crowdin 中始终为 <code>null</code>。</p>
     </td>
   </tr>
   <tr>
     <td><code class="whitespace-nowrap">context</code></td>
     <td>
       <p><strong>类型：</strong> <code>object</code></p>
-      <p><strong>描述：</strong> 有关打开 Crowdin 应用模块的环境信息（例如项目、语言、用户时区等）。</p>
+      <p><strong>描述：</strong> 打开模块时所处的环境，例如项目、区域设置和用户时区。</p>
     </td>
   </tr>
   <tr>

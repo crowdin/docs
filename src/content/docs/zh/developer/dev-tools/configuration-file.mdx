@@ -295,6 +295,22 @@ Crowdin CLI 允许使用以下占位符，将适当的变量放置在生成的�
 ]
 ```
 
+## 多语言文件
+
+对于将全部语言存储在单个文件中的文件格式（例如 String Catalog），将 `multilingual` 参数设为 `true` 并省略 `translation` 模式中的语言占位符：
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "Localizable.xcstrings",
+    "translation": "Localizable.xcstrings",
+    "multilingual": true
+  }
+]
+```
+
+将 String Catalog 文件作为源文件上传时，仅当在项目的 String Catalog [解析器配置](/project-settings/parser-configuration/#parser-configuration-for-all-project-files-of-a-specific-format)中选择了**导入翻译**，其中存储的翻译才会与源字符串一同导入。否则，仅导入源字符串。
+
 ## 多语言电子表格
 
 如果 CSV 或 XLS/XLSX 文件包含所有目标语言的译文，则应在方案中指定相应的语言代码。
@@ -325,6 +341,22 @@ ident3,Source 3,Context 3,,,
 
 ```yml title="crowdin.yml"
 "scheme" : "identifier,source_phrase,context,uk,none,es-MX,none,fr"
+```
+
+您可以使用 `import_translations` 参数将多语言电子表格中的翻译与源字符串一同导入。如果未设置，则仅导入源字符串。
+
+使用 `import_translations` 参数的配置示例：
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "multicolumn.csv",
+    "translation": "multicolumn.csv",
+    "first_line_contains_header": true,
+    "scheme": "identifier,source_phrase,context,uk,es-MX,fr",
+    "import_translations": true
+  }
+]
 ```
 
 ##### 模式常量

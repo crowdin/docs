@@ -8,7 +8,7 @@ sidebar:
 
 import { Aside, LinkCard, Tabs, TabItem, Badge } from '@astrojs/starlight/components';
 
-Crowdin Query Language (CroQL) 是适用于 Crowdin 编辑器、Crowdin Enterprise 编辑器以及 Crowdin 和 Crowdin Enterprise API 的工具，可让您根据特定条件检索所需的本地化资源。 使用 CroQL，您可以筛选源字符串及其针对特定目标语言的翻译、翻译记忆片段和术语库术语。
+Crowdin Query Language (CroQL) 是适用于 Crowdin 编辑器、Crowdin 企业版编辑器以及 Crowdin 和 Crowdin 企业版 API 的工具，可让您根据特定条件检索所需的本地化资源。使用 CroQL，您可以筛选源字符串及其针对特定目标语言的翻译、翻译记忆片段和术语库术语。
 
 您可以通过以下 API 方法使用 CroQL：
 
@@ -37,7 +37,7 @@ Crowdin Query Language (CroQL) 是适用于 Crowdin 编辑器、Crowdin Enterpri
 
 ## 操作符
 
-主要的 CroQL 运算符如下所示。 使用和组合它们，为从 Crowdin 检索所需的内容设置具体条件。 要构建您的 CroQL 查询，可以使用以下表格中的元素。
+主要的 CroQL 运算符如下所示。使用和组合它们，为从 Crowdin 检索所需的内容设置具体条件。要构建您的 CroQL 查询，可以使用以下表格中的元素。
 
 ### 算术运算符
 
@@ -125,7 +125,7 @@ Fetch 运算符用于从对象中获取数据。
 
 ## CroQL 查询示例
 
-在本节中，您可以找到 CroQL 查询的实用示例，帮助您理解和使用 Crowdin 中的查询功能。 这些示例可以帮助您学习如何创建自己的查询，根据各种条件（如翻译状态、用户活动和字符串属性）检索特定的数据集。
+在本节中，您可以找到 CroQL 查询的实用示例，帮助您理解和使用 Crowdin 中的查询功能。这些示例可以帮助您学习如何创建自己的查询，根据各种条件（如翻译状态、用户活动和字符串属性）检索特定的数据集。
 
 <LinkCard title="CroQL Tester - CroQL 表达式编辑器和测试工具" description="在 CroQL Tester 中试用您的 CroQL 查询。" href="https://store.crowdin.com/croql-tester" target="_blank" />
 
@@ -378,6 +378,11 @@ Fetch 运算符用于从对象中获取数据。
   url contains "https://"
   ```
 
+* `review-priority` [字段](/enterprise/fields/)值包含“Urgent”的术语（仅 Crowdin Enterprise）：
+  ```graphql
+  count of fields where (slug = "review-priority" and value contains "Urgent") > 0
+  ```
+
 <details>
   <summary><strong>在 Crowdin API 中使用术语库术语查询</strong></summary>
   在以下 Crowdin API 端点中使用您的查询：
@@ -453,11 +458,11 @@ Fetch 运算符用于从对象中获取数据。
   ```graphql
   count of translations where (user != @user:"crowdin") > 0
   ```
-* 与源字符串相同：
+* 翻译等于源字符串：
   ```graphql
   count of languages summary where (has translation as source) > 0
   ```
-* 已修改的源字符串：
+* 翻译后源文发生更改：
   ```graphql
   count of languages summary where (is source changed after translation) > 0
   ```
@@ -472,19 +477,19 @@ Fetch 运算符用于从对象中获取数据。
 
 #### 重复项
 
-* 主字符串：
+* 非重复项：
   ```graphql
   not is duplicate
   ```
-* 仅限重复项：
+* 重复项：
   ```graphql
   is duplicate
   ```
-* 共享译文的重复项：
+* 使用主字符串译文的重复项：
   ```graphql wrap
   is duplicate and count of languages summary where (has shared translation) > 0
   ```
-* 有独立译文的重复项：
+* 使用自身译文的重复项：
   ```graphql wrap
   is duplicate and count of languages summary where (not has shared translation and is translated) > 0
   ```
@@ -511,13 +516,17 @@ Fetch 运算符用于从对象中获取数据。
   ```graphql wrap
   count of translations where (count of approvals where (user != @user:"crowdin") > 0) > 0
   ```
-* 审批后有新译文：
+* 批准后添加了翻译：
   ```graphql
   count of languages summary where (has translation after approval) > 0
   ```
 
-#### 翻译记忆和 MT
+#### AI、机器翻译和翻译记忆
 
+* 由 AI 翻译：
+  ```graphql
+  count of languages summary where (is translated by ai) > 0
+  ```
 * 由 MT 翻译：
   ```graphql
   count of languages summary where (is translated by mt) > 0
@@ -526,7 +535,7 @@ Fetch 运算符用于从对象中获取数据。
   ```graphql
   count of languages summary where (is translated by tm) > 0
   ```
-* 由翻译记忆或 MT 翻译：
+* 由 AI、机器翻译或翻译记忆翻译：
   ```graphql
   count of languages summary where (is auto translated) > 0
   ```
@@ -538,11 +547,11 @@ Fetch 运算符用于从对象中获取数据。
   * 未使用：不可用
 * 排序方式：不可用
 * 口头表达：不可用
-* 口头表达范围：不可用
+* 搜索范围：不可用
 
 ## 语境
 
-CroQL 可以在以下上下文中使用：源字符串上下文、译文上下文和翻译记忆 (TM) 片段上下文。 使用以下示例作为构建 CroQL 查询的基础。
+CroQL 可以在以下上下文中使用：源字符串上下文、译文上下文和翻译记忆 (TM) 片段上下文。使用以下示例作为构建 CroQL 查询的基础。
 
 ### 源字符串上下文
 
@@ -620,6 +629,7 @@ CroQL 可以在以下上下文中使用：源字符串上下文、译文上下�
       "is auto translated": false,
       "is translated by tm": false,
       "is translated by mt": false,
+      "is translated by ai": false,
       "is source changed after translation": false,
       "has translation as source": false,
       "has translation after approval": false,
@@ -640,6 +650,10 @@ CroQL 可以在以下上下文中使用：源字符串上下文、译文上下�
       "has duplicate translation qa issues": false,
       "has ftl syntax qa issues": false,
       "has android syntax qa issues": false,
+      "has numbers mismatch qa issues": false,
+      "has ai qa issues": false,
+      "has outdated translation qa issues": false,
+      "has mdx syntax qa issues": false,
       "has custom qa issues": false,
       "rating": 1,
       "approvalsCount": 1
@@ -740,15 +754,14 @@ CroQL 可以在以下上下文中使用：源字符串上下文、译文上下�
     <td><code>isPassedWorkflow</code></td>
     <td>
       <p><strong>类型：</strong> <code>boolean</code></p>
-      <p><strong>描述：</strong> 仅限 Crowdin Enterprise。 源字符串已通过项目工作流。</p>
+      <p><strong>描述：</strong> 仅限 Crowdin Enterprise。源字符串已通过项目工作流。</p>
     </td>
   </tr>
   <tr>
     <td><code>fields</code></td>
     <td>
       <p><strong>类型：</strong> <code>object</code></p>
-      <p><strong>描述：</strong> 仅限 Crowdin Enterprise。 包含分配给字符串的自定义属性（[字段](/enterprise/fields/)）的对象。<br />
-      您可以通过 <code>name</code>、<code>slug</code>、<code>value</code> 和 <code>type</code> 进行筛选。</p>
+      <p><strong>描述：</strong> 仅限 Crowdin Enterprise。包含分配给字符串的自定义属性（[字段](/enterprise/fields/)）的对象。<br />您可以通过 <code>name</code>、<code>slug</code>、<code>value</code> 和 <code>type</code> 进行筛选。</p>
     </td>
   </tr>
   <tr>
@@ -832,15 +845,15 @@ CroQL 可以在以下上下文中使用：源字符串上下文、译文上下�
     <td><code>provider</code></td>
     <td>
       <p><strong>类型：</strong> <code>string</code></p>
-      <p><strong>允许的值：</strong> <code>tm</code>, <code>global_tm</code>, <code>google</code>, <code>google_automl</code>, <code>microsoft</code>, <code>crowdin</code>, <code>deepl</code>, <code>modernmt</code>, <code>amazon</code>, <code>watson</code>, <code>custom_mt</code></p>
-      <p><strong>描述：</strong> 通过翻译记忆或机器翻译引擎提供的译文。</p>
+      <p><strong>允许值：</strong> <code>tm</code>、<code>global_tm</code>、<code>google</code>、<code>google_automl</code>、<code>microsoft</code>、<code>crowdin</code>、<code>deepl</code>、<code>modernmt</code>、<code>amazon</code>、<code>watson</code>、<code>custom_mt</code>、<code>ai</code></p>
+      <p><strong>描述：</strong> 通过翻译记忆、机器翻译引擎或 AI 提供的翻译。</p>
     </td>
   </tr>
   <tr>
     <td><code>language</code></td>
     <td>
       <p><strong>类型：</strong> <code>string</code></p>
-      <p><strong>描述：</strong> 以字符串形式指定的语言标识符。 使用<a href="/zh/developer/language-codes/">语言代码</a>，例如，乌克兰语使用 <code>"uk"</code>。 在查询中指定时，请使用以下格式：<code>@language:"uk"</code>。</p>
+      <p><strong>描述：</strong> 以字符串形式指定的语言标识符。使用<a href="/zh/developer/language-codes/">语言代码</a>，例如，乌克兰语使用 <code>"uk"</code>。在查询中指定时，请使用以下格式：<code>@language:"uk"</code>。</p>
     </td>
   </tr>
   <tr>
@@ -924,7 +937,7 @@ CroQL 可以在以下上下文中使用：源字符串上下文、译文上下�
     <td><code>language</code></td>
     <td>
       <p><strong>类型：</strong> <code>string</code></p>
-      <p><strong>描述：</strong> 以字符串形式指定的语言标识符。 使用<a href="/zh/developer/language-codes/">语言代码</a>，例如，乌克兰语使用 <code>"uk"</code>。 在查询中指定时，请使用以下格式：<code>@language:"uk"</code>。</p>
+      <p><strong>描述：</strong> 以字符串形式指定的语言标识符。使用<a href="/zh/developer/language-codes/">语言代码</a>，例如，乌克兰语使用 <code>"uk"</code>。在查询中指定时，请使用以下格式：<code>@language:"uk"</code>。</p>
     </td>
   </tr>
   <tr>
@@ -966,7 +979,7 @@ CroQL 可以在以下上下文中使用：源字符串上下文、译文上下�
     <td><code>is auto translated</code></td>
     <td>
       <p><strong>类型：</strong> <code>boolean</code></p>
-      <p><strong>描述：</strong> 源字符串已由翻译记忆或 MT 翻译。</p>
+      <p><strong>描述：</strong> 源字符串由翻译记忆、机器翻译或 AI 翻译。</p>
     </td>
   </tr>
   <tr>
@@ -981,6 +994,13 @@ CroQL 可以在以下上下文中使用：源字符串上下文、译文上下�
     <td>
       <p><strong>类型：</strong> <code>boolean</code></p>
       <p><strong>描述：</strong> 源字符串已由 MT 翻译。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>is translated by ai</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串由 AI 翻译。</p>
     </td>
   </tr>
   <tr>
@@ -1124,6 +1144,34 @@ CroQL 可以在以下上下文中使用：源字符串上下文、译文上下�
     </td>
   </tr>
   <tr>
+    <td><code>has numbers mismatch qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在数字不匹配的 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has ai qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在 AI QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has outdated translation qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在过时翻译的 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>has mdx syntax qa issues</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>boolean</code></p>
+      <p><strong>描述：</strong> 源字符串存在 MDX 语法 QA 问题。</p>
+    </td>
+  </tr>
+  <tr>
     <td><code>has custom qa issues</code></td>
     <td>
       <p><strong>类型：</strong> <code>boolean</code></p>
@@ -1243,8 +1291,8 @@ CroQL 可以在以下上下文中使用：源字符串上下文、译文上下�
     <td><code>provider</code></td>
     <td>
       <p><strong>类型：</strong> <code>string</code></p>
-      <p><strong>允许的值：</strong> <code>tm</code>, <code>global_tm</code>, <code>google</code>, <code>google_automl</code>, <code>microsoft</code>, <code>crowdin</code>, <code>deepl</code>, <code>modernmt</code>, <code>amazon</code>, <code>watson</code>, <code>custom_mt</code></p>
-      <p><strong>描述：</strong> 通过翻译记忆或机器翻译引擎提供的译文。</p>
+      <p><strong>允许值：</strong> <code>tm</code>、<code>global_tm</code>、<code>google</code>、<code>google_automl</code>、<code>microsoft</code>、<code>crowdin</code>、<code>deepl</code>、<code>modernmt</code>、<code>amazon</code>、<code>watson</code>、<code>custom_mt</code>、<code>ai</code></p>
+      <p><strong>描述：</strong> 通过翻译记忆、机器翻译引擎或 AI 提供的翻译。</p>
     </td>
   </tr>
   <tr>
@@ -1500,6 +1548,10 @@ CroQL 可以在以下上下文中使用：源字符串上下文、译文上下�
   "lemma": "cancel",
   "url": "https://example.com/term/cancel",
   "concept": 101,
+  "fields": {
+    "review-priority": "Urgent",
+    "domain": "Billing"
+  },
   "createdAt": "2027-09-16T13:48:04+00:00",
   "updatedAt": "2027-09-16T13:48:04+00:00"
 }
@@ -1532,7 +1584,7 @@ CroQL 可以在以下上下文中使用：源字符串上下文、译文上下�
     <td><code>language</code></td>
     <td>
       <p><strong>类型：</strong> <code>string</code></p>
-      <p><strong>描述：</strong> 以字符串形式指定的语言标识符。 使用<a href="/zh/developer/language-codes/">语言代码</a>，例如，乌克兰语使用 <code>"uk"</code>。 在查询中指定时，请使用以下格式：<code>@language:"uk"</code>。</p>
+      <p><strong>描述：</strong> 以字符串形式指定的语言标识符。使用<a href="/zh/developer/language-codes/">语言代码</a>，例如，乌克兰语使用 <code>"uk"</code>。在查询中指定时，请使用以下格式：<code>@language:"uk"</code>。</p>
     </td>
   </tr>
   <tr>
@@ -1600,6 +1652,13 @@ CroQL 可以在以下上下文中使用：源字符串上下文、译文上下�
     <td>
       <p><strong>类型：</strong> <code>integer</code></p>
       <p><strong>描述：</strong> 术语所属概念的 ID。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>fields</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>object</code></p>
+      <p><strong>描述：</strong> 仅限 Crowdin Enterprise。包含分配给术语的自定义属性（[字段](/enterprise/fields/)）的对象。<br />您可以通过 <code>name</code>、<code>slug</code>、<code>value</code> 和 <code>type</code> 进行筛选。</p>
     </td>
   </tr>
   <tr>
