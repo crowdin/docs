@@ -7,6 +7,7 @@ sidebar:
 ---
 
 import { Steps, CardGrid, LinkCard, Card, Aside } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
 import { Image } from 'astro:assets';
 import usageStats from '!/crowdin/billing/usage_statistics.png';
 import balanceManagement from '!/crowdin/billing/balance_management.png';
@@ -30,13 +31,14 @@ Crowdin can manage the following paid services without the need to register sepa
 
 ## Using Crowdin Credits
 
-Crowdin Kredileri, ödemeleri Crowdin hesabınızdaki adanmış bir bakiye aracılığıyla ödemeleri işleyerek YZ modelleri ve çeviri satıcıları gibi ücretli araçların kullanımını basitleştirir. This centralizes balance management and provides a clear overview of your spending.
+Crowdin Kredileri, ödemeleri Crowdin hesabınızdaki adanmış bir bakiye aracılığıyla ödemeleri işleyerek YZ modelleri, çeviri satıcıları ve uygulamalar gibi ücretli araçların kullanımını basitleştirir. This centralizes balance management and provides a clear overview of your spending.
 
 In the **Crowdin Credits** section, you can:
 
 * **Manage Balance**: Add funds to your dedicated balance for the paid services you use.
 * **Set Balance Warnings**: Receive notifications when your balance is low.
 * **Track Usage**: View spending with detailed usage statistics.
+* **Uygulama Harcamalarını Denetleyin**: Uygulamaların bakiyenizden ne kadar ücret alabileceğine ilişkin sınırlar belirleyin ve işlemlerini inceleyin.
 
 To start using Crowdin Credits, [add funds to your account balance](#adding-funds-to-account-balance) and activate the **managed by Crowdin** option for the services you want to use in your projects.
 
@@ -78,7 +80,7 @@ To set up low-balance notifications, follow these steps:
 
 The **Usage Statistics** section provides a comprehensive visual analysis of your usage costs through an interactive graph, allowing you to review detailed statistics and track spending on each service based on your selected time period. In addition to the graph, the **Used during the selected time period** field shows the total amount spent during the chosen period.
 
-The graph displays usage costs for each service from the [available categories](#available-services). Hover over any bar to see a breakdown of the expenses per service for that day, month, or year.
+The graph displays usage costs for each service from the [available categories](#available-services). Uygulamalar tarafından yapılan ücretlendirmeler, her çubukta, her uygulama için bir tane olacak şekilde, **Uygulama:** etiketi ve ardından uygulama adı ile birlikte ayrı bölümler halinde görünür ve toplama dahil edilir. Hover over any bar to see a breakdown of the expenses per service for that day, month, or year.
 
 Depending on the selected date range, each stacked bar represents:
 
@@ -89,6 +91,65 @@ Depending on the selected date range, each stacked bar represents:
 You can also focus on specific services by hovering over the service titles under the graph. To hide certain services from the graph, click on their names.
 
 <Image src={usageStats} alt="Usage Statistics" />
+
+## Uygulama Harcama Sınırları
+
+Bazı uygulamalar, ücretli eylemler için Crowdin Kredisi alır. **Hesap Ayarları**’nızın **Faturalandırma** sekmesindeki **Uygulama harcama sınırları** bölümünde, uygulamaların hesabınızdan günlük ve aylık olarak ne kadar ücret alabileceğini sınırlayabilirsiniz. You can set limits account-wide, as a per-user baseline, and for specific users. Bir sınıra ulaşıldığında, dönem sıfırlanana kadar uygulama ücretleri reddedilir.
+
+For each limit, you can set a **Daily** amount, a **Monthly** amount, or both. Leaving a field empty means no limit for that period. Hesap genelindeki $0 tutarındaki sınır, tüm uygulama ücretlerini durdurur ve kullanıcı başına varsayılan $0 sınırı, özel sınırları olmayan kullanıcılar için bunları durdurur. Varsayılan olarak hesap genelindeki sınırlar $0’dır, bu yüzden siz bu sınırları ayarlayana kadar uygulamalar ücretlendirilemez. A daily limit can't be higher than the monthly limit. Daily limits reset every day at 00:00 UTC. Monthly limits reset on the 1st of each month at 00:00 UTC.
+
+### Account-Wide Limits
+
+Tüm uygulamaların birlikte hesabınızdan alabileceği en fazla ücret. Bir sınıra ulaşıldığında, dönem sıfırlanana kadar uygulama ücretleri tüm kullanıcılar için reddedilir. Her alanın altında, şu anki dönemde uygulamaların ne kadar ücretlendirildiğini görebilirsiniz.
+
+### Default Per-User Limits
+
+Özel sınırları olmayan her kullanıcıya uygulanır. Kullanıcı bir sınıra ulaştığında, dönem sıfırlanana kadar eylemleri için uygulama ücretleri reddedilir.
+
+Default per-user limits can't be higher than the account-wide limits.
+
+### Per-User Limits
+
+Belirli kullanıcılara, kullanıcı başına varsayılan sınırların yerine geçen özel sınırlar verin veya onlar için uygulama harcamalarını engelleyin.
+
+**Kullanıcı başına sınırlar** bölümü, özel sınırları olan veya bu ay uygulama ücreti alan kullanıcıları aşağıdaki ayrıntılarla birlikte listeler:
+
+* **Kullanıcı**: Sınırların uygulandığı kullanıcı.
+* **Daily limit**: The daily limit that applies to the user.
+* **Monthly limit**: The monthly limit that applies to the user.
+* **Günlük kullanım**: Kullanıcının eylemleri için bugün ne kadar uygulamanın ücretlendirildiği.
+* **Aylık kullanım**: Kullanıcının eylemleri için bu ay ne kadar uygulamanın ücretlendirildiği.
+
+To set custom limits for one or more users, follow these steps:
+
+<Steps>
+  1. Click <Icon name="mdi:plus" class="inline-icon" />**Set user limits** in the **Per-user limits** section.
+  2. In the **Set user limits** dialog, use the **User** field to select one or more users. Listede sadece projelerinizin üyeleri görünür. Users who already have custom limits can't be selected.
+  3. Choose how to limit the selected users:
+     * Enter a **Daily limit**, a **Monthly limit**, or both. Leaving a field empty removes the per-user limit for that period. Her ikisinin de boş bırakılması, bu kullanıcıların kişisel sınırlarının olmadığı anlamına gelir (hesap genelindeki sınırlar hala uygulanır).
+     * Alternatif olarak, seçilen kullanıcılar için tüm uygulama ücretlerini tüm sınırları yoksayarak reddetmek amacıyla **Bu kullanıcı için uygulama harcamalarını engelle** seçeneğini etkinleştirin.
+  4. **Kaydet**’e tıklayın.
+</Steps>
+
+Belirli bir kullanıcının sınırlarını yönetmek için kullanıcının satırında <Icon name="mdi:dots-horizontal" class="inline-icon" /> simgeine tıklayın ve aşağıdaki seçeneklerden birini seçin:
+
+* **Set limits** or **Edit**: Set or change the user's custom limits with **Use custom limits** selected. Clearing it returns the user to the default per-user limits.
+* **Uygulama harcamalarını engelle** veya **Uygulama harcamalarının engelini kaldır**: Kullanıcı için tüm uygulama ücretlerini reddedin veya engellemeyi kaldırın. Unblocking returns the user to the default per-user limits, even if they had custom limits before the block.
+* **Remove custom limits**: Return the user to the default per-user limits.
+
+## Uygulama İşlemleri
+
+**Faturalandırma** sekmesindeki **Uygulama işlemleri** bölümünde, uygulamalar tarafından tahsil edilen Crowdin Kredileri en yenisi başta olmak üzere aşağıdaki ayrıntılarla listelenir:
+
+* **Tarih**: Uygulamanın ödemeyi yaptığı zaman.
+* **Uygulama**: Ödemeyi yapan uygulama.
+* **Kullanıcı**: Eylemi ödemeyi tetikleyen kullanıcı.
+* **Tutar**: Alınan tutar.
+* **Açıklama**: Uygulamanın ücretle ilgili açıklaması.
+
+Listeyi daraltmak için döneme (\*\*varsayılan olarak **Tüm zamanlar**), uygulamaya (**Tüm uygulamalar**) veya kullanıcıya (**Tüm kullanıcılar**) göre süzün. Dönemi temizlemek için <Icon name="mdi:close" class="inline-icon" /> simgesine tıklayın.
+
+İşlemleri indirmek için **Dışa Aktar**’a tıklayın ve **CSV Olarak Dışa Aktar** veya **JSON Olarak Dışa Aktar** seçeneğini seçin. Dışa aktarma, şu anki süzgeçlerle eşleşen işlemleri içerir.
 
 ## Ayrıca Bakınız
 

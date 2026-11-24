@@ -7,6 +7,7 @@ sidebar:
 ---
 
 import { Steps, CardGrid, LinkCard, Card, Aside } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
 import { Image } from 'astro:assets';
 import usageStats from '!/crowdin/billing/usage_statistics.png';
 import balanceManagement from '!/crowdin/billing/balance_management.png';
@@ -30,13 +31,14 @@ Crowdin kann die folgenden kostenpflichtigen Dienste verwalten, ohne dass Sie se
 
 ## Crowdin Credits verwenden
 
-Crowdin Credits erleichtert die Nutzung kostenpflichtiger Tools wie KI-Modellen und Übersetzungsdienstleistern, indem Zahlungen über ein separates Guthaben innerhalb deines Crowdin-Kontos abgewickelt werden. Dadurch wird die Guthabenverwaltung zentralisiert und Sie erhalten einen klaren Überblick über Ihre Ausgaben.
+Crowdin Credits vereinfacht die Nutzung von kostenpflichtigen Tools wie KI-Modellen, Übersetzungsdienstleistern und Apps, indem es die Zahlungen über ein eigenes Guthaben innerhalb deines Crowdin-Kontos abwickelt. Dadurch wird die Guthabenverwaltung zentralisiert und Sie erhalten einen klaren Überblick über Ihre Ausgaben.
 
 Im Abschnitt **Crowdin Credits** können Sie:
 
 * **Guthaben verwalten**: Fügen Sie Ihrem eigenen Guthaben Geld für die von Ihnen verwendeten kostenpflichtigen Dienste hinzu.
 * **Guthabenwarnungen festlegen**: Erhalten Sie Benachrichtigungen, wenn Ihr Guthaben niedrig ist.
 * **Nutzung verfolgen**: Sehen Sie Ihre Ausgaben anhand detaillierter Nutzungsstatistiken ein.
+* **Kontrolliere deine App-Ausgaben**: Lege Limits für die Kosten fest, die Apps von deinem Guthaben abziehen können, und überprüfe ihre Transaktionen.
 
 Um Crowdin Credits zu verwenden, [füge deinem Kontoguthaben Geld hinzu](#adding-funds-to-account-balance) und aktiviere für die gewünschten Dienste in deinen Projekten die Option **von Crowdin verwaltet**.
 
@@ -78,7 +80,7 @@ Gehen Sie wie folgt vor, um Benachrichtigungen bei niedrigem Guthaben einzuricht
 
 Der Abschnitt **Nutzungsstatistiken** bietet über ein interaktives Diagramm eine umfassende visuelle Analyse Ihrer Nutzungskosten. So können Sie detaillierte Statistiken prüfen und die Ausgaben für jeden Dienst basierend auf dem ausgewählten Zeitraum verfolgen. Zusätzlich zum Diagramm zeigt das Feld **Im ausgewählten Zeitraum verwendet** den Gesamtbetrag, der während des ausgewählten Zeitraums ausgegeben wurde.
 
-Das Diagramm zeigt die Nutzungskosten für jeden Dienst aus den [verfügbaren Kategorien](#available-services). Bewegen Sie den Mauszeiger über einen Balken, um eine Aufschlüsselung der Ausgaben pro Dienst für den jeweiligen Tag, Monat oder das jeweilige Jahr anzuzeigen.
+Das Diagramm zeigt die Nutzungskosten für jeden Dienst aus den [verfügbaren Kategorien](#available-services). Die von Apps erhobenen Gebühren werden als separate Segmente jeder Leiste angezeigt, jeweils eine für jede App, mit dem Label **App:** gefolgt vom Namen der App, und werden zur Gesamtsumme hinzugerechnet. Bewegen Sie den Mauszeiger über einen Balken, um eine Aufschlüsselung der Ausgaben pro Dienst für den jeweiligen Tag, Monat oder das jeweilige Jahr anzuzeigen.
 
 Je nach ausgewähltem Datumsbereich steht jeder gestapelte Balken für:
 
@@ -89,6 +91,65 @@ Je nach ausgewähltem Datumsbereich steht jeder gestapelte Balken für:
 Sie können sich auch auf bestimmte Dienste konzentrieren, indem Sie den Mauszeiger über die Dienstbezeichnungen unter dem Diagramm bewegen. Um bestimmte Dienste aus dem Diagramm auszublenden, klicken Sie auf deren Namen.
 
 <Image src={usageStats} alt="Nutzungsstatistiken" />
+
+## App-Ausgabengrenzen
+
+Einige Apps berechnen für ihre kostenpflichtigen Aktionen Crowdin-Credits. Unter dem Abschnitt **App-Ausgabenlimits** auf dem Tab **Abrechnung** in den Kontoeinstellungen kannst du festlegen, wie viel Apps pro Tag und pro Monat von deinem Konto abheben dürfen. Du kannst Limits für das gesamte Konto, als Basiswert pro Benutzer und für bestimmte Benutzer festlegen. Wenn ein Limit erreicht ist, werden App-Gebühren abgelehnt, bis der Zeitraum zurückgesetzt ist.
+
+Für jedes Limit kannst du einen **Tagesbetrag**, einen **Monatsbetrag** oder beides festlegen. Wenn du ein Feld leer lässt, gibt es für diesen Zeitraum kein Limit. Ein Kontogrenzwert von 0 $ verhindert alle App-Gebühren und ein Standardgrenzwert von 0 $ pro Benutzer verhindert diese für Benutzer ohne eigene Grenzwerte. Standardmäßig sind die Kontogrenzen auf 0 $ eingestellt, sodass Apps erst dann Gebühren erheben können, wenn du sie festlegst. Ein Tageslimit darf nicht höher sein als das Monatslimit. Tageslimits werden jeden Tag um 00:00 UTC zurückgesetzt. Monatslimits werden am ersten Tag jedes Monats um 00:00 UTC zurückgesetzt.
+
+### Kontoweite Limits
+
+Der maximale Betrag, den alle Apps zusammen über dein Konto berechnen können. Wenn ein Limit erreicht ist, werden App-Gebühren für alle Nutzer abgelehnt, bis der Zeitraum zurückgesetzt ist. Unter jedem Feld kannst du sehen, wie viel Apps in der aktuellen Periode abgerechnet haben.
+
+### Standardlimits pro Benutzer
+
+Gilt für jeden Nutzer, der keine individuellen Limits festgelegt hat. Wenn du ein Limit erreichst, werden deine App-Gebühren abgelehnt, bis der Zeitraum zurückgesetzt ist.
+
+Standardlimits pro Benutzer dürfen nicht höher sein als die kontoweiten Limits.
+
+### Benutzerbezogene Limits
+
+Du kannst bestimmten Nutzern individuelle Ausgabenlimits zuweisen, die die Standardlimits für einzelne Nutzer ersetzen, oder die App-Ausgaben für sie blockieren.
+
+Im Abschnitt **Benutzergrenzen** siehst du eine Liste der Benutzer, die individuelle Grenzen haben oder in diesem Monat App-Gebühren hatten. Die folgenden Details sind für jeden Benutzer aufgeführt:
+
+* **Benutzer**: Der Benutzer, auf den die Einschränkungen angewendet werden.
+* **Tageslimit**: Das für den Nutzer geltende Tageslimit.
+* **Monatliches Limit**: Das für den Nutzer geltende monatliche Limit.
+* **Tägliche Nutzung:** Wie viel Apps heute für die Aktionen des Nutzers berechnet haben.
+* **Monatliche Nutzung:** Wie viel Apps für die Aktionen des Nutzers in diesem Monat berechnet haben.
+
+Um benutzerdefinierte Limits für einen oder mehrere Benutzer festzulegen, gehe wie folgt vor:
+
+<Steps>
+  1. Klicke im Abschnitt **Benutzerspezifische Limits** auf <Icon name="mdi:plus" class="inline-icon" />**Benutzerlimits festlegen**.
+  2. Wähle im Dialogfeld **Benutzergrenzen festlegen** über das Feld **Benutzer** einen oder mehrere Benutzer aus. Nur Mitglieder deines Projekts werden in der Liste angezeigt. Benutzer, für die bereits benutzerdefinierte Limits festgelegt wurden, können nicht ausgewählt werden.
+  3. Wähle aus, wie die ausgewählten Nutzer eingeschränkt werden sollen:
+     * Gib ein **Tageslimit**, ein **Monatslimit** oder beides ein. Wenn du ein Feld leer lässt, wird das benutzerbezogene Limit für diesen Zeitraum entfernt. Wenn du beide Felder leer lässt, haben diese Nutzer keine persönlichen Limits (die Kontolimits gelten weiterhin).
+     * Alternativ kannst du **App-Ausgaben für diesen Nutzer blockieren** aktivieren, um alle App-Gebühren für die ausgewählten Nutzer abzulehnen, unabhängig von den Limits.
+  4. Klicke auf **Speichern**.
+</Steps>
+
+Um die Limits eines bestimmten Nutzers zu verwalten, klicke auf <Icon name="mdi:dots-horizontal" class="inline-icon" /> in der Zeile des Nutzers und wähle eine der folgenden Optionen aus:
+
+* **Limits festlegen** oder **Bearbeiten**: Lege die benutzerdefinierten Limits des Benutzers fest oder ändere sie, wobei **Benutzerdefinierte Limits** verwenden ausgewählt ist. Durch das Löschen werden die benutzerspezifischen Standardlimits wiederhergestellt.
+* *Blockiere App-Ausgaben* oder *Entsperre App-Ausgaben*: Lehne alle App-Gebühren für den Nutzer ab oder hebe die Sperre auf. Durch das Aufheben der Sperre werden für den Benutzer wieder die standardmäßigen benutzerspezifischen Limits wirksam, auch wenn vor der Sperre benutzerdefinierte Limits galten.
+* **Benutzerdefinierte Limits aufheben**: Der Benutzer wird auf die standardmäßigen benutzerspezifischen Limits zurückgesetzt.
+
+## App-Transaktionen
+
+Im Bereich **App-Transaktionen** auf dem Tab **Abrechnung** werden die von Apps abgebuchten Crowdin-Credits in umgekehrter chronologischer Reihenfolge angezeigt, mit folgenden Details:
+
+* **Datum**: Wann die App die Gebühr erhoben hat.
+* **App**: Die App, die die Gebühr erhoben hat.
+* **Benutzer**: Der Benutzer, dessen Aktion die Gebühr ausgelöst hat.
+* **Betrag**: Der abgebuchte Betrag.
+* **Beschreibung**: Die Beschreibung der App für die Gebühr.
+
+Um die Liste einzugrenzen, kannst du nach Zeitraum (**Alle Zeiten** als Standardeinstellung), App (**Alle Apps**) oder Benutzer (**Alle Benutzer**) filtern. Klicke auf <Icon name="mdi:close" class="inline-icon" /> um den Zeitraum zu löschen.
+
+Um die Transaktionen herunterzuladen, klicke auf **Exportieren** und wähle **Als CSV exportieren** oder **Als JSON exportieren**. Der Export enthält die Transaktionen, die den aktuellen Filtern entsprechen.
 
 ## Siehe auch
 

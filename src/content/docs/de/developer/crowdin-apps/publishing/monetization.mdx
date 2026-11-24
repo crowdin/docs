@@ -1,6 +1,6 @@
 ---
 title: Monetarisierung von Crowdin-Apps
-description: Erfahre, wie du monetize your Crowdin Apps.
+description: Erfahre, wie du mit deinen Crowdin-Apps Geld verdienen kannst
 slug: developer/crowdin-apps-monetization
 sidebar:
   order: 3
@@ -11,24 +11,24 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 import appMonetization from '!/developer/crowdin_apps_monetization.png';
 import appMonetizationEnterprise from '!/developer/crowdin_apps_monetization_enterprise.png';
 
-Alle Crowdin Apps can use one of the folgenden payment models:
+Alle Crowdin-Apps können eines der folgenden Zahlungsmodelle nutzen:
 
-* **Payment über Crowdin** – Application Benutzer can subscribe to the App directly über Crowdin. The platfürm bietet an easy way to make payments.
-* **Payment über eigen payment system** – Application Benutzer can subscribe directly über the App oder undere third-party services connected to the App. The Entwickler of the Crowdin App should connect und configure the preferred payment system himself.
-* **Kostenlos usage of the Crowdin Apps** – Application Benutzer don't pay für the App usage.
+* **Bezahlung über Crowdin** &ndash; Du kannst die App direkt über Crowdin abonnieren. Die Plattform bietet dir eine einfache Möglichkeit, Zahlungen zu tätigen.
+* **Zahlung über das eigene Zahlungssystem** &ndash; Du kannst direkt über die App oder über andere mit der App verbundene Dienste von Drittanbietern ein Abonnement abschließen. Als Entwickler der Crowdin-App solltest du das gewünschte Zahlungssystem selbst anbinden und konfigurieren.
+* **Kostenlose Nutzung der Crowdin-Apps** &ndash; Du zahlst keine Gebühren für die Nutzung der Apps.
 
-## Payment über Crowdin
+## Zahlung über Crowdin
 
-Du kannst use Crowdin as a payment processoder für subscription hundling of deine Apps.. To use payment über Crowdin, [Contact Suppodert-Team](https://crowdin.com/contacts), so we will erstellen a subscription für your Crowdin App.
+Du kannst Crowdin als Zahlungsabwickler für die Abwicklung der Abonnements deiner Apps nutzen. Um die Zahlungsabwicklung über Crowdin zu nutzen, wende dich bitte an den Support [hier](https://crowdin.com/contacts), damit wir ein Abonnement für deine Crowdin-App einrichten können.
 
-To implement this payment processoder, du musst use an API endpoint to return up-to-date infürmation on the App subscription. Du solltest auch hinzufügen a middleware to your Crowdin App that will limit the Zugrwennf to the App für Benutzer that didn't subscribe..
+Um diesen Zahlungsdienstleister zu implementieren, musst du einen API-Endpunkt verwenden, um aktuelle Informationen zu deinem App-Abonnement abzurufen. Außerdem solltest du deiner Crowdin-App eine Middleware hinzufügen, die den Zugriff auf die App für Nutzer einschränkt, die sich nicht angemeldet haben.
 
-In the middleware, du solltest make an API Anfrage to Crowdin und, depending on the result, implement one of the folgenden actions:
+In der Middleware solltest du eine API-Anfrage an Crowdin senden und je nach Ergebnis eine der folgenden Aktionen ausführen:
 
-* `200 OK` – the subscription is active. Crowdin App must bieten Zugrwennf to the functionality by the date specwennied in the Antwodert. Dies date should be Stored mitin the App to reduce the Anzahl der Anfrages to this API endpoint.
-* `402 Payment Required` – the subscription was neint paid.
-  In diesem Fall, restrict Zugrwennf to the App functionality und bieten the Benutzer mit a URL to a prüfenout Seite. You will get the prüfenout URL in the Antwodert.
-* `404 Bad Request` – the subscription was neint found. Das bedeutet one of several erroders: a Benutzer entfernend a Crowdin App von the Organisation, oder a subscription wasn't legen festd für the App. In diesem Fall, du solltest restrict Zugrwennf to the Crowdin App.
+* `200 OK` &ndash; Dein Abonnement ist aktiv. Die Crowdin-App muss dir bis zu dem in der Antwort angegebenen Datum Zugriff auf die Funktion gewähren. Dieses Datum solltest du in der App speichern, um die Anzahl der Anfragen an diesen API-Endpunkt zu reduzieren.
+* `402 Zahlung erforderlich` &ndash; Dein Abonnement wurde nicht bezahlt.
+  In diesem Fall solltest du den Zugriff auf die Funktionen der App einschränken und dem Nutzer eine URL zu einer Bezahlseite bereitstellen. Die URL für den Bezahlvorgang erhältst du in der Antwort.
+* `404 Bad Request` &ndash; Dein Abonnement wurde nicht gefunden. Das bedeutet, dass einer von mehreren Fehlern vorliegt: Entweder hast du eine Crowdin-App aus der Organisation entfernt, oder für die App wurde kein Abonnement definiert. In diesem Fall solltest du den Zugriff auf die Crowdin-App einschränken.
 
 ### Anfrage
 
@@ -43,17 +43,17 @@ GET /api/v2/applications/{app-identifier}/subscription
 * Inhalt-Typ: `application/json`
 * Autoderization: `bearer \<access-token>`
 
-### Responses
+### Antworten
 
-**Status Code: `200`**
+**Statuscode: `200`**
 
 ```json
 {
-  "expires": "2022-12-19 12:00:00"
+  "Gültig bis": "2022-12-19 12:00:00"
 }
 ```
 
-**Status Code: `402`**
+**Statuscode: `402`**
 
 ```json
 {
@@ -61,33 +61,33 @@ GET /api/v2/applications/{app-identifier}/subscription
 }
 ```
 
-**Status Code: `400`**
+**Statuscode: `400`**
 
 ```json
 {
-  "message": "App identifier not found"
+  "message": "App-Id nicht gefunden"
 }
 ```
 
-## Purchasing a Crowdin App subscription über Crowdin
+## Erwerb eines Crowdin-App-Abonnements über Crowdin
 
-In the event of subscribing to a Crowdin App, a Benutzer will be directed to a prüfenout Seite mit the App subscription details. Please neinte that the ersten payment amount might dwennfer von the App subscription cost. Der/Die/Das subscription cost of the App ist propodertionally proderated over a billing cycle, und, z. B. wenn a Benutzer subscribes to an App at the beginning of his billing cycle, he will pay the App's subscription Preis in full. And wenn a Benutzer subscribes to an App in the middle of his billing cycle, he will pay nur half of the App's subscription Preis.
+Bei Abschluss eines Abonnements für eine Crowdin-App wirst du auf eine Zahlungsseite weitergeleitet, auf der die Details zu deinem App-Abonnement angezeigt werden. Bitte beachte, dass der Betrag deiner ersten Zahlung von den Kosten für das App-Abonnement abweichen kann. Die Abonnementkosten für die App werden anteilig über einen Abrechnungszeitraum verteilt. Wenn du beispielsweise zu Beginn deines Abrechnungszeitraums ein Abonnement für eine App abschließt, zahlst du den vollen Abonnementpreis für die App. Und wenn du ein Abonnement für eine App mitten in deinem Abrechnungszeitraum abschließt, zahlst du nur die Hälfte des Abonnementpreises für die App.
 
 <Tabs syncKey="Produkt">
-  <TabItem label="Crowdin Checkout Seite">
-    <Image src={appMonetization} alt="Crowdin Checkout Seite" />
+  <TabItem label="Crowdin-Zahlungsseite">
+    <Image src={appMonetization} alt="Crowdin-Zahlungsseite" />
   </TabItem>
-  <TabItem label="Crowdin Enterprise Checkout Seite">
-    <Image src={appMonetizationEnterprise} alt="Crowdin Enterprise Checkout Seite" />
+  <TabItem label="Crowdin Enterprise-Zahlungsseite">
+    <Image src={appMonetizationEnterprise} alt="Crowdin Enterprise-Zahlungsseite" />
   </TabItem>
 </Tabs>
 
-Let's review the möglich scenario unten:
+Schauen wir uns das folgende mögliche Szenario einmal an:
 
-Der/Die/Das total subscription Preis für a Crowdin App ist $30/Monat. Suppose today is the 1st day of the Monat, und the nächsten billing cycle starts on the 10th of the aktuell Monat, so wenn subscribing to the App, a Benutzer will benötigen to pay $10.
+Der Gesamtpreis für dein Abonnement der Crowdin-App beträgt 30 $ pro Monat. Angenommen, heute ist der 1. des Monats und der nächste Abrechnungszeitraum beginnt am 10. des laufenden Monats, dann musst du bei Abschluss eines Abonnements für die App 10 $ bezahlen.
 
 ```md
-$30 / 30 Tage (billing cycle) * 10 Tage (proderate period) = $10
+30 $ / 30 Tage (Abrechnungszeitraum) * 10 Tage (anteilig berechneter Zeitraum) = 10 $
 ```
 
-On the nächsten billing cycle, the App subscription will be einschließend in the Benutzer's Crowdin subscription in full.
+Im nächsten Abrechnungszeitraum wird das App-Abonnement vollständig in deinem Crowdin-Abonnement enthalten sein.
