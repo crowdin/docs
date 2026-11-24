@@ -5380,6 +5380,248 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundExceptionResource'
+  /billing/cdn/usage:
+    get:
+      tags:
+        - Billing
+      summary: 'Get CDN Usage'
+      description: "**Required scopes:** `billing` (Read only).\n\nReturns the Content Delivery usage in the period, per day or month and per project, and the usage that is not billed yet. CDN usage is collected per day in UTC, so it is counted for every day the period touches.\n\n__Note:__ Available for the account owner only"
+      operationId: api.billing.cdn.usage.get
+      parameters:
+        -
+          $ref: '#/components/parameters/BillingDateFrom'
+        -
+          $ref: '#/components/parameters/BillingDateTo'
+      responses:
+        '200':
+          description: 'CDN usage'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingCdnUsageResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Account Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  /billing/credits/usage:
+    get:
+      tags:
+        - Billing
+      summary: 'Get Crowdin Credits Usage'
+      description: "**Required scopes:** `billing` (Read only).\n\nReturns the Crowdin Credits spent on machine translation, AI, vendor services, and by applications in the period, in total, per provider, and per day or month with a breakdown by provider. The current balance is `creditBalance` in [Get Billing Subscription](#operation/api.billing.subscription.get). Machine translation spending is recorded per day, so it is counted for every day the period touches.\n\n__Note:__ Available for the account owner only"
+      operationId: api.billing.credits.usage.get
+      parameters:
+        -
+          $ref: '#/components/parameters/BillingDateFrom'
+        -
+          $ref: '#/components/parameters/BillingDateTo'
+      responses:
+        '200':
+          description: 'Crowdin Credits usage'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingCreditsUsageResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Account Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  /billing/payments:
+    get:
+      tags:
+        - Billing
+      summary: 'List Billing Payments'
+      description: "**Required scopes:** `billing` (Read only).\n\nReturns the completed payments of the account, newest first, with links to their invoices: subscription payments, app subscriptions, and Crowdin Credits top-ups. A refund is listed as a payment with a negative amount.\n\n__Note:__ Available for the account owner only"
+      operationId: api.billing.payments.getMany
+      parameters:
+        -
+          $ref: '#/components/parameters/PaginationLimit'
+        -
+          $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: Payments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingPaymentCollectionResource'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Account Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+  /billing/settings:
+    get:
+      tags:
+        - Billing
+      summary: 'Get Billing Settings'
+      description: "**Required scopes:** `billing` (Read only).\n\nReturns the additional emails that get the reminders before an annual subscription expires, and the balance warning thresholds.\n\n__Note:__ Available for the account owner only"
+      operationId: api.billing.settings.get
+      responses:
+        '200':
+          description: 'Billing settings'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingSettingsResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Account Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+    patch:
+      tags:
+        - Billing
+      summary: 'Edit Billing Settings'
+      description: "**Required scopes:** `billing` (Read and Write).\n\nChanges the billing settings. Settings missing from the request keep their values. The warning thresholds only trigger emails to the owner and never stop the services.\n\n__Note:__ Available for the account owner only"
+      operationId: api.billing.settings.patch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillingSettingsPatch'
+      responses:
+        '200':
+          description: 'Billing settings'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingSettingsResource'
+        '400':
+          description: 'Invalid Request Body'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Account Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
+        '429':
+          description: 'Billing settings are being changed by another request. Retry in a few seconds'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsExceptionResource'
+  /billing/subscription:
+    get:
+      tags:
+        - Billing
+      summary: 'Get Billing Subscription'
+      description: "**Required scopes:** `billing` (Read only).\n\nReturns the current plan, the subscription status and payment method, the Crowdin Credits balance, and the plan quotas with their usage. Use it as the source of the plan limits currently in effect for the account.\n\n__Note:__ Available for the account owner only"
+      operationId: api.billing.subscription.get
+      responses:
+        '200':
+          description: Subscription
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingSubscriptionResource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenExceptionResource'
+        '404':
+          description: 'Account Not Found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundExceptionResource'
   '/projects/{projectId}/branches':
     get:
       tags:
@@ -30056,6 +30298,533 @@ components:
           $ref: '#/components/schemas/CompletedExecution'
         -
           $ref: '#/components/schemas/FailedExecution'
+    BillingSettingsPatch:
+      description: 'A JSON Patch document as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-3)'
+      type: array
+      items:
+        $ref: '#/components/schemas/BillingSettingsPatchOperation'
+    BillingSettingsPatchOperation:
+      description: 'A JSON Patch `Replace` operation as defined by [RFC 6902](https://tools.ietf.org/html/rfc6902#section-4.3)'
+      required:
+        - op
+        - path
+      properties:
+        op:
+          description: 'Patch operation to perform'
+          type: string
+          enum:
+            - replace
+          example: replace
+        path:
+          description: 'A JSON Pointer as defined by [RFC 6901](https://tools.ietf.org/html/rfc6901)'
+          type: string
+          format: json-pointer
+          enum:
+            - /emails
+            - /balanceThreshold
+            - /dailyCdnSpendingThreshold
+          example: /balanceThreshold
+      type: object
+      discriminator:
+        propertyName: path
+        mapping:
+          /emails: '#/components/schemas/BillingSettingsPatchOperationEmails'
+          /balanceThreshold: '#/components/schemas/BillingSettingsPatchOperationBalanceThreshold'
+          /dailyCdnSpendingThreshold: '#/components/schemas/BillingSettingsPatchOperationDailyCdnSpendingThreshold'
+    BillingSettingsPatchOperationEmails:
+      description: 'Replaces the additional emails that get the reminders before an annual subscription expires'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/BillingSettingsPatchOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by [RFC 6901](https://tools.ietf.org/html/rfc6901)'
+              type: string
+              format: json-pointer
+              enum:
+                - /emails
+            value:
+              description: "Additional emails, up to 100. Replaces the current list; send an empty array to remove all of them. Duplicate emails are removed. The owner always gets the reminders and doesn't need to be listed\n\n__Note:__ Applies to annual plans only"
+              type: array
+              items:
+                type: string
+                format: email
+              maxItems: 100
+              example:
+                - finance@example.com
+                - accounting@example.com
+    BillingSettingsPatchOperationBalanceThreshold:
+      description: 'Sets the balance warning threshold'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/BillingSettingsPatchOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by [RFC 6901](https://tools.ietf.org/html/rfc6901)'
+              type: string
+              format: json-pointer
+              enum:
+                - /balanceThreshold
+            value:
+              description: 'Crowdin Credits balance, in USD, at which the owner gets an email. `null` turns the notification off'
+              type: integer
+              maximum: 4000
+              minimum: 0
+              example: 50
+              nullable: true
+    BillingSettingsPatchOperationDailyCdnSpendingThreshold:
+      description: 'Sets the daily Content Delivery spending warning threshold'
+      required:
+        - value
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/BillingSettingsPatchOperation'
+        -
+          properties:
+            path:
+              description: 'A JSON Pointer as defined by [RFC 6901](https://tools.ietf.org/html/rfc6901)'
+              type: string
+              format: json-pointer
+              enum:
+                - /dailyCdnSpendingThreshold
+            value:
+              description: 'Content Delivery spending of one day, in USD, at which the owner gets an email. `null` turns the notification off'
+              type: integer
+              maximum: 4000
+              minimum: 1
+              example: 30
+              nullable: true
+    BillingCdnUsageResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/BillingCdnUsage'
+    BillingCreditsUsageResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/BillingCreditsUsage'
+    BillingPaymentCollectionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          $ref: '#/components/schemas/CollectionResource'
+        -
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/BillingPaymentResource'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    BillingPaymentResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/BillingPayment'
+    BillingSettingsResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/BillingSettings'
+    BillingSubscriptionResource:
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/Resource'
+        -
+          properties:
+            data:
+              $ref: '#/components/schemas/BillingSubscription'
+    BillingCdnUsage:
+      title: 'Billing CDN Usage'
+      properties:
+        dateFrom:
+          description: 'Start of the requested period, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-01T00:00:00+00:00'
+        dateTo:
+          description: 'End of the requested period, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-30T23:59:59+00:00'
+        groupBy:
+          $ref: '#/components/schemas/BillingUsageGroupBy'
+        unbilled:
+          description: 'Content Delivery usage that is not billed yet and will be included in the next charge. It does not depend on the requested period and can be up to two hours old'
+          properties:
+            dateFrom:
+              description: 'Start of the first day of the unbilled usage, in ISO 8601 format'
+              type: string
+              format: date-time
+              example: '2026-09-15T00:00:00+00:00'
+            dateTo:
+              description: 'End of the last day with collected statistics, in ISO 8601 format'
+              type: string
+              format: date-time
+              example: '2026-10-05T23:59:59+00:00'
+            requests:
+              description: 'CDN requests'
+              type: integer
+              example: 1250000
+            transferredGigabytes:
+              description: 'Data transferred by the CDN, in gigabytes'
+              type: number
+              example: 14.321
+            requestsPrice:
+              description: 'Price of the requests, in USD'
+              type: number
+              example: 10
+            transferredGigabytesPrice:
+              description: 'Price of the data transfer, in USD'
+              type: number
+              example: 10
+            price:
+              description: 'Total price of the unbilled usage, in USD'
+              type: number
+              example: 20
+          type: object
+        periods:
+          description: 'CDN usage of all distributions in the requested period, per day or per month, as `groupBy` says'
+          type: array
+          items:
+            properties:
+              date:
+                description: 'Start of the day in UTC, or of the month when `groupBy` is `month`, in ISO 8601 format'
+                type: string
+                format: date-time
+                example: '2026-09-14T00:00:00+00:00'
+              requests:
+                description: 'CDN requests'
+                type: integer
+                example: 41200
+              transferredGigabytes:
+                description: 'Data transferred, in gigabytes'
+                type: number
+                example: 0.482
+              price:
+                description: 'Price of the usage at the add-on rates, in USD'
+                type: number
+                example: 0.89
+            type: object
+        projects:
+          description: 'CDN usage of each project in the requested period, ordered by `projectId`. Usage not linked to a project is left out'
+          type: array
+          items:
+            properties:
+              projectId:
+                description: 'ID of the project. Get via [List Projects](#operation/api.projects.getMany)'
+                type: integer
+                example: 8
+              requests:
+                description: 'CDN requests'
+                type: integer
+                example: 820000
+              transferredGigabytes:
+                description: 'Data transferred, in gigabytes'
+                type: number
+                example: 9.64
+              price:
+                description: 'Price of the usage at the add-on rates, in USD'
+                type: number
+                example: 4.39
+            type: object
+      type: object
+    BillingCreditsUsage:
+      title: 'Billing Crowdin Credits Usage'
+      properties:
+        dateFrom:
+          description: 'Start of the requested period, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-01T00:00:00+00:00'
+        dateTo:
+          description: 'End of the requested period, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-30T23:59:59+00:00'
+        groupBy:
+          $ref: '#/components/schemas/BillingUsageGroupBy'
+        total:
+          description: 'Crowdin Credits spent in the period, in USD. Every amount in the response is rounded to cents separately, so the sum of `periods[].amount` or `providers[].amount` can differ from `total` by a few cents'
+          type: number
+          example: 12.47
+        providers:
+          description: 'Crowdin Credits spent per provider in the period'
+          type: array
+          items:
+            $ref: '#/components/schemas/BillingCreditsProviderUsage'
+        periods:
+          description: 'Crowdin Credits spent per day or per month, as `groupBy` says'
+          type: array
+          items:
+            properties:
+              date:
+                description: 'Start of the day, or of the month when `groupBy` is `month`, in ISO 8601 format. Days and months follow the time zone of Crowdin servers, so the first and the last of them can extend beyond the requested period'
+                type: string
+                format: date-time
+                example: '2026-09-14T04:00:00+00:00'
+              amount:
+                description: 'Crowdin Credits spent in the day or month, in USD'
+                type: number
+                example: 1.05
+              providers:
+                description: 'Crowdin Credits spent per provider in the day or month. Providers with no spending in it are left out'
+                type: array
+                items:
+                  $ref: '#/components/schemas/BillingCreditsProviderUsage'
+            type: object
+      type: object
+    BillingUsageGroupBy:
+      description: 'Grouping of `periods`. One of: `day` — the period spans less than two full months, `month` — otherwise'
+      type: string
+      enum:
+        - day
+        - month
+      example: day
+    BillingPayment:
+      title: 'Billing Payment'
+      properties:
+        id:
+          description: 'ID of the payment'
+          type: integer
+          example: 8231
+        orderNumber:
+          description: 'Order number shown on the invoice. `null` when the payment provider assigned no order number'
+          type: string
+          example: CRO260915-1234-56789
+          nullable: true
+        amount:
+          description: 'Amount without taxes, in `currency`. Negative for a refund. `null` when the payment provider reported no amount'
+          type: number
+          example: 150
+          nullable: true
+        amountWithTaxes:
+          description: 'Amount charged, taxes included, in `currency`. Negative for a refund. `null` when the payment provider reported no amount'
+          type: number
+          example: 180
+          nullable: true
+        currency:
+          description: 'Currency of the payment, ISO 4217 code. `null` when the payment provider reported no currency'
+          type: string
+          example: USD
+          nullable: true
+        invoiceUrl:
+          description: 'Link to the invoice. `null` when the payment provider issued no invoice'
+          type: string
+          example: 'https://sites.fastspring.com/crowdin/order/invoice/CRO260915-1234-56789'
+          nullable: true
+        createdAt:
+          description: 'Date the payment was made, in ISO 8601 format'
+          type: string
+          format: date-time
+          example: '2026-09-15T10:12:44+00:00'
+        expiresAt:
+          description: 'Date the paid period ends, in ISO 8601 format. For a Crowdin Credits top-up or a refund, the date of the payment. `null` when the payment provider reported no date'
+          type: string
+          format: date-time
+          example: '2026-10-15T10:12:44+00:00'
+          nullable: true
+      type: object
+    BillingSettings:
+      title: 'Billing Settings'
+      properties:
+        ownerEmail:
+          description: 'Email of the owner. The owner always gets the reminders before an annual subscription expires and the balance warnings'
+          type: string
+          format: email
+          example: owner@example.com
+        emails:
+          description: "Additional emails that get the reminders two months and one month before an annual subscription expires. The owner gets them as well. These emails don't get invoices or other billing emails\n\n__Note:__ Applies to annual plans only"
+          type: array
+          items:
+            type: string
+            format: email
+          uniqueItems: true
+          example:
+            - finance@example.com
+        balanceThreshold:
+          description: 'Balance warning threshold, in USD. The owner gets an email when the Crowdin Credits balance drops to this amount. `null` when the notification is off'
+          type: integer
+          minimum: 0
+          example: 50
+          nullable: true
+        dailyCdnSpendingThreshold:
+          description: 'Daily Content Delivery spending warning threshold, in USD. The owner gets an email, at most once a day, when the Content Delivery spending of the day reaches this amount. `null` when the notification is off'
+          type: integer
+          minimum: 1
+          example: 30
+          nullable: true
+      type: object
+    BillingQuota:
+      required:
+        - limit
+        - used
+      properties:
+        limit:
+          description: 'Maximum the plan allows. `null` means unlimited'
+          type: integer
+          minimum: 0
+          example: 50000
+          nullable: true
+        used:
+          description: 'Current usage'
+          type: integer
+          minimum: 0
+          example: 12034
+      type: object
+    BillingSubscriptionBase:
+      properties:
+        planKey:
+          description: 'Key of the current plan'
+          type: string
+          example: team
+        planName:
+          description: 'Name of the current plan'
+          type: string
+          example: Team
+        status:
+          description: "Lifecycle state of the subscription. One of:\n* `active` — the subscription is in effect: paid, granted free of charge, or billed by a custom order\n* `notActive` — no subscription is bought: the plan is a trial or a free plan and nothing renews automatically\n* `suspended` — the subscription is paused and won't renew. The data is kept, and the subscription can be renewed\n* `terminated` — the subscription has ended. A new subscription has to be bought"
+          type: string
+          enum:
+            - active
+            - notActive
+            - suspended
+            - terminated
+          example: active
+        currency:
+          description: 'Currency the subscription is charged in, ISO 4217 code'
+          type: string
+          example: USD
+        hasPaymentProblem:
+          description: 'If `true`, the last charge failed and the payment details need to be updated'
+          type: boolean
+          example: false
+        expiresAt:
+          description: 'Date the current subscription period ends, in ISO 8601 format. An `active` subscription renews on this date. `null` when the subscription has no end date'
+          type: string
+          format: date-time
+          example: '2027-01-15T00:00:00+00:00'
+          nullable: true
+        nextChargeAt:
+          description: 'Date of the next deduction from the prepaid balance for an annual prepaid plan, or of the next charge for a subscription billed through AWS Marketplace, in ISO 8601 format. `null` for other subscriptions'
+          type: string
+          format: date-time
+          example: '2026-10-15T00:00:00+00:00'
+          nullable: true
+      type: object
+    BillingSubscription:
+      title: 'Billing Subscription'
+      type: object
+      allOf:
+        -
+          $ref: '#/components/schemas/BillingSubscriptionBase'
+        -
+          properties:
+            paymentMethod:
+              description: "Payment method the subscription is billed through. One of:\n* `fastSpring` — FastSpring\n* `payPro` — PayPro\n* `github` — GitHub, including the GitHub Education offers\n* `awsMarketplace` — AWS Marketplace\n* `customOrder` — a custom order paid by invoice\n* `free` — the subscription is granted free of charge\n\n`null` when no payment method is set up, for example during a trial, or when the subscription is billed through another channel"
+              type: string
+              enum:
+                - fastSpring
+                - payPro
+                - github
+                - awsMarketplace
+                - customOrder
+                - free
+              example: fastSpring
+              nullable: true
+            billingCycle:
+              description: 'Billing cycle of the plan. One of: `monthly`, `annual`'
+              type: string
+              enum:
+                - monthly
+                - annual
+              example: monthly
+            creditBalance:
+              description: 'Crowdin Credits balance, in USD. Crowdin Credits pay for machine translation, AI, and vendor services. The spending is in [Get Crowdin Credits Usage](#operation/api.billing.credits.usage.get)'
+              type: number
+              example: 87.53
+            quotas:
+              description: 'Quotas of the current plan with their usage, keyed by quota type. Only the quotas that apply to the plan are present'
+              properties:
+                words:
+                  description: 'Hosted source words, counted once for each target language. Present when the plan is limited by words'
+                  allOf: [{ $ref: '#/components/schemas/BillingQuota' }]
+                strings:
+                  description: 'Hosted source strings. Present when the plan is limited by strings instead of words'
+                  allOf: [{ $ref: '#/components/schemas/BillingQuota' }]
+                managers:
+                  description: 'Paid seats. With granular limits — managers only, otherwise everyone with a paid role: managers, developers, and language coordinators'
+                  type: object
+                  allOf: [{ $ref: '#/components/schemas/BillingQuota' }, { properties: { pending: { description: 'Pending invitations to a paid role. They are counted in `used`, since an invitation takes a seat once it is sent. Present when the plan has no granular limits', type: integer, minimum: 0, example: 2 } } }]
+                developers:
+                  description: 'Developers and translation requestors. Present when the plan has granular limits, unless the plan has no seats for them and nobody holds the role'
+                  allOf: [{ $ref: '#/components/schemas/BillingQuota' }]
+                languageCoordinators:
+                  description: 'Language coordinators. Present when the plan has granular limits, unless the plan has no seats for them and nobody holds the role'
+                  allOf: [{ $ref: '#/components/schemas/BillingQuota' }]
+                privateProjects:
+                  description: 'Private projects. Present on current plans'
+                  allOf: [{ $ref: '#/components/schemas/BillingQuota' }]
+                projects:
+                  description: 'Projects of any visibility. Present on legacy plans'
+                  allOf: [{ $ref: '#/components/schemas/BillingQuota' }]
+                versions:
+                  description: 'Versions (branches) in a project. `limit` applies to each project separately, and `used` is the highest number of versions in one project. Present on legacy plans that include versions'
+                  allOf: [{ $ref: '#/components/schemas/BillingQuota' }]
+              type: object
+    BillingCreditsProviderUsage:
+      properties:
+        service:
+          description: 'Service the credits were spent on. One of: `machineTranslation`, `ai`, `vendor`, `application`'
+          type: string
+          enum:
+            - machineTranslation
+            - ai
+            - vendor
+            - application
+          example: machineTranslation
+        provider:
+          description: 'Key of the provider. For `machineTranslation`, the engine type, as `type` in [List MTs](#operation/api.mts.getMany). For `ai`, the provider type, as `type` in [List AI Providers](#operation/api.ai.providers.getMany). For `vendor`, the vendor identifier, as `vendor` of a vendor task. For `application`, the application identifier, as `identifier` in [List Application Installations](#operation/api.applications.installations.getMany)'
+          type: string
+          example: deepl
+        providerName:
+          description: 'Display name of the provider. For `application`, the application name at its latest spending'
+          type: string
+          example: DeepL
+        amount:
+          description: 'Crowdin Credits spent with the provider, in USD'
+          type: number
+          example: 9.2
+      type: object
     BranchPatch:
       description: 'A JSON Patch document as defined by <a href="https://tools.ietf.org/html/rfc6902#section-3" target="_blank">RFC 6902</a>'
       type: array
@@ -37175,7 +37944,7 @@ components:
           example: 'Syncs glossaries between Acme and Crowdin'
           nullable: true
         scopes:
-          description: 'Scopes the client may request. Default is `*`. The client cannot get a scope that the token or the app making this request lacks, so a caller without `*` has to list the scopes here.<br><br>Available scopes: `*`, `user`, `team`, `field`, `notification`, `tm`, `glossary`, `style-guide`, `mt`, `webhook`, `manager`, `vendor`, `client`, `group`, `project`, `project.settings`, `project.member`, `project.status`, `project.status.issue`, `project.status.progress`, `project.status.qa-check`, `project.source`, `project.source.file`, `project.source.string`, `project.translation`, `project.task`, `project.dictionary`, `project.report`, `project.advisor`, `project.placeholder`, `project.discussion`, `project.webhook`, `project.screenshot`, `security-log`, `ai`, `ai.prompt`, `ai.provider`, `ai.proxy`, `ai.translate`, `ai.request-log`, `application`, `application.installation`, `application.proxy`, `application.consent`, `application.storage`, `application.credits`, `application.transaction`, `organization`, `custom-placeholder`, `custom-spellchecker`, `language`, `external-qa-check`, `automation`, `automation.rule`, `automation.rule.execution`, `oauth-client`.<br><br>Each scope supports `:read` and `:write` modifiers (e.g. `project:read`); without a modifier the scope grants both'
+          description: 'Scopes the client may request. Default is `*`. The client cannot get a scope that the token or the app making this request lacks, so a caller without `*` has to list the scopes here.<br><br>Available scopes: `*`, `user`, `team`, `field`, `notification`, `tm`, `glossary`, `style-guide`, `mt`, `webhook`, `manager`, `vendor`, `client`, `group`, `project`, `project.settings`, `project.member`, `project.status`, `project.status.issue`, `project.status.progress`, `project.status.qa-check`, `project.source`, `project.source.file`, `project.source.string`, `project.translation`, `project.task`, `project.dictionary`, `project.report`, `project.advisor`, `project.placeholder`, `project.discussion`, `project.webhook`, `project.screenshot`, `security-log`, `ai`, `ai.prompt`, `ai.provider`, `ai.proxy`, `ai.translate`, `ai.request-log`, `application`, `application.installation`, `application.proxy`, `application.consent`, `application.storage`, `application.credits`, `application.transaction`, `organization`, `billing`, `custom-placeholder`, `custom-spellchecker`, `language`, `external-qa-check`, `automation`, `automation.rule`, `automation.rule.execution`, `oauth-client`.<br><br>Each scope supports `:read` and `:write` modifiers (e.g. `project:read`); without a modifier the scope grants both'
           type: array
           items:
             type: string
@@ -55713,6 +56482,24 @@ components:
           - monthlyCostLimit
           - monthlyCostSpent
       example: 'dailyCostSpent desc'
+    BillingDateFrom:
+      name: dateFrom
+      in: query
+      description: 'Start of the period, inclusive, in ISO 8601 format'
+      required: true
+      schema:
+        type: string
+        format: date-time
+      example: '2026-09-01T00:00:00+00:00'
+    BillingDateTo:
+      name: dateTo
+      in: query
+      description: 'End of the period, inclusive, in ISO 8601 format. Not earlier than `dateFrom` and at most 366 days after it'
+      required: true
+      schema:
+        type: string
+        format: date-time
+      example: '2026-09-30T23:59:59+00:00'
     PaginationLimit:
       name: limit
       in: query
@@ -56923,6 +57710,9 @@ tags:
   -
     name: Users
     description: "\nUsers API gives you the possibility to get profile information about the currently authenticated user.\n\nUse API to manage the managers of your account: list them, add or invite new ones, change their access to your projects, TMs, glossaries, and style guides, or remove them.\n"
+  -
+    name: Billing
+    description: "\nBilling covers the subscription of your account, its payments, and the spending of Crowdin Credits and Content Delivery.\n\nUse API to check the subscription, the plan quotas, and the Crowdin Credits balance, list payments, get the Crowdin Credits and Content Delivery usage, and manage the billing settings. Changing the plan, managing application subscriptions, and viewing the Content Delivery statistics of a single distribution are available only in the account settings.\n\n__Note:__ Available for the account owner only.\n"
   -
     name: Notifications
     description: 'Use API to send custom notifications to the authenticated user or project members.'
