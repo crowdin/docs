@@ -11,6 +11,7 @@ import ReadMore from '~/components/ReadMore.astro';
 
 import fileTranslated from '/src/assets/code/webhooks/file.translated.json?raw';
 import fileApproved from '/src/assets/code/webhooks/file.approved.json?raw';
+import fileQaFinished from '/src/assets/code/webhooks/file.qa.finished.json?raw';
 import fileAdded from '/src/assets/code/webhooks/file.added.json?raw';
 import fileUpdated from '/src/assets/code/webhooks/file.updated.json?raw';
 import fileReverted from '/src/assets/code/webhooks/file.reverted.json?raw';
@@ -19,7 +20,9 @@ import branchTranslated from '/src/assets/code/webhooks/branch.translated.json?r
 import branchApproved from '/src/assets/code/webhooks/branch.approved.json?raw';
 import projectTranslated from '/src/assets/code/webhooks/project.translated.json?raw';
 import projectApproved from '/src/assets/code/webhooks/project.approved.json?raw';
+import projectQaFinished from '/src/assets/code/webhooks/project.qa.finished.json?raw';
 import projectBuilt from '/src/assets/code/webhooks/project.built.json?raw';
+import preTranslationCompleted from '/src/assets/code/webhooks/preTranslation.completed.json?raw';
 import translationUpdated from '/src/assets/code/webhooks/translation.updated.json?raw';
 import translationUpdatedSb from '/src/assets/code/webhooks/sb/translation.updated.json?raw';
 import stringAdded from '/src/assets/code/webhooks/string.added.json?raw';
@@ -28,6 +31,13 @@ import stringUpdated from '/src/assets/code/webhooks/string.updated.json?raw';
 import stringUpdatedSb from '/src/assets/code/webhooks/sb/string.updated.json?raw';
 import stringDeleted from '/src/assets/code/webhooks/string.deleted.json?raw';
 import stringDeletedSb from '/src/assets/code/webhooks/sb/string.deleted.json?raw';
+import stringLabelsAssigned from '/src/assets/code/webhooks/string.labelsAssigned.json?raw';
+import stringLabelsAssignedSb from '/src/assets/code/webhooks/sb/string.labelsAssigned.json?raw';
+import stringLabelsUnassigned from '/src/assets/code/webhooks/string.labelsUnassigned.json?raw';
+import stringLabelsUnassignedSb from '/src/assets/code/webhooks/sb/string.labelsUnassigned.json?raw';
+import labelCreated from '/src/assets/code/webhooks/label.created.json?raw';
+import labelUpdated from '/src/assets/code/webhooks/label.updated.json?raw';
+import labelDeleted from '/src/assets/code/webhooks/label.deleted.json?raw';
 import suggestionAdded from '/src/assets/code/webhooks/suggestion.added.json?raw';
 import suggestionAddedSb from '/src/assets/code/webhooks/sb/suggestion.added.json?raw';
 import suggestionUpdated from '/src/assets/code/webhooks/suggestion.updated.json?raw';
@@ -59,11 +69,7 @@ import projectDeleted from '/src/assets/code/webhooks/project.deleted.json?raw';
 import groupCreated from '/src/assets/code/webhooks/group.created.json?raw';
 import groupDeleted from '/src/assets/code/webhooks/group.deleted.json?raw';
 
-您可以添加 webhook 以与第三方服务或后端建立集成。 当您针对项目配置 webhook 后，Crowdin 将开始通过 HTTP 发送带有数据的 POST 或 GET 请求。
-
-<Aside title="响应超时">
-  您的端点应在 **30 秒**内返回 `2XX` 响应。 如果处理时间较长，请异步处理。
-</Aside>
+您可以添加 webhook 以与第三方服务或后端建立集成。当您针对项目配置 webhook 后，Crowdin 将开始通过 HTTP 发送带有数据的 POST 或 GET 请求。
 
 ## 配置 Webhook
 
@@ -93,6 +99,22 @@ Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
   详细了解 [IP 地址](/zh/developer/ip-addresses/#webhooks-ai-providers-and-mt-engines)。
 </ReadMore>
 
+## 投递
+
+Crowdin 将每个排队的事件向你的端点发送一次。当你的端点在请求超时前返回 `2XX` 状态码时，投递即视为成功。任何其他响应、超时或连接错误都会被记录为失败的调用，Crowdin 不会再次发送该事件。如果 Webhook 启用了**批量 Webhook**，Crowdin 会将多个事件合并为一个包含 `events` 数组的请求，响应适用于该请求中的每个事件。
+
+<Aside title="响应超时">
+  您的端点应在 **30 秒**内返回 `2XX` 响应。如果处理时间较长，请异步处理。
+</Aside>
+
+将每个请求视为你将收到的该事件的唯一通知。先响应，然后再进行处理，并使用 API 来补上服务不可用期间遗漏的任何内容。
+
+每个请求在 `event` 字段中指明事件名称，并携带其所描述对象的载荷。如果你的服务需要识别已经处理过的请求，请根据这些值构建幂等键，例如事件名称加上对象 ID 及其时间戳。
+
+<ReadMore>
+  阅读更多关于 [Crowdin](/webhooks/#failing-webhooks) 和 [Crowdin Enterprise](/enterprise/webhooks/#failing-webhooks) 中 Webhook 失败的内容。
+</ReadMore>
+
 ## 事件
 
 您可以为项目、账户或组织中发生的不同事件配置 webhook。
@@ -101,6 +123,7 @@ Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
 
 * [文件已完全翻译](#文件已完全翻译) &ndash; 文件已翻译成目标语言之一
 * [文件已完全审核](#文件已完全审核) &ndash; 文件中的译文已被批准为目标语言之一
+* [文件 QA 检查完成](#file-qa-checks-finished) &ndash; 已完成对翻译为某个目标语言的文件进行的 QA 检查
 * [文件已添加](#文件已添加) &ndash; 新文件已添加到项目中
 * [文件已更新](#文件已更新) &ndash; 文件已更新
 * [文件已还原](#文件已还原) &ndash; 文件已还原到之前的版本
@@ -115,7 +138,9 @@ Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
 
 * [项目已完全翻译](#项目已完全翻译) &ndash; 所有文件已翻译成目标语言之一
 * [项目已完全审核](#项目已完全审核) &ndash; 所有文件中的译文已被批准为目标语言之一
+* [项目 QA 检查完成](#project-qa-checks-finished) &ndash; 已完成对翻译为某个目标语言的所有文件的 QA 检查
 * [项目已成功构建](#项目已成功构建) &ndash; 项目已成功构建
+* [自动翻译完成](#auto-translation-completed) &ndash; 自动翻译完成、失败或被取消
 * [导出的译文已更新](#导出的译文已更新) &ndash; 字符串的最终译文已更新
 
 #### 源字符串
@@ -123,6 +148,14 @@ Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
 * [源字符串已添加](#源字符串已添加) &ndash; 新字符串已添加到项目中
 * [源字符串已更新](#源字符串已更新) &ndash; 项目中的字符串已更新
 * [源字符串已删除](#源字符串已删除) &ndash; 字符串已删除
+* [已为字符串分配标签](#labels-assigned-to-string) &ndash; 已为字符串分配标签
+* [已取消字符串的标签分配](#labels-unassigned-from-string) &ndash; 已取消字符串的标签分配
+
+#### 标签
+
+* [已创建标签](#label-created) &ndash; 已创建标签
+* [已更新标签](#label-updated) &ndash; 已更新标签标题
+* [已删除标签](#label-deleted) &ndash; 已删除标签
 
 #### 建议译文
 
@@ -155,7 +188,7 @@ Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
 
 ## Webhook 负载示例
 
-查看不同事件的 webhook 负载示例。
+查看受支持事件的 webhook 负载示例。这些示例展示了负载在 Crowdin 中的呈现方式。在 Crowdin Enterprise 中，负载有细微差异。请参阅 [Crowdin 与 Crowdin Enterprise 事件负载](#crowdin-and-crowdin-enterprise-events-payloads) 进行对比。
 
 ### 文件已完全翻译
 
@@ -164,6 +197,10 @@ Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
 ### 文件已完全审核
 
 <Code code={fileApproved} lang="json" wrap />
+
+### 文件 QA 检查完成
+
+<Code code={fileQaFinished} lang="json" wrap />
 
 ### 文件已添加
 
@@ -197,9 +234,17 @@ Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
 
 <Code code={projectApproved} lang="json" wrap />
 
+### 项目 QA 检查完成
+
+<Code code={projectQaFinished} lang="json" wrap />
+
 ### 项目已成功构建
 
 <Code code={projectBuilt} lang="json" wrap />
+
+### 自动翻译完成
+
+<Code code={preTranslationCompleted} lang="json" wrap />
 
 ### 导出的译文已更新
 
@@ -244,6 +289,40 @@ Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
     <Code code={stringDeletedSb} lang="json" wrap />
   </TabItem>
 </Tabs>
+
+### 已为字符串分配标签
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={stringLabelsAssigned} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={stringLabelsAssignedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 已取消字符串的标签分配
+
+<Tabs syncKey="projectType">
+  <TabItem label="基于文件的项目">
+    <Code code={stringLabelsUnassigned} lang="json" wrap />
+  </TabItem>
+  <TabItem label="基于字符串的项目">
+    <Code code={stringLabelsUnassignedSb} lang="json" wrap />
+  </TabItem>
+</Tabs>
+
+### 已创建标签
+
+<Code code={labelCreated} lang="json" wrap />
+
+### 已更新标签
+
+<Code code={labelUpdated} lang="json" wrap />
+
+### 已删除标签
+
+<Code code={labelDeleted} lang="json" wrap />
 
 ### 建议译文已添加
 
@@ -406,7 +485,7 @@ Webhook 集成可在不同级别实现，包括项目、账户或组织级别。
 
 ## Crowdin 和 Crowdin Enterprise 事件负载
 
-Crowdin 和 Crowdin Enterprise 事件的负载结构基本相同。 唯一的区别在于 `project` 对象。 对于 Crowdin Enterprise 事件，`project` 对象包含额外字段。
+Crowdin 和 Crowdin Enterprise 事件的负载结构基本相同。唯一的区别在于 `project` 对象。对于 Crowdin Enterprise 事件，`project` 对象包含额外字段。
 
 ```diff del={"Crowdin:":18-20} ins={"Crowdin Enterprise:":22-24} lang="json"
 {
@@ -431,7 +510,7 @@ Crowdin 和 Crowdin Enterprise 事件的负载结构基本相同。 唯一的区
 -    "visibility": "private",
 -    "publicDownloads": true,
 
-+    "logo": ""data:image/png;base64,iVBORw0KGgoAAAANSU....",
++    "logo": "data:image/png;base64,iVBORw0KGgoAAAANSU....",
 +    "isExternal": false,
 +    "externalType": null,
 +    "hasCrowdsourcing": true,

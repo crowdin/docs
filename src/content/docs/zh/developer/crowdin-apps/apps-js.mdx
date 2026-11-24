@@ -7,9 +7,13 @@ slug: developer/crowdin-apps-js
 import { Aside } from '@astrojs/starlight/components';
 import ReadMore from '~/components/ReadMore.astro';
 
-Crowdin Apps JS 是一个 JavaScript 库，可实现您的应用与 Crowdin UI 之间的通信。 由于所有 Crowdin 应用都在沙盒 `\<iframe>` 中运行，它们是隔离的，无法直接访问 Crowdin 主页面的内容或代码。
+Crowdin Apps JS 是一个 JavaScript 库，可实现您的应用与 Crowdin UI 之间的通信。由于所有 Crowdin 应用都在沙盒 `\<iframe>` 中运行，它们是隔离的，无法直接访问 Crowdin 主页面的内容或代码。
 
-该库通过提供安全的跨窗口消息传递（`postMessage()`）桥接来解决这一问题。 引入库后，您将可以访问全局 **`AP`**（App Project）对象。 该对象是调用方法（如 `AP.getContext()`）和订阅事件（如 `AP.events.on()`）的唯一入口点。
+该库通过提供安全的跨窗口消息传递（`postMessage()`）桥接来解决这一问题。引入库后，您将可以访问全局 **`AP`**（App Project）对象。该对象是调用方法（如 `AP.getContext()`）和订阅事件（如 `AP.events.on()`）的唯一入口点。
+
+<Aside>
+  无服务器应用通过 Crowdin Serverless Apps SDK 访问这些方法，该 SDK 封装了此库。在自托管应用中，你提供的页面直接调用 `AP`。
+</Aside>
 
 ## 入门
 
@@ -20,12 +24,12 @@ Crowdin Apps JS 是一个 JavaScript 库，可实现您的应用与 Crowdin UI �
 ```
 
 <Aside type="caution">
-  请勿下载并自行托管 `iframe.js` 文件。 该文件必须从 <code class="whitespace-nowrap">https://cdn.crowdin.com/</code> 域提供，以建立跨域消息传递桥接。 如果您从自己的服务器或独立网页提供该库，则该库将无法正常运行。
+  请勿下载并自行托管 `iframe.js` 文件。该文件必须从 <code class="whitespace-nowrap">https://cdn.crowdin.com/</code> 域提供，以建立跨域消息传递桥接。如果您从自己的服务器或独立网页提供该库，则该库将无法正常运行。
 </Aside>
 
 ## 全局动作
 
-全局操作在您的应用可以加载的每种上下文中均可用（例如，在模态窗口、项目"工具"标签页或编辑器侧边栏中）。 所有动作均可直接从根 `AP` 对象调用。
+全局操作在您的应用可以加载的每种上下文中均可用（例如，在模态窗口、项目"工具"标签页或编辑器侧边栏中）。所有动作均可直接从根 `AP` 对象调用。
 
 ### 上下文与主题
 
@@ -36,7 +40,9 @@ Crowdin Apps JS 是一个 JavaScript 库，可实现您的应用与 Crowdin UI �
 检索包含应用当前运行环境关键信息的 `ContextDataObject`（例如项目 ID、用户和文件数据）。
 
 <Aside>
-  此方法的有效载荷是动态的。 根据加载应用的页面（例如编辑器与项目工具），它可能包含不同的属性集。
+  * 此方法的载荷是动态的。根据应用加载的页面（例如编辑器与项目工具），它可能包含不同的属性集。
+  * 当值不可用时，其键会从上下文对象中省略，而不是设置为 `null`。
+  * `user`、`project` 和 `permissions` 详细信息不是 <a href="#get-jwt-token">AP.getJwtToken</a> 返回的 JWT 令牌的一部分，因此它们仅在浏览器中可供应用使用。
 </Aside>
 
 **示例：**
@@ -61,7 +67,7 @@ AP.getContext(function(contextData) {
     <td>
       <p><strong>类型：</strong> <code>function</code></p>
       <p><strong>必填：</strong> 是</p>
-      <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个参数：<code>ContextDataObject</code> 或 <code>null</code>。</p>
+      <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个参数：<code>ContextDataObject</code> 或 <code>null</code>。</p>
     </td>
   </tr>
   </tbody>
@@ -69,18 +75,49 @@ AP.getContext(function(contextData) {
 
 ##### 响应有效载荷示例
 
-```json collapse={12-21,25-59,62-64}
+```json collapse={36-97}
 {
+  "user_id": 15,
+  "user_login": "john.smith",
   "project_id": 123,
+  "project_identifier": "docs-portal",
   "organization_id": 100001,
+  "organization_domain": "acme",
+  "user": {
+    "id": 15,
+    "username": "john.smith",
+    "fullname": "John Smith",
+    "isAdmin": false
+  },
+  "project": {
+    "id": 123,
+    "name": "Docs Portal",
+    "identifier": "docs-portal",
+    "type": "file-based",
+    "sourceLanguage": "en",
+    "targetLanguages": ["fr", "uk"],
+    "description": "Public documentation portal"
+  },
+  "permissions": [
+    {
+      "name": "translator",
+      "allLanguages": false,
+      "languages": ["fr"]
+    },
+    {
+      "name": "proofreader",
+      "allLanguages": true,
+      "languages": []
+    }
+  ],
   "editor": {
     "mode": "translate",
     "theme": "dark",
     "source_language_id": "en",
-    "target_language_id": "fr",          // Present in "translate" and "proofread"
-    "target_language_ids": ["fr", "uk"], // Present only in "multilingual"
-    "active_target_language_id": "fr",   // The currently active target language in the Editor
-    "task_id": 327,                      // Present only if Task-based access control is enabled
+    "target_language_id": "fr",          // 存在于 "translate" 和 "proofread"
+    "target_language_ids": ["fr", "uk"], // 仅存在于 "multilingual"
+    "active_target_language_id": "fr",   // 编辑器中当前活动的目标语言
+    "task_id": 327,                      // 仅在启用基于任务的访问控制时存在
     "task": {
       "id": 327,
       "type": 2,
@@ -145,10 +182,31 @@ AP.getContext(function(contextData) {
 <table>
   <tbody>
     <tr>
+      <td><code>user_id</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>integer</code></p>
+        <p><strong>描述：</strong> 当前向应用显示的用户唯一数字 ID。仅对已身份验证的用户存在。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>user_login</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 当前向应用显示的用户的用户名。仅对已身份验证的用户存在。</p>
+      </td>
+    </tr>
+    <tr>
       <td><code>project_id</code></td>
       <td>
         <p><strong>类型：</strong> <code>integer</code></p>
         <p><strong>描述：</strong> 当前项目的唯一数字 ID。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">project_identifier</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 模块打开所在项目的标识符。当模块在项目上下文中运行且标识符可用时存在。</p>
       </td>
     </tr>
     <tr>
@@ -159,10 +217,151 @@ AP.getContext(function(contextData) {
       </td>
     </tr>
     <tr>
+      <td><code class="whitespace-nowrap">organization_domain</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 应用安装所在组织的域（仅 Crowdin Enterprise）。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>group_id</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>integer</code></p>
+        <p><strong>描述：</strong> 打开应用的组的唯一数字 ID（仅 Crowdin Enterprise）。当<a href="/developer/crowdin-apps-module-group-reports/">组织报告模块</a>在组中打开时存在。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>user</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>描述：</strong> 包含向应用显示的用户的详细信息的对象。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>user.id</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>integer</code></p>
+        <p><strong>描述：</strong> 用户的唯一数字 ID。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>user.username</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 用户的用户名。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>user.fullname</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 用户的全名。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>user.isAdmin</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>boolean</code></p>
+        <p><strong>描述：</strong> 仅限 Crowdin Enterprise。用户是否具有组织管理员
+        访问权限。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>project</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>描述：</strong> 包含应用运行所在项目的详细信息的对象。当应用在项目上下文中运行时
+        存在。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>project.id</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>integer</code></p>
+        <p><strong>描述：</strong> 项目的唯一数字 ID。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>project.name</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 项目的显示名称。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">project.identifier</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 项目的标识符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>project.type</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> <code>file-based</code>、<code>string-based</code></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">project.sourceLanguage</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code> | <code>null</code></p>
+        <p><strong>描述：</strong> 项目源语言的语言代码。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">project.targetLanguages</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code></p>
+        <p><strong>描述：</strong> 项目目标语言的语言代码。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">project.description</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 项目描述。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>permissions</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code></p>
+        <p><strong>描述：</strong> 用户在当前项目中拥有的角色。仅列出最高级别的访问权限，因此具有 <code>admin</code>、<code>owner</code>、<code>manager</code> 或
+        <code>developer</code> 角色的用户没有 <code>translator</code>、<code>proofreader</code> 或
+        <code>language_coordinator</code> 条目。当应用在项目上下文中运行时存在，对于在项目中没有角色的用户
+        为空。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">permissions[].name</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>允许值：</strong> <code>admin</code>（仅 Crowdin Enterprise）、<code>owner</code>、
+        <code>manager</code>、<code>developer</code>、<code>language_coordinator</code>、<code>translator</code>、
+        <code>proofreader</code></p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">permissions[].allLanguages</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>boolean</code></p>
+        <p><strong>描述：</strong> 该角色是否涵盖项目的每种目标语言。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">permissions[].languages</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code></p>
+        <p><strong>描述：</strong> 该角色所限定的语言代码。当 <code>allLanguages</code> 为 <code>true</code>
+        时为空。</p>
+      </td>
+    </tr>
+    <tr>
       <td><code>editor</code></td>
       <td>
         <p><strong>类型：</strong> <code>object</code> | <code>null</code></p>
-        <p><strong>描述：</strong> 包含编辑器上下文的对象。 如果应用不在编辑器中，则为 <code>null</code>。</p>
+        <p><strong>描述：</strong> 包含编辑器上下文的对象。如果应用不在编辑器中，则为 <code>null</code>。</p>
       </td>
     </tr>
     <tr>
@@ -199,28 +398,28 @@ AP.getContext(function(contextData) {
       <td><code class="whitespace-nowrap">editor.target_language_ids</code></td>
       <td>
         <p><strong>类型：</strong> <code>array</code></p>
-        <p><strong>描述：</strong> 目标语言 ID 的数组。 <Aside>当 <code>editor.mode</code> 设置为 <code>multilingual</code> 时，此字段将替换 <code>editor.target_language_id</code>。</Aside></p>
+        <p><strong>描述：</strong> 目标语言 ID 的数组。<Aside>当 <code>editor.mode</code> 设置为 <code>multilingual</code> 时，此字段将替换 <code>editor.target_language_id</code>。</Aside></p>
       </td>
     </tr>
     <tr>
       <td><code class="whitespace-nowrap">editor.active_target_language_id</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>描述：</strong> 编辑器中当前活动目标语言的 ID（例如，<code>"fr"</code>）。 在 <code>multilingual</code> 模式下，该值根据光标位置动态更新。</p>
+        <p><strong>描述：</strong> 编辑器中当前活动目标语言的 ID（例如，<code>"fr"</code>）。在 <code>multilingual</code> 模式下，该值根据光标位置动态更新。</p>
       </td>
     </tr>
     <tr>
       <td><code class="whitespace-nowrap">editor.task_id</code></td>
       <td>
         <p><strong>类型：</strong> <code>integer</code></p>
-        <p><strong>描述：</strong> 当前任务的数字 ID。 <Aside>仅当在项目设置中启用了[基于任务的访问控制](/project-settings/privacy-collaboration/#privacy)时，才会出现此字段。</Aside></p>
+        <p><strong>描述：</strong> 当前任务的数字 ID。<Aside>仅当项目设置中启用了[基于任务的访问控制](/project-settings/security-permissions/#privacy)时，此项才会出现。</Aside></p>
       </td>
     </tr>
     <tr>
       <td><code class="whitespace-nowrap">editor.task</code></td>
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
-        <p><strong>描述：</strong> 包含当前任务元数据的详细对象（例如标题、状态、描述）。 仅与 <code>editor.task_id</code> 一起出现。</p>
+        <p><strong>描述：</strong> 包含当前任务元数据的详细对象（例如标题、状态、描述）。仅与 <code>editor.task_id</code> 一起出现。</p>
       </td>
     </tr>
     <tr>
@@ -234,7 +433,7 @@ AP.getContext(function(contextData) {
       <td><code>editor.fileData</code></td>
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
-        <p><strong>描述：</strong> 包含已打开文件数据的详细对象。 （此对象与 <code>AP.editor.getSelectedFiles</code> 中返回的对象相同）。</p>
+        <p><strong>描述：</strong> 包含已打开文件数据的详细对象。（此对象与 <code>AP.editor.getSelectedFiles</code> 中返回的对象相同）。</p>
       </td>
     </tr>
     <tr>
@@ -283,8 +482,7 @@ AP.getContext(function(contextData) {
       <td><code>editor.workflow_step</code></td>
       <td>
         <p><strong>类型：</strong> <code>object</code> | <code>null</code></p>
-        <p><strong>描述：</strong> 仅限 Crowdin Enterprise。 当前工作流步骤的详细信息。
-        如果没有活动的工作流，则为 <code>null</code>。</p>
+        <p><strong>描述：</strong> 仅限 Crowdin Enterprise。当前工作流步骤的详细信息。如果没有活动的工作流，则为 <code>null</code>。</p>
       </td>
     </tr>
     <tr>
@@ -306,6 +504,195 @@ AP.getContext(function(contextData) {
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>描述：</strong> 工作流步骤的类型（例如，<code>"Translate"</code>、<code>"Proofread"</code>）。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.getPageState(callback) {#get-page-state}
+
+检索一个 `PageStateObject`，其中包含当前编辑器状态的快照：`AP.getContext()` 返回的所有内容，以及当前字符串、字符串列表、翻译、过滤器和文件选择。当你的应用需要一次获取多个状态信息时使用它，而不是链式调用单独的 `AP.editor.get*` 调用。
+
+<Aside>
+  此方法仅在编辑器中可用。回调在字符串列表加载完成后运行。
+</Aside>
+
+**示例：**
+
+```js
+AP.getPageState(function(pageState) {
+  if (pageState) {
+    console.log("Current string:", pageState.currentString);
+    console.log("Current page:", pageState.page);
+  }
+});
+```
+
+##### 参数
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="whitespace-nowrap">callback</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>function</code></p>
+        <p><strong>必填：</strong> 是</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。它接收一个参数：<code>PageStateObject</code> 或 <code>null</code>。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### 响应有效载荷示例
+
+下面的对象和数组已缩短。有关每个对象的完整结构，请参见表中链接的方法。
+
+```json
+{
+  // AP.getContext() 返回的每个字段，以及下面的字段
+  "currentString": {
+    "id": 1568759,
+    "text": "Welcome!",
+    "context": "Main screen"
+  },
+  "stringsList": [
+    {
+      "id": 1568759,
+      "text": "Welcome!"
+    }
+  ],
+  "selectedStrings": null,
+  "translations": [],
+  "topTranslation": null,
+  "filter": 3,
+  "customFilter": {
+    "translations": "untranslated",
+    "croql_expression": ""
+  },
+  "croqlFilter": "",
+  "filtersList": [
+    {
+      "name": "Show All",
+      "value": 3
+    }
+  ],
+  "page": 1,
+  "workflowStepStatusFilter": null,
+  "selectedFiles": [],
+  "isMultipleFilesSelected": false,
+  "unsavedSourceStrings": null
+}
+```
+
+##### 响应对象结构
+
+<p>快照重复了 <code><a href="#get-context">AP.getContext</a></code> 响应的每个字段，并添加了
+下面的字段。</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>currentString</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code> | <code>null</code></p>
+        <p><strong>描述：</strong> 当前活动的源字符串。有关对象结构，请参见 <code><a href="#get-string">AP.editor.getString</a></code>。在基于资产的项目中为
+        <code>null</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>stringsList</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code> | <code>null</code></p>
+        <p><strong>描述：</strong> 字符串列表中当前可见的字符串。有关对象结构，请参见 <code><a href="#get-strings-list">AP.editor.getStringsList</a></code>。在基于资产的项目中为
+        <code>null</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">selectedStrings</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code> | <code>null</code></p>
+        <p><strong>描述：</strong> 编辑器中当前选择的字符串。有关对象结构，请参见 <code><a href="#get-selected-strings">AP.editor.getSelectedStrings</a></code>。当未选择字符串时，以及在 <code>translate</code> 模式（没有多项
+        选择）下为 <code>null</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>translations</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code> | <code>null</code></p>
+        <p><strong>描述：</strong> 当前字符串的翻译和建议。有关对象结构，请参见 <code><a href="#get-translations">AP.editor.getTranslations</a></code>。在基于资产的项目中为
+        <code>null</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>topTranslation</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code> | <code>null</code></p>
+        <p><strong>描述：</strong> 当前字符串的顶级翻译。有关对象结构，请参见 <code><a href="#get-top-translation">AP.editor.getTopTranslation</a></code>。在基于资产的项目中以及当字符串还没有翻译时为 <code>null</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>filter</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>integer</code></p>
+        <p><strong>描述：</strong> 活动基本过滤器的数字 ID。参见 <code><a href="#get-filter">AP.editor.getFilter</a></code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>customFilter</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>描述：</strong> 高级过滤器的当前状态。有关对象结构，请参见 <code><a href="#get-custom-filter">AP.editor.getCustomFilter</a></code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>croqlFilter</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 活动的 CroQL 过滤查询，或在未设置过滤器时为空字符串。参见
+        <code><a href="#get-croql-filter">AP.editor.getCroqlFilter</a></code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>filtersList</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code></p>
+        <p><strong>描述：</strong> 可用的基本过滤器，及其名称和数字 ID。有关对象结构，请参见 <code><a href="#get-filters-list">AP.editor.getFiltersList</a></code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>page</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>integer</code></p>
+        <p><strong>描述：</strong> 字符串列表的当前页码。参见 <code><a href="#get-page">AP.editor.getPage</a></code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">workflowStepStatusFilter</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code> | <code>null</code></p>
+        <p><strong>描述：</strong> 仅 Crowdin Enterprise。当前工作流步骤上工作流步骤状态的
+        活动过滤器，或在未选择状态时为 <code>ALL</code>。有关允许的值，请参见 <code><a href="#get-workflow-step-status-filter">AP.editor.getWorkflowStepStatusFilter</a></code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>selectedFiles</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code> | <code>null</code></p>
+        <p><strong>描述：</strong> 在文件树中选择的文件。有关对象结构，请参见 <code><a href="#get-selected-files">AP.editor.getSelectedFiles</a></code>。当编辑器没有文件树时为 <code>null</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">isMultipleFilesSelected</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>boolean</code></p>
+        <p><strong>描述：</strong> 文件树中是否选择了多个文件。参见 <code><a href="#is-multiple-files-selected">AP.editor.isMultipleFilesSelected</a></code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="whitespace-nowrap">unsavedSourceStrings</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code> | <code>null</code></p>
+        <p><strong>描述：</strong> 有未保存更改的源字符串。有关对象结构，请参见 <code><a href="#get-unsaved-source-strings">AP.editor.getUnsavedSourceStrings</a></code>。在 <code>multilingual</code> 模式外为 <code>null</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -333,7 +720,7 @@ AP.getTheme(function(themeName) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个参数：<code>string</code>（主题名称）。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个参数：<code>string</code>（主题名称）。</p>
       </td>
     </tr>
   </tbody>
@@ -354,7 +741,7 @@ AP.getTheme(function(themeName) {
 
 #### AP.getCssVariables(callback)
 
-检索包含所有活动 Crowdin CSS 变量的对象。 这允许您的应用将其元素样式设置为与用户的 UI 主题匹配，以实现无缝的外观和体验。
+检索包含所有活动 Crowdin CSS 变量的对象。这允许您的应用将其元素样式设置为与用户的 UI 主题匹配，以实现无缝的外观和体验。
 
 **示例：**
 
@@ -376,7 +763,7 @@ AP.getCssVariables(function(variables) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个参数：<code>object</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个参数：<code>object</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -403,7 +790,7 @@ AP.getCssVariables(function(variables) {
 
 #### AP.getJwtToken(callback) {#get-jwt-token}
 
-检索当前用户的身份验证 JWT 令牌。 此令牌可用于代表用户发出 Crowdin API v2 请求。
+检索当前用户的身份验证 JWT 令牌。此令牌可用于代表用户发出 Crowdin API v2 请求。
 
 **示例：**
 
@@ -426,7 +813,7 @@ AP.getJwtToken(function(token) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个参数：<code>string</code>（JWT 令牌）或 <code>null</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个参数：<code>string</code>（JWT 令牌）或 <code>null</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -440,13 +827,149 @@ AP.getJwtToken(function(token) {
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkw...SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
 ```
 
+### 发起 API 请求
+
+你可以代表当前用户从你的应用直接或通过官方 API 客户端调用 Crowdin REST API。
+
+#### AP.apiRequest(payload, callback) {#api-request}
+
+你的应用可以直接从 iframe 调用 Crowdin REST API。 Crowdin 代表当前用户执行每个请求，并将其限制在应用清单中声明的作用域内，因此你的代码中不需要令牌。
+
+**示例：**
+
+```js
+AP.apiRequest(
+  { method: "get", path: "projects?limit=25", headers: {} },
+  (res) => {
+    if (res.status >= 200 && res.status < 300) {
+      console.log(res.body.data);
+    }
+  },
+);
+```
+
+##### 参数
+
+<table>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">payload</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>object</code></p>
+      <p><strong>必需：</strong> 是</p>
+      <p><strong>描述：</strong> 请求定义。参见下面的载荷字段。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">callback</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>function</code></p>
+      <p><strong>必需：</strong> 是</p>
+      <p><strong>描述：</strong> 接收包含 status、statusText 和 body 属性的响应信封的函数。</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+##### 载荷字段
+
+<table>
+  <tbody>
+  <tr>
+    <td><code class="whitespace-nowrap">method</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>必需：</strong> 是</p>
+      <p><strong>描述：</strong> HTTP 方法：<code>get</code>、<code>post</code>、<code>put</code>、<code>patch</code>、<code>delete</code> 或 <code>head</code>。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">path</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>string</code></p>
+      <p><strong>必需：</strong> 是</p>
+      <p><strong>描述：</strong> 相对于 <code>/api/v2</code> 的路径，包括查询字符串。例如，<code>projects?limit=25</code>。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">headers</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>object</code></p>
+      <p><strong>必需：</strong> 是</p>
+      <p><strong>描述：</strong> 额外的请求标头。不需要时传递空对象。</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code class="whitespace-nowrap">body</code></td>
+    <td>
+      <p><strong>类型：</strong> <code>object | string | ArrayBuffer</code></p>
+      <p><strong>必需：</strong> 否</p>
+      <p><strong>描述：</strong> 请求体：可 JSON 序列化的值、字符串，或用于二进制数据的 <code>ArrayBuffer</code>。不支持 <code>FormData</code>（没有 API v2 端点需要 multipart）。要上传文件，请先将其读入 <code>ArrayBuffer</code>。</p>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+##### 响应
+
+回调接收一个包含三个属性的响应信封：`status`、`statusText` 和 `body`。 Crowdin 为每个完成的请求返回此信封，无论成功与否，因此非 2xx 响应不会抛出异常。 `status` 为 `0` 表示网络故障。
+
+对于 JSON 响应，`body` 是解析后的 JSON 值；对于文本响应，是字符串；对于二进制响应，是 `ArrayBuffer`。当响应没有正文时，它不存在。
+
+##### 上传文件
+
+```js
+const buffer = await file.arrayBuffer();
+
+AP.apiRequest(
+  {
+    method: "post",
+    path: "storages",
+    headers: { "Crowdin-API-FileName": file.name },
+    body: buffer,
+  },
+  (res) => console.log(res.body.data),
+);
+```
+
+#### 使用官方 API 客户端 {#api-client}
+
+你可以使用官方 [`@crowdin/crowdin-api-client`](https://npmx.dev/package/@crowdin/crowdin-api-client) 与 [`@crowdin/apps-api-adapter`](https://npmx.dev/package/@crowdin/apps-api-adapter) 包，而不是直接调用 `AP.apiRequest`。该适配器在 `AP.apiRequest` 之上实现客户端的 HTTP 层，因此你可以获得完整的类型化 API 表面，同时每个请求仍在当前用户的会话和清单作用域下运行。
+
+```bash
+npm install @crowdin/apps-api-adapter @crowdin/crowdin-api-client
+```
+
+```js
+import { AppsApiAdapter } from "@crowdin/apps-api-adapter";
+import { Client } from "@crowdin/crowdin-api-client";
+
+const crowdin = new Client(
+  { token: "unused" },
+  { httpClient: new AppsApiAdapter() },
+);
+
+const { data: projects } = await crowdin.projectsGroupsApi.listProjects();
+
+const file = document.querySelector("#file").files[0];
+await crowdin.uploadStorageApi.addStorage(file.name, file);
+```
+
+<Aside type="note">
+  `token` 是客户端构造函数所必需的，但从未使用。宿主使用当前用户的会话对每个请求进行身份验证。
+</Aside>
+
+* 二进制上传接受 `Blob`、`File`、`ArrayBuffer` 或类型化数组；适配器会自动转换它们。
+* 失败的请求会以客户端通常的 `CrowdinError` / `CrowdinValidationError` 拒绝。
+* 通过桥接无法使用 GraphQL；只有 REST API（`/api/v2`）可用。
+
 ### 视口与尺寸
 
 这组方法允许您的应用获取有关其 `iframe` 尺寸和位置的信息，并请求尺寸变更。
 
 #### AP.getViewportSize(callback) {#get-viewport-size}
 
-检索应用 `iframe` 的当前可见尺寸。 这对于了解用户滚动时实际可见的应用内容非常有用。
+检索应用 `iframe` 的当前可见尺寸。这对于了解用户滚动时实际可见的应用内容非常有用。
 
 **示例：**
 
@@ -466,7 +989,7 @@ AP.getViewportSize(function(viewport) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个 <code>ViewportObject</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个 <code>ViewportObject</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -528,7 +1051,7 @@ AP.getWindowSize(function(windowSize) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个 <code>WindowSizeObject</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个 <code>WindowSizeObject</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -568,7 +1091,7 @@ AP.getWindowSize(function(windowSize) {
 
 检索应用 `iframe` 相对于主窗口视口顶部的垂直滚动位置。
 
-如果应用顶部可见，则返回 `0`。 如果用户向下滚动页面，该值将是一个正数，表示应用有多少像素滚出了视野。
+如果应用顶部可见，则返回 `0`。如果用户向下滚动页面，该值将是一个正数，表示应用有多少像素滚出了视野。
 
 **示例：**
 
@@ -588,7 +1111,7 @@ AP.getScrollPosition(function(scrollPosition) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个 <code>integer</code> 参数。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个 <code>integer</code> 参数。</p>
       </td>
     </tr>
   </tbody>
@@ -604,7 +1127,7 @@ AP.getScrollPosition(function(scrollPosition) {
 
 #### AP.resize(width, height) {#resize}
 
-更新应用 `iframe` 的尺寸。 这是控制应用视图大小的主要方法。
+更新应用 `iframe` 的尺寸。这是控制应用视图大小的主要方法。
 
 <Aside>
   如果请求的尺寸大于宿主面板允许的最大宽度或高度，Crowdin 将提供滚动条以容纳溢出内容。
@@ -688,7 +1211,7 @@ console.log("Current height:", currentSize.h)；
 
 #### AP.registerIntersectionObserver(elementId, callback) {#register-intersection-observer}
 
-为应用 `iframe` 中的某个元素注册交叉观察器。 这允许您检测当用户滚动时元素何时变为可见或隐藏。
+为应用 `iframe` 中的某个元素注册交叉观察器。这允许您检测当用户滚动时元素何时变为可见或隐藏。
 
 <Aside>
   此方法仅在编辑器中有效。
@@ -724,7 +1247,7 @@ AP.registerIntersectionObserver('my-element', function(entry) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 当元素可见性改变时触发的回调函数。 该函数接收一个 <code>IntersectionObserverEntry</code> 对象。</p>
+        <p><strong>描述：</strong> 当元素可见性改变时触发的回调函数。该函数接收一个 <code>IntersectionObserverEntry</code> 对象。</p>
       </td>
     </tr>
   </tbody>
@@ -823,7 +1346,7 @@ AP.closeNavbarExtension()；
 
 #### AP.getFormData(callback) {#get-form-data}
 
-检索应用表单中的当前数据。 当用户尝试从自定义应用界面继续时，Crowdin 通常会调用此方法。
+检索应用表单中的当前数据。当用户尝试从自定义应用界面继续时，Crowdin 通常会调用此方法。
 
 **示例：**
 
@@ -844,7 +1367,7 @@ AP.getFormData(function(formData) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收表单数据对象或 <code>undefined</code>/<code>null</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收表单数据对象或 <code>undefined</code>/<code>null</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -898,7 +1421,7 @@ AP.formDataUpdated(myFormData)；
 
 #### AP.getRenderData(callback) {#get-render-data}
 
-检索 Crowdin 提供的用于渲染应用 UI 的初始数据。 这通常用于需要任务特定数据的自定义工作流步骤。
+检索 Crowdin 提供的用于渲染应用 UI 的初始数据。这通常用于需要任务特定数据的自定义工作流步骤。
 
 <Aside>
   此方法仅适用于 Crowdin Enterprise。
@@ -923,7 +1446,7 @@ AP.getRenderData(function(renderData) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收渲染数据对象或空对象 <code>{}</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收渲染数据对象或空对象 <code>{}</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -946,7 +1469,7 @@ AP.getRenderData(function(renderData) {
 
 #### AP.getSchema(callback) {#get-schema}
 
-检索为应用定义的表单 schema。 这通常由基于 Crowdin 提供的 schema 渲染 UI 的应用使用。
+检索为应用定义的表单 schema。这通常由基于 Crowdin 提供的 schema 渲染 UI 的应用使用。
 
 <Aside>
   此方法仅适用于 Crowdin Enterprise。
@@ -971,7 +1494,7 @@ AP.getSchema(function(schema) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收 schema 对象或 <code>undefined</code>/<code>null</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收 schema 对象或 <code>undefined</code>/<code>null</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -999,11 +1522,11 @@ AP.getSchema(function(schema) {
 
 ## 编辑器动作
 
-这些方法允许您的应用从编辑器 UI 获取信息并在其中执行操作。 这些方法仅在应用加载到 Crowdin 编辑器（例如侧边面板）中时可用，所有方法均通过 `AP.editor` 对象调用。
+这些方法允许您的应用从编辑器 UI 获取信息并在其中执行操作。这些方法仅在应用加载到 Crowdin 编辑器（例如侧边面板）中时可用，所有方法均通过 `AP.editor` 对象调用。
 
 ### 数据检索（字符串和文件）
 
-这组方法允许您的应用读取编辑器中当前正在查看的字符串和文件的相关信息，以及更改文件选择。
+这组方法允许您的应用读取编辑器中当前正在查看的字符串和文件的相关信息，以及更改文件选择。要在一次调用中读取编辑器的多个状态信息，请使用 [AP.getPageState](#get-page-state)。
 
 #### AP.editor.getString(callback) {#get-string}
 
@@ -1030,7 +1553,7 @@ AP.editor.getString(function(stringData) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个 <code>StringDataObject</code>，如果没有活动字符串则为 <code>null</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个 <code>StringDataObject</code>，如果没有活动字符串则为 <code>null</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -1067,7 +1590,7 @@ AP.editor.getString(function(stringData) {
       <td><code>identifier</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>描述：</strong> 字符串的键或标识符（例如，<code>"app.title"</code>）。 可以为空。</p>
+        <p><strong>描述：</strong> 字符串的键或标识符（例如，<code>"app.title"</code>）。可以为空。</p>
       </td>
     </tr>
     <tr>
@@ -1139,7 +1662,7 @@ AP.editor.getStringsList(function(strings) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收 <code>StringListObject</code> 项的数组。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收 <code>StringListObject</code> 项的数组。</p>
       </td>
     </tr>
   </tbody>
@@ -1237,7 +1760,7 @@ AP.editor.getSelectedStrings(function(selectedData, selectedCount) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收两个参数（按此顺序）：</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收两个参数（按此顺序）：</p>
           <ul>
             <li><code>selectedData</code>（Array|String）：<code>SelectedStringObject</code> 项的数组或字符串 <code>"all"</code>。</li>
             <li><code>selectedCount</code>（Integer）：所选字符串的总数。</li>
@@ -1309,7 +1832,7 @@ AP.editor.getSelectedStrings(function(selectedData, selectedCount) {
       <td><code>string</code></td>
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
-        <p><strong>描述：</strong> 源字符串对象。 请参阅 <code><a href="#get-string">AP.editor.getString</a></code> 中的结构。</p>
+        <p><strong>描述：</strong> 源字符串对象。请参阅 <code><a href="#get-string">AP.editor.getString</a></code> 中的结构。</p>
       </td>
     </tr>
     <tr>
@@ -1323,14 +1846,14 @@ AP.editor.getSelectedStrings(function(selectedData, selectedCount) {
       <td><code class="whitespace-nowrap">translations.[language_id]</code></td>
       <td>
         <p><strong>类型：</strong> <code>array</code></p>
-        <p><strong>描述：</strong> 指定目标语言（例如，<code>"fr"</code>）的翻译对象数组。 请参阅 <code><a href="#get-translations">AP.editor.getTranslations</a></code> 了解 <code>TranslationObject</code> 结构。</p>
+        <p><strong>描述：</strong> 指定目标语言（例如，<code>"fr"</code>）的翻译对象数组。请参阅 <code><a href="#get-translations">AP.editor.getTranslations</a></code> 了解 <code>TranslationObject</code> 结构。</p>
       </td>
     </tr>
   </tbody>
 </table>
 
 <Aside type="caution">
-  请始终检查 <code>selectedData</code> 的类型。 如果用户选择了所有字符串，该方法将返回字符串 <code>"all"</code> 而不是数组。
+  请始终检查 <code>selectedData</code> 的类型。如果用户选择了所有字符串，该方法将返回字符串 <code>"all"</code> 而不是数组。
 </Aside>
 
 #### AP.editor.getSelectedFiles(callback) {#get-selected-files}
@@ -1357,7 +1880,7 @@ AP.editor.getSelectedFiles(function(files) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收 <code>FileObject</code> 项的数组。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收 <code>FileObject</code> 项的数组。</p>
       </td>
     </tr>
   </tbody>
@@ -1481,7 +2004,7 @@ AP.editor.isMultipleFilesSelected(function(isMultiple) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个 <code>boolean</code>（<code>true</code> 或 <code>false</code>）。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个 <code>boolean</code>（<code>true</code> 或 <code>false</code>）。</p>
       </td>
     </tr>
   </tbody>
@@ -1523,7 +2046,7 @@ AP.editor.changeFile('15409')；
 
 #### AP.editor.changeFiles(fileIds) {#change-files}
 
-在文件树中选择多个文件。 这是用户勾选多个文件复选框的程序等效操作。
+在文件树中选择多个文件。这是用户勾选多个文件复选框的程序等效操作。
 
 <Aside>
   此方法仅在支持多文件选择的编辑器视图中有效（例如并排视图）。
@@ -1578,7 +2101,7 @@ AP.editor.getUnsavedSourceStrings(function(unsavedStrings) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收未保存字符串对象的数组或 <code>null</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收未保存字符串对象的数组或 <code>null</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -1612,7 +2135,7 @@ AP.editor.getTranslations(function(translations) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收 <code>TranslationObject</code> 项的数组。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收 <code>TranslationObject</code> 项的数组。</p>
       </td>
     </tr>
   </tbody>
@@ -1742,7 +2265,7 @@ AP.editor.getTopTranslation(function(topTranslation) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个 <code>TranslationObject</code> 或 <code>null</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个 <code>TranslationObject</code> 或 <code>null</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -1768,7 +2291,7 @@ AP.editor.getTopTranslation(function(topTranslation) {
 
 ##### 响应对象结构
 
-此方法返回单个 `TranslationObject`。 完整属性列表请参阅 [`AP.editor.getTranslations`](#get-translations) 的结构表。
+此方法返回单个 `TranslationObject`。完整属性列表请参阅 [`AP.editor.getTranslations`](#get-translations) 的结构表。
 
 #### AP.editor.setTranslation(text) {#set-translation}
 
@@ -1844,7 +2367,7 @@ AP.editor.setFocus()；
 
 #### AP.editor.setUnsavedSuggestion(suggestion) {#set-unsaved-suggestion}
 
-为特定字符串设置"未保存的建议"。 这用于以编程方式添加翻译而不保存，通常在多语言视图中使用。
+为特定字符串设置"未保存的建议"。这用于以编程方式添加翻译而不保存，通常在多语言视图中使用。
 
 **示例：**
 
@@ -1867,7 +2390,7 @@ AP.editor.setUnsavedSuggestion({
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 包含建议详细信息的对象。 请参阅下方的 <code>输入对象结构</code>。</p>
+        <p><strong>描述：</strong> 包含建议详细信息的对象。请参阅下方的 <code>输入对象结构</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -1952,7 +2475,7 @@ AP.editor.setUnsavedSuggestions([
       <td>
         <p><strong>类型：</strong> <code>array</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 建议对象的数组。 请参阅 <code><a href="#set-unsaved-suggestion">setUnsavedSuggestion</a></code> 中的 <code>Input Object Structure</code>。</p>
+        <p><strong>描述：</strong> 建议对象的数组。请参阅 <code><a href="#set-unsaved-suggestion">setUnsavedSuggestion</a></code> 中的 <code>Input Object Structure</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -1985,7 +2508,7 @@ AP.editor.removeUnsavedSuggestions([
       <td>
         <p><strong>类型：</strong> <code>array</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 要删除的建议对象数组。 格式与 <code><a href="#set-unsaved-suggestions">setUnsavedSuggestions</a></code> 相同。</p>
+        <p><strong>描述：</strong> 要删除的建议对象数组。格式与 <code><a href="#set-unsaved-suggestions">setUnsavedSuggestions</a></code> 相同。</p>
       </td>
     </tr>
   </tbody>
@@ -2014,8 +2537,7 @@ AP.editor.applyUnsavedTranslations('providedStrings', [1569759, 1569761])；
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 用于应用翻译的方法。</p>
-        <p><strong>允许值：</strong> <code>all</code>（页面上所有未保存的），<code>selectedStrings</code>（仅针对选中的字符串），<code>providedStrings</code>（针对 `data` 参数中提供的字符串 ID）。</p>
+        <p><strong>描述：</strong> 用于应用翻译的方法。</p><p><strong>允许值：</strong> <code>all</code>（页面上所有未保存的），<code>selectedStrings</code>（仅针对选中的字符串），<code>providedStrings</code>（针对 `data` 参数中提供的字符串 ID）。</p>
       </td>
     </tr>
     <tr>
@@ -2023,7 +2545,7 @@ AP.editor.applyUnsavedTranslations('providedStrings', [1569759, 1569761])；
       <td>
         <p><strong>类型：</strong> <code>array</code> | <code>null</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 数字字符串 ID 的数组。 仅当 <code>method</code> 设置为 <code>providedStrings</code> 时使用。 否则，传入 <code>null</code>。</p>
+        <p><strong>描述：</strong> 数字字符串 ID 的数组。仅当 <code>method</code> 设置为 <code>providedStrings</code> 时使用。否则，传入 <code>null</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -2054,7 +2576,7 @@ AP.editor.getFiltersList(function(filters) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收 <code>FilterObject</code> 项的数组。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收 <code>FilterObject</code> 项的数组。</p>
       </td>
     </tr>
   </tbody>
@@ -2081,7 +2603,7 @@ AP.editor.getFiltersList(function(filters) {
     "value": 4
   },
   {
-    "name": "Machine Translations"
+    "name": "Auto-Translated"
   },
   {
     "name": "All",
@@ -2109,7 +2631,7 @@ AP.editor.getFiltersList(function(filters) {
       <td><code class="whitespace-nowrap">value</code></td>
       <td>
         <p><strong>类型：</strong> <code>integer</code></p>
-        <p><strong>描述：</strong> 过滤器的数字 ID。 此值供 <code>AP.editor.setFilter</code> 使用。 某些项目是分节标题，没有 <code>value</code>。</p>
+        <p><strong>描述：</strong> 过滤器的数字 ID。此值供 <code>AP.editor.setFilter</code> 使用。某些项目是分节标题，没有 <code>value</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -2137,7 +2659,7 @@ AP.editor.getFilter(function(filterId) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个参数：<code>integer</code>（过滤器 ID）。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个参数：<code>integer</code>（过滤器 ID）。</p>
       </td>
     </tr>
   </tbody>
@@ -2171,7 +2693,7 @@ AP.editor.setFilter(2)；
       <td>
         <p><strong>类型：</strong> <code>integer</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 要应用的过滤器的数字 ID。 请参阅 <code><a href="#get-filters-list">AP.editor.getFiltersList</a></code> 获取所有可用 ID。</p>
+        <p><strong>描述：</strong> 要应用的过滤器的数字 ID。请参阅 <code><a href="#get-filters-list">AP.editor.getFiltersList</a></code> 获取所有可用 ID。</p>
       </td>
     </tr>
   </tbody>
@@ -2187,13 +2709,14 @@ AP.editor.setFilter(2)；
 * **4**：已审核
 * **5**：已翻译，未审核
 * **7**：有评论
-* **10**：由翻译记忆或 MT 翻译
+* **10**：自动翻译 > 全部
 * **12**：高级筛选器
-* **30**：由翻译记忆翻译
-* **31**：由 MT 翻译
+* **30**：自动翻译 > TM
+* **31**：自动翻译 > MT
+* **41**：自动翻译 > AI
 
 <Aside type="caution">
-  此列表可能不完整，因为它不包含自定义 QA 检查过滤器或其他应用添加的过滤器。 使用 <code><a href="#get-filters-list">AP.editor.getFiltersList</a></code> 检索当前上下文中所有可用的过滤器。
+  此列表可能不完整，因为它不包含自定义 QA 检查过滤器或其他应用添加的过滤器。使用 <code><a href="#get-filters-list">AP.editor.getFiltersList</a></code> 检索当前上下文中所有可用的过滤器。
 </Aside>
 
 #### AP.editor.getCustomFilter(callback) {#get-custom-filter}
@@ -2220,7 +2743,7 @@ AP.editor.getCustomFilter(function(customFilter) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个 <code>CustomFilterObject</code> 或 <code>null</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个 <code>CustomFilterObject</code> 或 <code>null</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -2241,7 +2764,7 @@ AP.editor.getCustomFilter(function(customFilter) {
 
 ##### 响应对象结构
 
-`CustomFilterObject` 包含编辑器高级筛选器对话框中所有可用字段。 以下是一些关键属性：
+`CustomFilterObject` 包含编辑器高级筛选器对话框中所有可用字段。以下是一些关键属性：
 
 <table>
   <tbody>
@@ -2266,6 +2789,14 @@ AP.editor.getCustomFilter(function(customFilter) {
       <td>
         <p><strong>类型：</strong> <code>array</code></p>
         <p><strong>描述：</strong> 要过滤的标签 ID 数组。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>duplicate_statuses</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code></p>
+        <p><strong>允许的值：</strong> <code>"single"</code>、<code>"master"</code>、<code>"duplicate_shared"</code>、<code>"duplicate_own"</code></p>
+        <p><strong>说明：</strong> 按字符串的重复状态进行筛选。如果字符串具有所列任一状态，则匹配。此属性仅适用于自动翻译重复项的项目。已弃用的 <code>duplicates</code> 字符串属性仍可接受。</p>
       </td>
     </tr>
     <tr>
@@ -2302,7 +2833,7 @@ AP.editor.setCustomFilter({
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 包含过滤条件的 <code>CustomFilterObject</code>。 请参阅 <code><a href="#get-custom-filter">AP.editor.getCustomFilter</a></code> 获取所有可用属性的完整列表。</p>
+        <p><strong>描述：</strong> 包含过滤条件的 <code>CustomFilterObject</code>。请参阅 <code><a href="#get-custom-filter">AP.editor.getCustomFilter</a></code> 获取所有可用属性的完整列表。</p>
       </td>
     </tr>
   </tbody>
@@ -2319,7 +2850,8 @@ AP.editor.setCustomFilter({
     updated_from: '',
     updated_to: '',
     translations: '', // 'translated', 'untranslated'
-    duplicates: '',
+    duplicate_statuses: [], // 'single', 'master', 'duplicate_shared', 'duplicate_own'
+    duplicates: '', // 已弃用。请使用 duplicate_statuses。
     tm_and_mt: '',
     pre_translation: '',
     approvals: '',
@@ -2381,7 +2913,7 @@ AP.editor.getCroqlFilter(function(croqlQuery) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个 <code>string</code>（CroQL 查询）或 <code>null</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个 <code>string</code>（CroQL 查询）或 <code>null</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -2457,7 +2989,7 @@ AP.editor.getMode(function(modeName) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个参数：<code>string</code>（模式名称）。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个参数：<code>string</code>（模式名称）。</p>
       </td>
     </tr>
   </tbody>
@@ -2496,7 +3028,7 @@ AP.editor.setMode('proofread')；
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 要切换到的模式名称。 允许值：<code>translate</code>、<code>proofread</code>、<code>review</code>、<code>multilingual</code>。</p>
+        <p><strong>描述：</strong> 要切换到的模式名称。允许值：<code>translate</code>、<code>proofread</code>、<code>review</code>、<code>multilingual</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -2524,7 +3056,7 @@ AP.editor.getPage(function(pageNumber) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个参数：<code>integer</code>（页码）。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个参数：<code>integer</code>（页码）。</p>
       </td>
     </tr>
   </tbody>
@@ -2587,7 +3119,7 @@ AP.editor.getProjectTargetLanguages(function(languages) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收 <code>LanguageObject</code> 项的数组。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收 <code>LanguageObject</code> 项的数组。</p>
       </td>
     </tr>
   </tbody>
@@ -2647,7 +3179,7 @@ AP.editor.getProjectTargetLanguages(function(languages) {
 在并排和舒适模式下将编辑器切换到不同的目标语言，或在多语言模式下设置活动语言。
 
 <Aside>
-  此方法需要语言 `id`（例如，<code>"11"</code>），而非语言代码（例如，<code>"de"</code>）。 您可以使用 <code><a href="#get-project-target-languages">getProjectTargetLanguages</a></code> 获取可用 ID 列表。
+  此方法需要语言 `id`（例如，<code>"11"</code>），而非语言代码（例如，<code>"de"</code>）。您可以使用 <code><a href="#get-project-target-languages">getProjectTargetLanguages</a></code> 获取可用 ID 列表。
 </Aside>
 
 **示例（并排和舒适模式）：**
@@ -2718,7 +3250,7 @@ AP.editor.search("Welcome", { caseSensitive: true, search_option: 1 })；
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
         <p><strong>必填：</strong> 否</p>
-        <p><strong>描述：</strong> 包含搜索选项的对象。 请参阅下方的 <code>输入对象结构</code>。</p>
+        <p><strong>描述：</strong> 包含搜索选项的对象。请参阅下方的 <code>输入对象结构</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -2732,21 +3264,21 @@ AP.editor.search("Welcome", { caseSensitive: true, search_option: 1 })；
       <td><code>searchStrict</code></td>
       <td>
         <p><strong>类型：</strong> <code>boolean</code></p>
-        <p><strong>描述：</strong> 如果为 <code>true</code>，则执行严格搜索。 默认值为 <code>false</code>。</p>
+        <p><strong>描述：</strong> 如果为 <code>true</code>，则执行严格搜索。默认值为 <code>false</code>。</p>
       </td>
     </tr>
     <tr>
       <td><code class="whitespace-nowrap">searchFullMatch</code></td>
       <td>
         <p><strong>类型：</strong> <code>boolean</code></p>
-        <p><strong>描述：</strong> 如果为 <code>true</code>，则搜索完全匹配。 默认值为 <code>false</code>。</p>
+        <p><strong>描述：</strong> 如果为 <code>true</code>，则搜索完全匹配。默认值为 <code>false</code>。</p>
       </td>
     </tr>
     <tr>
       <td><code>caseSensitive</code></td>
       <td>
         <p><strong>类型：</strong> <code>boolean</code></p>
-        <p><strong>描述：</strong> 如果为 <code>true</code>，则搜索区分大小写。 默认值为 <code>false</code>。</p>
+        <p><strong>描述：</strong> 如果为 <code>true</code>，则搜索区分大小写。默认值为 <code>false</code>。</p>
       </td>
     </tr>
     <tr>
@@ -2904,7 +3436,7 @@ AP.editor.getWorkflowSteps(function(steps) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收 <code>WorkflowStepObject</code> 项的数组，如果未配置工作流则为 <code>undefined</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收 <code>WorkflowStepObject</code> 项的数组，如果未配置工作流则为 <code>undefined</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -2995,7 +3527,7 @@ AP.editor.getWorkflowSteps(function(steps) {
 检索当前工作流步骤处于当前状态的活动过滤器。
 
 <Aside>
-  在有工作流的项目中，字符串有三种状态：<i>待办</i>、<i>待定</i>和<i>已完成</i>。 此方法检索这些状态的当前过滤器。
+  在有工作流的项目中，字符串有三种状态：<i>待办</i>、<i>待定</i>和<i>已完成</i>。此方法检索这些状态的当前过滤器。
 </Aside>
 
 **示例：**
@@ -3016,7 +3548,7 @@ AP.editor.getWorkflowStepStatusFilter(function(status) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个 <code>string</code> 参数。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个 <code>string</code> 参数。</p>
       </td>
     </tr>
   </tbody>
@@ -3033,7 +3565,11 @@ AP.editor.getWorkflowStepStatusFilter(function(status) {
 ##### 响应对象结构
 
 <p><strong>类型：</strong> <code>string</code></p>
-<p><strong>允许值：</strong> <code>ALL</code>、<code>ToDo</code>、<code>Pending</code>、<code>Done</code></p>
+<p><strong>允许值：</strong> <code>ALL</code>、<code>TODO</code>、<code>PENDING</code>、
+<code>INCOMPLETE</code>、<code>DONE</code></p>
+<p><code>PENDING</code> 适用于 <code>review</code> 模式，<code>INCOMPLETE</code> 适用于
+<code>translate</code>、<code>proofread</code> 和 <code>multilingual</code> 模式。编辑器在<strong>工作流步骤状态</strong>菜单中将两者都显示为
+<strong>待处理</strong>。</p>
 
 #### AP.editor.setWorkflowStep(stepId) {#set-workflow-step}
 
@@ -3055,7 +3591,7 @@ AP.editor.setWorkflowStep(753)；
       <td>
         <p><strong>类型：</strong> <code>integer</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 要切换到的工作流步骤的 ID。 请参阅 <code>AP.editor.getWorkflowSteps</code> 获取可用 ID。</p>
+        <p><strong>描述：</strong> 要切换到的工作流步骤的 ID。请参阅 <code>AP.editor.getWorkflowSteps</code> 获取可用 ID。</p>
       </td>
     </tr>
   </tbody>
@@ -3081,8 +3617,11 @@ AP.editor.setWorkflowStepStatusFilter('DONE')；
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 要过滤的状态。</p>
-        <p><strong>允许值：</strong> <code>ALL</code>、<code>TODO</code>、<code>PENDING</code>、<code>DONE</code></p>
+        <p><strong>描述：</strong> 要过滤的状态。</p><p><strong>允许值：</strong> <code>ALL</code>、<code>TODO</code>、<code>PENDING</code>、
+        <code>INCOMPLETE</code>、<code>DONE</code></p>
+        <p><code>PENDING</code> 适用于 <code>review</code> 模式，<code>INCOMPLETE</code> 适用于
+        <code>translate</code>、<code>proofread</code> 和 <code>multilingual</code> 模式。编辑器在<strong>工作流步骤状态</strong>菜单中将两者都显示为
+        <strong>待处理</strong>。</p>
       </td>
     </tr>
   </tbody>
@@ -3115,7 +3654,7 @@ AP.editor.source.getSelectedText(function(selectedText) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个参数：<code>string</code>（选中的文本）或 <code>null</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个参数：<code>string</code>（选中的文本）或 <code>null</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -3152,7 +3691,7 @@ AP.editor.textarea.getSelectedText(function(selectedText) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个参数：<code>string</code>（选中的文本）或 <code>null</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个参数：<code>string</code>（选中的文本）或 <code>null</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -3174,7 +3713,7 @@ AP.editor.textarea.getSelectedText(function(selectedText) {
 
 在编辑器的上下文菜单中注册一个自定义项目（右键单击时出现的菜单）。
 
-您必须定义 `action` 对象，`callback` 将返回同一对象，并附加 `eventSubscriptionId`。 然后使用 `AP.events.on` 监听该 ID 上的点击事件。
+您必须定义 `action` 对象，`callback` 将返回同一对象，并附加 `eventSubscriptionId`。然后使用 `AP.events.on` 监听该 ID 上的点击事件。
 
 **示例：**
 
@@ -3202,7 +3741,7 @@ AP.editor.registerContextMenuAction({
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 动作的配置对象。 请参阅下方的 <code>输入对象结构</code>。</p>
+        <p><strong>描述：</strong> 动作的配置对象。请参阅下方的 <code>输入对象结构</code>。</p>
       </td>
     </tr>
     <tr>
@@ -3225,7 +3764,7 @@ AP.editor.registerContextMenuAction({
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 将显示该动作的上下文菜单类型。 可能的值：</p>
+        <p><strong>描述：</strong> 将显示该动作的上下文菜单类型。可能的值：</p>
         <ul>
           <li><code>textarea-context-menu</code>：翻译输入区域的上下文菜单。</li>
           <li><code>source-string-context-menu</code>：源字符串的上下文菜单。</li>
@@ -3272,7 +3811,7 @@ AP.editor.registerContextMenuAction({
       <td><code class="whitespace-nowrap">eventSubscriptionId</code></td>
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
-        <p><strong>描述：</strong> 此菜单项的唯一 ID。 使用此 ID 配合 <code>AP.events.on</code> 监听点击事件。</p>
+        <p><strong>描述：</strong> 此菜单项的唯一 ID。使用此 ID 配合 <code>AP.events.on</code> 监听点击事件。</p>
       </td>
     </tr>
     <tr>
@@ -3371,7 +3910,7 @@ AP.editor.getHotKeys(function(hotkeys) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收一个参数：<code>string</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收一个参数：<code>string</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -3387,7 +3926,7 @@ AP.editor.getHotKeys(function(hotkeys) {
 
 #### AP.editor.propagateHotKeyPress(hotKeyPressed) {#propagate-hotkey-press}
 
-手动将快捷键按下事件从应用的 `iframe` 传播到主编辑器。 如果您的应用捕获了某个按键事件（例如"Enter"），并且您也希望编辑器对此作出响应，此功能将非常有用。
+手动将快捷键按下事件从应用的 `iframe` 传播到主编辑器。如果您的应用捕获了某个按键事件（例如"Enter"），并且您也希望编辑器对此作出响应，此功能将非常有用。
 
 **示例：**
 
@@ -3413,7 +3952,7 @@ AP.editor.propagateHotKeyPress('Command+Enter')；
 
 #### AP.editor.applyCustomThemeStyle(theme, callback) {#apply-custom-theme-style}
 
-将自定义主题配置应用于编辑器 UI。 这允许对颜色、背景和元素高亮进行深度自定义。
+将自定义主题配置应用于编辑器 UI。这允许对颜色、背景和元素高亮进行深度自定义。
 
 **示例：**
 
@@ -3462,8 +4001,7 @@ AP.editor.applyCustomThemeStyle({
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 包含 UI 颜色和样式配置的 <code>ThemeObject</code>。
-        请参阅上面的示例了解所需结构。</p>
+        <p><strong>描述：</strong> 包含 UI 颜色和样式配置的 <code>ThemeObject</code>。请参阅上面的示例了解所需结构。</p>
       </td>
     </tr>
     <tr>
@@ -3471,7 +4009,7 @@ AP.editor.applyCustomThemeStyle({
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 否</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 如果应用失败，则接收错误消息字符串；成功时接收 <code>null</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。如果应用失败，则接收错误消息字符串；成功时接收 <code>null</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -3486,6 +4024,116 @@ AP.editor.applyCustomThemeStyle({
 ```js
 AP.editor.resetCustomThemeStyle()；
 ```
+
+#### AP.editor.updateButton(moduleKey, patch, [callback]) {#update-button}
+
+对应用自己的[编辑器按钮](/developer/crowdin-apps-module-editor-button/)模块之一应用运行时补丁。省略的字段保持其当前值。将 `icon`、`badge` 或 `tooltip` 设置为 `null` 会使其恢复到清单状态，将 `enabled` 设置为 `true` 也是如此。该状态持续到编辑器重新加载或应用的模块刷新。
+
+**示例：**
+
+```js
+AP.editor.updateButton(
+  'attach-screenshot',
+  { icon: '/icons/filled.svg', badge: 3 },
+  function(applied) {
+    console.log(applied); // true
+  }
+);
+```
+
+##### 参数
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>moduleKey</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 应用自己的 <code>editor-button</code> 模块的 <code>key</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>patch</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 要更改的按钮字段。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>patch.icon</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 以 <code>/</code> 开头的路径、应用自身源上的绝对 URL，或 <code>data:image/…</code>最多 32 KB 的 URI。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>patch.badge</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>integer</code> | <code>boolean</code></p>
+        <p><strong>描述：</strong> 1 到 99 的数字在按钮上显示计数器，更高的数字显示为 <code>99+</code>，<code>0</code> 或 <code>true</code> 显示圆点。 <code>false</code> 移除徽章。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>patch.enabled</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>boolean</code></p>
+        <p><strong>描述：</strong> 设置为 <code>false</code> 使按钮处于非活动状态，因此点击及其键盘快捷键没有效果。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>patch.tooltip</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>描述：</strong> 代替模块 <code>name</code> 显示的文本，既用于按钮的工具提示，也用于菜单中的项目标签。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>function</code></p>
+        <p><strong>必需：</strong> 否</p>
+        <p><strong>描述：</strong> 当补丁的至少一个字段被应用时接收 <code>true</code>。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### AP.editor.resetButton(moduleKey, [callback]) {#reset-button}
+
+将应用自己的[编辑器按钮](/developer/crowdin-apps-module-editor-button/)模块之一恢复到清单中声明的状态。
+
+**示例：**
+
+```js
+AP.editor.resetButton('attach-screenshot', function(cleared) {
+  console.log(cleared); // true
+});
+```
+
+##### 参数
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>moduleKey</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>必需：</strong> 是</p>
+        <p><strong>描述：</strong> 应用自己的 <code>editor-button</code> 模块的 <code>key</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>function</code></p>
+        <p><strong>必需：</strong> 否</p>
+        <p><strong>描述：</strong> 当按钮有运行时更改需要清除时接收 <code>true</code>。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ### 编辑器模态框动作
 
@@ -3522,7 +4170,7 @@ AP.editor.openModal({
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 模态框的配置对象。 请参阅下方的 <code>输入对象结构</code>。</p>
+        <p><strong>描述：</strong> 模态框的配置对象。请参阅下方的 <code>输入对象结构</code>。</p>
       </td>
     </tr>
     <tr>
@@ -3553,8 +4201,7 @@ AP.editor.openModal({
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>必填：</strong> 否</p>
-        <p><strong>描述：</strong> 模态窗口的大小。</p>
-        <p><strong>允许值：</strong> <code>small</code>、<code>medium</code>、<code>large</code>、<code>xlarge</code>。 默认值为 <code>medium</code>。</p>
+        <p><strong>描述：</strong> 模态窗口的大小。</p><p><strong>允许值：</strong> <code>small</code>、<code>medium</code>、<code>large</code>、<code>xlarge</code>。默认值为 <code>medium</code>。</p>
       </td>
     </tr>
     <tr>
@@ -3579,9 +4226,164 @@ AP.editor.openModal({
 AP.editor.closeModal()；
 ```
 
+#### AP.editor.ui.openTermDialog(request, [callback]) {#open-term-dialog}
+
+打开编辑器的**创建术语**对话框，并填写术语及其翻译。翻译将作为草稿术语添加，在用户保存术语之前不会添加到术语库中。
+
+如果项目的默认术语库中已有该术语（或 `conceptId` 中设置的概念），对话框将打开该概念，并仅添加其尚未包含的语言。否则，对话框将创建一个新概念。
+
+<Aside>
+  在应用的用户操作中调用此方法，例如按钮点击。仅当应用框架具有焦点时，对话框才会打开。
+</Aside>
+
+**示例：**
+
+```js
+AP.editor.ui.openTermDialog({
+  term: 'discount',
+  partOfSpeech: 'noun',
+  type: 'full form',
+  translations: [
+    { languageId: 'uk', text: 'знижка', partOfSpeech: 'noun', gender: 'feminine', type: 'full form' }
+  ]
+}, function(opened) {
+  if (!opened) {
+    console.log("术语对话框未打开。");
+  }
+});
+```
+
+##### 参数
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>request</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>object</code></p>
+        <p><strong>是否必需：</strong> 是</p>
+        <p><strong>说明：</strong> 术语及其翻译。请参阅下方的 <code>输入对象结构</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>callback</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>function</code></p>
+        <p><strong>是否必需：</strong> 否</p>
+        <p><strong>说明：</strong> 可选的​​回调函数，接收一个 <code>boolean</code> 值：
+        对话框打开时为 <code>true</code>，请求无效、应用框架没有焦点、用户无法在此项目中添加术语库术语、项目术语库不可用或术语对话框已打开时为 <code>false</code>。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### 输入对象结构
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>term</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>是否必需：</strong> 是</p>
+        <p><strong>说明：</strong> 项目源语言中的术语。最大长度：512
+        个字符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>partOfSpeech</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>是否必需：</strong> 否</p>
+        <p><strong>说明：</strong> 术语的词性，使用 Crowdin API 的命名（例如
+        <code>noun</code> 或 <code>proper noun</code>）或其代码（例如 <code>NOUN</code> 或
+        <code>PROPN</code>）。仅适用于新概念。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>是否必需：</strong> 否</p>
+        <p><strong>说明：</strong> 术语的类型。仅适用于新概念。</p><p><strong>允许的值：</strong> <code>full form</code>、<code>acronym</code>、
+        <code>abbreviation</code>、<code>short form</code>、<code>phrase</code>、<code>variant</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>conceptId</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>integer</code></p>
+        <p><strong>是否必需：</strong> 否</p>
+        <p><strong>说明：</strong> 项目默认术语库中用于添加翻译的概念 ID。如果省略，对话框将在该术语库中查找术语。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>translations</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>array</code></p>
+        <p><strong>是否必需：</strong> 否</p>
+        <p><strong>说明：</strong> 术语的翻译，每种语言一个。对话框使用前
+        500 项。请参阅下方的 <code>Translation Object Structure</code>。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+##### 翻译对象结构
+
+<table>
+  <tbody>
+    <tr>
+      <td><code>languageId</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code> | <code>integer</code></p>
+        <p><strong>是否必需：</strong> 是</p>
+        <p><strong>说明：</strong> 语言，使用 Crowdin API 的标识（例如
+        <code>uk</code> 或 <code>es-ES</code>），或编辑器的数字语言 ID。对话框为项目的目标语言添加
+        翻译，并跳过同一语言的第二个翻译。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>text</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>是否必需：</strong> 是</p>
+        <p><strong>说明：</strong> 该语言中的术语。最大长度：512 个字符。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>partOfSpeech</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>是否必需：</strong> 否</p>
+        <p><strong>说明：</strong> 翻译的词性，格式与术语的
+        <code>partOfSpeech</code> 相同。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>gender</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>是否必需：</strong> 否</p>
+        <p><strong>说明：</strong> 翻译的语法性别。</p><p><strong>允许的值：</strong> <code>masculine</code>、<code>feminine</code>、<code>common</code>、
+        <code>neuter</code>、<code>other</code>。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td>
+        <p><strong>类型：</strong> <code>string</code></p>
+        <p><strong>是否必需：</strong> 否</p>
+        <p><strong>说明：</strong> 翻译的类型，允许的值与术语的
+        <code>type</code> 相同。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 ## 项目动作
 
-这组方法允许您的应用与 Crowdin 项目进行交互，例如导航到不同的项目页面或打开编辑器。 所有方法均通过 `AP.project` 对象调用。
+这组方法允许您的应用与 Crowdin 项目进行交互，例如导航到不同的项目页面或打开编辑器。所有方法均通过 `AP.project` 对象调用。
 
 <Aside>
   这些方法仅适用于 Crowdin。
@@ -3618,7 +4420,7 @@ AP.project.redirect('/', true)；
       <td>
         <p><strong>类型：</strong> <code>boolean</code></p>
         <p><strong>必填：</strong> 否</p>
-        <p><strong>描述：</strong> 如果设置为 <code>true</code>，则强制进行完整的浏览器页面加载。 如果为 <code>false</code>（默认），则使用内部路由。</p>
+        <p><strong>描述：</strong> 如果设置为 <code>true</code>，则强制进行完整的浏览器页面加载。如果为 <code>false</code>（默认），则使用内部路由。</p>
       </td>
     </tr>
   </tbody>
@@ -3644,8 +4446,7 @@ AP.project.openModal('mt-pre-translation')；
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 要打开的内置模态框的名称。</p>
-        <p><strong>允许值：</strong> <code>mt-pre-translation</code>、<code>ai-pre-translation</code>、<code>marketplace-store</code></p>
+        <p><strong>描述：</strong> 要打开的内置模态框的名称。</p><p><strong>允许值：</strong> <code>mt-pre-translation</code>、<code>ai-pre-translation</code>、<code>marketplace-store</code></p>
       </td>
     </tr>
   </tbody>
@@ -3690,7 +4491,7 @@ AP.project.openEditor('15411', 'multilingual', 'de')；
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>必填：</strong> 否</p>
-        <p><strong>描述：</strong> 要打开的语言代码（例如，<code>"de"</code>）。 如果 <code>view</code> 为 <code>multilingual</code>，这可以是逗号分隔的列表。</p>
+        <p><strong>描述：</strong> 要打开的语言代码（例如，<code>"de"</code>）。如果 <code>view</code> 为 <code>multilingual</code>，这可以是逗号分隔的列表。</p>
       </td>
     </tr>
   </tbody>
@@ -3716,8 +4517,7 @@ AP.project.previewTranslations('csv')；
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 要下载的预览格式。</p>
-        <p><strong>允许值：</strong> <code>csv</code>、<code>xlsx</code></p>
+        <p><strong>描述：</strong> 要下载的预览格式。</p><p><strong>允许值：</strong> <code>csv</code>、<code>xlsx</code></p>
       </td>
     </tr>
   </tbody>
@@ -3746,7 +4546,7 @@ AP.project.getTabsConfiguration(function(config) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 处理响应的回调函数。 该函数接收选项卡配置对象的<code>array</code>。</p>
+        <p><strong>描述：</strong> 处理响应的回调函数。该函数接收选项卡配置对象的<code>array</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -3756,7 +4556,7 @@ AP.project.getTabsConfiguration(function(config) {
 
 此方法返回对象的 **`array`**。
 
-```json collapse={10-50}
+```json collapse={10-49}
 [
   {
     "identifier": "home",
@@ -3815,7 +4615,7 @@ AP.project.getTabsConfiguration(function(config) {
 
 #### AP.project.saveTabsConfiguration(params, callback) {#project-save-tabs-configuration}
 
-保存项目选项卡的新配置。 这允许您以编程方式在项目上下文中显示或隐藏特定选项卡。
+保存项目选项卡的新配置。这允许您以编程方式在项目上下文中显示或隐藏特定选项卡。
 
 **示例：**
 
@@ -3891,7 +4691,7 @@ AP.project.saveTabsConfiguration({ tabs_configuration: newConfig }, function(suc
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 包含新配置的对象。 请参阅下方的 <code>输入对象结构</code>。</p>
+        <p><strong>描述：</strong> 包含新配置的对象。请参阅下方的 <code>输入对象结构</code>。</p>
       </td>
     </tr>
     <tr>
@@ -3914,7 +4714,7 @@ AP.project.saveTabsConfiguration({ tabs_configuration: newConfig }, function(suc
       <td>
         <p><strong>类型：</strong> <code>array</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 选项卡配置对象的数组。 请参阅 <code><a href="#project-get-tabs-configuration">AP.project.getTabsConfiguration</a></code> 了解单个选项卡对象的结构。</p>
+        <p><strong>描述：</strong> 选项卡配置对象的数组。请参阅 <code><a href="#project-get-tabs-configuration">AP.project.getTabsConfiguration</a></code> 了解单个选项卡对象的结构。</p>
       </td>
     </tr>
   </tbody>
@@ -3922,7 +4722,7 @@ AP.project.saveTabsConfiguration({ tabs_configuration: newConfig }, function(suc
 
 ## 个人资料动作
 
-这组方法允许您的应用与用户的账户个人资料页面进行交互，在项目之外。 所有方法均通过 `AP.profile` 对象调用。
+这组方法允许您的应用与用户的账户个人资料页面进行交互，在项目之外。所有方法均通过 `AP.profile` 对象调用。
 
 <Aside>
   这些方法仅在 Crowdin 用户个人资料部分中可用（例如，个人资料设置、翻译记忆、MT、我的任务）。
@@ -3963,7 +4763,7 @@ AP.profile.redirect('/tasks')；
 更新应用当前运行所在模态窗口的尺寸和滚动行为。
 
 <Aside>
-此方法仅在您的应用作为[模态模块](/developer/crowdin-apps-module-modal/)启动时有效。 从其他上下文，例如编辑器侧边面板或项目选项卡，调用时无效。
+此方法仅在您的应用作为[模态模块](/developer/crowdin-apps-module-modal/)启动时有效。从其他上下文，例如编辑器侧边面板或项目选项卡，调用时无效。
 </Aside>
 
 **示例：**
@@ -3988,7 +4788,7 @@ AP.modal.setSize({
       <td>
         <p><strong>类型：</strong> <code>object</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 包含尺寸和滚动设置的对象。 请参阅下方的 <code>输入对象结构</code>。</p>
+        <p><strong>描述：</strong> 包含尺寸和滚动设置的对象。请参阅下方的 <code>输入对象结构</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -4019,7 +4819,7 @@ AP.modal.setSize({
       <td>
         <p><strong>类型：</strong> <code>boolean</code></p>
         <p><strong>必填：</strong> 否</p>
-        <p><strong>描述：</strong> 是否隐藏水平滚动条。 默认值为 <code>true</code>。</p>
+        <p><strong>描述：</strong> 是否隐藏水平滚动条。默认值为 <code>true</code>。</p>
       </td>
     </tr>
     <tr>
@@ -4027,7 +4827,7 @@ AP.modal.setSize({
       <td>
         <p><strong>类型：</strong> <code>boolean</code></p>
         <p><strong>必填：</strong> 否</p>
-        <p><strong>描述：</strong> 是否隐藏垂直滚动条。 默认值为 <code>false</code>。</p>
+        <p><strong>描述：</strong> 是否隐藏垂直滚动条。默认值为 <code>false</code>。</p>
       </td>
     </tr>
   </tbody>
@@ -4035,7 +4835,7 @@ AP.modal.setSize({
 
 ## 事件处理
 
-这些方法允许您的应用监听并响应 Crowdin UI 中发生的事件（例如，当用户更改字符串或保存翻译时），以及触发自己的自定义事件。 所有方法均通过 `AP.events` 对象调用。
+这些方法允许您的应用监听并响应 Crowdin UI 中发生的事件（例如，当用户更改字符串或保存翻译时），以及触发自己的自定义事件。所有方法均通过 `AP.events` 对象调用。
 
 <ReadMore>
   详细了解[支持的事件](#supported-events)。
@@ -4043,7 +4843,7 @@ AP.modal.setSize({
 
 #### AP.events.on(eventName, callback) {#events-on}
 
-为事件订阅一个监听器。 这是监听 Crowdin UI 事件（例如 `string.change`）以及应用或库发出的自定义内部事件的主要方法。
+为事件订阅一个监听器。这是监听 Crowdin UI 事件（例如 `string.change`）以及应用或库发出的自定义内部事件的主要方法。
 
 **示例：**
 
@@ -4063,8 +4863,7 @@ AP.events.on('string.change', function(stringData) {
       <td>
         <p><strong>类型：</strong> <code>string</code></p>
         <p><strong>Required:</strong> 是</p>
-        <p><strong>描述：</strong> 要监听的事件名称（例如，<code>string.change</code>）。
-        请参阅<a href="#supported-events">支持的事件</a>部分获取完整列表。</p>
+        <p><strong>描述：</strong> 要监听的事件名称（例如，<code>string.change</code>）。请参阅<a href="#supported-events">支持的事件</a>部分获取完整列表。</p>
       </td>
     </tr>
     <tr>
@@ -4072,7 +4871,7 @@ AP.events.on('string.change', function(stringData) {
       <td>
         <p><strong>类型：</strong> <code>function</code></p>
         <p><strong>必填：</strong> 是</p>
-        <p><strong>描述：</strong> 事件触发时执行的函数。 该函数接收特定于事件的数据有效载荷对象。</p>
+        <p><strong>描述：</strong> 事件触发时执行的函数。该函数接收特定于事件的数据有效载荷对象。</p>
       </td>
     </tr>
   </tbody>
@@ -4181,7 +4980,7 @@ AP.events.offAll('string.change')；
 
 #### AP.events.onAny(callback) {#events-on-any}
 
-订阅一个针对*任何*事件都会触发的监听器。 这对于调试以查看通过系统传递的所有事件非常有用。
+订阅一个针对*任何*事件都会触发的监听器。这对于调试以查看通过系统传递的所有事件非常有用。
 
 **示例：**
 
@@ -4237,7 +5036,7 @@ AP.events.offAny(myDebugListener);
 
 #### AP.events.emit(eventName, [data]) {#events-emit}
 
-在您的应用中触发自定义事件。 所有通过 `AP.events.on` 注册的监听器都将被触发。
+在您的应用中触发自定义事件。所有通过 `AP.events.on` 注册的监听器都将被触发。
 
 **示例：**
 
@@ -4274,7 +5073,7 @@ AP.events.emit('my-custom-event', { status: 'updated' });
 使用这些事件名称与 `AP.events.on()` 方法，以监听 Crowdin UI 中发生的操作。
 
 <Aside>
-  这些事件大多数特定于编辑器上下文。 全局事件（例如 <code>theme.changed</code>）可在您的应用运行的任何上下文中监听。
+  这些事件大多数特定于编辑器上下文。全局事件（例如 <code>theme.changed</code>）可在您的应用运行的任何上下文中监听。
 </Aside>
 
 <table>
@@ -4292,9 +5091,7 @@ AP.events.emit('my-custom-event', { status: 'updated' });
     <tr>
       <td><code>string.change</code></td>
       <td>
-        <p>当用户从一个原文字符串切换到另一个时触发。</p>
-        <p><strong>负载：</strong> 一个 <code>StringDataObject</code>（如果未选择字符串则为 <code>null</code>）。
-        对象结构请参阅 <code><a href="#get-string">AP.editor.getString</a></code>。</p>
+        <p>当用户从一个原文字符串切换到另一个时触发。</p><p><strong>负载：</strong> 一个 <code>StringDataObject</code>（如果未选择字符串则为 <code>null</code>）。对象结构请参阅 <code><a href="#get-string">AP.editor.getString</a></code>。</p>
         <div>
           ```json
           {
@@ -4309,8 +5106,7 @@ AP.events.emit('my-custom-event', { status: 'updated' });
     <tr>
       <td><code>string.selected</code></td>
       <td>
-        <p>当用户选择或取消选择字符串时触发（使用并排视图中的复选框）。</p>
-        <p><strong>负载：</strong> 一个由 <code>SelectedStringObject</code> 项组成的数组。 对象结构请参阅 <code><a href="#get-selected-strings">AP.editor.getSelectedStrings</a></code>。</p>
+        <p>当用户选择或取消选择字符串时触发（使用并排视图中的复选框）。</p><p><strong>负载：</strong> 一个由 <code>SelectedStringObject</code> 项组成的数组。对象结构请参阅 <code><a href="#get-selected-strings">AP.editor.getSelectedStrings</a></code>。</p>
         <div>
           ```json
           [
@@ -4329,10 +5125,25 @@ AP.events.emit('my-custom-event', { status: 'updated' });
       </td>
     </tr>
     <tr>
+      <td><code>editor.button.click</code></td>
+      <td>
+        <p>当用户点击 <code>event</code> 类型的<a href="/developer/crowdin-apps-module-editor-button/">编辑器按钮</a>模块时触发。只有按钮的 <code>options.module</code> 中指定的模块会收到该事件。</p><p><strong>载荷：</strong> 包含按钮的 <code>key</code> 和 <code>location</code> 的对象。翻译工具栏按钮还会报告 <code>stringId</code>、<code>languageIds</code> 和 <code>pluralId</code>（当字符串没有复数形式时为 <code>-1</code>）；字符串菜单按钮报告 <code>stringIds</code> 和 <code>languageIds</code>。</p>
+        <div>
+          ```json
+          {
+            "key": "attach-screenshot",
+            "location": "strings-menu",
+            "stringIds": [1569759, 1569760],
+            "languageIds": [18]
+          }
+          ```
+        </div>
+      </td>
+    </tr>
+    <tr>
       <td><code>textarea.edited</code></td>
       <td>
-        <p>当用户在译文文本区域进行任何更改（输入、删除、粘贴）时触发。</p>
-        <p><strong>负载：</strong> 一个包含字符串数据、<code>oldText</code> 和 <code>newText</code> 的对象。</p>
+        <p>当用户在译文文本区域进行任何更改（输入、删除、粘贴）时触发。</p><p><strong>负载：</strong> 一个包含字符串数据、<code>oldText</code> 和 <code>newText</code> 的对象。</p>
         <div>
           ```json
           {
@@ -4348,8 +5159,7 @@ AP.events.emit('my-custom-event', { status: 'updated' });
     <tr>
       <td><code>translation.added</code></td>
       <td>
-        <p>当用户保存新译文时触发。</p>
-        <p><strong>负载：</strong> 新保存译文的 <code>TranslationObject</code>。 对象结构请参阅 <code><a href="#get-translations">AP.editor.getTranslations</a></code>。</p>
+        <p>当用户保存新译文时触发。</p><p><strong>负载：</strong> 新保存译文的 <code>TranslationObject</code>。对象结构请参阅 <code><a href="#get-translations">AP.editor.getTranslations</a></code>。</p>
         <div>
           ```json
           {
@@ -4368,8 +5178,7 @@ AP.events.emit('my-custom-event', { status: 'updated' });
     <tr>
       <td><code>translation.deleted</code></td>
       <td>
-        <p>当用户删除译文时触发。</p>
-        <p><strong>负载：</strong> 一个包含已删除译文的 <code>id</code> 及其 <code>string_id</code> 的对象。</p>
+        <p>当用户删除译文时触发。</p><p><strong>负载：</strong> 一个包含已删除译文的 <code>id</code> 及其 <code>string_id</code> 的对象。</p>
         <div>
           ```json
           {
@@ -4383,22 +5192,19 @@ AP.events.emit('my-custom-event', { status: 'updated' });
     <tr>
       <td><code>translation.restored</code></td>
       <td>
-        <p>当用户恢复已删除的译文时触发。</p>
-        <p><strong>负载：</strong> 已恢复的 <code>TranslationObject</code>。 对象结构请参阅 <code><a href="#get-translations">AP.editor.getTranslations</a></code>。</p>
+        <p>当用户恢复已删除的译文时触发。</p><p><strong>负载：</strong> 已恢复的 <code>TranslationObject</code>。对象结构请参阅 <code><a href="#get-translations">AP.editor.getTranslations</a></code>。</p>
       </td>
     </tr>
     <tr>
       <td><code>translation.vote</code></td>
       <td>
-        <p>当用户对译文进行投票（赞或踩）时触发。</p>
-        <p><strong>负载：</strong> 更新后的 <code>TranslationObject</code>，包含新的 <code>votes_rating</code>。</p>
+        <p>当用户对译文进行投票（赞或踩）时触发。</p><p><strong>负载：</strong> 更新后的 <code>TranslationObject</code>，包含新的 <code>votes_rating</code>。</p>
       </td>
     </tr>
     <tr>
       <td><code>translation.approve</code></td>
       <td>
-        <p>当用户批准译文时触发。</p>
-        <p><strong>负载：</strong> 更新后的 <code>TranslationObject</code>，现在包含 <code>"approved": true</code> 和 <code>approver</code> 详情。</p>
+        <p>当用户批准译文时触发。</p><p><strong>负载：</strong> 更新后的 <code>TranslationObject</code>，现在包含 <code>"approved": true</code> 和 <code>approver</code> 详情。</p>
         <div>
           ```json
           {
@@ -4417,44 +5223,60 @@ AP.events.emit('my-custom-event', { status: 'updated' });
     <tr>
       <td><code>translation.disapprove</code></td>
       <td>
-        <p>当用户撤销对译文的批准时触发。</p>
-        <p><strong>负载：</strong> 更新后的 <code>TranslationObject</code>，现在包含 <code>"approved":
+        <p>当用户撤销对译文的批准时触发。</p><p><strong>负载：</strong> 更新后的 <code>TranslationObject</code>，现在包含 <code>"approved":
         false</code>。</p>
       </td>
     </tr>
     <tr>
       <td><code>language.change</code></td>
       <td>
-        <p>当用户在编辑器中更改目标语言时触发。</p>
-        <p><strong>负载：</strong> 完整的 <code>ContextDataObject</code>。 对象结构请参阅 <code><a href="#get-context">AP.getContext</a></code>。</p>
+        <p>当用户在编辑器中更改目标语言时触发。</p><p><strong>负载：</strong> 完整的 <code>ContextDataObject</code>。对象结构请参阅 <code><a href="#get-context">AP.getContext</a></code>。</p>
       </td>
     </tr>
     <tr>
       <td><code>file.change</code></td>
       <td>
-        <p>当用户在编辑器中切换到不同文件时触发。</p>
-        <p><strong>负载：</strong> 完整的 <code>ContextDataObject</code>。 对象结构请参阅 <code><a href="#get-context">AP.getContext</a></code>。</p>
+        <p>当用户在编辑器中切换到不同文件时触发。</p><p><strong>负载：</strong> 完整的 <code>ContextDataObject</code>。对象结构请参阅 <code><a href="#get-context">AP.getContext</a></code>。</p>
       </td>
     </tr>
     <tr>
       <td><code>theme.changed</code></td>
       <td>
-        <p>当用户更改 UI 主题时触发。</p>
-        <p><strong>负载：</strong> 一个包含新主题名称的 <code>string</code>（例如 <code>"light"</code>、<code>"dark"</code>）。</p>
+        <p>当用户更改 UI 主题时触发。</p><p><strong>负载：</strong> 一个包含新主题名称的 <code>string</code>（例如 <code>"light"</code>、<code>"dark"</code>）。</p>
       </td>
     </tr>
     <tr>
       <td><code>asset.source.preview</code></td>
       <td>
-        <p>当在编辑器中选择源资源文件时触发（适用于基于资源的项目）。</p>
-        <p><strong>负载：</strong> <code>ContextDataObject</code>。 对象结构请参阅 <code><a href="#get-context">AP.getContext</a></code>。</p>
+        <p>当在编辑器中选择源资源文件时触发（适用于基于资源的项目）。</p><p><strong>负载：</strong> <code>ContextDataObject</code>。对象结构请参阅 <code><a href="#get-context">AP.getContext</a></code>。</p>
       </td>
     </tr>
     <tr>
       <td><code class="whitespace-nowrap">asset.suggestion.preview</code></td>
       <td>
-        <p>当在编辑器中选择建议资源文件时触发（适用于基于资源的项目）。</p>
-        <p><strong>负载：</strong> 一个包含 <code>editor</code> 上下文和 <code>suggestion</code> 数据的对象。</p>
+        <p>当在编辑器中选择建议资源文件时触发（适用于基于资源的项目）。</p><p><strong>负载：</strong> 一个包含 <code>editor</code> 上下文和 <code>suggestion</code> 数据的对象。</p>
+      </td>
+    </tr>
+    <tr>
+      <td><code>pageState.changed</code></td>
+      <td>
+        <p>当编辑器页面状态的任何部分更改时触发。 200 毫秒内发生的更改会作为
+        单个事件报告。</p><p><strong>载荷：</strong> 完整的 <code>PageStateObject</code>，以及一个命名了触发事件的
+        字段的 <code>changed</code> 数组。有关对象结构，请参见
+        <code><a href="#get-page-state">AP.getPageState</a></code>。将 <code>changed</code> 视为关于重新读取内容的提示：载荷始终携带最新
+        状态。</p>
+        <div>
+          ```json
+          {
+            "changed": ["currentString", "translations", "topTranslation"],
+            "currentString": {
+              "id": 1568759,
+              "text": "Welcome!"
+            },
+            "page": 1
+          }
+          ```
+        </div>
       </td>
     </tr>
   </tbody>

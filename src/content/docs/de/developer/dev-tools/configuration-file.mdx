@@ -294,6 +294,22 @@ Standardmäßig werden alle Sprachen exportiert. Wenn du bestimmte Sprachen expo
 ]
 ```
 
+## Mehrsprachige Dateien
+
+Bei Dateiformaten, bei denen alle Sprachen in einer Datei gespeichert sind, wie beispielsweise String Catalog, setzt du den Parameter `multilingual` auf `true` und lässt die Sprachplatzhalter im Muster `translation` weg:
+
+```yml title="crowdin.yml"
+"Dateien": [
+  {
+    "Quelle": "Localizable.xcstrings",
+    "Übersetzung": "Localizable.xcstrings",
+    "mehrsprachig": true
+  }
+]
+```
+
+Wenn du eine String-Katalog-Datei als Quell-Datei hochlädst, werden die darin gespeicherten Übersetzungen zusammen mit den Quellstrings nur dann importiert, wenn in der String-Katalog [Parser-Konfiguration](/project-settings/parser-configuration/#parser-configuration-for-all-project-files-of-a-specific-format) deines Projekts **Übersetzungen importieren** ausgewählt ist. Andernfalls werden nur die Quellstrings importiert.
+
 ## Mehrsprachige Tabelle
 
 Wenn eine CSV- oder XLS/XLSX-Datei die Übersetzungen für alle Zielsprachen enthält, solltest du die passenden Sprachcodes im Schema angeben.
@@ -324,6 +340,22 @@ Wenn deine CSV- oder XLS/XLSX-Datei Spalten enthält, die beim Import übersprun
 
 ```yml title="crowdin.yml"
 "scheme" : "identifier,source_phrase,context,uk,none,es-MX,none,fr"
+```
+
+Mit dem Parameter `import_translations` kannst du die Übersetzungen aus einer mehrsprachigen Tabelle zusammen mit den Quelltexten importieren. Wenn diese Option nicht gesetzt ist, werden nur die Quellzeichenfolgen importiert.
+
+Beispiel für die Konfiguration mit dem Parameter `import_translations`:
+
+```yml title="crowdin.yml"
+"files": [
+  {
+    "source": "multicolumn.csv",    
+    "translation": "multicolumn.csv",
+    "first_line_contains_header": true,
+    "scheme": "identifier,source_phrase,context,uk,es-MX,fr",
+    "import_translations": true
+  }
+]
 ```
 
 ##### Schema-Konstanten
@@ -757,7 +789,7 @@ Labels werden den Quellzeichenfolgen nur beim ersten Upload in das Crowdin-Proje
 Zeichenfolgen, die vor der Verwendung des Parameters `labels` in das Crowdin-Projekt hochgeladen wurden, erhalten keine Labels.
 Wenn du das beim ersten Upload hinzugefügte Label direkt in Crowdin entfernst, wird es bei den nächsten Synchronisierungen nicht erneut hinzugefügt.
 
-Example:
+Beispiel:
 
 ```yml title="crowdin.yml"
 "files": [
