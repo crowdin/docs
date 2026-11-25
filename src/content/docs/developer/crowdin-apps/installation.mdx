@@ -8,8 +8,6 @@ import { Image } from 'astro:assets';
 import { Steps, Aside } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
 import ReadMore from '~/components/ReadMore.astro';
-import storeInstall from '!/developer/crowdin_apps_store_install.png';
-import storeInstallEnterprise from '!/developer/crowdin_apps_store_install_e.png';
 import communicationFlow from '!/developer/crowdin_apps_communication_crowdin.png';
 
 You can install Crowdin Apps either from the [Crowdin Store](https://store.crowdin.com) or manually, depending on whether the app is already published.
@@ -20,20 +18,18 @@ To install an app that is already published on the Crowdin Store, follow these s
 
 <Steps>
   1. Open your profile home page and select **Store** on the left sidebar.
-  2. Click <Icon name="mdi:download" class="inline-icon" />**Install** on the needed app. <Image src={storeInstall} alt="Store" />
-  3. In the appeared dialog, configure preferred permissions and click **Install**.
+  2. Click <Icon name="mdi:download" class="inline-icon" /> on the card of the needed app.
+  3. In the dialog that opens, configure preferred permissions and click **Install**.
 </Steps>
 
 To install a private app, follow these steps:
 
 <Steps>
   1. Go to **Account Settings > Apps** and click **Install Private App**.
-  2. Select how you want to install the app and click **Install**:
-      * **From a manifest URL** &ndash; for self-hosted apps that run on your own server. Paste in the app's **Manifest URL**.
-      * **From a manifest file** &ndash; for [serverless apps](/developer/crowdin-apps-serverless/) that Crowdin hosts. Upload the app's manifest file (`.json`).
-  3. Configure preferred permissions. If you chose **From a manifest file**, also select the **App source**:
-      * **Production bundle** &ndash; upload the app's build as a `.zip` bundle. Crowdin hosts it and serves it to your users.
-      * **Development URL** &ndash; load the app from a URL while you develop it, for example from a local dev server.
+  2. Select how you want to install the app:
+      * **From an app file**: For [serverless apps](/developer/crowdin-apps-serverless/) that Crowdin hosts. Upload the app file (`.crowdinapp`), which contains the app's manifest and build.
+      * **From a manifest URL**: For self-hosted apps that run on your own server. Paste in the app's **Manifest URL** and click **Continue**.
+  3. Configure preferred permissions. If you're developing a serverless app, turn on **Development mode** and enter the **URL** of your local dev server on `localhost` or `127.0.0.1`. Crowdin then loads the app from your computer, and only you can use it while development mode is on.
   4. Click **Install**.
 </Steps>
 
@@ -43,22 +39,54 @@ To install an app that is already published on the Crowdin Store, follow these s
 
 <Steps>
   1. Open your organization's **Workspace** and select **Store** on the left sidebar.
-  2. Click <Icon name="mdi:download" class="inline-icon" />**Install** on the needed app. <Image src={storeInstallEnterprise} alt="Store" />
-  3. In the appeared dialog, configure preferred permissions and click **Install**.
+  2. Click <Icon name="mdi:download" class="inline-icon" /> on the card of the needed app.
+  3. In the dialog that opens, configure preferred permissions and click **Install**.
 </Steps>
 
 To install a private app, follow these steps:
 
 <Steps>
   1. Go to **Organization Settings > Apps** and click **Install Private App**.
-  2. Select how you want to install the app and click **Install**:
-      * **From a manifest URL** &ndash; for self-hosted apps that run on your own server. Paste in the app's **Manifest URL**.
-      * **From a manifest file** &ndash; for [serverless apps](/developer/crowdin-apps-serverless/) that Crowdin hosts. Upload the app's manifest file (`.json`).
-  3. Configure preferred permissions. If you chose **From a manifest file**, also select the **App source**:
-      * **Production bundle** &ndash; upload the app's build as a `.zip` bundle. Crowdin hosts it and serves it to your users.
-      * **Development URL** &ndash; load the app from a URL while you develop it, for example from a local dev server.
+  2. Select how you want to install the app:
+      * **From an app file**: For [serverless apps](/developer/crowdin-apps-serverless/) that Crowdin hosts. Upload the app file (`.crowdinapp`), which contains the app's manifest and build.
+      * **From a manifest URL**: For self-hosted apps that run on your own server. Paste in the app's **Manifest URL** and click **Continue**.
+  3. Configure preferred permissions. If you're developing a serverless app, turn on **Development mode** and enter the **URL** of your local dev server on `localhost` or `127.0.0.1`. Crowdin then loads the app from your computer, and only you can use it while development mode is on.
   4. Click **Install**.
 </Steps>
+
+## Updating Apps
+
+How an installed app gets a newer version depends on how it was installed.
+
+### Updating Self-Hosted Apps
+
+Crowdin checks the manifests of self-hosted apps daily. A change waits for an admin when it widens what the app can do: new scopes, new modules that need an access setting or act on their own, or a different server address. Crowdin applies all other changes on its own. While a change waits, the app shows **Update available** in the apps list, admins see a banner with a **Review** button on the app's pages, and the account owner (for Crowdin) or organization admins (for Crowdin Enterprise) get a notification (**App Updates** in the notification settings).
+
+To review and apply the update, follow these steps:
+
+<Steps>
+  1. Go to **Account Settings > Apps** (for Crowdin) or **Organization Settings > Apps** (for Crowdin Enterprise) and select **Edit** on the app.
+  2. Review the changes, marked **New**, **Removed**, or **Changed**, and set access for any new modules.
+  3. Click **Update**.
+</Steps>
+
+To apply a new authentication type, uninstall the app and install it again.
+
+### Updating Serverless Apps
+
+To update a serverless app to a newer version, upload its new app file:
+
+<Steps>
+  1. Go to **Account Settings > Apps** (for Crowdin) or **Organization Settings > Apps** (for Crowdin Enterprise) and select **Edit** on the app.
+  2. In the **App file** section, click **Update file** (or **Upload file** if the app has no app file yet) and upload the new app file (`.crowdinapp`).
+  3. Review the changes and click **Save**.
+</Steps>
+
+Saving replaces the app's build and applies the manifest from the file. If the app name in the file differs from the installed app's name, a warning shows both names before you save, because saving gives the installed app the name, access, modules, and build from the file. An update keeps the **Development mode** setting, and while development mode is on, Crowdin loads the app from its URL instead of the app file. You can turn development mode on or off on the same screen.
+
+When an app installed from an app file has the same name as the file you're installing, the dialog warns that the file adds a second copy. To update the installed app instead, click **Update the installed app instead**.
+
+To get the file of an app installed from an app file, for example to share the app, select **Download** on the app.
 
 ## Crowdin Apps Permission Configuration
 
@@ -84,10 +112,6 @@ Available options for Crowdin:
 * All users, including guests (unauthenticated users)
 * Custom Access &ndash; the users you pick with **Select users**. The module switches to this option automatically once you pick users.
 
-<Aside>
-  The project owner will always have access to all modules of the app.
-</Aside>
-
 In Crowdin, users other than the installer decide whether the app can access Crowdin on their behalf when they use its modules.
 
 <ReadMore>
@@ -102,10 +126,6 @@ Available options for Crowdin Enterprise:
 * All users, including guests (unauthenticated users)
 * Custom Access &ndash; the users you pick with **Select users**. The module switches to this option automatically once you pick users.
 
-<Aside>
-  The organization owner will always have access to all modules of the app.
-</Aside>
-
 ### Project Access Configuration
 
 You can also specify the projects in which the app can be used (these settings apply across all app modules).
@@ -115,46 +135,54 @@ Project access options:
 * All projects I have access to (for Crowdin) or All projects (for Crowdin Enterprise)
 * Selected projects
 
+### Apps That Use a Bot
+
+Some apps work in projects through their own bot, a user that Crowdin creates for the app when you install it. The installation dialog shows this bot under **Will perform action as:**. The projects the bot is a member of are the projects the app works in, so these apps skip the project access options.
+
+To add the bot as a manager to all existing projects, keep **Assign bot as a manager to all existing projects** selected when you install the app. To change the bot's permissions later, use the project's **Members** tab or the **Managers** page (for Crowdin) or **Users** page (for Crowdin Enterprise).
+
 ## Installed Event Communication Flow
 
 This flow applies to self-hosted apps, which register the `installed` event in their app descriptor.
 
-When a Crowdin App is installed in the Account Settings, an authorization flow takes place, during which Crowdin and the Crowdin App exchange the authorization data (the authorization code is exchanged for an access token). The following illustration shows the events in this process.
+When a Crowdin App is installed in the Account Settings, an authorization flow takes place, during which Crowdin and the Crowdin App exchange the authorization data (the app exchanges the credentials from the Installed event for an access token). The following illustration shows the events in this process.
 
 <Image src={communicationFlow} alt="Communication between Crowdin and Crowdin App" />
 
 <Aside>
-  The Installed event is used for the `crowdin_app` and `crowdin_agent` authentication types. For `crowdin_agent`, the payload additionally contains the `agentId` property.
+  Crowdin sends the Installed event to apps with the `authorization_code`, `crowdin_app`, `crowdin_agent`, and `crowdin_app_with_code` (Crowdin Enterprise only) authentication types. It sends the event again when the app's permissions or its owner change. For `crowdin_agent`, the payload additionally contains the `agentId` property, and for `authorization_code` and `crowdin_app_with_code`, the `code` property.
 </Aside>
 
 Let's examine each step in the illustration in detail:
 
 <Steps>
-  1. Installation of the Manifest URL - the user pastes in the Manifest URL in **Account Settings > Apps** and clicks **Install**.
+  1. Installation of the Manifest URL - the user pastes in the Manifest URL in **Account Settings > Apps** and clicks **Continue**.
   2. Fetching content from the Manifest URL - the request is sent to the Crowdin App.
   3. Response: manifest JSON - the Crowdin App returns the Manifest JSON that contains data about the app.
   4. Manifest Data Validation - the received content is validated against the structure and data of the Manifest JSON.
   5. Prompt to install - Crowdin displays the information about the Crowdin App, the list of permissions, and the **Install** button to the user.
   6. Confirmation of the installation - the user confirms the installation of the Crowdin App.
-  7. The Installed event - Crowdin sends the Installed event with the authorization code to the Crowdin App so it can generate an API token.
+  7. The Installed event - Crowdin sends the Installed event with the credentials the Crowdin App needs to get an API token.
   8. Token request - the Crowdin App sends a request to acquire an API token:
       ```
       POST https://accounts.crowdin.com/oauth/token
       ```
   9. Access Token - the authorization service returns the API access token and the refresh token.
-  10. Success Code Response - the Crowdin App returns the success status code (2xx), which confirms that the app installation finished. If the status code is different, the app will be removed from the Crowdin account.
+  10. Response: success code - the Crowdin App returns the success status code (2xx), which confirms that the app installation finished. If the status code is different, Crowdin removes the app from the Crowdin account.
 </Steps>
 
 **Token request parameters (step 8):**
 
+An app with the `authorization_code` type exchanges the `code` from the Installed event for a token in the [authorization code flow](/developer/authorizing-oauth-apps/#exchange-the-code-for-an-access-token). Apps with the other types send the following parameters:
+
 <table>
   <tbody>
   <tr>
-    <td><code>grant_type: crowdin_app</code></td>
+    <td><code>grant_type</code></td>
     <td>
       <p><strong>Type:</strong> <code>string</code></p>
       <p><strong>Required:</strong> yes</p>
-      <p><strong>Description:</strong> Specifies the flow for an OAuth app.</p>
+      <p><strong>Description:</strong> The flow for the app's authentication type: <code>crowdin_app</code>, <code>crowdin_agent</code>, or <code>crowdin_app_with_code</code>.</p>
     </td>
   </tr>
   <tr>
@@ -203,6 +231,22 @@ Let's examine each step in the illustration in detail:
       <p><strong>Type:</strong> <code>integer</code></p>
       <p><strong>Required:</strong> yes</p>
       <p><strong>Description:</strong> The identifier of the user who installed the app. This value is retrieved from the installed event.</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>agent_id</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>integer</code></p>
+      <p><strong>Required:</strong> only with <code>crowdin_agent</code></p>
+      <p><strong>Description:</strong> The identifier of the app's bot user. This value is retrieved from the installed event (<code>agentId</code>).</p>
+    </td>
+  </tr>
+  <tr>
+    <td><code>code</code></td>
+    <td>
+      <p><strong>Type:</strong> <code>string</code></p>
+      <p><strong>Required:</strong> only with <code>crowdin_app_with_code</code></p>
+      <p><strong>Description:</strong> The authorization code from the installed event or from the JWT of a module request.</p>
     </td>
   </tr>
   </tbody>
