@@ -20390,13 +20390,18 @@ paths:
       tags:
         - Tasks
       summary: 'Export Project Task Strings'
-      description: '**Required scopes:** `project.task` (Read only).'
+      description: "**Required scopes:** `project.task` (Read only).\n\nBuilds a Crowdin XLIFF file with the task strings for offline translation and returns a link to download it. Project managers get the strings of every assignee, other members only the strings assigned to them."
       operationId: api.projects.tasks.exports.post
       parameters:
         -
           $ref: '#/components/parameters/ProjectId'
         -
           $ref: '#/components/parameters/TaskId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskStringsExportForm'
       responses:
         '200':
           description: 'Tasks strings download URL'
@@ -20406,6 +20411,12 @@ paths:
                 $ref: '#/components/schemas/DownloadLinkResource'
         '204':
           description: 'No Strings found'
+        '400':
+          description: 'Invalid Request Parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCollectionResource'
         '401':
           description: Unauthorized
           content:
@@ -57725,6 +57736,18 @@ components:
           type: integer
           example: 3600
       type: object
+    TaskStringsExportForm:
+      properties:
+        xliffVersion:
+          description: 'XLIFF version of the exported file. One of: `1.2`, `2.0`, `2.1`, `2.2`. Default is `1.2`'
+          type: string
+          enum:
+            - '1.2'
+            - '2.0'
+            - '2.1'
+            - '2.2'
+          example: '1.2'
+      type: object
     EnterpriseFileBasedTaskCollectionResource:
       description: 'Task Collection Resource'
       type: object
@@ -60041,6 +60064,15 @@ components:
           description: "Defines export file format. Use API Type feature specified at the corresponding file format from [Crowdin Store](https://store.crowdin.com/tags/string-exporter)\n\n__Note:__ the `format` parameter is required in all cases except when you'd like to export translations for a single file in its original format"
           type: string
           example: xliff
+        xliffVersion:
+          description: "XLIFF version of the exported file. One of: `1.2`, `2.0`, `2.1`, `2.2`. Default is `1.2`\n\n__Note:__ Can be used only when `format` is `xliff`"
+          type: string
+          enum:
+            - '1.2'
+            - '2.0'
+            - '2.1'
+            - '2.2'
+          example: '1.2'
         labelIds:
           description: 'Label Identifiers. Get via [List Labels](#operation/api.projects.labels.getMany)'
           type: array
