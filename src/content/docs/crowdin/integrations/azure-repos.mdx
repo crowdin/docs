@@ -12,7 +12,6 @@ import { Icon } from 'astro-icon/components';
 import ReadMore from '~/components/ReadMore.astro';
 import QuestionAnswer from '~/components/QuestionAnswer.astro';
 import setUpIntegrationDropdown from '!/crowdin/integrations/set_up_integration_dropdown.png';
-import authorizationAzureRepos from '!/crowdin/integrations/azure_repos_integration_authorization.png';
 import unconfigured from '!/crowdin/integrations/integration_unconfigured.png';
 import unconfiguredSb from '!/crowdin/integrations/integration_unconfigured_sb.png';
 import syncNow from '!/crowdin/integrations/integration_sync_now.png';
@@ -39,23 +38,28 @@ All translated and approved files (or target file bundles) are automatically mer
 
 ## Connecting Azure Repos Account
 
+The integration connects to Azure Repos with a personal access token of an Azure DevOps account.
+
+Create a [personal access token](https://learn.microsoft.com/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate) in Azure DevOps, or ask the repository owner to provide you with one:
+
+* The token must be created for the organization the repository belongs to.
+* In the **Code** group, select the **Full** and **Status** scopes.
+
+<Aside title="Permissions">
+  The integration creates webhooks (service hook subscriptions) in the Azure DevOps project of the repository. The account that owns the token needs the *Edit subscriptions* and *View subscriptions* permissions for service hooks in that project. By default, only project administrators have them. Read more about [service hook permissions](https://learn.microsoft.com/azure/devops/service-hooks/overview?view=azure-devops#q-what-permissions-do-i-need-to-set-up-a-subscription).
+</Aside>
+
 <Steps>
   1. Open your project and go to the **Integrations** tab.
   2. Click on **Azure Repos** in the Integrations list.
-  3. Click **Set Up Integration** and select **Source and translation files mode** or **Target file bundles mode** from the drop-down list to integrate via your Azure Repos account. <Image src={setUpIntegrationDropdown} alt="Connecting Azure Repos" class="width-sm" />
+  3. Enter the name of your Azure DevOps organization in the **Organization** field and the token in the **Token** field.
+  4. Click **Set Up Integration** and select **Source and translation files mode** or **Target file bundles mode** from the drop-down list. <Image src={setUpIntegrationDropdown} alt="Connecting Azure Repos" class="width-sm" />
      <Aside>In string-based projects, Azure Repos integration exclusively operates in the **Target file bundles mode**.</Aside>
-  4. Then authorize the connection with Crowdin on the Azure Repos side: <Image src={authorizationAzureRepos} alt="Azure Repos Integration Authorization" />
 </Steps>
-
-In case the repository you need is private, and you have limited or no access to it, please ask the repository owner to provide you with an access token. Afterward, click **Use personal access token** and insert the token into the *Token* field and click **Set Up Integration**.
-
-<Aside title="Permissions">
-  When setting up an integration with an access token, ensure that you have the Project Administrator level permission to the necessary repo.
-</Aside>
 
 ### Selecting Repository
 
-In the appeared dialog, select your repository and branches that should be translated.
+In the dialog that opens, select your repository and branches that should be translated.
 
 <Tabs syncKey="projectType">
   <TabItem label="File-based project">
@@ -233,4 +237,10 @@ By default, the translations stored on the repo are uploaded to Crowdin during t
   * By default, the `[ci skip]` tag is added to the commit message to skip unnecessary builds. Read more about the [Commit Message parameter](/developer/configuration-file/#commit-message).
   * Configure the preferred sync interval using [Sync Schedule](#synchronization-settings) (e.g., set the sync once in 24 hours).
   * Squash commits when merging a localization branch to keep the master branch history clean and uncluttered.
+</QuestionAnswer>
+
+<QuestionAnswer title="What should I do if I get the Failed to create repository webhook error?">
+  The *Failed to create repository webhook* error means that Azure DevOps refused to create the integration's webhooks (service hook subscriptions) in the project of a connected repository. It happens when the account that owns the personal access token doesn't have the *Edit subscriptions* and *View subscriptions* permissions for service hooks in that project.
+
+  Use a token of a project administrator, or ask a project administrator to grant these permissions to the account that owns the token, and then click **Resume** in the Azure Repos integration section. Read more about [service hook permissions](https://learn.microsoft.com/azure/devops/service-hooks/overview?view=azure-devops#q-what-permissions-do-i-need-to-set-up-a-subscription).
 </QuestionAnswer>
