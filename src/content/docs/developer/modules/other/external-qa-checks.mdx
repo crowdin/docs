@@ -331,7 +331,7 @@ When the app is installed, each `external-qa-check` module appears as a separate
 
 For each enabled external check, a project manager chooses its severity under **Save translations**:
 
-* **Warning** (default): Translators see the QA issue and can still save the translation with **Save Anyway**. Asynchronous checks always use this severity.
+* **Warning** (default): Translators see the QA issue and can still save the translation anyway. Asynchronous checks always use this severity.
 * **Error**: A translation that fails the check isn't saved. Available only for checks with `supportsSynchronousRun: true`. When you update a project using the [Edit Project](/developer/enterprise/api/v2/#operation/api.projects.patch) API method, add the check ID to `externalQaCheckIds` and set its value in `externalQaChecksIgnorable` to `false` to make it blocking.
 
 If an app update removes `supportsSynchronousRun`, the check stops blocking translations in all projects and works as an asynchronous check.
@@ -373,7 +373,7 @@ When a translation fails a check with the **Error** severity, the app's `error.m
 
 | Where the translation is added | What happens |
 |--------------------------------|--------------|
-| Editor, single translation | The translation isn't saved. There is no **Save Anyway** option. |
+| Editor, single translation | The translation isn't saved, and translators can't override the check. |
 | API, Add Translation | The API responds with HTTP 400 and the app's message. |
 | API, Translation Batch Operations | The whole request is rejected, and nothing is saved. |
 | Editor, **Find and Replace** or bulk saving | Only the translations that failed the check aren't saved. |
@@ -458,7 +458,7 @@ If a synchronous check doesn't answer within the time limit, the translation is 
 Crowdin Enterprise doesn't limit how often it calls an app. The only limits are the 10 parallel requests for one set of translations and the [circuit breaker](#circuit-breaker). Plan the capacity of your app, and of any service behind it, for these sources of load:
 
 * **Everyday work**: Each save in the Editor or via the API sends a request. File uploads and auto-translations send one request per batch.
-* **Repeated texts**: Results aren't cached, and identical texts in different projects are checked separately. The same text is sent again after **Save Anyway**, an approval, a vote, a source text change, a retry, or a revalidation. Auto-translation via AI with retries on QA issues sends each text twice: once for the first AI output and once for the final text.
+* **Repeated texts**: Results aren't cached, and identical texts in different projects are checked separately. The same text is sent again when a translator saves the translation anyway, and after an approval, a vote, a source text change, a retry, or a revalidation. Auto-translation via AI with retries on QA issues sends each text twice: once for the first AI output and once for the final text.
 * **Full re-checks**: When a project manager enables the check in a project, or when the Revalidate QA Checks API method is called with its ID, the top translation of every string in the project is checked, in all languages. Your app doesn't control when this happens.
 * **Parallel work**: Operations in all projects of the organization run at the same time, and each of them sends its own requests.
 
