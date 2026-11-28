@@ -12,12 +12,11 @@ import { Icon } from 'astro-icon/components';
 import ReadMore from '~/components/ReadMore.astro';
 import QuestionAnswer from '~/components/QuestionAnswer.astro';
 import setUpIntegrationDropdown from '!/enterprise/integrations/set_up_integration_dropdown.png';
-import authorizationAzureRepos from '!/crowdin/integrations/azure_repos_integration_authorization.png';
 import unconfigured from '!/enterprise/integrations/integration_unconfigured.png';
 import unconfiguredSb from '!/enterprise/integrations/integration_unconfigured_sb.png';
 import syncNow from '!/enterprise/integrations/integration_sync_now.png';
 
-Die Azure Repos-Integration ermöglicht es Ihnen, Dateien zwischen Ihrem Azure Repos-Repository und Ihrem Crowdin Enterprise-Projekt zu synchronisieren.
+Die Azure Repos-Integration ermöglicht es dir, Dateien zwischen deinem Azure Repos-Repository und deinem Crowdin Enterprise-Projekt zu synchronisieren.
 
 <Aside>
   Du musst die [Azure-Repos-Integration](https://store.crowdin.com/azure-repos) in deiner Crowdin-Enterprise-Organisation installieren, bevor du sie einrichten und verwenden kannst.
@@ -38,23 +37,28 @@ Alle übersetzten und freigegebenen Dateien (oder Ziel-Dateibundles) werden auto
 
 ## Azure-Repos-Konto verbinden
 
+Die Integration stellt über ein persönliches Zugriffstoken eines Azure DevOps-Kontos eine Verbindung zu Azure Repos her.
+
+In Azure DevOps ein [persönliches Zugriffstoken](https://learn.microsoft.com/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate) erstellen oder den Repository-Besitzer bitten, eines zur Verfügung zu stellen:
+
+* Das Token für die Organisation erstellen, zu der das Repository gehört.
+* In der Gruppe **Code** die Bereiche **Vollständig** und **Status** auswählen.
+
+<Aside title="Berechtigungen">
+  Durch die Integration werden Webhooks (Service-Hook-Abonnements) im Azure DevOps-Projekt des Repositorys erstellt. Das Konto, dem der Token gehört, benötigt die Berechtigungen *Abonnements bearbeiten* und *Abonnements anzeigen* für Service-Hooks in diesem Projekt. Standardmäßig verfügen nur Projektadministratoren darüber. Mehr über [Berechtigungen für Service-Hooks](https://learn.microsoft.com/azure/devops/service-hooks/overview?view=azure-devops#q-what-permissions-do-i-need-to-set-up-a-subscription) erfahren.
+</Aside>
+
 <Steps>
   1. Wähle **application/json** als **Inhaltstyp** aus.
   2. Klicke in der Liste der Integrationen auf **Azure Repos**.
-  3. Klicke auf **Integration einrichten** und wähle in der Dropdown-Liste **Modus für Quell- und Übersetzungsdateien** oder **Modus für Ziel-Dateibundles**, um die Integration über dein Azure-Repos-Konto herzustellen. <Image src={setUpIntegrationDropdown} alt="Azure Repos verbinden" class="width-sm" />
+  3. Namen deiner Azure DevOps-Organisation in das Feld **Organisation** und das Token in das Feld **Token** eingeben.
+  4. Auf **Integration einrichten** klicken und aus der Dropdown-Liste entweder den Modus **Quell- und Übersetzungsdateien** oder den Modus **Ziel-Dateibündel** auswählen. <Image src={setUpIntegrationDropdown} alt="Azure Repos verbinden" class="width-sm" />
      <Aside>In stringbasierten Projekten arbeitet die Azure-Repos-Integration ausschließlich im **Modus für Ziel-Dateibundles**.</Aside>
-  4. Dann autorisiere die Verbindung mit Crowdin auf der Azure-Repos-Seite: <Image src={authorizationAzureRepos} alt="Autorisierung der Azure-Repos-Integration" />
 </Steps>
-
-Falls das benötigte Repository privat ist und du nur eingeschränkten oder keinen Zugriff darauf hast, bitte den Repositorybesitzer, dir ein Zugriffstoken bereitzustellen. Klicke anschließend auf **Persönliches Zugriffstoken verwenden**, füge das Token in das Feld *Token* ein und klicke auf **Integration einrichten**.
-
-<Aside title="Berechtigungen">
-  Wenn du eine Integration mit einem Zugriffstoken einrichtest, stelle sicher, dass du über die Berechtigung auf Projektadministratorebene für das benötigte Repository verfügst.
-</Aside>
 
 ### Repository auswählen
 
-Wähle im angezeigten Dialogfeld dein Repository und die zu übersetzenden Branches aus.
+Im sich öffnenden Dialogfeld dein Repository und die Zweige auswählen, die übersetzt werden sollen.
 
 <Tabs syncKey="projectType">
   <TabItem label="Dateibasiertes Projekt">
@@ -230,4 +234,10 @@ Standardmäßig werden die im Repo gespeicherten Übersetzungen nur bei der erst
   * Standardmäßig wird der Tag `[ci skip]` zur Commit-Nachricht hinzugefügt, um unnötige Builds zu überspringen. Mehr über den [Parameter „Commit Message“](/developer/configuration-file/#commit-message) erfahren.
   * Konfiguriere das gewünschte Synchronisierungsintervall mithilfe von [Synchronisierungszeitplan](#synchronization-settings) (z. B. Synchronisierung einmal alle 24 Stunden).
   * Führe Commits beim Zusammenführen eines Lokalisierungs-Branchs zusammen, damit die Historie des Master-Branchs übersichtlich und sauber bleibt.
+</QuestionAnswer>
+
+<QuestionAnswer title="Was tun, wenn die Fehlermeldung Failed to create repository webhook angezeigt wird?">
+  Der Fehler *Failed to create repository webhook* bedeutet, dass Azure DevOps die Erstellung der Webhooks (Service-Hook-Abonnements) der Integration im Projekt eines verbundenen Repositorys abgelehnt hat. Dies tritt auf, wenn das Konto, dem das persönliche Zugriffstoken gehört, nicht über die Berechtigungen *Abonnements bearbeiten* und *Abonnements anzeigen* für Service-Hooks in diesem Projekt verfügt.
+
+  Als Projektadministrator dein Token verwenden oder einen Projektadministrator bitten, die Berechtigungen dem Konto zu erteilen, dem das Token gehört, und dann im Abschnitt Azure Repos-Integration auf **Weiter** klicken. Mehr über [Berechtigungen für Service-Hooks](https://learn.microsoft.com/azure/devops/service-hooks/overview?view=azure-devops#q-what-permissions-do-i-need-to-set-up-a-subscription) erfahren.
 </QuestionAnswer>
